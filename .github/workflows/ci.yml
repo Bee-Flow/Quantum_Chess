@@ -315,7 +315,9 @@ jobs:
         run: |
           ./occ config:system:set debug --value=true --type=boolean
           ./occ migrations:status "$APP_NAME"
-          ./occ migrations:status "$APP_NAME" | grep -Eq 'New Migrations:\s+0' || { echo 'Migrations were not applied'; exit 1; }
+          # "New Migrations" is miscounted by Nextcloud 35 (it compares list indexes with versions), so check
+          # that nothing is pending instead.
+          ./occ migrations:status "$APP_NAME" | grep -Eq 'Pending Migrations:\s+None' || { echo 'Migrations were not applied'; exit 1; }
           ./occ config:system:set debug --value=false --type=boolean
 
       - name: Background job is registered
