@@ -270,13 +270,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Recent versions of the notifications app ship runtime Composer dependencies (web push), which the
-      # server release tarball contains but a git checkout does not. Its post-install script only installs
-      # developer tools, so it is skipped.
+      # server release tarball contains but a git checkout does not. Its post-install scripts must run: on
+      # stable35 they prefix the web push library with Mozart (OCA\Notifications\Vendor\…).
       - name: Install the notifications app's PHP dependencies
         working-directory: apps/notifications
         run: |
           if [ -f composer.json ]; then
-            composer install --no-dev --no-interaction --no-progress --no-scripts --prefer-dist
+            composer install --no-dev --no-interaction --no-progress --prefer-dist
           fi
 
       - name: Set up Node from package.json engines
