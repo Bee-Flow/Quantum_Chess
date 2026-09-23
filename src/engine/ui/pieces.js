@@ -118,3 +118,13 @@ export function typeOfId(state, id) {
 export function capitalise(text) {
 	return text === '' ? text : text.charAt(0).toLocaleUpperCase() + text.slice(1)
 }
+
+/**
+ * Sentence case for spoken text: upper-case the first letter of every sentence.
+ *
+ * @param {string} text text
+ * @return {string}
+ */
+export function sentenceCase(text) {
+	return text.replace(/(^|[.!?]\s+)(\p{Ll})/gu, (match, lead, letter) => lead + letter.toLocaleUpperCase())
+}

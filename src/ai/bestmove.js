@@ -11,12 +11,15 @@
  * The level noise uses an injected RNG (`rng` function or `seed`); it is never the roll source.
  */
 
-import { BUDGET, budget, generateMoves, kingDanger, seededRng, T } from '../engine/index.js'
+import { BUDGET, budget, generateMoves, kingDanger, moveRisk, seededRng, T } from '../engine/index.js'
 import { features } from './evaluate.js'
 import { reaches } from './geometry.js'
 import { levelOf, SOLVER_MAX_PIECES, SOLVER_MAX_WORLDS } from './levels.js'
 import { captureWeight, cleanValue, Searcher, victimOf } from './search.js'
 import { solve } from './solver.js'
+
+/** The level noise may not pick a move whose king risk exceeds the safest move's by more than this. */
+const KING_GUARD = 0.10
 
 /**
  * A level-noise RNG from the options: `rng` (function), `seed` (integer) or a fresh random seed.
@@ -133,15 +136,18 @@ function policyPool(state, moves, level, funSplit) {
  * @param {Array<{code: string, value: number, resolution: string}>} scored searched moves (best first)
  * @param {object} level level
  * @param {function(): number} rng noise RNG
+ * @param {(function(string): boolean)|null} [safe] moves the non-random picks may choose (the best always may)
  * @return {object} the chosen entry
  */
-export function pickMove(scored, level, rng) {
-	const list = scored.map((m) => ({ ...m, v: m.value + (m.resolution === 'rolled' ? level.rollBonus : 0) }))
-	list.sort((a, b) => b.v - a.v)
+export function pickMove(scored, level, rng, safe = null) {
+	const all = scored.map((m) => ({ ...m, v: m.value + (m.resolution === 'rolled' ? level.rollBonus : 0) }))
+	all.sort((a, b) => b.v - a.v)
 	const r = rng()
 	if (r < level.randomRate) {
-		return list[Math.floor(rng() * list.length)]
+		return all[Math.floor(rng() * all.length)]
 	}
+	// A level that watches its king never lets the noise pick a move that hands the opponent a king shot.
+	const list = safe === null ? all : all.filter((m, i) => i === 0 || safe(m.code))
 	if (r < level.randomRate + level.topHalfRate) {
 		const half = list.slice(0, Math.max(1, Math.ceil(list.length / 2)))
 		return half[Math.floor(rng() * half.length)]
@@ -271,7 +277,14 @@ export function* bestMoveTask(state, options = {}, ctx = { slice: () => Infinity
 	}
 	const res = searcher.result()
 	const scored = res.moves.filter((m) => m.value !== null)
-	const chosen = scored.length > 0 ? pickMove(scored, level, rng) : { code: pool[0].code, value: 0.5 }
+	let safe = null
+	if (!blind) {
+		// Noticing the king: noise may not choose a move that gives the opponent a much bigger king shot.
+		const risk = new Map(scored.map((m) => [m.code, moveRisk(state, m.code)]))
+		const minRisk = Math.min(...risk.values())
+		safe = (code) => risk.get(code) <= minRisk + KING_GUARD
+	}
+	const chosen = scored.length > 0 ? pickMove(scored, level, rng, safe) : { code: pool[0].code, value: 0.5 }
 	return finish(chosen.code, chosen.value, {
 		depth: res.depth,
 		nodes: res.nodes,

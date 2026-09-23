@@ -322,8 +322,9 @@ export class Searcher {
 			if (t >= this.sliceDeadline && this.sliceDeadline < this.deadline) {
 				throw new Stop('slice')
 			}
-			// The first iteration always completes (only a node budget stops it): every root move gets a value.
-			if (t >= this.deadline && this.depth > 0) {
+			// Analysis (usePartial off) always completes the first iteration, so that every root move gets a value; a
+			// move choice may stop inside it once at least one move has one.
+			if (t >= this.deadline && (this.depth > 0 || (this.usePartial && this.iter !== null && this.iter.index > 0))) {
 				if (!this.extended && this.extendTo > this.deadline && this.unstable()) {
 					this.extended = true
 					this.deadline = this.extendTo
@@ -791,7 +792,7 @@ export class Searcher {
 	 */
 	store(hash, depth, value, flag, move) {
 		const old = this.tt.get(hash)
-		if (old !== undefined && old.depth > depth && old.flag === EXACT) {
+		if (old !== undefined && old.depth > depth) {
 			return
 		}
 		if (old === undefined && this.tt.size >= TT_MAX) {
@@ -835,6 +836,16 @@ export class Searcher {
 	 */
 	qsearch(state, alpha, beta, ply, qd) {
 		this.tick()
+		// Quiescence results go to the transposition table too, with a negative depth for the quiescence plies
+		// already used: this lets a search that restarts after a time slice resume where it stopped.
+		const hash = state.history[state.history.length - 1]
+		const qDepth = -qd / 16
+		const entry = this.tt.get(hash)
+		if (entry !== undefined && entry.depth >= qDepth) {
+			if (entry.flag === EXACT || (entry.flag === LOWER && entry.value >= beta) || (entry.flag === UPPER && entry.value <= alpha)) {
+				return entry.value
+			}
+		}
 		const stand = staticE(state, this.ignoreKing)
 		if (stand >= 1) {
 			return 1 - ply * PLY_DISCOUNT
@@ -845,6 +856,7 @@ export class Searcher {
 		if (qd >= this.p.qMax || stand >= beta) {
 			return stand
 		}
+		const alpha0 = alpha
 		let best = stand
 		if (stand > alpha) {
 			alpha = stand
@@ -895,6 +907,7 @@ export class Searcher {
 				break
 			}
 		}
+		this.store(hash, qDepth, best, best <= alpha0 ? UPPER : best >= beta ? LOWER : EXACT, null)
 		return best
 	}
 

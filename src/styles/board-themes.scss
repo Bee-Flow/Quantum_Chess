@@ -1,0 +1,67 @@
+/**
+ * SPDX-FileCopyrightText: 2026 BeeFlow
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+// The six board themes of GAME-DESIGN §3.2 (attribute `data-board-theme` on every board root). Board colours never
+// follow the Nextcloud light/dark theme; in the dark theme only the squares layer is dimmed (QuantumBoard.vue).
+// tests/js/board/contrast.spec.js reads the colours of this file and checks every marker against both square
+// colours (≥ 3:1) and the badges (≥ 7:1).
+
+[data-board-theme] {
+	--qc-sq-light: #dee3e6;
+	--qc-sq-dark: #8ca2ad;
+	--qc-board-ring: #3f1ca0;
+	--qc-square-border: transparent;
+	--qc-board-frame: rgb(0 0 0 / 0.1);
+}
+
+// nextcloud: follows the admin's primary colour with its lightness pinned (slate without oklch(from …) support)
+[data-board-theme='nextcloud'] {
+	--qc-sq-light: #dee3e6;
+	--qc-sq-dark: #8ca2ad;
+	--qc-board-ring: #3f1ca0;
+
+	@supports (color: oklch(from red l c h)) {
+		--qc-sq-light: oklch(from var(--color-primary-element, #00679e) 0.93 min(calc(c * 0.25), 0.04) h);
+		--qc-sq-dark: oklch(from var(--color-primary-element, #00679e) 0.66 min(calc(c * 0.5), 0.09) h);
+	}
+}
+
+[data-board-theme='wood'] {
+	--qc-sq-light: #f0d9b5;
+	--qc-sq-dark: #b58863;
+	--qc-board-ring: #3f1ca0;
+}
+
+[data-board-theme='green'] {
+	--qc-sq-light: #ebecd0;
+	--qc-sq-dark: #739552;
+	--qc-board-ring: #3f1ca0;
+}
+
+[data-board-theme='slate'] {
+	--qc-sq-light: #dee3e6;
+	--qc-sq-dark: #8ca2ad;
+	--qc-board-ring: #3f1ca0;
+}
+
+// quantum: lavender squares; rings switch to a near-black violet
+[data-board-theme='quantum'] {
+	--qc-sq-light: #e6e1f8;
+	--qc-sq-dark: #8a79c6;
+	--qc-board-ring: #1f1147;
+}
+
+// contrast: chosen automatically under Nextcloud's high-contrast themes; square borders and solid markers
+[data-board-theme='contrast'] {
+	--qc-sq-light: #ffffff;
+	--qc-sq-dark: #8a8a8a;
+	--qc-board-ring: #1f1147;
+	--qc-square-border: rgb(0 0 0 / 0.55);
+	--qc-board-frame: #000000;
+	--qc-target: rgb(11 22 34 / 0.85);
+	--qc-target-capture: rgb(11 22 34 / 0.9);
+	--qc-target-rim: rgb(0 0 0 / 1);
+	--qc-last-move: rgb(247 203 77 / 0.6);
+}

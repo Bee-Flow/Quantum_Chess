@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { ENGINE_VERSION, LEAF_K, LEVELS, levelOf, PIECE_VALUES, STRENGTHS } from '../../../src/ai/levels.js'
+import { ENGINE_VERSION, LEAF_K, levelOf, LEVELS, PIECE_VALUES, STRENGTHS } from '../../../src/ai/levels.js'
 
 describe('LEVELS (GAME-DESIGN §6.1, SPEC §4.2)', () => {
 	it('has five frozen levels in order with names, labels and canned lines', () => {

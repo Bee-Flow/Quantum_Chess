@@ -1,0 +1,94 @@
+/**
+ * SPDX-FileCopyrightText: 2026 BeeFlow
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+// Design tokens of GAME-DESIGN §3.2. Scoped to the app root (`.qc-app`, added by main.js) and to every board
+// component root (`.qc-scope`), so boards rendered outside the app shell (settings pages, the dev harness) get them
+// too. Non-board UI uses Nextcloud's variables directly.
+
+:where(.qc-app, .qc-scope) {
+	// Accent and selection
+	--qc-accent: var(--color-primary-element);
+	--qc-accent-soft: var(--color-primary-element-light);
+	--qc-select: color-mix(in srgb, var(--color-primary-element) 50%, transparent);
+
+	// Quantum UI outside the board (chips, log, split pipe)
+	--qc-quantum: #6b3fd4;
+	// Rings, threads and outlines on the board: board colours do not follow the theme. A deeper violet than the
+	// GAME-DESIGN draft (#5b2fd0) so that every marker keeps 3:1 against both square colours (GD §9.1).
+	--qc-quantum-board: #3f1ca0;
+	--qc-quantum-halo: rgb(255 255 255 / 0.75);
+
+	// Target markers: a translucent fill with a crisp rim
+	--qc-target: rgb(11 22 34 / 0.3);
+	--qc-target-capture: rgb(11 22 34 / 0.38);
+	--qc-target-rim: rgb(11 22 34 / 0.82);
+	--qc-last-move: rgb(247 203 77 / 0.42);
+
+	// Outcomes: Captured uses success; Moved and Missed are neutral and never red
+	--qc-success: var(--color-success);
+	--qc-neutral-outcome: var(--color-text-maxcontrast);
+	--qc-outcome-move: #8a94a3;
+	--qc-outcome-miss: #c3cad4;
+
+	// King ring
+	--qc-warning: var(--color-warning);
+	--qc-danger: var(--color-error);
+	--qc-ring-warning: #e09a00;
+	--qc-ring-danger: #d0263a;
+
+	// What-if view (Okabe-Ito)
+	--qc-corr-up: #0072b2;
+	--qc-corr-down: #d55e00;
+
+	// Identity dots for ghosts (colour-blind safe)
+	--qc-id-1: #e69f00;
+	--qc-id-2: #56b4e9;
+	--qc-id-3: #009e73;
+	--qc-id-4: #f0e442;
+	--qc-id-5: #cc79a7;
+	--qc-id-6: #0072b2;
+
+	// AI
+	--qc-ai: var(--color-element-assistant, var(--color-primary-element));
+
+	// Motion (GD §3.2): durations are multiplied by --qc-speed (Slow 1.5, Normal 1, Fast 0.5, Off 0)
+	--qc-speed: 1;
+	--qc-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--qc-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+	--qc-ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// Dark Nextcloud theme ("default" follows the system; "dark" is explicit). UI colours follow the theme, board colours
+// do not.
+@mixin qc-dark-tokens {
+	--qc-quantum: #b39bff;
+	--qc-last-move: rgb(247 203 77 / 0.34);
+	--qc-corr-up: #56b4e9;
+	--qc-corr-down: #e69f00;
+}
+
+@media (prefers-color-scheme: dark) {
+	body[data-theme-default] :where(.qc-app, .qc-scope) {
+		@include qc-dark-tokens;
+	}
+}
+
+body[data-theme-dark] :where(.qc-app, .qc-scope),
+body[data-theme-dark-highcontrast] :where(.qc-app, .qc-scope) {
+	@include qc-dark-tokens;
+}
+
+// Visually hidden text for screen readers
+.qc-sr-only {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	padding: 0 !important;
+	margin: -1px !important;
+	overflow: hidden !important;
+	clip: rect(0 0 0 0) !important;
+	white-space: nowrap !important;
+	border: 0 !important;
+}

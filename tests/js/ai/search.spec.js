@@ -119,11 +119,16 @@ describe('search: results and mechanics', () => {
 		expect(seen.every((p) => typeof p.E === 'number' && typeof p.code === 'string')).toBe(true)
 	})
 
-	it('stops at the time limit but always completes the first iteration', () => {
+	it('stops at the time limit; analysis still completes the first iteration', () => {
 		let t = 0
-		const r = search(POS.ghosts(), { level: 5, timeMs: 1, now: () => t++ })
-		expect(r.depth).toBeGreaterThanOrEqual(1)
-		expect(r.moves.every((m) => m.value !== null)).toBe(true)
+		const analysis = search(POS.ghosts(), { level: 5, timeMs: 1, usePartial: false, now: () => t++ })
+		expect(analysis.depth).toBeGreaterThanOrEqual(1)
+		expect(analysis.moves.every((m) => m.value !== null)).toBe(true)
+		// A move choice may stop inside the first iteration, keeping the moves it already valued.
+		t = 0
+		const choice = search(POS.ghosts(), { level: 5, timeMs: 1, now: () => t++ })
+		expect(choice.moves.filter((m) => m.value !== null).length).toBeGreaterThanOrEqual(1)
+		expect(choice.moves[0].value).not.toBe(null)
 	})
 
 	it('uses a partial last iteration for the move, but not for analysis values', () => {
