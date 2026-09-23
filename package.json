@@ -18,7 +18,13 @@
     "test:watch": "vitest",
     "lint": "eslint src tests/js",
     "lint:fix": "eslint --fix src tests/js",
-    "fixtures": "node tests/fixtures/generate-engine-fixtures.mjs"
+    "fixtures": "node tests/fixtures/generate-engine-fixtures.mjs",
+    "bench": "vitest bench --run",
+    "trainer:validate": "node tools/trainer-validate.mjs",
+    "puzzles:build": "node tools/puzzles-build.mjs",
+    "size": "node tools/check-bundle-size.mjs",
+    "test:e2e": "playwright test -c tests/e2e/playwright.config.mjs",
+    "screenshots": "node tests/e2e/screenshots.mjs"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
@@ -37,6 +43,7 @@
     "@nextcloud/initial-state": "^3.0.0",
     "@nextcloud/l10n": "^3.4.1",
     "@nextcloud/moment": "^1.3.5",
+    "@nextcloud/password-confirmation": "^6.1.0",
     "@nextcloud/router": "^3.2.0",
     "@nextcloud/vue": "^9.13.0",
     "vue": "^3.5.18",
@@ -46,6 +53,7 @@
     "@nextcloud/browserslist-config": "^3.1.2",
     "@nextcloud/eslint-config": "^9.0.1",
     "@nextcloud/vite-config": "^2.5.4",
+    "@playwright/test": "^1.63.0",
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.5.1",
     "ajv": "^8.20.0",

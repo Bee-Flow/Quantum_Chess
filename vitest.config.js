@@ -12,5 +12,8 @@ export default defineConfig({
 		environment: 'node',
 		environmentMatchGlobs: [['**/*.vue.spec.js', 'happy-dom']],
 		testTimeout: 30000,
+		benchmark: {
+			include: ['tests/js/**/*.bench.js'],
+		},
 	},
 })
