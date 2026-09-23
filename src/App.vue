@@ -10,7 +10,7 @@
 <template>
 	<NcContent appName="quantumchess" class="qc-app">
 		<AppNavigation @openSettings="openSettings" />
-		<NcAppContent :pageHeading="t('quantumchess', 'Quantum Chess')">
+		<NcAppContent :pageHeading="t('quantumchess', 'Quantum Chess')" :pageTitle="pageTitle">
 			<router-view />
 		</NcAppContent>
 		<NewGameDialog
@@ -28,7 +28,7 @@
 <script setup>
 import { emit } from '@nextcloud/event-bus'
 import { t } from '@nextcloud/l10n'
-import { computed, defineAsyncComponent, onMounted, watch, watchEffect } from 'vue'
+import { computed, defineAsyncComponent, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcContent from '@nextcloud/vue/components/NcContent'
@@ -86,11 +86,12 @@ function onSettingsOpen(open) {
 	}
 }
 
-// Tab title: "(2) Quantum Chess" while games wait for the user (GAME-DESIGN §2.2).
-const baseTitle = document.title
-watchEffect(() => {
+// Tab title: "(2) Quantum Chess - Nextcloud" while games wait for the user (GAME-DESIGN §2.2). Passed as pageTitle,
+// because NcAppContent otherwise adds the app name from an injected ref and shows "[object Object]".
+const pageTitle = computed(() => {
 	const n = lobby.counts?.value?.total ?? 0
-	document.title = n > 0 ? `(${n}) ${baseTitle}` : baseTitle
+	const name = t('quantumchess', 'Quantum Chess')
+	return n > 0 ? `(${n}) ${name}` : name
 })
 
 // The navigation collapses on game routes when the board would get too small (GAME-DESIGN §2.2).
