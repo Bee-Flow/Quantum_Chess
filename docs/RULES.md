@@ -384,7 +384,7 @@ A split may not spread a piece over more than 4 squares. Merge or measure it fir
   - the player who ran out of time loses;
   - but it is a draw if the other player has only their king left;
   - and the game is simply cancelled if the player who ran out had not made a move yet.
-- In rated games, the coach, hints and the evaluation bar are switched off for your own games that are still in progress. They come back when the game ends. The server also refuses AI help on positions from your running rated games. It cannot stop the built-in engine in your browser, though, so rated play relies on fair play.
+- In your online games that are still in progress, the coach, hints, the evaluation bar and the analysis are switched off. They come back when the game ends. The server also refuses AI help for positions from your running rated games. It cannot stop the built-in engine in your browser, though, so rated play relies on fair play.
 - Games against the computer, against an AI model, or pass & play never change your rating.
 
 ---

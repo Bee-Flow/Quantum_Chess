@@ -1,0 +1,104 @@
+# SPDX-FileCopyrightText: 2026 BeeFlow
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Bug report
+description: Something in Quantum Chess does not work as it should
+labels: ['bug', 'needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. Security issues do **not** belong here: please follow the
+        [security policy](https://github.com/bee-flow/quantum_chess/security/policy) instead.
+
+        Is it about a roll? Every roll is exact and fair, and the move log explains each one. Before reporting a
+        roll as wrong, open the game's log (or the review's *Verify*) and include what it says.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: |
+        1. Start a computer game at level 2
+        2. Split the knight on g1 to f3 and h3
+        3. …
+        Expected: …
+        Actual: …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where in the app?
+      multiple: true
+      options:
+        - Online game (against another user)
+        - Computer game
+        - AI opponent
+        - Pass & play
+        - Trainer (lessons, puzzles, lab)
+        - Coach or post-game review
+        - Lobby, navigation or dashboard widget
+        - Notifications
+        - Settings (in-app, personal or admin)
+        - Installation or upgrade
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: game
+    attributes:
+      label: Moves or game export
+      description: |
+        If the problem happens in a game, paste the move codes (*⋮ → Copy moves*) or attach the exported
+        `.qcg.json` file. It contains no names of other people unless it is an online game you took part in.
+      render: text
+  - type: input
+    id: app-version
+    attributes:
+      label: Quantum Chess version
+      description: Administration settings → Apps (or `occ app:list`).
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: nextcloud-version
+    attributes:
+      label: Nextcloud version
+      placeholder: '32.0.1'
+    validations:
+      required: true
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP version and database
+      placeholder: PHP 8.3, MariaDB 10.11
+  - type: input
+    id: browser
+    attributes:
+      label: Browser, device and operating system
+      placeholder: Firefox 131 on Windows 11 / Safari on iPhone 15 (iOS 18)
+    validations:
+      required: true
+  - type: dropdown
+    id: ai-source
+    attributes:
+      label: AI source (only for AI opponent or AI coach problems)
+      options:
+        - Not related to AI
+        - Nextcloud AI (Assistant / TaskProcessing)
+        - Organisation provider (configured by the admin)
+        - My own API key
+        - Local server (Ollama, LocalAI, LM Studio)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Browser console errors (F12 → Console) and matching lines of the Nextcloud log (Administration settings →
+        Logging, or `data/nextcloud.log`). Please remove anything private first. API keys never appear in the log.
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or a screen recording
+      description: Drag files here. A short recording helps a lot with animation or input problems.

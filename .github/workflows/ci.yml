@@ -1,0 +1,395 @@
+# SPDX-FileCopyrightText: 2026 BeeFlow
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Continuous integration: the quality gates of docs/SPEC.md §15.1 on every pull request and push.
+#
+#   lint         info.xml against the App Store schema, SPDX headers, version numbers
+#   node         ESLint, Vitest, production build, bundle size, trainer data, engine fixture drift
+#   php          php -l, php-cs-fixer, Psalm and PHPUnit on PHP 8.1–8.4
+#   psalm-max    Psalm against the public API (OCP) of the newest supported Nextcloud
+#   package      `make appstore`, checks the tarball holds runtime files only, uploads it
+#   integration  installs the app into Nextcloud 32 and 35 (SQLite), migrations, HTTP smoke, Playwright e2e
+#   bench        engine and AI benchmarks (advisory, never blocks a merge)
+#
+# Actions are pinned to commit hashes (the versions of Nextcloud's organisation templates); Dependabot updates them.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'stable*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  APP_NAME: quantumchess
+
+jobs:
+  lint:
+    name: Lint (info.xml, SPDX, versions)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download the App Store schema
+        run: curl -fsSL -o info.xsd https://raw.githubusercontent.com/nextcloud/appstore/master/nextcloudappstore/api/v1/release/info.xsd
+
+      - name: Validate appinfo/info.xml
+        uses: ChristophWurst/xmllint-action@36f2a302f84f8c83fceea0b9c59e1eb4a616d3c1 # v1.2
+        with:
+          xml-file: ./appinfo/info.xml
+          xml-schema-file: ./info.xsd
+
+      - name: SPDX licence headers
+        run: make lint-spdx
+
+      - name: Versions of info.xml, package.json and CHANGELOG.md agree
+        run: make version-check
+
+  node:
+    name: Node (lint, test, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node from package.json engines
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: package.json
+          cache: npm
+
+      - name: Install dependencies
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Unit tests (Vitest)
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Bundle size (main entry ≤ 250 KB gzip)
+        run: npm run size --if-present
+
+      - name: Trainer lessons and puzzles
+        run: npm run trainer:validate --if-present
+
+      - name: Engine fixtures are up to date
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.fixtures ? 0 : 1)"; then
+            npm run fixtures
+            git diff --stat --exit-code -- tests/fixtures/engine
+            test -z "$(git status --porcelain -- tests/fixtures/engine)" || { git status --short -- tests/fixtures/engine; exit 1; }
+          else
+            echo 'No fixtures script yet'
+          fi
+
+  php:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.2', '8.3', '8.4']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ctype, curl, dom, fileinfo, gd, iconv, intl, json, mbstring, openssl, posix, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
+          coverage: none
+          ini-file: development
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+
+      - name: Syntax (php -l)
+        run: composer run lint
+
+      - name: Coding standard (php-cs-fixer)
+        run: composer run cs:check
+
+      - name: Static analysis (Psalm)
+        run: composer run psalm -- --monochrome --no-progress --output-format=github
+
+      - name: Unit tests (PHPUnit)
+        run: composer run test:unit
+
+  psalm-max:
+    name: Psalm against Nextcloud 35 OCP
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.4'
+          coverage: none
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Composer dependencies with nextcloud/ocp dev-stable35
+        run: |
+          composer install --no-interaction --prefer-dist
+          composer require --dev --no-interaction 'nextcloud/ocp:dev-stable35' --ignore-platform-reqs --with-dependencies
+
+      - name: Static analysis (Psalm)
+        run: composer run psalm -- --monochrome --no-progress --output-format=github
+
+  package:
+    name: App Store package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node from package.json engines
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: package.json
+          cache: npm
+
+      - name: Set up PHP 8.1
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.1'
+          coverage: none
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the package (make appstore)
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+        run: make appstore
+
+      - name: Check the package contents
+        run: |
+          tar -tzf "build/artifacts/${APP_NAME}.tar.gz" > contents.txt
+          for required in appinfo/info.xml appinfo/routes.php lib/AppInfo/Application.php js/quantumchess-main.mjs img/app.svg img/app-dark.svg LICENSE; do
+            grep -qx "${APP_NAME}/${required}" contents.txt || { echo "Missing ${required}"; exit 1; }
+          done
+          if grep -E "^${APP_NAME}/(src|tests|docs|tools|node_modules|vendor|build|screenshots|translationfiles)/|/\.git|\.(key|crt|csr)$" contents.txt; then
+            echo 'The package contains files that must not be shipped (listed above)'
+            exit 1
+          fi
+          echo "$(grep -vc '/$' contents.txt) files, $(du -h "build/artifacts/${APP_NAME}.tar.gz" | cut -f1)"
+
+      - name: Upload the package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.APP_NAME }}-${{ github.sha }}
+          path: build/artifacts/${{ env.APP_NAME }}.tar.gz
+          retention-days: 7
+
+  integration:
+    name: Nextcloud ${{ matrix.server }} · PHP ${{ matrix.php }} · SQLite
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # min-version and max-version of appinfo/info.xml, each with a PHP version it supports
+          - server: stable32
+            php: '8.1'
+          - server: stable35
+            php: '8.4'
+    env:
+      QC_BASE_URL: http://localhost:8080
+      QC_NC_ROOT: ${{ github.workspace }}
+      QC_ADMIN_PASSWORD: QuantumAdmin!2026
+      QC_BOB_PASSWORD: QuantumBob!2026
+      QC_CAROL_PASSWORD: QuantumCarol!2026
+    steps:
+      - name: Checkout Nextcloud ${{ matrix.server }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: nextcloud/server
+          ref: ${{ matrix.server }}
+          submodules: true
+
+      - name: Checkout the app
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: apps/${{ env.APP_NAME }}
+
+      # Not part of the server repository, but of every server release; needed for notification actions
+      - name: Checkout the notifications app
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: nextcloud/notifications
+          ref: ${{ matrix.server }}
+          path: apps/notifications
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: bz2, ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix, session, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
+          coverage: none
+          ini-file: development
+          ini-values: disable_functions=
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node from package.json engines
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: apps/${{ env.APP_NAME }}/package.json
+          cache: npm
+          cache-dependency-path: apps/${{ env.APP_NAME }}/package-lock.json
+
+      - name: Build the app
+        working-directory: apps/${{ env.APP_NAME }}
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install Nextcloud
+        run: |
+          mkdir data
+          ./occ maintenance:install --verbose --database=sqlite --database-name=nextcloud --admin-user=admin --admin-pass="$QC_ADMIN_PASSWORD"
+          ./occ config:system:set trusted_domains 1 --value=127.0.0.1
+          ./occ background:cron
+          ./occ user:setting admin settings display_name 'Alice Admin'
+          OC_PASS="$QC_BOB_PASSWORD" ./occ user:add --password-from-env --display-name='Bob Builder' bob
+          OC_PASS="$QC_CAROL_PASSWORD" ./occ user:add --password-from-env --display-name='Carol Quantum' carol
+
+      - name: Enable the app
+        run: |
+          ./occ app:enable notifications
+          ./occ app:enable "$APP_NAME"
+          ./occ app:list --enabled | grep -E "^\s+- ${APP_NAME}:"
+
+      - name: Migrations
+        run: |
+          ./occ migrations:status "$APP_NAME"
+          ./occ migrations:status "$APP_NAME" | grep -Eq 'New Migrations:\s+0' || { echo 'Migrations were not applied'; exit 1; }
+
+      - name: Background job is registered
+        run: ./occ background-job:list --limit=500 | grep -F 'OCA\QuantumChess\BackgroundJob\GameMaintenanceJob'
+
+      - name: Start the web server
+        run: |
+          php -S localhost:8080 > php-server.log 2>&1 &
+          for _ in $(seq 1 30); do curl -fsS "$QC_BASE_URL/status.php" > /dev/null && break; sleep 1; done
+          curl -fsS "$QC_BASE_URL/status.php"
+
+      - name: HTTP smoke test
+        run: |
+          set -euo pipefail
+          auth=(-u "admin:$QC_ADMIN_PASSWORD")
+          # The app page renders and loads the main bundle
+          curl -fsS "${auth[@]}" "$QC_BASE_URL/index.php/apps/$APP_NAME/" -o page.html
+          script=$(grep -oE 'src="[^"]*/js/quantumchess-main\.mjs[^"]*"' page.html | head -n 1 | sed -E 's/^src="([^"]*)"$/\1/; s/&amp;/\&/g')
+          test -n "$script" || { echo 'quantumchess-main.mjs is not referenced by the page'; exit 1; }
+          curl -fsS -o /dev/null "$QC_BASE_URL$script"
+          # One API route (JSON, as a logged-in user)
+          curl -fsS "${auth[@]}" -H 'OCS-APIRequest: true' -H 'Accept: application/json' \
+            "$QC_BASE_URL/index.php/apps/$APP_NAME/api/games/summary" | tee summary.json
+          echo
+          node -e "const s = require('./summary.json'); if (typeof s.rev !== 'string') process.exit(1)"
+          # Icons and the settings pages
+          curl -fsS -o /dev/null "$QC_BASE_URL/apps/$APP_NAME/img/app.svg"
+          curl -fsS -o /dev/null "${auth[@]}" "$QC_BASE_URL/index.php/settings/admin/$APP_NAME"
+          curl -fsS -o /dev/null "${auth[@]}" "$QC_BASE_URL/index.php/settings/user/$APP_NAME"
+          echo 'HTTP smoke test passed'
+
+      - name: End-to-end tests (Playwright)
+        working-directory: apps/${{ env.APP_NAME }}
+        run: |
+          if ! ls tests/e2e/*.spec.mjs > /dev/null 2>&1 || [ ! -d node_modules/@playwright/test ]; then
+            echo 'No Playwright specs or @playwright/test is not installed yet; skipping'
+            exit 0
+          fi
+          npx playwright install --with-deps chromium
+          npx playwright test -c tests/e2e/playwright.config.mjs
+
+      - name: No errors from the app in nextcloud.log
+        if: always()
+        run: |
+          touch data/nextcloud.log
+          if grep -i 'quantumchess' data/nextcloud.log | grep -E '"level":\s*[34]'; then
+            echo 'The app logged errors (see above)'
+            exit 1
+          fi
+
+      - name: Upload logs and reports
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-${{ matrix.server }}-logs
+          path: |
+            data/nextcloud.log
+            php-server.log
+            apps/${{ env.APP_NAME }}/playwright-report
+            apps/${{ env.APP_NAME }}/test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
+  bench:
+    name: Benchmarks (advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node from package.json engines
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: package.json
+          cache: npm
+
+      - name: Install dependencies
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+        run: npm ci
+
+      - name: Benchmarks (vitest bench)
+        run: npm run bench --if-present

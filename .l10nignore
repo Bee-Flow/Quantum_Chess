@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 BeeFlow
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Paths the Nextcloud translation tool skips when it extracts strings (one prefix per line, relative to the
+# app root). Strings are extracted from the sources in src/, lib/, templates/ and appinfo/info.xml.
+# Built bundles (generated from src/)
+js/
+build/
+# Development only (and generated test output)
+vendor/
+tests/
+tools/
+docs/
+screenshots/
+translationfiles/
+coverage/
+playwright-report/
+test-results/

@@ -1,0 +1,158 @@
+# SPDX-FileCopyrightText: 2026 BeeFlow
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Build, code-sign and publish a release to the Nextcloud App Store.
+#
+# Modelled on Nextcloud's organisation template (nextcloud/.github, workflow-templates/appstore-build-publish.yml)
+# with these differences: the app id (quantumchess) differs from the repository name, so it is set explicitly;
+# packaging and signing use the Makefile (`make appstore`, `make sign`), which is tested in CI and usable by hand;
+# the private key is checked against the App Store certificate before anything is uploaded.
+#
+# Trigger: publish a GitHub release whose tag is v<version of appinfo/info.xml>, e.g. v1.0.0 (see RELEASING.md).
+# Secrets: APP_PRIVATE_KEY (contents of quantumchess.key) and APPSTORE_TOKEN (apps.nextcloud.com → Account → API token).
+
+name: Build and publish app release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: appstore-release
+  cancel-in-progress: false
+
+env:
+  APP_NAME: quantumchess
+
+jobs:
+  build_and_publish:
+    name: Build, sign and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check actor permission
+        uses: skjnldsv/check-actor-permission@69e92a3c4711150929bca9fcf34448c5bf5526e7 # v3.0
+        with:
+          require: write
+
+      - name: Check that the release secrets are set
+        env:
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APPSTORE_TOKEN: ${{ secrets.APPSTORE_TOKEN }}
+        run: |
+          [ -n "$APP_PRIVATE_KEY" ] || { echo '::error::The secret APP_PRIVATE_KEY is missing (see RELEASING.md, step 4)'; exit 1; }
+          [ -n "$APPSTORE_TOKEN" ] || { echo '::error::The secret APPSTORE_TOKEN is missing (see RELEASING.md, step 4)'; exit 1; }
+
+      - name: Set app version from the tag
+        run: echo "APP_VERSION=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: ${{ env.APP_NAME }}
+
+      - name: Get appinfo data
+        id: appinfo
+        uses: skjnldsv/xpath-action@f5b036e9d973f42c86324833fd00be90665fbf77 # v1.0.0
+        with:
+          filename: ${{ env.APP_NAME }}/appinfo/info.xml
+          expression: "//info//dependencies//nextcloud/@min-version"
+
+      - name: Set up Node from package.json engines
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: ${{ env.APP_NAME }}/package.json
+          package-manager-cache: false
+
+      - name: Validate app version against tag (info.xml, package.json, CHANGELOG.md)
+        working-directory: ${{ env.APP_NAME }}
+        run: make version-check TAG="$APP_VERSION"
+
+      - name: Get PHP version
+        id: php-versions
+        uses: nextcloud-libraries/nextcloud-version-matrix@cd0211ffcef1065e2020cd579e4843b8746e7a58 # v1.3.3
+        with:
+          filename: ${{ env.APP_NAME }}/appinfo/info.xml
+
+      - name: Set up PHP ${{ steps.php-versions.outputs.php-min }}
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ steps.php-versions.outputs.php-min }}
+          coverage: none
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and package ${{ env.APP_NAME }} ${{ env.APP_VERSION }}
+        working-directory: ${{ env.APP_NAME }}
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+        run: make appstore
+
+      - name: Check server download link for ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
+        run: |
+          NCVERSION='${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}'
+          DOWNLOAD_URL=$(curl -s "https://updates.nextcloud.com/updater_server/latest?channel=beta&version=$NCVERSION" | jq -r '.downloads.zip[0]')
+          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> "$GITHUB_ENV"
+
+      - name: Download server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
+        continue-on-error: true
+        id: server-download
+        if: ${{ env.DOWNLOAD_URL != 'null' }}
+        run: |
+          echo "Downloading release archive from $DOWNLOAD_URL"
+          wget --quiet "$DOWNLOAD_URL" -O nextcloud.zip
+          unzip -q nextcloud.zip
+
+      - name: Checkout server master fallback
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: ${{ steps.server-download.outcome != 'success' }}
+        with:
+          persist-credentials: false
+          submodules: true
+          repository: nextcloud/server
+          path: nextcloud
+
+      - name: Fetch the App Store certificate and check it against the private key
+        env:
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+        run: |
+          umask 077
+          printf '%s\n' "$APP_PRIVATE_KEY" > "$RUNNER_TEMP/$APP_NAME.key"
+          wget --quiet -O "$RUNNER_TEMP/$APP_NAME.crt" "https://github.com/nextcloud/app-certificate-requests/raw/master/$APP_NAME/$APP_NAME.crt"
+          openssl x509 -in "$RUNNER_TEMP/$APP_NAME.crt" -noout -subject | grep -Eq "CN ?= ?${APP_NAME}(,|$)" \
+            || { echo "::error::The certificate is not issued for $APP_NAME"; exit 1; }
+          cert_key=$(openssl x509 -in "$RUNNER_TEMP/$APP_NAME.crt" -noout -pubkey | openssl sha256)
+          private_key=$(openssl pkey -in "$RUNNER_TEMP/$APP_NAME.key" -pubout | openssl sha256)
+          [ "$cert_key" = "$private_key" ] || { echo '::error::APP_PRIVATE_KEY does not belong to the App Store certificate'; exit 1; }
+
+      - name: Sign the app (occ integrity:sign-app) and the tarball
+        working-directory: ${{ env.APP_NAME }}
+        run: make sign KEY="$RUNNER_TEMP/$APP_NAME.key" CERT="$RUNNER_TEMP/$APP_NAME.crt" NEXTCLOUD="$GITHUB_WORKSPACE/nextcloud"
+
+      - name: Attach tarball to GitHub release
+        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # 2.11.5
+        id: attach_to_release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ env.APP_NAME }}/build/artifacts/${{ env.APP_NAME }}.tar.gz
+          asset_name: ${{ env.APP_NAME }}-${{ env.APP_VERSION }}.tar.gz
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - name: Upload app to Nextcloud App Store
+        uses: nextcloud-libraries/nextcloud-appstore-push-action@a011fe619bcf6e77ddebc96f9908e1af4071b9c1 # v1.0.3
+        with:
+          app_name: ${{ env.APP_NAME }}
+          appstore_token: ${{ secrets.APPSTORE_TOKEN }}
+          download_url: ${{ steps.attach_to_release.outputs.browser_download_url }}
+          app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Remove the private key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/$APP_NAME.key"
