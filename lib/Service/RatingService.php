@@ -64,15 +64,23 @@ class RatingService {
 		return max(self::FLOOR, $rating + $delta) - $rating;
 	}
 
-	private function row(string $uid, int $now): Rating {
+	/**
+	 * The player's row, created with the start values when missing (a concurrent creation is tolerated). With
+	 * `$lock` the row is locked first, so the values read are current until the transaction ends.
+	 */
+	private function row(string $uid, int $now, bool $lock = false): Rating {
 		$row = $this->mapper->findByUid($uid);
 		if ($row === null) {
-			$row = new Rating();
-			$row->setUid($uid);
-			$row->setRating(self::START);
-			$row->setPeak(self::START);
-			$row->setUpdatedAt($now);
-			$row = $this->mapper->insert($row);
+			$this->mapper->insertIfMissing($uid, self::START, $now);
+		}
+		if ($lock) {
+			$this->mapper->lock($uid);
+		}
+		if ($row === null || $lock) {
+			$row = $this->mapper->findByUid($uid);
+		}
+		if ($row === null) {
+			throw new \RuntimeException('Quantum Chess: the rating row of a player could not be created');
 		}
 		return $row;
 	}
@@ -96,9 +104,11 @@ class RatingService {
 		/** @var array<string, Rating> $rows */
 		$rows = [];
 		$uids = array_values(array_filter([$white, $black], fn ($uid) => $uid !== null));
+		// SPEC §8.6: both rows are locked in ascending uid order before they are read, and written in that order too,
+		// so two games of one player that finish at the same time neither lose an update nor deadlock.
 		sort($uids);
 		foreach ($uids as $uid) {
-			$rows[$uid] = $this->row($uid, $now);
+			$rows[$uid] = $this->row($uid, $now, true);
 		}
 		$rated = $game->getRated() === 1 && $white !== null && $black !== null;
 		$deltas = [];
@@ -114,10 +124,8 @@ class RatingService {
 			$game->setRatingWDelta($deltas['w']);
 			$game->setRatingBDelta($deltas['b']);
 		}
-		foreach (['w' => $white, 'b' => $black] as $color => $uid) {
-			if ($uid === null) {
-				continue;
-			}
+		foreach ($uids as $uid) {
+			$color = $uid === $white ? 'w' : 'b';
 			$row = $rows[$uid];
 			$mine = $color === 'w' ? $score : 1.0 - $score;
 			$row->setGames($row->getGames() + 1);

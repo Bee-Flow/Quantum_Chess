@@ -16,9 +16,15 @@
 		:aria-label="ariaLabel"
 		:title="ariaLabel"
 		data-test="eval-bar">
-		<div class="qc-eval__white" :style="fillStyle" />
-		<div v-if="fogStyle" class="qc-eval__fog" :style="fogStyle" />
-		<span v-if="vertical" class="qc-eval__label" :class="E >= 0.5 ? 'qc-eval__label--white' : 'qc-eval__label--black'">{{ shortLabel }}</span>
+		<div class="qc-eval__track">
+			<div class="qc-eval__white" :style="fillStyle" />
+			<div v-if="fogStyle" class="qc-eval__fog" :style="fogStyle" />
+		</div>
+		<!-- outside the clipped track: "100", "+1.2" or "♚12" are wider than the 12 px bar and must not be cut -->
+		<span
+			v-if="vertical"
+			class="qc-eval__label"
+			:class="[E >= 0.5 ? 'qc-eval__label--white' : 'qc-eval__label--black', { 'qc-eval__label--long': shortLabel.length > 2 }]">{{ shortLabel }}</span>
 	</div>
 </template>
 
@@ -99,7 +105,6 @@ const ariaLabel = computed(() => {
 <style lang="scss" scoped>
 .qc-eval {
 	position: absolute;
-	overflow: hidden;
 	background: #3a3a3a;
 	border-radius: var(--border-radius-small, 4px);
 	box-shadow: 0 0 0 1px var(--color-border);
@@ -119,6 +124,13 @@ const ariaLabel = computed(() => {
 	&--pending {
 		opacity: 0.6;
 	}
+}
+
+.qc-eval__track {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	border-radius: inherit;
 }
 
 .qc-eval__white {
@@ -146,12 +158,19 @@ const ariaLabel = computed(() => {
 
 .qc-eval__label {
 	position: absolute;
-	inset-inline: 0;
+	left: 50%;
+	transform: translateX(-50%);
 	font-size: 8px;
 	line-height: 1;
 	font-weight: bold;
+	white-space: nowrap;
 	text-align: center;
 	pointer-events: none;
+
+	&--long {
+		font-size: 7px;
+		letter-spacing: -0.5px;
+	}
 
 	&--white {
 		bottom: 2px;

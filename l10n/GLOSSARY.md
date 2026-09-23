@@ -11,6 +11,11 @@ the settings pages, the trainer, the rules page and `appinfo/info.xml`. The term
 
 Form of address: Dutch *je*, German *du*, French *vous* (as Nextcloud itself).
 
+Nextcloud offers German twice: *Deutsch* (`de`, du) and *Deutsch (Förmlich: Sie)* (`de_DE`), and it does not fall back
+from `de_DE` to `de` for an app. `translationfiles/de_DE` therefore exists as well; it currently carries the `de`
+texts (du) so that formal-German users never see English. A translator who turns it into the Sie form edits only
+`translationfiles/de_DE/quantumchess.po`; new strings must be added to both German files.
+
 ## Game terms
 
 | English | Dutch (nl) | German (de) | French (fr) |

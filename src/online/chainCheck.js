@@ -11,6 +11,7 @@
  */
 
 import { applyMove, chainNext, chainStart, initialState } from '../engine/index.js'
+import { readJson, writeJson } from '../services/storage.js'
 
 export const CHAIN_STORAGE_KEY = 'quantumchess.chain.v1'
 const MAX_STORED = 200
@@ -89,7 +90,7 @@ export function chainKey(game) {
  */
 export function loadStoredChain(id) {
 	try {
-		const all = JSON.parse(globalThis.localStorage?.getItem(CHAIN_STORAGE_KEY) ?? '{}') ?? {}
+		const all = readJson(CHAIN_STORAGE_KEY, {}) ?? {}
 		const entry = all[String(id)]
 		return Array.isArray(entry) && Number.isInteger(entry[0]) && typeof entry[1] === 'string' ? { ply: entry[0], chain: entry[1] } : null
 	} catch {
@@ -106,14 +107,14 @@ export function loadStoredChain(id) {
  */
 export function storeChain(id, ply, chain) {
 	try {
-		const all = JSON.parse(globalThis.localStorage?.getItem(CHAIN_STORAGE_KEY) ?? '{}') ?? {}
+		const all = readJson(CHAIN_STORAGE_KEY, {}) ?? {}
 		delete all[String(id)]
 		all[String(id)] = [ply, chain]
 		const keys = Object.keys(all)
 		for (const key of keys.slice(0, Math.max(0, keys.length - MAX_STORED))) {
 			delete all[key]
 		}
-		globalThis.localStorage?.setItem(CHAIN_STORAGE_KEY, JSON.stringify(all))
+		writeJson(CHAIN_STORAGE_KEY, all)
 	} catch {
 		// storage is a convenience; the server chain is still checked
 	}

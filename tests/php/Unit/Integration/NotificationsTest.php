@@ -310,7 +310,7 @@ final class NotificationsTest extends TestCase {
 		$url->method('imagePath')->willReturn('/img/app-dark.svg');
 		$url->method('getAbsoluteURL')->willReturnArgument(0);
 		$users = $this->createMock(IUserManager::class);
-		$users->method('getDisplayName')->willReturnCallback(fn (string $uid) => ucfirst($uid));
+		$users->method('getDisplayName')->willReturnCallback(fn (string $uid) => $uid === 'zed' ? null : ucfirst($uid));
 		$mapper = $this->createMock(GameMapper::class);
 		$mapper->method('findById')->willReturnCallback(fn (int $id) => $id === 42 ? $game : null);
 		return new Notifier($factory, $url, $users, $mapper, new MoveDescriber(new Engine()));
@@ -376,6 +376,27 @@ final class NotificationsTest extends TestCase {
 		$this->assertSame('You lost against Alice', $n->getParsedSubject());
 		$this->assertSame('King captured · Rating 1188 (−12)', $n->getParsedMessage());
 		$this->assertSame(['Rematch'], array_map(fn (IAction $a) => $a->getParsedLabel(), $n->getParsedActions()));
+	}
+
+	public function testDeletedAccountsAreNeitherNamedNorOfferedARematch(): void {
+		$game = $this->game();
+		$game->setStatus(Game::STATUS_FINISHED);
+		$game->setWhiteUid(null);
+		$game->setCreatorUid(null);
+		$notifier = $this->notifier($game);
+		$n = $notifier->prepare($this->incoming('game_over', ['actor' => 'zed', 'outcome' => 'win', 'reason' => 'resignation']), 'en');
+		$this->assertSame('You won against Deleted user', $n->getParsedSubject());
+		$this->assertStringNotContainsString('zed', json_encode($n->getRichSubjectParameters()));
+		$this->assertSame([], $n->getParsedActions(), 'no rematch against a deleted account');
+		try {
+			$notifier->prepare($this->incoming('chat', ['actor' => 'zed', 'excerpt' => 'my phone number is 555-0199']), 'en');
+			$this->fail('the chat of a deleted account is gone');
+		} catch (AlreadyProcessedException) {
+		}
+		// an opponent who left the game (data erased) gets no rematch offer either
+		$game->setWhiteUid(null);
+		$n = $notifier->prepare($this->incoming('game_over', ['actor' => 'alice', 'outcome' => 'win', 'reason' => 'resignation']), 'en');
+		$this->assertSame([], $n->getParsedActions());
 	}
 
 	public function testLastMoveInWords(): void {

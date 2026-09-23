@@ -45,6 +45,25 @@ class RatingMapper extends QBMapper {
 		return $this->findEntities($qb);
 	}
 
+	/**
+	 * Create the player's row with the start values unless it exists. A concurrent insert of the same row is not an
+	 * error (INSERT … ON CONFLICT DO NOTHING / INSERT IGNORE), so it never aborts the caller's transaction.
+	 */
+	public function insertIfMissing(string $uid, int $start, int $now): void {
+		$this->db->insertIgnoreConflict(self::TABLE, ['uid' => $uid, 'rating' => $start, 'peak' => $start, 'updated_at' => $now]);
+	}
+
+	/**
+	 * Lock the player's row until the end of the transaction (an UPDATE that changes nothing), so that a read after it
+	 * sees the latest committed values and no other transaction can change them in between.
+	 */
+	public function lock(string $uid): void {
+		$qb = $this->db->getQueryBuilder();
+		$qb->update(self::TABLE)->set('updated_at', 'updated_at')
+			->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid)))
+			->executeStatement();
+	}
+
 	public function deleteByUid(string $uid): void {
 		$qb = $this->db->getQueryBuilder();
 		$qb->delete(self::TABLE)->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid)))->executeStatement();

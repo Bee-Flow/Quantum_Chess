@@ -141,8 +141,11 @@ mistake here shows up before anything is published.
    A few minutes later the new version is on https://apps.nextcloud.com/apps/quantumchess and Nextcloud servers
    offer it as an update.
 
-**Pre-releases** such as `1.1.0-beta.1` work the same way. The App Store treats versions with a `-` as unstable
-(offered only to servers on the beta channel) and shows the `## [Unreleased]` section as their notes.
+**Pre-releases** such as `1.1.0-beta.1` work the same way, except for the changelog. The App Store treats versions
+with a `-` as unstable (offered only to servers on the beta channel) and always shows the `## [Unreleased]` section
+as their notes, so for a pre-release do **not** rename `## [Unreleased]`: write the notes there. `make version-check`
+accepts that for a version with a `-` (it then checks that `## [Unreleased]` is not empty). Rename the section only
+for the final release.
 
 ### Manual fallback (without GitHub Actions)
 
@@ -151,11 +154,17 @@ checkout (any version from the `min-version` in `info.xml` up; `occ` does not ne
 
 ```sh
 make appstore                                   # build/artifacts/quantumchess.tar.gz
-make sign KEY=~/.nextcloud/certificates/quantumchess.key \
-          CERT=~/.nextcloud/certificates/quantumchess.crt \
+make sign KEY="$HOME/.nextcloud/certificates/quantumchess.key" \
+          CERT="$HOME/.nextcloud/certificates/quantumchess.crt" \
           NEXTCLOUD=/path/to/nextcloud/server  # code-signs the files and writes quantumchess.tar.gz.sig
-gh release upload vX.Y.Z build/artifacts/quantumchess.tar.gz#quantumchess-vX.Y.Z.tar.gz
+cp build/artifacts/quantumchess.tar.gz build/artifacts/quantumchess-vX.Y.Z.tar.gz
+gh release upload vX.Y.Z build/artifacts/quantumchess-vX.Y.Z.tar.gz
 ```
+
+Write `$HOME`, not `~`, in `KEY=` and `CERT=`: only bash expands a `~` after `=` in an argument (sh and zsh pass it on
+literally). The copy gives the release asset the name the workflow and the README use (`gh release upload` takes the
+asset name from the file; a `#name` suffix only sets a display label). The copy has the same content, so the
+signature in `quantumchess.tar.gz.sig` fits it.
 
 `make sign` writes the tarball signature the App Store asks for into `build/artifacts/quantumchess.tar.gz.sig`. It
 is the same as signing the finished tarball yourself:
@@ -211,11 +220,14 @@ release alleen stap 5.
    `APP_PRIVATE_KEY` (de volledige inhoud van `quantumchess.key`) en `APPSTORE_TOKEN` (je API-token van
    https://apps.nextcloud.com/account/token) toe.
 5. **Release uitbrengen** (elke keer): verhoog het versienummer in `appinfo/info.xml`, `package.json`
-   (`npm version X.Y.Z --no-git-tag-version`) en `CHANGELOG.md`; controleer met `make version-check`; commit, maak de
-   tag `vX.Y.Z`, push, en publiceer een GitHub-release voor die tag. De workflow bouwt de app, ondertekent hem met
+   (`npm version X.Y.Z --no-git-tag-version`) en `CHANGELOG.md` (bij een pre-release zoals `1.1.0-beta.1` blijven de
+   notities onder `## [Unreleased]` staan, want die sectie toont de App Store dan); controleer met
+   `make version-check`; commit, maak de tag `vX.Y.Z`, push, en publiceer een GitHub-release voor die tag. De workflow bouwt de app, ondertekent hem met
    `occ integrity:sign-app`, maakt het tarball-bestand, hangt het aan de release en uploadt het naar de App Store.
 
 Lukt de workflow niet, dan kan het ook met de hand: `make appstore`, daarna
-`make sign KEY=… CERT=… NEXTCLOUD=/pad/naar/nextcloud`, het tarball-bestand uploaden naar de GitHub-release, en op
+`make sign KEY="$HOME/…/quantumchess.key" CERT="$HOME/…/quantumchess.crt" NEXTCLOUD=/pad/naar/nextcloud` (schrijf
+`$HOME`, niet `~`: alleen bash vult `~` na `=` in), het tarball-bestand als `quantumchess-vX.Y.Z.tar.gz` (eerst
+kopiëren onder die naam) uploaden naar de GitHub-release, en op
 https://apps.nextcloud.com/developer/apps/releases/new de download-URL en de handtekening
 (`build/artifacts/quantumchess.tar.gz.sig`) invullen.

@@ -10,6 +10,8 @@ export default createAppConfig({
 	'settings-personal': 'src/settings-personal.js',
 }, {
 	inlineCSS: { relativeCSSInjection: true },
+	// the AI worker is emitted to assets/ under a content hash: clear it like js/, or old workers pile up (and ship)
+	emptyOutputDirectory: { additionalDirectories: ['assets'] },
 	config: {
 		worker: {
 			format: 'es',

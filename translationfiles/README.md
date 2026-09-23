@@ -12,7 +12,8 @@ Quantum Chess uses Nextcloud's translation tooling. The app ships its translatio
 translationfiles/
 ├── templates/quantumchess.pot   every translatable string (generated, never edited by hand)
 ├── nl/quantumchess.po           Dutch
-├── de/quantumchess.po           German
+├── de/quantumchess.po           German (du)
+├── de_DE/quantumchess.po        German, formal (Nextcloud's "Deutsch (Förmlich: Sie)"; for now the de texts)
 └── fr/quantumchess.po           French
 ```
 
@@ -35,6 +36,9 @@ Without extra tools (Node only):
 With Nextcloud's own tool: `make l10n-pot` (needs `xgettext` from GNU gettext; downloads `translationtool.phar` into
 `build/tools/`) and `make l10n` produce the same files. Paths listed in `.l10nignore` (built bundles in `js/`, tests,
 tools) are skipped.
+
+Nextcloud does not fall back from `de_DE` to `de` for apps, so both German files must stay complete
+(`node tools/l10n.mjs check` checks every language, `de_DE` included).
 
 Plural forms follow Nextcloud: Dutch and German `nplurals=2; plural=(n != 1);`, French
 `nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;`.

@@ -140,5 +140,6 @@ describe('review replay', () => {
 		expect(g.steps[2].measurement.u).toBe(5)
 		expect(g.moves[2]).toEqual({ code: 'f3-e5', u: 5 })
 		expect(g.viewer).toBe('w')
+		expect(reviewGame({ source: 'local', id: 'y', local: { ...rec, mode: 'local', humanColor: null } }).viewer, 'pass & play has no single viewer').toBeNull()
 	})
 })

@@ -140,6 +140,10 @@ await cleanup()
 
 // ---------------------------------------------------------------- invitation, OCS accept
 console.log('Invitation and acceptance')
+const upper = (await api('admin', 'POST', 'api/games', { opponent: uid('bob').toUpperCase(), rated: false })).game
+check(upper.opponent.userId === uid('bob'), 'an invitation typed in another letter case stores the canonical user id')
+check((await api('bob', 'GET', 'api/games')).invitations.some((g) => g.id === upper.id), 'bob sees that invitation')
+await api('admin', 'POST', `api/games/${upper.id}/cancel`)
 let { game } = await api('admin', 'POST', 'api/games', { opponent: uid('bob'), rated: true, timeControl: 'corr:3d', message: 'Fancy a quantum game?' })
 check(game.status === 'pending' && game.ratedRequested && game.colorChoice === 'r', 'admin invites bob (rated, corr:3d, pending)')
 await expectError(api('admin', 'POST', 'api/games', { opponent: uid('bob') }), 429, 'too_many_invitations')
@@ -159,6 +163,9 @@ check(game.rated && game.white && game.black && game.chain?.length === 64 && gam
 check(game.chain === chainStart(game.id, game.white.userId, game.black.userId, game.createdAt), 'chain_0 equals the JS engine chainStart')
 const white = game.white.userId === uid('admin') ? 'admin' : 'bob'
 const black = white === 'admin' ? 'bob' : 'admin'
+const probe = await expectError(api('carol', 'POST', `api/games/${game.id}/join`), 404, 'not_found')
+const missing = await expectError(api('carol', 'POST', 'api/games/999999999/join'), 404, 'not_found')
+check(JSON.stringify(probe) === JSON.stringify(missing), 'joining someone else\'s active game answers like a missing game (no probing)')
 
 // ---------------------------------------------------------------- moves
 console.log('Moves')

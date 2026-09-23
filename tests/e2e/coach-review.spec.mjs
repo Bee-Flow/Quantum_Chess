@@ -70,7 +70,7 @@ async function startGame(page) {
 	await waitForTurn(page)
 	await page.evaluate(() => {
 		const id = window.location.hash.split('/').pop()
-		const key = 'quantumchess.localGame.v1.' + id
+		const key = `quantumchess/${document.head.dataset.user}/localGame.v1.` + id
 		const rec = JSON.parse(window.localStorage.getItem(key))
 		rec.options.coach = 'beginner'
 		window.localStorage.setItem(key, JSON.stringify(rec))

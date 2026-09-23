@@ -115,10 +115,16 @@ lint-spdx: ## Check that source files carry an SPDX licence header
 check-runtime-deps: ## Fail if composer.json gained runtime dependencies (the package ships without vendor/)
 	@php -r '$$x = preg_grep("/^(php|ext-.+)$$/", array_keys(json_decode(file_get_contents("composer.json"), true)["require"] ?? []), PREG_GREP_INVERT); if ($$x) { fwrite(STDERR, "Runtime Composer dependencies are not packaged: " . implode(", ", $$x) . PHP_EOL); exit(1); }'
 
+# A pre-release (a version with "-") keeps its notes under "## [Unreleased]": the App Store shows that section for it.
 version-check: ## Check that info.xml, package.json and CHANGELOG.md agree (and TAG=vX.Y.Z, if given)
 	@info=$$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' appinfo/info.xml | head -n 1); \
 	pkg=$$(node -p "require('./package.json').version"); \
 	log=$$(sed -n 's/^## \[\([0-9][^]]*\)\].*/\1/p' CHANGELOG.md | head -n 1); \
+	case "$$info" in *-*) \
+		notes=$$(awk '/^## \[Unreleased\]/ { f = 1; next } /^## \[/ { f = 0 } f && NF' CHANGELOG.md | head -n 1); \
+		[ -n "$$notes" ] || { echo "Pre-release $$info: write its notes under ## [Unreleased] (the App Store shows that section)"; exit 1; }; \
+		log="$$info"; echo "CHANGELOG.md: pre-release notes under [Unreleased]";; \
+	esac; \
 	echo "info.xml $$info · package.json $$pkg · CHANGELOG.md $$log$(if $(TAG), · tag $(TAG))"; \
 	[ "$$info" = "$$pkg" ] && [ "$$info" = "$$log" ] || { echo "Versions differ"; exit 1; }; \
 	[ -z "$(TAG)" ] || [ "v$$info" = "$(TAG)" ] || { echo "Tag $(TAG) does not match version $$info"; exit 1; }

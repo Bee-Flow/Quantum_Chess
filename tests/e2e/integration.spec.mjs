@@ -53,7 +53,7 @@ async function waitForTurn(page) {
 async function localMoves(page) {
 	return page.evaluate(() => {
 		const id = window.location.hash.split('/').pop()
-		const rec = JSON.parse(window.localStorage.getItem('quantumchess.localGame.v1.' + id) ?? 'null')
+		const rec = JSON.parse(window.localStorage.getItem(`quantumchess/${document.head.dataset.user}/localGame.v1.` + id) ?? 'null')
 		return rec ? rec.moves.map((m) => m.code) : []
 	})
 }

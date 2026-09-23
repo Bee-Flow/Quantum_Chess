@@ -36,15 +36,8 @@ final class RatingAndTimeTest extends TestCase {
 
 	public function testApplyResultUpdatesBothRowsAndTheGame(): void {
 		$rows = [];
-		$mapper = $this->createMock(RatingMapper::class);
-		$mapper->method('findByUid')->willReturnCallback(function (string $uid) use (&$rows) {
-			return $rows[$uid] ?? null;
-		});
-		$mapper->method('insert')->willReturnCallback(function (Rating $row) use (&$rows) {
-			$rows[$row->getUid()] = $row;
-			return $row;
-		});
-		$mapper->method('update')->willReturnArgument(0);
+		$calls = [];
+		$mapper = $this->ratingMapper($rows, $calls);
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1790000000);
 		$service = new RatingService($mapper, $this->createMock(GameMapper::class), $time);
@@ -73,17 +66,57 @@ final class RatingAndTimeTest extends TestCase {
 		$this->assertSame([1, 0, 1, 1], [$alice->getWins(), $alice->getLosses(), $alice->getGames(), $alice->getRatedGames()]);
 		$this->assertSame([0, 1, 13], [$bob->getWins(), $bob->getLosses(), $bob->getRatedGames()]);
 		$this->assertSame(1226, $alice->getPeak());
+		$this->assertSame(['insert alice', 'lock alice', 'lock bob', 'update alice', 'update bob'], $calls);
+
+		// Rows are locked and written in ascending uid order whatever the colours (no lock-order deadlock).
+		$calls = [];
+		$game = new Game();
+		$game->setWhiteUid('bob');
+		$game->setBlackUid('alice');
+		$game->setStatus(Game::STATUS_FINISHED);
+		$game->setRated(0);
+		$game->setResult('1-0');
+		$service->applyResult($game);
+		$this->assertSame(['lock alice', 'lock bob', 'update alice', 'update bob'], $calls);
+		$this->assertSame([1, 2, 13], [$bob->getWins(), $bob->getGames(), $bob->getRatedGames()], 'unrated: counts only');
+	}
+
+	/**
+	 * A RatingMapper over `$rows` that logs inserts, locks and updates.
+	 *
+	 * @param array<string, Rating> $rows
+	 * @param list<string> $calls
+	 */
+	private function ratingMapper(array &$rows, array &$calls): RatingMapper {
+		$mapper = $this->createMock(RatingMapper::class);
+		$mapper->method('findByUid')->willReturnCallback(function (string $uid) use (&$rows) {
+			return $rows[$uid] ?? null;
+		});
+		$mapper->method('insertIfMissing')->willReturnCallback(function (string $uid, int $start, int $now) use (&$rows, &$calls): void {
+			$calls[] = 'insert ' . $uid;
+			if (!isset($rows[$uid])) {
+				$row = new Rating();
+				$row->setUid($uid);
+				$row->setRating($start);
+				$row->setPeak($start);
+				$row->setUpdatedAt($now);
+				$rows[$uid] = $row;
+			}
+		});
+		$mapper->method('lock')->willReturnCallback(function (string $uid) use (&$calls): void {
+			$calls[] = 'lock ' . $uid;
+		});
+		$mapper->method('update')->willReturnCallback(function (Rating $row) use (&$calls) {
+			$calls[] = 'update ' . $row->getUid();
+			return $row;
+		});
+		return $mapper;
 	}
 
 	public function testUnratedGamesOnlyCount(): void {
 		$rows = [];
-		$mapper = $this->createMock(RatingMapper::class);
-		$mapper->method('findByUid')->willReturnCallback(fn (string $uid) => $rows[$uid] ?? null);
-		$mapper->method('insert')->willReturnCallback(function (Rating $row) use (&$rows) {
-			$rows[$row->getUid()] = $row;
-			return $row;
-		});
-		$mapper->method('update')->willReturnArgument(0);
+		$calls = [];
+		$mapper = $this->ratingMapper($rows, $calls);
 		$service = new RatingService($mapper, $this->createMock(GameMapper::class), $this->createMock(ITimeFactory::class));
 		$game = new Game();
 		$game->setWhiteUid('alice');

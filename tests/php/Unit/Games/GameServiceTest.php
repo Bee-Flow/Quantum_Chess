@@ -56,6 +56,10 @@ final class GameServiceTest extends TestCase {
 	private NotificationService&MockObject $notifications;
 	private CountingGameService $service;
 	private bool $updateOk = true;
+	/** @var array<int, Game> other games findById() knows */
+	private array $others = [];
+	/** @var (callable(): void)|null runs when updateChecked() fails (the other request's commit) */
+	private $onConflict = null;
 	private ?Move $stored = null;
 	/** @var list<Move> */
 	private array $inserted = [];
@@ -64,8 +68,16 @@ final class GameServiceTest extends TestCase {
 		$this->engine = new Engine();
 		$this->game = $this->activeGame();
 		$this->games = $this->createMock(GameMapper::class);
-		$this->games->method('findById')->willReturnCallback(fn (int $id) => $id === 7 ? $this->game : null);
-		$this->games->method('updateChecked')->willReturnCallback(fn () => $this->updateOk);
+		$this->games->method('findById')->willReturnCallback(fn (int $id) => $id === 7 ? $this->game : ($this->others[$id] ?? null));
+		$this->games->method('updateChecked')->willReturnCallback(function () {
+			if (!$this->updateOk && $this->onConflict !== null) {
+				($this->onConflict)();
+				$this->onConflict = null;
+				$this->updateOk = true;
+				return false;
+			}
+			return $this->updateOk;
+		});
 		$this->moves = $this->createMock(MoveMapper::class);
 		$this->moves->method('findByClientId')->willReturnCallback(fn () => $this->stored);
 		$this->moves->method('insert')->willReturnCallback(function (Move $m) {
@@ -194,6 +206,27 @@ final class GameServiceTest extends TestCase {
 		$this->updateOk = false;
 		$this->assertApiError('conflict', fn () => $this->service->move(7, 'alice', 'e2-e4', 0, null, null));
 		$this->assertSame(5, $this->game->getRev());
+	}
+
+	public function testSimultaneousRematchRequestsAreIdempotent(): void {
+		$this->game->setStatus(Game::STATUS_FINISHED);
+		$this->game->setResult('1-0');
+		$pending = new Game();
+		$pending->setId(8);
+		$pending->setCreatorUid('bob');
+		$pending->setOpponentUid('alice');
+		$pending->setStatus(Game::STATUS_PENDING);
+		$pending->setTimeControl('corr:3d');
+		$pending->setExpiresAt(self::NOW + 1000);
+		$this->others[8] = $pending;
+		$this->games->method('insert')->willReturnCallback(function (Game $game) {
+			$game->setId(9);
+			return $game;
+		});
+		// bob's first request loses the race against his own second request, which created game 8 meanwhile
+		$this->updateOk = false;
+		$this->onConflict = fn () => $this->game->setRematchId(8);
+		$this->assertSame($pending, $this->service->rematch(7, 'bob'));
 	}
 
 	public function testMoveDeclinesTheOpponentsDrawOffer(): void {

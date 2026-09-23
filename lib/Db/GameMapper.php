@@ -259,6 +259,12 @@ class GameMapper extends QBMapper {
 
 	/** Sets `$column` to NULL where it equals `$uid` (account deletion). */
 	public function clearUser(int $gameId, string $uid): void {
+		// the invitation text is the creator's own words
+		$qb = $this->db->getQueryBuilder();
+		$qb->update(self::TABLE)->set('invite_message', $qb->createNamedParameter(null))
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->eq('creator_uid', $qb->createNamedParameter($uid)))
+			->executeStatement();
 		foreach (self::USER_COLUMNS as $column) {
 			$qb = $this->db->getQueryBuilder();
 			$qb->update(self::TABLE)->set($column, $qb->createNamedParameter(null))

@@ -24,7 +24,8 @@
 				<span class="qc-poss__count" :class="{ 'qc-poss__count--muted': count === 1 }">{{ count }}</span>
 			</NcButton>
 		</template>
-		<div class="qc-poss">
+		<!-- focusable, so the popover's focus trap has a tabbable node (the mini-boards are pictures) -->
+		<div class="qc-poss" tabindex="0">
 			<p class="qc-poss__title">
 				{{ n('quantumchess', 'This position could be %n chessboard:', 'This position could be %n different chessboards:', count) }}
 			</p>
@@ -120,6 +121,12 @@ const restText = computed(() => formatProbability(list.value.restWeight, { weigh
 .qc-poss {
 	padding: 12px;
 	max-width: 360px;
+	border-radius: var(--border-radius-large);
+
+	&:focus-visible {
+		outline: 2px solid var(--color-main-text);
+		outline-offset: -2px;
+	}
 }
 
 .qc-poss__title {

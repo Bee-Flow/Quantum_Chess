@@ -180,10 +180,16 @@ const modelOptions = computed(() => {
 	return [...new Set(list)]
 })
 
+const baseUrl = computed(() => preset.value?.fixedUrl ? preset.value.baseUrl : (draft.baseUrl ?? '').trim())
+// The server drops the saved key when the service or its address changes (it is never sent anywhere else).
+const endpointChanged = computed(() => !props.provider || props.provider.preset !== draft.preset || props.provider.baseUrl !== baseUrl.value)
 const keyLabel = computed(() => props.keyInfo.hasKey ? t('quantumchess', 'Replace API key') : t('quantumchess', 'API key'))
 const keyHelp = computed(() => {
 	if (props.keyInfo.keyUnreadable) {
 		return t('quantumchess', 'Your saved key can\'t be read any more. Please enter it again.')
+	}
+	if (props.keyInfo.hasKey && endpointChanged.value) {
+		return t('quantumchess', 'The saved key is only sent to the saved address. Enter the key again for this service.')
 	}
 	if (props.keyInfo.hasKey) {
 		return props.keyInfo.keyHint
@@ -193,7 +199,6 @@ const keyHelp = computed(() => {
 	return preset.value?.keyRequired ? t('quantumchess', 'Required for this service.') : t('quantumchess', 'Optional for this service.')
 })
 
-const baseUrl = computed(() => preset.value?.fixedUrl ? preset.value.baseUrl : (draft.baseUrl ?? '').trim())
 const canTest = computed(() => preset.value !== null && baseUrl.value !== '')
 const canSave = computed(() => canTest.value && typeof draft.model === 'string' && draft.model.trim() !== '')
 

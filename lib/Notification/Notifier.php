@@ -128,8 +128,18 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		}
 
 		$actor = is_string($params['actor'] ?? null) ? $params['actor'] : null;
-		$actorName = $actor === null ? $l->t('Deleted user') : ($this->userManager->getDisplayName($actor) ?? $actor);
-		$rich = $actor === null ? [] : ['user' => ['type' => 'user', 'id' => $actor, 'name' => $actorName]];
+		$actorName = $actor === null ? null : $this->userManager->getDisplayName($actor);
+		if ($actor !== null && $actorName === null) {
+			// the account was deleted: its chat is gone, and neither its id nor its name is shown (SPEC §8.12)
+			if ($subject === 'chat') {
+				throw new AlreadyProcessedException();
+			}
+			$actor = null;
+		}
+		$actorName ??= $l->t('Deleted user');
+		$rich = $actor === null
+			? ['user' => ['type' => 'highlight', 'id' => 'deleted-user', 'name' => $actorName]]
+			: ['user' => ['type' => 'user', 'id' => $actor, 'name' => $actorName]];
 
 		$message = '';
 		switch ($subject) {
@@ -181,7 +191,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 					$delta = $params['delta'];
 					$message .= ' · ' . $l->t('Rating %1$d (%2$s)', [$params['rating'], ($delta >= 0 ? '+' : '−') . (string)abs($delta)]);
 				}
-				if ($actor !== null && $game->getRematchId() === null) {
+				if ($actor !== null && $game->getRematchId() === null && $game->opponentOf($notification->getUser()) !== null) {
 					$this->addAction($notification, $l->t('Rematch'), 'rematch', $id, false);
 				}
 				break;
@@ -200,7 +210,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 				throw new UnknownNotificationException();
 		}
 
-		$notification->setRichSubject($text, $rich);
+		$notification->setRichSubject($text, str_contains($text, '{user}') ? $rich : []);
 		$notification->setParsedSubject(str_replace('{user}', $actorName, $text));
 		if ($message !== '') {
 			$notification->setParsedMessage($message);

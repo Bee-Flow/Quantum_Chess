@@ -45,7 +45,7 @@ async function waitForTurn(page) {
 async function record(page) {
 	return page.evaluate(() => {
 		const id = window.location.hash.split('/').pop()
-		return JSON.parse(window.localStorage.getItem('quantumchess.localGame.v1.' + id))
+		return JSON.parse(window.localStorage.getItem(`quantumchess/${document.head.dataset.user}/localGame.v1.` + id))
 	})
 }
 

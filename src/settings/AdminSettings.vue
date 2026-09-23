@@ -390,10 +390,11 @@ function saveNotice() {
 async function saveProvider({ provider, apiKey }) {
 	savingProvider.value = true
 	try {
+		// Provider first: a new address drops the saved key, so a new key is stored after it.
+		apply(await saveAdminSettings({ shared_provider: provider }))
 		if (apiKey !== null) {
 			v.shared_api_key = await saveAdminSecret('shared_api_key', apiKey)
 		}
-		apply(await saveAdminSettings({ shared_provider: provider }))
 		showSuccess(t('quantumchess', 'The organisation provider was saved'))
 	} catch (error) {
 		showError(errorText(error))

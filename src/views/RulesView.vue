@@ -196,9 +196,13 @@ ol.qc-rules__list {
 	width: 100%;
 	margin: 8px 0;
 	border-collapse: collapse;
+	// Nextcloud's core CSS sets `white-space: nowrap` on tables: the explanations must wrap instead of being cut off
+	white-space: normal;
 
 	th,
 	td {
+		white-space: normal;
+		overflow-wrap: break-word;
 		padding: 8px;
 		border-block-end: 1px solid var(--color-border);
 		text-align: start;

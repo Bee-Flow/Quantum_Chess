@@ -237,7 +237,11 @@ class LlmService {
 			throw $this->invalid('apiKey');
 		}
 		if ($apiKey === '') {
-			$apiKey = $scope === 'shared' ? $this->keys->getShared() : $this->keys->getPersonal($uid);
+			// The saved key is only sent to the address it was saved for (a changed address needs the key again).
+			$stored = $scope === 'shared' ? $this->settings->sharedProvider() : $this->settings->personalProvider($uid);
+			if (SettingsService::sameEndpoint($stored, $provider)) {
+				$apiKey = $scope === 'shared' ? $this->keys->getShared() : $this->keys->getPersonal($uid);
+			}
 		}
 		try {
 			$guard = $this->urlGuard->check($provider['baseUrl'], $scope, $this->settings->sharedAllowLocal(), $this->settings->localAllowlist())['allowLocal'];

@@ -9,9 +9,11 @@
  * (`analyze`, `evaluateMove`); interpretation lives in this folder.
  */
 
+import { t } from '@nextcloud/l10n'
 import { computed, onBeforeUnmount, reactive, ref, shallowRef, toRaw, unref, watch } from 'vue'
 import { analyze, evaluateMove } from '../ai/client.js'
 import { findMove, moveRisk, otherColor, positionHash } from '../engine/index.js'
+import { formatPercentNumber, pieceTypeName } from '../engine/ui/index.js'
 import { preferences } from '../services/preferences.js'
 import { hintFor, MAX_TIER } from './hints.js'
 import { isQuantumMove, qualityOf } from './quality.js'
@@ -210,10 +212,28 @@ export function useCoach({ state, moves, myColor, enabled = ref(true), stateAt =
 		return { chance, square: likeliestSquare(s, king), mate: analysis.value?.mate?.winner === s.turn ? analysis.value.mate : null }
 	})
 
+	// Board markers carry their explanation (title, screen readers) and the percentage the board shows next to them.
 	const markers = computed(() => {
-		const out = threats.value.map((x) => ({ square: x.square, kind: 'threat', pct: Math.round(x.pCap * 100) }))
-		if (opportunity.value && opportunity.value.square !== null && opportunity.value.chance > 0) {
-			out.push({ square: opportunity.value.square, kind: 'opportunity', pct: Math.round(opportunity.value.chance * 100) })
+		const out = threats.value.map((x) => {
+			const pct = Math.round(x.pCap * 100)
+			return {
+				square: x.square,
+				kind: 'threat',
+				pct,
+				text: t('quantumchess', 'Your {piece} is {pct} capturable.', { piece: pieceTypeName(x.type), pct: formatPercentNumber(pct) }),
+			}
+		})
+		const o = opportunity.value
+		if (o && o.square !== null && o.chance > 0) {
+			const pct = Math.round(o.chance * 100)
+			out.push({
+				square: o.square,
+				kind: 'opportunity',
+				pct,
+				text: o.chance >= 1
+					? t('quantumchess', 'You can capture the king for certain!')
+					: t('quantumchess', 'You can capture the king: {pct}!', { pct: formatPercentNumber(pct) }),
+			})
 		}
 		return out
 	})

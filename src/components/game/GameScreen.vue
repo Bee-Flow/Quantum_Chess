@@ -227,7 +227,8 @@ import PlayerCard from './PlayerCard.vue'
 import ResultBar from './ResultBar.vue'
 import { hasView } from '../../composables/modules.js'
 import { useBoardSize } from '../../composables/useBoardSize.js'
-import { findMove, T } from '../../engine/index.js'
+import { findMove } from '../../engine/index.js'
+import { kingCaptureContext } from '../../services/format.js'
 import { preferences } from '../../services/preferences.js'
 import { useBoardInput } from '../board/useBoardInput.js'
 import { gameSummary } from './moveRows.js'
@@ -352,10 +353,7 @@ const reasonExtra = computed(() => {
 	if (!r || r.reason !== 'king_captured' || !moves.value.length) {
 		return {}
 	}
-	const m = moves.value[moves.value.length - 1]
-	const o = m.measurement?.outcomes.find((x) => x.key === m.measurement.key)
-	const target = m.code.includes('-') ? m.code.split('-').pop().replace(/=.*/, '') : null
-	return { captureProbability: o ? o.weight / T : 1, square: target }
+	return kingCaptureContext(moves.value[moves.value.length - 1])
 })
 
 // --- Actions ---

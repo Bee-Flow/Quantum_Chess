@@ -265,3 +265,27 @@ const celebrate = computed(() => outcome.value === 'win' && !reducedMotion.value
 	}
 }
 </style>
+
+<style lang="scss">
+// NcDialog renders its action row outside this component's scope. Up to five actions do not fit in one row: wrap
+// them, and stack them on phones with the main action on top, instead of cutting their labels.
+.qc-game-over .dialog__actions {
+	flex-wrap: wrap;
+	row-gap: 8px;
+}
+
+@media (max-width: 600px) {
+	.qc-game-over .dialog__actions {
+		flex-direction: column;
+		align-items: stretch;
+
+		.button-vue {
+			width: 100%;
+		}
+
+		.button-vue--primary {
+			order: -1;
+		}
+	}
+}
+</style>

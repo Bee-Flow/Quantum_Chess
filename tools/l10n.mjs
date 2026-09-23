@@ -33,6 +33,9 @@ const POT = join(ROOT, 'translationfiles/templates', `${APP}.pot`)
 const PLURAL_FORMS = {
 	nl: 'nplurals=2; plural=(n != 1);',
 	de: 'nplurals=2; plural=(n != 1);',
+	// Nextcloud offers German twice ("Deutsch" de and "Deutsch (Förmlich: Sie)" de_DE) and does not fall back from
+	// de_DE to de for apps, so de_DE needs its own files (l10n/GLOSSARY.md).
+	de_DE: 'nplurals=2; plural=(n != 1);',
 	fr: 'nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;',
 }
 const LANGUAGES = Object.keys(PLURAL_FORMS)

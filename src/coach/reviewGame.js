@@ -42,7 +42,8 @@ function localName(rec, color) {
  * @param {object} [input.local] local game record
  * @param {object} [input.online] online game DTO
  * @return {{source: string, id: string, startState: object|null, moves: Array<{code: string, u: number|null, outcome?: string}>,
- *   states: object[], steps: object[], names: {w: string, b: string}, viewer: 'w'|'b', result: object|null}}
+ *   states: object[], steps: object[], names: {w: string, b: string}, viewer: 'w'|'b'|null, result: object|null}}
+ *   (`viewer` is null for pass & play, where both sides are the same person)
  */
 export function reviewGame({ source, id, local, online }) {
 	let startState
@@ -54,7 +55,7 @@ export function reviewGame({ source, id, local, online }) {
 		startState = local.startState ?? null
 		moves = local.moves.map((m) => (Number.isInteger(m.u) ? { code: m.code, u: m.u } : { code: m.code, u: null, ...(m.key ? { outcome: m.key } : {}) }))
 		names = { w: localName(local, 'w'), b: localName(local, 'b') }
-		viewer = local.humanColor ?? 'w'
+		viewer = local.humanColor ?? null
 		result = local.result ?? null
 	} else {
 		startState = online.startState ?? null

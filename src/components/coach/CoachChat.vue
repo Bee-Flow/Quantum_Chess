@@ -29,7 +29,7 @@
 					<p v-if="m.fallback" class="qc-coach-chat__fallback">
 						{{ t('quantumchess', 'The AI coach is unavailable. Here is what the engine says:') }}
 					</p>
-					<NcRichText :text="m.text" useMarkdown />
+					<NcRichText :text="withoutLinks(m.text)" useMarkdown :autolink="false" />
 					<div v-if="m.chips.length" class="qc-coach-chat__chips">
 						<button
 							v-for="c in m.chips"
@@ -93,7 +93,7 @@ import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcRichText from '@nextcloud/vue/components/NcRichText'
 import NcTextField from '@nextcloud/vue/components/NcTextField'
-import { moveChips, truncateAnswer } from '../../coach/chips.js'
+import { moveChips, truncateAnswer, withoutLinks } from '../../coach/chips.js'
 import { engineAnswer } from '../../coach/explain.js'
 import { useAiSources } from '../../composables/useAiSources.js'
 import { waitForAiTask } from '../../services/aiTasks.js'

@@ -51,7 +51,8 @@ class InvitePolicy {
 		}
 		$fromUser = $this->userManager->get($from);
 		$toUser = $this->userManager->get($to);
-		if ($fromUser === null || $toUser === null || !$toUser->isEnabled() || !$fromUser->isEnabled()) {
+		if ($fromUser === null || $toUser === null || !$toUser->isEnabled() || !$fromUser->isEnabled()
+			|| $fromUser->getUID() === $toUser->getUID()) {
 			return false;
 		}
 		if (!$this->appManager->isEnabledForUser(Application::APP_ID, $toUser)
@@ -89,10 +90,16 @@ class InvitePolicy {
 		return $this->games->havePlayed($from->getUID(), $to->getUID());
 	}
 
-	public function assertCanInvite(string $from, string $to): void {
-		if (!$this->canInvite($from, $to)) {
+	/**
+	 * @return string the invitee's canonical user id (user ids match case-insensitively, stored ids must be exact)
+	 * @throws ApiException 404 user_not_found
+	 */
+	public function assertCanInvite(string $from, string $to): string {
+		$user = $this->canInvite($from, $to) ? $this->userManager->get($to) : null;
+		if ($user === null) {
 			throw new ApiException('user_not_found', $this->l->t('You can\'t invite this user'), 404);
 		}
+		return $user->getUID();
 	}
 
 	public function assertWithinLimits(string $from, ?string $to): void {

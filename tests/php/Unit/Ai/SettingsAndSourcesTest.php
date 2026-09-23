@@ -23,7 +23,9 @@ use OCA\QuantumChess\Service\RatingService;
 use OCA\QuantumChess\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Config\IUserConfig;
+use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
+use OCP\Http\Client\IResponse;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use OCP\IGroupManager;
@@ -265,6 +267,55 @@ final class SettingsAndSourcesTest extends TestCase {
 		$this->assertStringNotContainsString('sk-ant-api03-XYZW', json_encode($settings->getAdmin()));
 		$this->expectException(ApiException::class);
 		$settings->setAdminSecret('other_key', 'x');
+	}
+
+	public function testStoredKeysStayWithTheirAddress(): void {
+		$settings = $this->settings();
+		$settings->setAdmin(['shared_provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'm']]);
+		$settings->setAdminSecret('shared_api_key', 'sk-org-SECRET-1234');
+		$saved = $settings->setAdmin(['shared_provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1/', 'model' => 'm2', 'label' => 'AI']]);
+		$this->assertTrue($saved['shared_api_key']['hasKey'], 'model and label changes keep the key');
+		$saved = $settings->setAdmin(['shared_provider' => ['preset' => 'custom', 'baseUrl' => 'https://attacker.example.com/v1', 'model' => 'm2']]);
+		$this->assertFalse($saved['shared_api_key']['hasKey'], 'a new address drops the key (it was confirmed with the password)');
+
+		$settings->setAdmin(['shared_provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'm']]);
+		$settings->setAdminSecret('shared_api_key', 'sk-org-SECRET-1234');
+		$settings->setAdmin(['allow_personal_keys' => true]);
+		$settings->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'm'], 'apiKey' => 'sk-bob-PRIVATE-99']);
+		$this->assertTrue($settings->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'x']])['hasKey']);
+		$this->assertFalse($settings->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'https://other.example.com/v1', 'model' => 'x']])['hasKey']);
+		$personal = $settings->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'x'], 'apiKey' => 'sk-bob-PRIVATE-99']);
+		$this->assertTrue($personal['hasKey'], 'a key sent with the new address is stored');
+
+		// the connection test only sends a stored key to the stored address
+		$sent = [];
+		$client = $this->createMock(IClient::class);
+		$client->method('get')->willReturnCallback(function (string $url, array $options) use (&$sent): IResponse {
+			$sent[] = [$url, $options['headers']['Authorization'] ?? null];
+			$response = $this->createMock(IResponse::class);
+			$response->method('getStatusCode')->willReturn(200);
+			$response->method('getBody')->willReturn('{"data":[{"id":"m"}]}');
+			return $response;
+		});
+		$clients = $this->createMock(IClientService::class);
+		$clients->method('newClient')->willReturn($client);
+		$factory = $this->createMock(ICacheFactory::class);
+		$factory->method('createDistributed')->willReturn($this->cache);
+		$engine = new Engine();
+		$llm = new LlmService($engine, new PromptBuilder($engine), $this->sources($settings), $this->usage($settings), $settings,
+			$this->createMock(NextcloudAiProvider::class), $this->keys(), $this->guard(), $clients, $factory, $this->l(), $this->createMock(LoggerInterface::class));
+		$llm->testConnection('admin', ['scope' => 'shared', 'preset' => 'custom', 'baseUrl' => 'https://attacker.example.com/v1'], true);
+		$llm->testConnection('admin', ['scope' => 'shared', 'preset' => 'custom', 'baseUrl' => 'https://attacker.example.com/v1', 'apiKey' => 'sk-typed-0000'], true);
+		$llm->testConnection('bob', ['scope' => 'personal', 'preset' => 'custom', 'baseUrl' => 'https://attacker.example.com/v1'], false);
+		$llm->testConnection('bob', ['scope' => 'personal', 'preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1'], false);
+		$this->assertSame([
+			['https://attacker.example.com/v1/models', null],
+			['https://attacker.example.com/v1/models', 'Bearer sk-typed-0000'],
+			['https://attacker.example.com/v1/models', null],
+			['https://ai.example.com/v1/models', 'Bearer sk-bob-PRIVATE-99'],
+		], $sent);
+		$llm->testConnection('admin', ['scope' => 'shared', 'preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1'], true);
+		$this->assertSame(['https://ai.example.com/v1/models', 'Bearer sk-org-SECRET-1234'], $sent[4], 'the saved address gets the saved key');
 	}
 
 	public function testPersonalSettings(): void {

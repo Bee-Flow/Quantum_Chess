@@ -108,10 +108,39 @@ async function copyCodes() {
 	}
 }
 
+/**
+ * Keep the newest row visible inside the list's own scroll box (the panel body on desktop, the list in the review).
+ * Never scroll the page: on phones the list grows below the board in the page scroller, and scrolling that one would
+ * push the board off-screen after every move.
+ *
+ * @param {HTMLElement} row the row to reveal
+ */
+function revealInOwnBox(row) {
+	for (let box = row.parentElement; box && box !== document.body; box = box.parentElement) {
+		const overflow = getComputedStyle(box).overflowY
+		if (overflow !== 'auto' && overflow !== 'scroll') {
+			continue
+		}
+		if (box.id === 'app-content-vue' || box === document.scrollingElement || box.scrollHeight <= box.clientHeight) {
+			return
+		}
+		const r = row.getBoundingClientRect()
+		const b = box.getBoundingClientRect()
+		if (r.bottom > b.bottom) {
+			box.scrollTop += r.bottom - b.bottom
+		} else if (r.top < b.top) {
+			box.scrollTop -= b.top - r.top
+		}
+		return
+	}
+}
+
 watch(() => props.moves.length, async () => {
 	await nextTick()
 	const last = body.value?.lastElementChild
-	last?.scrollIntoView?.({ block: 'nearest' })
+	if (last) {
+		revealInOwnBox(last)
+	}
 })
 </script>
 

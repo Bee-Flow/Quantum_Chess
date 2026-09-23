@@ -8,6 +8,7 @@
  */
 
 import { n, t } from '@nextcloud/l10n'
+import { T } from '../engine/constants.js'
 import { formatProbability } from '../engine/ui/index.js'
 
 /**
@@ -110,7 +111,11 @@ export function reasonCopy(reason, { winner = null, names = {}, captureProbabili
 	const loserName = winner === 'w' ? b : w
 	switch (reason) {
 		case 'king_captured':
-			if (captureProbability !== null && captureProbability < 1) {
+			if (captureProbability === null) {
+				// the final move is not known here (lobby lists): claim nothing about the roll
+				return t('quantumchess', 'King captured')
+			}
+			if (captureProbability < 1) {
 				return square
 					? t('quantumchess', 'King captured on {square} by a {percent} roll', { square, percent: formatPercent(captureProbability) })
 					: t('quantumchess', 'King captured by a {percent} roll', { percent: formatPercent(captureProbability) })
@@ -145,6 +150,23 @@ export function reasonCopy(reason, { winner = null, names = {}, captureProbabili
 		default:
 			return ''
 	}
+}
+
+/**
+ * The reasonCopy() context of a game won by capturing the king: the chance of the final move's capture and its target
+ * square (a quiet capture of a solid king is certain).
+ *
+ * @param {{code: string, measurement?: object|null}|null|undefined} last the final move (code and measurement record)
+ * @return {{captureProbability: number, square: string|null}|{}}
+ */
+export function kingCaptureContext(last) {
+	if (!last?.code) {
+		return {}
+	}
+	const m = last.measurement
+	const outcome = m?.outcomes?.find((o) => o.key === m.key)
+	const square = last.code.includes('-') ? last.code.split('-').pop().replace(/[=@].*/, '') : null
+	return { captureProbability: outcome ? outcome.weight / T : 1, square }
 }
 
 /**

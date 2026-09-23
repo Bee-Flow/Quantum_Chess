@@ -3,11 +3,15 @@
   - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-<!-- One piece graphic from the sprite (SPEC §14.6.2): captured trays, trophies, copy. -->
+<!--
+  One piece graphic from the sprite (SPEC §14.6.2): captured trays, trophies, copy. The sprite has the board's fixed
+  colours (black body, black outline), so on a dark theme a black piece gets a light outline to stay visible (GD §9,
+  ≥ 3:1 for graphics).
+-->
 <template>
 	<svg
 		class="qc-piece-icon"
-		:class="{ 'qc-piece-icon--inline': inline }"
+		:class="{ 'qc-piece-icon--inline': inline, 'qc-piece-icon--halo': halo }"
 		:width="size"
 		:height="size"
 		viewBox="0 0 45 45"
@@ -19,6 +23,7 @@
 </template>
 
 <script setup>
+import { useIsDarkTheme } from '@nextcloud/vue/composables/useIsDarkTheme'
 import { computed } from 'vue'
 import { pieceName } from '../../engine/ui/index.js'
 import { boardPrefs } from './boardPreferences.js'
@@ -41,13 +46,21 @@ const props = defineProps({
 
 const symbol = computed(() => pieceSymbolId(props.set ?? boardPrefs.pieceSet, props.color, props.type.toLowerCase()))
 const label = computed(() => pieceName(props.type.toLowerCase(), props.color))
+const isDark = useIsDarkTheme()
+const halo = computed(() => isDark.value && props.color === 'b')
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .qc-piece-icon {
 	display: inline-block;
 	flex: none;
 	overflow: visible;
+}
+
+// four hard 1px shadows draw a crisp outline in the text colour around the whole glyph
+.qc-piece-icon--halo {
+	filter: drop-shadow(1px 0 0 var(--color-main-text)) drop-shadow(-1px 0 0 var(--color-main-text))
+		drop-shadow(0 1px 0 var(--color-main-text)) drop-shadow(0 -1px 0 var(--color-main-text));
 }
 
 .qc-piece-icon--inline {

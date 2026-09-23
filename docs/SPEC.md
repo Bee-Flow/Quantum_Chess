@@ -1177,8 +1177,9 @@ becomes `active`. Errors: `404 not_found`, `409 invalid_status`, `429 too_many_a
 `POST /api/games/{id}/decline` (invitee) → `{"game": GameSummary}` (`declined`).
 `POST /api/games/{id}/cancel` (creator of a pending or open game) → `{"game": GameSummary}` (`cancelled`).
 `POST /api/games/{id}/join` (an open challenge the viewer may see, not their own) → `{"game": GameLive}`. Errors:
-`404 not_found`, `409 already_taken` ("Someone was faster. The challenge is gone."), `409 invalid_status`,
-`400 own_challenge`, `429 too_many_active`.
+`404 not_found` (also for a challenge that someone else already took, so game ids cannot be probed), `409
+already_taken` ("Someone was faster. The challenge is gone.", the join that lost a simultaneous race), `409
+invalid_status`, `400 own_challenge`, `429 too_many_active`.
 `POST /api/games/{id}/rematch` (participant of a `finished` or `aborted` game) → `{"game": GameLive}` of the rematch
 game; idempotent (§8.5). Errors: `409 invalid_status`, `404 user_not_found`.
 
@@ -1965,6 +1966,9 @@ export const PREFERENCE_DEFAULTS = Object.freeze({
 
 - **Keys**: §10.7. **Password confirmation** (`#[PasswordConfirmationRequired]` on the server, `confirmPassword()`
   from `@nextcloud/password-confirmation` on the client): saving an admin secret, *Delete my data*, [P1] new season.
+  A stored key (organisation or personal) is bound to the preset and base URL it was saved with: changing either
+  deletes the key (the client saves the provider first, then a new key), and *Test connection* sends the stored key
+  only to the stored address, so no route without password confirmation can send the organisation key elsewhere.
 - **Authorisation**: every game endpoint checks participation; non-participants get `404` (never `403`), so game ids
   cannot be probed. Admin routes lack `#[NoAdminRequired]`.
 - **Input**: every body field validated for type, length and range; engine states from clients only through
@@ -2546,7 +2550,10 @@ leaf of `counters` = max; `xp` = max; `streak`: the side with the later `last` w
 - **`localStorage` keys** (all wrapped in `storage.js`, all optional): `quantumchess.localGames.v1`,
   `quantumchess.localGame.v1.<id>` (frontend-app), `quantumchess.chain.v1`, `quantumchess.chatSeen.v1`
   (frontend-online), `quantumchess.review.v1.*` (coach-review), `quantumchess.trainer.v1` (trainer),
-  `quantumchess.engine.v1.bench` (ai-js).
+  `quantumchess.engine.v1.bench` (ai-js). These are logical names: `storage.js` stores each one per user as
+  `quantumchess/<uid>/<rest>` (for example `quantumchess/bob/trainer.v1`), because browser storage outlives an expired
+  session and must never carry one account's data into the next account's server data. Only the device benchmark
+  stays shared.
 
 ### 14.10 Rules page and persona catalogue ‹frontend-app›
 

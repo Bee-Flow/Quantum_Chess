@@ -8,6 +8,7 @@ js/
 assets/
 build/
 # Development only (and generated test output)
+src/components/board/dev/
 vendor/
 tests/
 tools/

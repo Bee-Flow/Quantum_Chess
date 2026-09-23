@@ -166,8 +166,16 @@ try {
 	} catch (error) {
 		check(error instanceof ApiError && error.status === 403, 'admin settings are admin only (403 for bob)')
 	}
+	const shared = await api('admin', 'PUT', 'api/settings/admin', { shared_enabled: true, shared_allow_local: true, shared_provider: { preset: 'custom', baseUrl: fake.baseUrl, model: 'fake-chess-1', label: 'Company AI' } })
+	check(shared.shared_provider.label === 'Company AI', 'organisation provider saved')
 	const secret = await api('admin', 'PUT', 'api/settings/admin/secret', { key: 'shared_api_key', value: SHARED_KEY })
 	check(secret.hasKey === true && secret.keyHint === '9Zk4', 'shared key stored (basic auth counts as a fresh password confirmation)')
+	check(!JSON.stringify(await api('admin', 'GET', 'api/settings/admin')).includes(SHARED_KEY), 'the key is never returned')
+	const elsewhere = fake.baseUrl.replace('/v1', '/other/v1')
+	const probe = await api('admin', 'POST', 'api/settings/test', { scope: 'shared', preset: 'custom', baseUrl: elsewhere })
+	check(!fake.requests.some((req) => req.headers.authorization === `Bearer ${SHARED_KEY}`) && probe.ok === false, 'the connection test never sends the saved key to another address')
+	await api('admin', 'POST', 'api/settings/test', { scope: 'shared', preset: 'custom', baseUrl: fake.baseUrl })
+	check(fake.requests.at(-1).headers.authorization === `Bearer ${SHARED_KEY}`, 'the connection test of the saved address uses the saved key')
 	if (env.occ) {
 		const list = (await occ(['config:list', 'quantumchess'])).stdout
 		const key = JSON.parse(list).apps.quantumchess.shared_api_key ?? ''
@@ -175,12 +183,12 @@ try {
 		const privateList = (await occ(['config:list', 'quantumchess', '--private'])).stdout
 		check(!privateList.includes(SHARED_KEY), 'even --private shows only the encrypted key')
 	}
-	const shared = await api('admin', 'PUT', 'api/settings/admin', { shared_enabled: true, shared_allow_local: true, shared_provider: { preset: 'custom', baseUrl: fake.baseUrl, model: 'fake-chess-1', label: 'Company AI' } })
-	check(shared.shared_provider.label === 'Company AI' && !JSON.stringify(shared).includes(SHARED_KEY), 'organisation provider saved, key not returned')
 	const viaShared = await api('bob', 'POST', 'api/ai/move', { ...body, source: 'shared' })
 	check(viaShared.status === 'done' && fake.requests.at(-1).headers.authorization === `Bearer ${SHARED_KEY}`, 'organisation provider answers with the shared key')
 	const usage = (await api('admin', 'GET', 'api/settings/admin')).status.diagnostics.aiRequestsToday
 	check(usage.personal > 0 && usage.shared > 0, `usage counted per source: ${JSON.stringify(usage)}`)
+	const moved = await api('admin', 'PUT', 'api/settings/admin', { shared_provider: { preset: 'custom', baseUrl: elsewhere, model: 'fake-chess-1' } })
+	check(moved.shared_api_key.hasKey === false, 'a new organisation address drops the saved key (it needs the password again)')
 } finally {
 	console.log('Cleanup')
 	await api('bob', 'PUT', 'api/settings/personal', { provider: null, apiKey: '', defaultSource: null }).catch((e) => console.error(e.message))

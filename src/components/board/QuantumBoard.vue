@@ -315,6 +315,12 @@
 					:class="d.up ? 'qc-delta--up' : 'qc-delta--down'"
 					:style="d.style">{{ d.text }}</span>
 				<span
+					v-for="m in coachLabels"
+					:key="'cl' + m.square"
+					class="qc-coach-pct"
+					:class="'qc-coach-pct--' + m.kind"
+					:style="m.style">{{ m.text }}</span>
+				<span
 					v-for="l in linkGlyphs"
 					:key="'l' + l.square"
 					class="qc-link-glyph"
@@ -471,6 +477,7 @@ import { kingDanger, squareName, T } from '../../engine/index.js'
 import {
 	describePosition,
 	figurine,
+	formatPercentNumber,
 	formatProbability,
 	identityColours,
 	kingCaptureThreat,
@@ -799,6 +806,20 @@ const badges = computed(() => {
 	return out
 })
 
+/** Coach markers by square (their explanation goes into the square's label and tooltip). */
+const markerBySquare = computed(() => new Map(props.markers.map((m) => [m.square, m])))
+
+/** The percentage of each coach marker, at the bottom-left corner of its square above the pieces. */
+const coachLabels = computed(() => props.markers.filter((m) => Number.isFinite(m.pct)).map((m) => {
+	const px = pixelOf(m.square)
+	return {
+		square: m.square,
+		kind: m.kind,
+		text: formatPercentNumber(m.pct),
+		style: { left: px.x + 2 + 'px', top: px.y + S.value - 2 + 'px', fontSize: Math.min(12, Math.max(10, Math.round(0.2 * S.value))) + 'px' },
+	}
+}))
+
 const whatIfChanged = computed(() => items.value.filter((p) => p.delta !== null && !p.chosen))
 const deltas = computed(() => whatIfChanged.value.map((p) => {
 	const px = pixelOf(p.square)
@@ -1081,11 +1102,15 @@ function cellOf(square) {
 	if (tg) {
 		label += ', ' + targetText(tg)
 	}
+	const marker = markerBySquare.value.get(square)
+	if (marker?.text) {
+		label += '. ' + marker.text
+	}
 	return {
 		square,
 		label,
 		selected: input.value.selection === square || input.value.mergeSources.includes(square),
-		title: tg?.disabled ? tg.reason : undefined,
+		title: tg?.disabled ? tg.reason : marker?.text,
 		rank: coords !== 'off' && coords !== 'all' && col === 0 ? name[1] : '',
 		file: coords !== 'off' && coords !== 'all' && row === 7 ? name[0] : '',
 		name: coords === 'all' ? name : '',
@@ -1968,6 +1993,24 @@ defineExpose({
 }
 
 // Layer 3: badges
+.qc-coach-pct {
+	position: absolute;
+	transform: translateY(-100%);
+	padding: 0 4px;
+	border-radius: var(--border-radius-pill, 999px);
+	background: var(--qc-ring-danger);
+	color: #fff;
+	font-weight: 700;
+	line-height: 1.3;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+
+	&--opportunity {
+		background: var(--color-primary-element);
+		color: var(--color-primary-element-text);
+	}
+}
+
 .qc-board__badges {
 	position: absolute;
 	inset: 0;

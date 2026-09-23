@@ -117,11 +117,11 @@ msgstr "Adversaire IA"
 msgid "You"
 msgstr "Vous"
 
-#: src/coach/reviewGame.js:35 src/coach/reviewGame.js:65 src/components/app/AppNavigation.vue:206 src/components/app/ColorChoice.vue:39 src/components/app/NewGameDialog.vue:121 src/components/app/NewGameDialog.vue:439 src/components/game/MoveList.vue:25 src/components/game/RollLog.vue:105 src/composables/useLocalGame.js:191 src/engine/ui/pieces.js:88 src/online/useOnlineGame.js:156 src/services/format.js:107 src/services/format.js:161 src/trainer/usePlayback.js:24 src/views/HomeView.vue:129 src/views/LocalGameView.vue:109
+#: src/coach/reviewGame.js:35 src/coach/reviewGame.js:66 src/components/app/AppNavigation.vue:206 src/components/app/ColorChoice.vue:39 src/components/app/NewGameDialog.vue:121 src/components/app/NewGameDialog.vue:439 src/components/game/MoveList.vue:25 src/components/game/RollLog.vue:105 src/composables/useLocalGame.js:191 src/engine/ui/pieces.js:88 src/online/useOnlineGame.js:156 src/services/format.js:108 src/services/format.js:183 src/trainer/usePlayback.js:24 src/views/HomeView.vue:129 src/views/LocalGameView.vue:109
 msgid "White"
 msgstr "Blancs"
 
-#: src/coach/reviewGame.js:35 src/coach/reviewGame.js:65 src/components/app/AppNavigation.vue:206 src/components/app/ColorChoice.vue:40 src/components/app/NewGameDialog.vue:126 src/components/app/NewGameDialog.vue:440 src/components/game/MoveList.vue:28 src/components/game/RollLog.vue:105 src/composables/useLocalGame.js:191 src/engine/ui/pieces.js:88 src/online/useOnlineGame.js:156 src/services/format.js:108 src/services/format.js:162 src/trainer/usePlayback.js:24 src/views/HomeView.vue:129 src/views/LocalGameView.vue:109
+#: src/coach/reviewGame.js:35 src/coach/reviewGame.js:66 src/components/app/AppNavigation.vue:206 src/components/app/ColorChoice.vue:40 src/components/app/NewGameDialog.vue:126 src/components/app/NewGameDialog.vue:440 src/components/game/MoveList.vue:28 src/components/game/RollLog.vue:105 src/composables/useLocalGame.js:191 src/engine/ui/pieces.js:88 src/online/useOnlineGame.js:156 src/services/format.js:109 src/services/format.js:184 src/trainer/usePlayback.js:24 src/views/HomeView.vue:129 src/views/LocalGameView.vue:109
 msgid "Black"
 msgstr "Noirs"
 
@@ -160,6 +160,18 @@ msgstr "Une pièce de peu de valeur peut découvrir où se trouve vraiment un fa
 #: src/coach/themes.js:73
 msgid "No tactics right now: improve a piece."
 msgstr "Pas de tactique pour l'instant : améliorez une pièce."
+
+#: src/coach/useCoach.js:223 src/components/coach/CoachPanel.vue:171
+msgid "Your {piece} is {pct} capturable."
+msgstr "Votre {piece} peut être pris à {pct}."
+
+#: src/coach/useCoach.js:234 src/components/coach/CoachPanel.vue:162
+msgid "You can capture the king for certain!"
+msgstr "Vous pouvez prendre le roi à coup sûr !"
+
+#: src/coach/useCoach.js:235 src/components/coach/CoachPanel.vue:164
+msgid "You can capture the king: {pct}!"
+msgstr "Vous pouvez prendre le roi : {pct} !"
 
 #: src/components/ai/AiChat.vue:14
 msgid "Say hello to {name}. Your message is sent with the next move."
@@ -309,7 +321,7 @@ msgstr "Rechercher un collègue"
 msgid "Time per move"
 msgstr "Temps par coup"
 
-#: src/components/app/NewGameDialog.vue:168 src/components/lobby/LobbyGameCard.vue:44 src/components/online/InvitationPanel.vue:31 lib/Dashboard/GamesWidget.php:118 lib/Notification/Notifier.php:140
+#: src/components/app/NewGameDialog.vue:168 src/components/lobby/LobbyGameCard.vue:44 src/components/online/InvitationPanel.vue:31 lib/Dashboard/GamesWidget.php:118 lib/Notification/Notifier.php:150
 msgid "Rated"
 msgstr "Classée"
 
@@ -492,25 +504,25 @@ msgstr "Et si ? (E)"
 msgid "Possibilities"
 msgstr "Possibilités"
 
-#: src/components/board/PossibilitiesChip.vue:29
+#: src/components/board/PossibilitiesChip.vue:30
 msgid "This position could be %n chessboard:"
 msgid_plural "This position could be %n different chessboards:"
 msgstr[0] "Cette position pourrait être %n échiquier :"
 msgstr[1] "Cette position pourrait être %n échiquiers différents :"
 msgstr[2] "Cette position pourrait être %n échiquiers différents :"
 
-#: src/components/board/PossibilitiesChip.vue:38
+#: src/components/board/PossibilitiesChip.vue:39
 msgid "Possibility with {p}"
 msgstr "Possibilité à {p}"
 
-#: src/components/board/PossibilitiesChip.vue:44
+#: src/components/board/PossibilitiesChip.vue:45
 msgid "and %n more ({p})"
 msgid_plural "and %n more ({p})"
 msgstr[0] "et %n autre ({p})"
 msgstr[1] "et %n autres ({p})"
 msgstr[2] "et %n autres ({p})"
 
-#: src/components/board/PossibilitiesChip.vue:75
+#: src/components/board/PossibilitiesChip.vue:76
 msgid "%n possibility"
 msgid_plural "%n possibilities"
 msgstr[0] "%n possibilité"
@@ -525,27 +537,27 @@ msgstr "Promouvoir en"
 msgid "Chessboard"
 msgstr "Échiquier"
 
-#: src/components/board/QuantumBoard.vue:400 src/components/game/GameOverDialog.vue:54
+#: src/components/board/QuantumBoard.vue:406 src/components/game/GameOverDialog.vue:54
 msgid "Close"
 msgstr "Fermer"
 
-#: src/components/board/QuantumBoard.vue:414
+#: src/components/board/QuantumBoard.vue:420
 msgid "Waiting for the server…"
 msgstr "En attente du serveur…"
 
-#: src/components/board/QuantumBoard.vue:422
+#: src/components/board/QuantumBoard.vue:428
 msgid "Lesson roll"
 msgstr "Lancer de la leçon"
 
-#: src/components/board/QuantumBoard.vue:1063
+#: src/components/board/QuantumBoard.vue:1084
 msgid "merge"
 msgstr "fusion"
 
-#: src/components/board/QuantumBoard.vue:1063
+#: src/components/board/QuantumBoard.vue:1084
 msgid "target"
 msgstr "cible"
 
-#: src/components/board/QuantumBoard.vue:1173
+#: src/components/board/QuantumBoard.vue:1198
 msgid "If {piece} is on {square} ({p})… · Tab: other part · Esc"
 msgstr "Si {piece} est sur {square} ({p})… · Tab : autre part · Échap"
 
@@ -730,17 +742,13 @@ msgstr "Expliquez le lien ici"
 msgid "What's the plan?"
 msgstr "Quel est le plan ?"
 
-#: src/components/coach/CoachPanel.vue:14 src/components/online/OnlineGameHost.vue:137 src/views/ReviewView.vue:289
+#: src/components/coach/CoachPanel.vue:14 src/components/online/OnlineGameHost.vue:137 src/views/ReviewView.vue:301
 msgid "Available after the game."
 msgstr "Disponible après la partie."
 
 #: src/components/coach/CoachPanel.vue:17
 msgid "The coach is off. You can turn it on in the settings."
 msgstr "Le coach est désactivé. Vous pouvez l'activer dans les paramètres."
-
-#: src/components/coach/CoachPanel.vue:27
-msgid "Your move {move}"
-msgstr "Votre coup {move}"
 
 #: src/components/coach/CoachPanel.vue:31
 msgid "About {pp} % worse than {best}."
@@ -778,43 +786,43 @@ msgstr "Votre adversaire peut gagner à coup sûr : ♚ en {n}."
 msgid "Your winning chances: {pct}"
 msgstr "Vos chances de gain : {pct}"
 
+#: src/components/coach/CoachPanel.vue:148
+msgid "Your move {move}"
+msgstr "Votre coup {move}"
+
 #: src/components/coach/CoachPanel.vue:151
-msgid "You can capture the king for certain!"
-msgstr "Vous pouvez prendre le roi à coup sûr !"
+msgid "Black’s move {move}"
+msgstr "Coup des Noirs {move}"
 
-#: src/components/coach/CoachPanel.vue:153
-msgid "You can capture the king: {pct}!"
-msgstr "Vous pouvez prendre le roi : {pct} !"
+#: src/components/coach/CoachPanel.vue:152
+msgid "White’s move {move}"
+msgstr "Coup des Blancs {move}"
 
-#: src/components/coach/CoachPanel.vue:154
+#: src/components/coach/CoachPanel.vue:165
 msgid "You can trap the enemy king."
 msgstr "Vous pouvez enfermer le roi adverse."
 
-#: src/components/coach/CoachPanel.vue:160
-msgid "Your {piece} is {pct} capturable."
-msgstr "Votre {piece} peut être pris à {pct}."
-
-#: src/components/coach/EvalBar.vue:81
+#: src/components/coach/EvalBar.vue:87
 msgid "Evaluation: analysing …"
 msgstr "Évaluation : analyse en cours…"
 
-#: src/components/coach/EvalBar.vue:86
+#: src/components/coach/EvalBar.vue:92
 msgid "White wins for certain: ♚ in {n}"
 msgstr "Les Blancs gagnent à coup sûr : ♚ en {n}"
 
-#: src/components/coach/EvalBar.vue:87
+#: src/components/coach/EvalBar.vue:93
 msgid "Black wins for certain: ♚ in {n}"
 msgstr "Les Noirs gagnent à coup sûr : ♚ en {n}"
 
-#: src/components/coach/EvalBar.vue:90
+#: src/components/coach/EvalBar.vue:96
 msgid "Evaluation: {value}"
 msgstr "Évaluation : {value}"
 
-#: src/components/coach/EvalBar.vue:94
+#: src/components/coach/EvalBar.vue:100
 msgid "Evaluation: White {pct}"
 msgstr "Évaluation : Blancs {pct}"
 
-#: src/components/coach/EvalBar.vue:95
+#: src/components/coach/EvalBar.vue:101
 msgid "Evaluation: Black {pct}"
 msgstr "Évaluation : Noirs {pct}"
 
@@ -907,15 +915,15 @@ msgstr "Jouer le niveau {n} ({name})"
 msgid "Rematch requested ✓"
 msgstr "Revanche demandée ✓"
 
-#: src/components/game/GameOverDialog.vue:70 src/components/game/ResultBar.vue:26 src/components/lobby/RecentGames.vue:44 src/components/lobby/RecentGames.vue:45 lib/Notification/Notifier.php:185
+#: src/components/game/GameOverDialog.vue:70 src/components/game/ResultBar.vue:26 src/components/lobby/RecentGames.vue:44 src/components/lobby/RecentGames.vue:45 lib/Notification/Notifier.php:195
 msgid "Rematch"
 msgstr "Revanche"
 
-#: src/components/game/GameOverDialog.vue:125 src/services/format.js:165
+#: src/components/game/GameOverDialog.vue:125 src/services/format.js:187
 msgid "Game aborted"
 msgstr "Partie annulée"
 
-#: src/components/game/GameOverDialog.vue:128 src/online/summaryText.js:91 src/services/format.js:167
+#: src/components/game/GameOverDialog.vue:128 src/online/summaryText.js:91 src/services/format.js:189
 msgid "Draw"
 msgstr "Nulle"
 
@@ -986,7 +994,7 @@ msgstr "La partie se termine et compte comme une défaite."
 msgid "Keep playing"
 msgstr "Continuer à jouer"
 
-#: src/components/game/GameScreen.vue:282 src/views/ReviewView.vue:67
+#: src/components/game/GameScreen.vue:283 src/views/ReviewView.vue:67
 msgid "Move {n} of {total}"
 msgstr "Coup {n} sur {total}"
 
@@ -1141,11 +1149,11 @@ msgstr "En attente d'une réponse"
 msgid "you moved {when}"
 msgstr "vous avez joué {when}"
 
-#: src/components/lobby/LobbyOnlineSections.vue:45 src/components/online/InvitationPanel.vue:40 src/components/online/OnlineGameHost.vue:61 src/components/online/OnlineGameHost.vue:87 lib/Notification/Notifier.php:151 lib/Notification/Notifier.php:170
+#: src/components/lobby/LobbyOnlineSections.vue:45 src/components/online/InvitationPanel.vue:40 src/components/online/OnlineGameHost.vue:61 src/components/online/OnlineGameHost.vue:87 lib/Notification/Notifier.php:161 lib/Notification/Notifier.php:180
 msgid "Decline"
 msgstr "Refuser"
 
-#: src/components/lobby/LobbyOnlineSections.vue:53 src/components/online/InvitationPanel.vue:47 lib/Notification/Notifier.php:150 lib/Notification/Notifier.php:169
+#: src/components/lobby/LobbyOnlineSections.vue:53 src/components/online/InvitationPanel.vue:47 lib/Notification/Notifier.php:160 lib/Notification/Notifier.php:179
 msgid "Accept"
 msgstr "Accepter"
 
@@ -1212,7 +1220,7 @@ msgstr "Insérer un emoji"
 msgid "Message"
 msgstr "Message"
 
-#: src/components/online/GameChat.vue:97 lib/Service/GameService.php:817
+#: src/components/online/GameChat.vue:97 lib/Service/GameService.php:809
 msgid "The chat of this game is closed."
 msgstr "La discussion de cette partie est fermée."
 
@@ -1220,7 +1228,7 @@ msgstr "La discussion de cette partie est fermée."
 msgid "your opponent"
 msgstr "votre adversaire"
 
-#: src/components/online/GameChat.vue:170 lib/Dashboard/GamesWidget.php:110 lib/Notification/Notifier.php:131 lib/Service/GameSerializer.php:59 lib/Service/GameSerializer.php:231
+#: src/components/online/GameChat.vue:170 lib/Dashboard/GamesWidget.php:110 lib/Notification/Notifier.php:139 lib/Service/GameSerializer.php:59 lib/Service/GameSerializer.php:231
 msgid "Deleted user"
 msgstr "Utilisateur supprimé"
 
@@ -1658,23 +1666,23 @@ msgstr "Joueur"
 msgid "Rating"
 msgstr "Cote"
 
-#: src/components/stats/LeaderboardTable.vue:38 src/views/StatsView.vue:62
+#: src/components/stats/LeaderboardTable.vue:39 src/views/StatsView.vue:62
 msgid "Games"
 msgstr "Parties"
 
-#: src/components/stats/LeaderboardTable.vue:41
+#: src/components/stats/LeaderboardTable.vue:42
 msgid "W / L / D"
 msgstr "V / D / N"
 
-#: src/components/stats/LeaderboardTable.vue:61
+#: src/components/stats/LeaderboardTable.vue:62
 msgid "(only you see this row)"
 msgstr "(vous seul voyez cette ligne)"
 
-#: src/components/stats/LeaderboardTable.vue:64 src/views/StatsView.vue:53
+#: src/components/stats/LeaderboardTable.vue:65 src/views/StatsView.vue:53
 msgid "Provisional rating: fewer than 10 rated games"
 msgstr "Cote provisoire : moins de 10 parties classées"
 
-#: src/components/stats/LeaderboardTable.vue:99 src/settings/AdminSettings.vue:34 src/settings/AdminSettings.vue:97 src/settings/AdminSettings.vue:145
+#: src/components/stats/LeaderboardTable.vue:100 src/settings/AdminSettings.vue:34 src/settings/AdminSettings.vue:97 src/settings/AdminSettings.vue:145
 msgid "Everyone"
 msgstr "Tout le monde"
 
@@ -1760,7 +1768,7 @@ msgstr "La limite d'IA du jour est atteinte."
 msgid "No AI source is available. An administrator can set one up in the Quantum Chess admin settings."
 msgstr "Aucune source d'IA n'est disponible. Un administrateur peut en configurer une dans les paramètres d'administration de Quantum Chess."
 
-#: src/composables/useLocalGame.js:84 src/views/ReviewView.vue:281
+#: src/composables/useLocalGame.js:84 src/views/ReviewView.vue:293
 msgid "This game is not on this device any more."
 msgstr "Cette partie n'est plus sur cet appareil."
 
@@ -2268,11 +2276,11 @@ msgstr[0] "%n jour par coup"
 msgstr[1] "%n jours par coup"
 msgstr[2] "%n jours par coup"
 
-#: src/online/summaryText.js:57 lib/Notification/Notifier.php:142
+#: src/online/summaryText.js:57 lib/Notification/Notifier.php:152
 msgid "You play White"
 msgstr "Vous jouez les Blancs"
 
-#: src/online/summaryText.js:60 lib/Notification/Notifier.php:143
+#: src/online/summaryText.js:60 lib/Notification/Notifier.php:153
 msgid "You play Black"
 msgstr "Vous jouez les Noirs"
 
@@ -3228,121 +3236,125 @@ msgstr "Vue « Et si ? »"
 msgid "The board as it would be if the part you tapped is the real one."
 msgstr "L'échiquier tel qu'il serait si la part touchée était la vraie."
 
-#: src/services/format.js:36
+#: src/services/format.js:37
 msgid "less than a minute left"
 msgstr "moins d'une minute restante"
 
-#: src/services/format.js:40
+#: src/services/format.js:41
 msgid "%n min left"
 msgid_plural "%n min left"
 msgstr[0] "%n min restante"
 msgstr[1] "%n min restantes"
 msgstr[2] "%n min restantes"
 
-#: src/services/format.js:44
+#: src/services/format.js:45
 msgid "%n h left"
 msgid_plural "%n h left"
 msgstr[0] "%n h restante"
 msgstr[1] "%n h restantes"
 msgstr[2] "%n h restantes"
 
-#: src/services/format.js:47 lib/Dashboard/GamesWidget.php:126
+#: src/services/format.js:48 lib/Dashboard/GamesWidget.php:126
 msgid "%n day left"
 msgid_plural "%n days left"
 msgstr[0] "%n jour restant"
 msgstr[1] "%n jours restants"
 msgstr[2] "%n jours restants"
 
-#: src/services/format.js:60
+#: src/services/format.js:61
 msgid "just now"
 msgstr "à l'instant"
 
-#: src/services/format.js:63
+#: src/services/format.js:64
 msgid "%n min ago"
 msgid_plural "%n min ago"
 msgstr[0] "il y a %n min"
 msgstr[1] "il y a %n min"
 msgstr[2] "il y a %n min"
 
-#: src/services/format.js:66
+#: src/services/format.js:67
 msgid "%n h ago"
 msgid_plural "%n h ago"
 msgstr[0] "il y a %n h"
 msgstr[1] "il y a %n h"
 msgstr[2] "il y a %n h"
 
-#: src/services/format.js:68
+#: src/services/format.js:69
 msgid "%n day ago"
 msgid_plural "%n days ago"
 msgstr[0] "il y a %n jour"
 msgstr[1] "il y a %n jours"
 msgstr[2] "il y a %n jours"
 
-#: src/services/format.js:115
+#: src/services/format.js:116 lib/Notification/Notifier.php:77
+msgid "King captured"
+msgstr "Roi pris"
+
+#: src/services/format.js:120
 msgid "King captured on {square} by a {percent} roll"
 msgstr "Roi pris sur {square} par un lancer à {percent}"
 
-#: src/services/format.js:116
+#: src/services/format.js:121
 msgid "King captured by a {percent} roll"
 msgstr "Roi pris par un lancer à {percent}"
 
-#: src/services/format.js:118
+#: src/services/format.js:123
 msgid "King captured for certain"
 msgstr "Roi pris à coup sûr"
 
-#: src/services/format.js:120
+#: src/services/format.js:125
 msgid "{loser}’s king cannot escape: every move would let {winner} capture it"
 msgstr "Le roi de {loser} ne peut pas s'échapper : chaque coup laisserait {winner} le prendre"
 
-#: src/services/format.js:122
+#: src/services/format.js:127
 msgid "Only the kings are left"
 msgstr "Il ne reste que les rois"
 
-#: src/services/format.js:124
+#: src/services/format.js:129
 msgid "The same position appeared three times"
 msgstr "La même position est apparue trois fois"
 
-#: src/services/format.js:126
+#: src/services/format.js:131
 msgid "50 moves without a capture or pawn move"
 msgstr "50 coups sans prise ni coup de pion"
 
-#: src/services/format.js:128
+#: src/services/format.js:133
 msgid "No legal moves"
 msgstr "Aucun coup légal"
 
-#: src/services/format.js:130
+#: src/services/format.js:135
 msgid "The game reached its length limit"
 msgstr "La partie a atteint sa longueur maximale"
 
-#: src/services/format.js:132
+#: src/services/format.js:137
 msgid "{loser} resigned"
 msgstr "{loser} a abandonné"
 
-#: src/services/format.js:134
+#: src/services/format.js:139
 msgid "Draw by agreement"
 msgstr "Nulle par accord mutuel"
 
-#: src/services/format.js:136
+#: src/services/format.js:141
 msgid "{loser} ran out of time"
 msgstr "{loser} a dépassé son temps"
 
-#: src/services/format.js:138
+#: src/services/format.js:143
 msgid "Time ran out, but only a king was left to win with"
 msgstr "Le temps est écoulé, mais il ne restait qu'un roi pour gagner"
 
-#: src/services/format.js:140
+#: src/services/format.js:145
 msgid "The game was aborted"
 msgstr "La partie a été annulée"
 
-#: src/services/format.js:142
+#: src/services/format.js:147
 msgid "The game was abandoned"
 msgstr "La partie a été délaissée"
 
-#: src/services/format.js:144
+#: src/services/format.js:149
 msgid "A player’s account was deleted"
 msgstr "Le compte d'un joueur a été supprimé"
 
-#: src/services/format.js:169
+#: src/services/format.js:191
 msgid "{name} won"
 msgstr "{name} a gagné"
 
@@ -3582,11 +3594,11 @@ msgstr "Tâches d'arrière-plan"
 msgid "Saved"
 msgstr "Enregistré"
 
-#: src/settings/AdminSettings.vue:397
+#: src/settings/AdminSettings.vue:398
 msgid "The organisation provider was saved"
 msgstr "Le fournisseur IA de l'organisation a été enregistré"
 
-#: src/settings/AdminSettings.vue:410
+#: src/settings/AdminSettings.vue:411
 msgid "The key was removed"
 msgstr "La clé a été supprimée"
 
@@ -3721,31 +3733,35 @@ msgstr[0] "Connecté. Le serveur propose {count} modèle de discussion."
 msgstr[1] "Connecté. Le serveur propose {count} modèles de discussion."
 msgstr[2] "Connecté. Le serveur propose {count} modèles de discussion."
 
-#: src/settings/ProviderForm.vue:183
+#: src/settings/ProviderForm.vue:186
 msgid "Replace API key"
 msgstr "Remplacer la clé d'API"
 
-#: src/settings/ProviderForm.vue:183
+#: src/settings/ProviderForm.vue:186
 msgid "API key"
 msgstr "Clé d'API"
 
-#: src/settings/ProviderForm.vue:186
+#: src/settings/ProviderForm.vue:189
 msgid "Your saved key can't be read any more. Please enter it again."
 msgstr "Votre clé enregistrée ne peut plus être lue. Veuillez la saisir à nouveau."
 
-#: src/settings/ProviderForm.vue:190
+#: src/settings/ProviderForm.vue:192
+msgid "The saved key is only sent to the saved address. Enter the key again for this service."
+msgstr "La clé enregistrée n'est envoyée qu'à l'adresse enregistrée. Saisissez de nouveau la clé pour ce service."
+
+#: src/settings/ProviderForm.vue:196
 msgid "Saved key ends in …{hint}. Leave empty to keep it."
 msgstr "La clé enregistrée se termine par …{hint}. Laissez vide pour la conserver."
 
-#: src/settings/ProviderForm.vue:191
+#: src/settings/ProviderForm.vue:197
 msgid "A key is saved. Leave empty to keep it."
 msgstr "Une clé est enregistrée. Laissez vide pour la conserver."
 
-#: src/settings/ProviderForm.vue:193
+#: src/settings/ProviderForm.vue:199
 msgid "Required for this service."
 msgstr "Obligatoire pour ce service."
 
-#: src/settings/ProviderForm.vue:193
+#: src/settings/ProviderForm.vue:199
 msgid "Optional for this service."
 msgstr "Facultatif pour ce service."
 
@@ -4849,11 +4865,11 @@ msgstr "L'analyse n'a pas pu aboutir. Le graphique montre les coups analysés ju
 msgid "Move {n}: {code}"
 msgstr "Coup {n} : {code}"
 
-#: src/views/ReviewView.vue:294
+#: src/views/ReviewView.vue:306
 msgid "The game could not be loaded."
 msgstr "La partie n'a pas pu être chargée."
 
-#: src/views/ReviewView.vue:340
+#: src/views/ReviewView.vue:352
 msgid "The game could not be replayed."
 msgstr "La partie n'a pas pu être rejouée."
 
@@ -4990,7 +5006,7 @@ msgstr "une partie complète"
 msgid "The request is too large."
 msgstr "La requête est trop volumineuse."
 
-#: lib/Controller/AiController.php:86 lib/Controller/AiController.php:132 lib/Controller/SettingsController.php:131 lib/Controller/SettingsController.php:164 lib/Service/Ai/AiSourceService.php:69 lib/Service/Ai/LlmService.php:527 lib/Service/GameService.php:410 lib/Service/SettingsService.php:724 lib/Service/StatsService.php:168
+#: lib/Controller/AiController.php:86 lib/Controller/AiController.php:132 lib/Controller/SettingsController.php:131 lib/Controller/SettingsController.php:164 lib/Service/Ai/AiSourceService.php:69 lib/Service/Ai/LlmService.php:531 lib/Service/GameService.php:410 lib/Service/SettingsService.php:745 lib/Service/StatsService.php:168
 msgid "Invalid value"
 msgstr "Valeur invalide"
 
@@ -5008,11 +5024,11 @@ msgstr "%s veut une revanche"
 msgid "%s invited you"
 msgstr "%s vous a invité"
 
-#: lib/Dashboard/GamesWidget.php:118 lib/Notification/Notifier.php:140
+#: lib/Dashboard/GamesWidget.php:118 lib/Notification/Notifier.php:150
 msgid "Unrated"
 msgstr "Non classée"
 
-#: lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:168
+#: lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:178
 msgid "Move %d"
 msgstr "Coup %d"
 
@@ -5103,10 +5119,6 @@ msgstr "Sans limite de temps"
 msgid "3 days per move"
 msgstr "3 jours par coup"
 
-#: lib/Notification/Notifier.php:77
-msgid "King captured"
-msgstr "Roi pris"
-
 #: lib/Notification/Notifier.php:78
 msgid "King trapped"
 msgstr "Roi enfermé"
@@ -5151,76 +5163,76 @@ msgstr "Compte supprimé"
 msgid "Aborted: no first move in time"
 msgstr "Annulée : pas de premier coup à temps"
 
-#: lib/Notification/Notifier.php:138
+#: lib/Notification/Notifier.php:148
 msgid "{user} invited you to a game of Quantum Chess"
 msgstr "{user} vous a invité à une partie de Quantum Chess"
 
-#: lib/Notification/Notifier.php:138
+#: lib/Notification/Notifier.php:148
 msgid "{user} wants a rematch"
 msgstr "{user} veut une revanche"
 
-#: lib/Notification/Notifier.php:144
+#: lib/Notification/Notifier.php:154
 msgid "Random colours"
 msgstr "Couleurs au hasard"
 
-#: lib/Notification/Notifier.php:155
+#: lib/Notification/Notifier.php:165
 msgid "{user} accepted your invitation"
 msgstr "{user} a accepté votre invitation"
 
-#: lib/Notification/Notifier.php:155
+#: lib/Notification/Notifier.php:165
 msgid "{user} joined your open challenge"
 msgstr "{user} a rejoint votre défi ouvert"
 
-#: lib/Notification/Notifier.php:156
+#: lib/Notification/Notifier.php:166
 msgid "It's your move."
 msgstr "C'est à vous de jouer."
 
-#: lib/Notification/Notifier.php:156
+#: lib/Notification/Notifier.php:166
 msgid "Waiting for their first move."
 msgstr "En attente de son premier coup."
 
-#: lib/Notification/Notifier.php:159
+#: lib/Notification/Notifier.php:169
 msgid "{user} declined your invitation"
 msgstr "{user} a refusé votre invitation"
 
-#: lib/Notification/Notifier.php:163
+#: lib/Notification/Notifier.php:173
 msgid "Your move against {user}"
 msgstr "À vous de jouer contre {user}"
 
-#: lib/Notification/Notifier.php:167
+#: lib/Notification/Notifier.php:177
 msgid "{user} offers a draw"
 msgstr "{user} propose la nulle"
 
-#: lib/Notification/Notifier.php:174
+#: lib/Notification/Notifier.php:184
 msgid "You won against {user}"
 msgstr "Vous avez gagné contre {user}"
 
-#: lib/Notification/Notifier.php:175
+#: lib/Notification/Notifier.php:185
 msgid "You lost against {user}"
 msgstr "Vous avez perdu contre {user}"
 
-#: lib/Notification/Notifier.php:176
+#: lib/Notification/Notifier.php:186
 msgid "Your game against {user} was aborted"
 msgstr "Votre partie contre {user} a été annulée"
 
-#: lib/Notification/Notifier.php:177
+#: lib/Notification/Notifier.php:187
 msgid "Your game against {user} ended in a draw"
 msgstr "Votre partie contre {user} s'est terminée par une nulle"
 
-#: lib/Notification/Notifier.php:182
+#: lib/Notification/Notifier.php:192
 #, php-format
 msgid "Rating %1$d (%2$s)"
 msgstr "Cote %1$d (%2$s)"
 
-#: lib/Notification/Notifier.php:189
+#: lib/Notification/Notifier.php:199
 msgid "{user} sent a message"
 msgstr "{user} a envoyé un message"
 
-#: lib/Notification/Notifier.php:193
+#: lib/Notification/Notifier.php:203
 msgid "New message"
 msgstr "Nouveau message"
 
-#: lib/Notification/Notifier.php:197
+#: lib/Notification/Notifier.php:207
 msgid "Your game ended because your opponent's account was deleted"
 msgstr "Votre partie s'est terminée car le compte de votre adversaire a été supprimé"
 
@@ -5244,39 +5256,39 @@ msgstr "Veuillez attendre la réponse précédente de l'IA."
 msgid "Not found"
 msgstr "Introuvable"
 
-#: lib/Service/Ai/LlmService.php:325
+#: lib/Service/Ai/LlmService.php:329
 msgid "The AI service did not accept the API key."
 msgstr "Le service d'IA n'a pas accepté la clé d'API."
 
-#: lib/Service/Ai/LlmService.php:326
+#: lib/Service/Ai/LlmService.php:330
 msgid "The AI service does not know this model."
 msgstr "Le service d'IA ne connaît pas ce modèle."
 
-#: lib/Service/Ai/LlmService.php:327
+#: lib/Service/Ai/LlmService.php:331
 msgid "The AI service is busy. Please try again in a moment."
 msgstr "Le service d'IA est occupé. Veuillez réessayer dans un instant."
 
-#: lib/Service/Ai/LlmService.php:328
+#: lib/Service/Ai/LlmService.php:332
 msgid "The AI service quota is used up."
 msgstr "Le quota du service d'IA est épuisé."
 
-#: lib/Service/Ai/LlmService.php:329
+#: lib/Service/Ai/LlmService.php:333
 msgid "The AI service took too long to answer."
 msgstr "Le service d'IA a mis trop de temps à répondre."
 
-#: lib/Service/Ai/LlmService.php:330
+#: lib/Service/Ai/LlmService.php:334
 msgid "The AI service could not be reached."
 msgstr "Le service d'IA n'a pas pu être joint."
 
-#: lib/Service/Ai/LlmService.php:331
+#: lib/Service/Ai/LlmService.php:335
 msgid "The AI service declined to answer."
 msgstr "Le service d'IA a refusé de répondre."
 
-#: lib/Service/Ai/LlmService.php:332
+#: lib/Service/Ai/LlmService.php:336
 msgid "The AI service sent an answer that could not be read."
 msgstr "Le service d'IA a envoyé une réponse illisible."
 
-#: lib/Service/Ai/LlmService.php:376
+#: lib/Service/Ai/LlmService.php:380
 msgid "The position is not valid."
 msgstr "La position n'est pas valide."
 
@@ -5336,67 +5348,67 @@ msgstr "Les défis ouverts sont désactivés sur ce serveur."
 msgid "This is your own challenge."
 msgstr "C'est votre propre défi."
 
-#: lib/Service/GameService.php:585
+#: lib/Service/GameService.php:584
 msgid "Someone was faster. The challenge is gone."
 msgstr "Quelqu'un a été plus rapide. Le défi n'est plus disponible."
 
-#: lib/Service/GameService.php:608
+#: lib/Service/GameService.php:600
 msgid "Invalid client id"
 msgstr "Identifiant client invalide"
 
-#: lib/Service/GameService.php:619 lib/Service/GameService.php:726
+#: lib/Service/GameService.php:611 lib/Service/GameService.php:718
 msgid "This game is over."
 msgstr "Cette partie est terminée."
 
-#: lib/Service/GameService.php:625
+#: lib/Service/GameService.php:617
 msgid "It is not your move."
 msgstr "Ce n'est pas à vous de jouer."
 
-#: lib/Service/GameService.php:633
+#: lib/Service/GameService.php:625
 msgid "This move is not possible."
 msgstr "Ce coup n'est pas possible."
 
-#: lib/Service/GameService.php:748
+#: lib/Service/GameService.php:740
 msgid "The game can only be aborted before both sides have moved."
 msgstr "La partie ne peut être annulée qu'avant que les deux camps aient joué."
 
-#: lib/Service/GameService.php:762
+#: lib/Service/GameService.php:754
 msgid "Invalid action"
 msgstr "Action invalide"
 
-#: lib/Service/GameService.php:774
+#: lib/Service/GameService.php:766
 msgid "You cannot offer a draw right now."
 msgstr "Vous ne pouvez pas proposer la nulle pour le moment."
 
-#: lib/Service/GameService.php:787
+#: lib/Service/GameService.php:779
 msgid "There is no draw offer to answer."
 msgstr "Il n'y a aucune proposition de nulle à laquelle répondre."
 
-#: lib/Service/GameService.php:809
+#: lib/Service/GameService.php:801
 msgid "Chat is turned off on this server."
 msgstr "La discussion est désactivée sur ce serveur."
 
-#: lib/Service/GameService.php:822
+#: lib/Service/GameService.php:814
 msgid "Unknown phrase"
 msgstr "Phrase inconnue"
 
-#: lib/Service/GameService.php:830
+#: lib/Service/GameService.php:822
 msgid "A message has 1 to 500 characters."
 msgstr "Un message contient de 1 à 500 caractères."
 
-#: lib/Service/GameService.php:886 lib/Service/InvitePolicy.php:92
+#: lib/Service/GameService.php:892 lib/Service/InvitePolicy.php:100
 msgid "You can't invite this user"
 msgstr "Vous ne pouvez pas inviter cet utilisateur"
 
-#: lib/Service/InvitePolicy.php:99
+#: lib/Service/InvitePolicy.php:108
 msgid "You already have %d open challenges."
 msgstr "Vous avez déjà %d défis ouverts."
 
-#: lib/Service/InvitePolicy.php:103
+#: lib/Service/InvitePolicy.php:112
 msgid "You have too many open invitations."
 msgstr "Vous avez trop d'invitations en attente."
 
-#: lib/Service/InvitePolicy.php:110
+#: lib/Service/InvitePolicy.php:119
 msgid "You have reached the maximum number of running games."
 msgstr "Vous avez atteint le nombre maximum de parties en cours."
 
@@ -5408,19 +5420,19 @@ msgstr "Les préférences doivent être un objet."
 msgid "The preferences are too large."
 msgstr "Les préférences sont trop volumineuses."
 
-#: lib/Service/SettingsService.php:331
+#: lib/Service/SettingsService.php:348
 msgid "The address must start with https://."
 msgstr "L'adresse doit commencer par https://."
 
-#: lib/Service/SettingsService.php:332
+#: lib/Service/SettingsService.php:349
 msgid "This local address is not allowed. Ask your administrator to add it to the list of allowed local servers."
 msgstr "Cette adresse locale n'est pas autorisée. Demandez à votre administrateur de l'ajouter à la liste des serveurs locaux autorisés."
 
-#: lib/Service/SettingsService.php:333
+#: lib/Service/SettingsService.php:350
 msgid "This is not a valid server address."
 msgstr "Ce n'est pas une adresse de serveur valide."
 
-#: lib/Service/SettingsService.php:670 lib/Service/SettingsService.php:683
+#: lib/Service/SettingsService.php:687 lib/Service/SettingsService.php:700
 msgid "Your administrator does not allow personal AI providers."
 msgstr "Votre administrateur n'autorise pas les fournisseurs d'IA personnels."
 

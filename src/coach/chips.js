@@ -27,6 +27,18 @@ export function truncateAnswer(text) {
 }
 
 /**
+ * Coach answers are untrusted model output (SPEC §12.3: Markdown on, links off). Escaping the square brackets turns
+ * Markdown links, images and reference links into plain text; bare URLs stay text because the renderer's autolink
+ * is off, and raw HTML is escaped by the renderer anyway.
+ *
+ * @param {string} text answer (Markdown)
+ * @return {string}
+ */
+export function withoutLinks(text) {
+	return String(text ?? '').replace(/[[\]]/g, '\\$&')
+}
+
+/**
  * The distinct move codes of a text, validated in a position.
  *
  * @param {string} text answer text

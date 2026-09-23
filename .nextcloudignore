@@ -14,3 +14,5 @@ Thumbs.db
 *.rej
 *.bak
 appinfo/signature.json
+# translator documentation (links to docs/ and translationfiles/, which are not shipped)
+GLOSSARY.md

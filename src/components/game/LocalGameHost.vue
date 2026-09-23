@@ -37,7 +37,7 @@
 				:format="preferences.evalFormat" />
 		</template>
 		<template v-if="coach.active.value" #overlay>
-			<QualityToast :coach="coach" />
+			<QualityToast :coach="coach" :orientation="controller.orientation.value" />
 		</template>
 		<template #coach>
 			<CoachPanel

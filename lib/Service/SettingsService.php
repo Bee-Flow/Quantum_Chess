@@ -169,6 +169,10 @@ class SettingsService {
 		foreach ($clean as $key => $value) {
 			$validated[$key] = $this->validateAdmin($key, $value, $sharedAllowLocal);
 		}
+		if (array_key_exists('shared_provider', $validated) && !self::sameEndpoint($this->sharedProvider(), $validated['shared_provider'])) {
+			// The stored key was confirmed with the password for the old address: never send it to a new one.
+			$this->keys->setShared(null);
+		}
 		foreach ($validated as $key => $value) {
 			$lazy = in_array($key, self::LAZY, true);
 			match (self::ADMIN[$key][0]) {
@@ -285,6 +289,19 @@ class SettingsService {
 			$models[] = $model;
 		}
 		return array_values(array_unique($models));
+	}
+
+	/**
+	 * Whether a provider points at the same service (preset and base URL) as the stored one. A stored API key is only
+	 * ever sent to the address it was saved for.
+	 *
+	 * @param array<array-key, mixed>|null $stored
+	 * @param array<array-key, mixed>|null $provider
+	 */
+	public static function sameEndpoint(?array $stored, ?array $provider): bool {
+		return $stored !== null && $provider !== null
+			&& is_string($stored['preset'] ?? null) && ($stored['preset'] === ($provider['preset'] ?? null))
+			&& is_string($stored['baseUrl'] ?? null) && ($stored['baseUrl'] === ($provider['baseUrl'] ?? null));
 	}
 
 	public static function isValidModel(string $model): bool {
@@ -689,6 +706,10 @@ class SettingsService {
 			if ($default !== null && $default !== '' && (!is_string($default) || !in_array($default, self::SOURCES, true))) {
 				throw $this->invalid('defaultSource');
 			}
+		}
+		if ($provider !== false && !is_string($apiKey) && !self::sameEndpoint($this->personalProvider($uid), $provider)) {
+			// A saved key follows its provider only while the address stays the same.
+			$apiKey = '';
 		}
 		if ($provider === null) {
 			$this->userConfig->deleteUserConfig($uid, Application::APP_ID, 'ai_provider');

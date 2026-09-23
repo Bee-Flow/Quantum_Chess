@@ -109,13 +109,16 @@ jobs:
           wget --quiet "$DOWNLOAD_URL" -O nextcloud.zip
           unzip -q nextcloud.zip
 
-      - name: Checkout server master fallback
+      # The branch of the minimum version, not master: signing runs occ under php-min, and master (like the newest
+      # stable branches) refuses to start on that PHP version.
+      - name: Checkout server stable${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }} fallback
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: ${{ steps.server-download.outcome != 'success' }}
         with:
           persist-credentials: false
           submodules: true
           repository: nextcloud/server
+          ref: stable${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
           path: nextcloud
 
       - name: Fetch the App Store certificate and check it against the private key

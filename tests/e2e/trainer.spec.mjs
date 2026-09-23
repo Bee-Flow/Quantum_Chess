@@ -154,7 +154,7 @@ test('lessons 1–3 and puzzle 1 by clicking; progress persists', async ({ page 
 
 	// Progress survives a reload (server copy; the local mirror is cleared)
 	await page.waitForTimeout(2600)
-	await page.evaluate(() => window.localStorage.removeItem('quantumchess.trainer.v1'))
+	await page.evaluate(() => window.localStorage.removeItem(`quantumchess/${document.head.dataset.user}/trainer.v1`))
 	await openApp(page, 'trainer', { ready: '[data-test="trainer-continue"]' })
 	await expect(tid(page, 'lesson-L01')).toHaveClass(/qc-trainer__lesson--done/)
 	await expect(tid(page, 'lesson-L03')).toHaveClass(/qc-trainer__lesson--done/)

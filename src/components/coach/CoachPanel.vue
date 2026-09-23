@@ -24,7 +24,7 @@
 
 			<section v-if="last" class="qc-coach__section" data-test="coach-last-move">
 				<div class="qc-coach__row">
-					<span>{{ t('quantumchess', 'Your move {move}', { move: last.code }) }}</span>
+					<span>{{ lastLabel }}</span>
 					<QualityBadge :label="last.label" :luck="last.luck" />
 				</div>
 				<p v-if="last.deltaPp > 2 && last.bestCode !== last.code" class="qc-coach__detail">
@@ -139,6 +139,17 @@ const last = computed(() => {
 		}
 	}
 	return null
+})
+
+// In pass & play "your" is the side to move, but the graded move belongs to the player before: name its colour.
+const lastLabel = computed(() => {
+	const l = last.value
+	if (!l || props.myColor !== null) {
+		return l ? t('quantumchess', 'Your move {move}', { move: l.code }) : ''
+	}
+	return l.color === 'b'
+		? t('quantumchess', 'Black’s move {move}', { move: l.code })
+		: t('quantumchess', 'White’s move {move}', { move: l.code })
 })
 
 const warnings = computed(() => {

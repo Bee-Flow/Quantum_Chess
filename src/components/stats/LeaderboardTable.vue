@@ -34,6 +34,7 @@
 					<th scope="col" class="qc-board-table__num">
 						{{ t('quantumchess', 'Rating') }}
 					</th>
+					<!-- all online games, like the W / L / D record next to it and the Games card (ratedGames only ranks) -->
 					<th scope="col" class="qc-board-table__num qc-board-table__wide">
 						{{ t('quantumchess', 'Games') }}
 					</th>
@@ -65,7 +66,7 @@
 						{{ formatRating(e.rating, e.provisional) }}
 					</td>
 					<td class="qc-board-table__num qc-board-table__wide">
-						{{ e.ratedGames }}
+						{{ e.wins + e.losses + e.draws }}
 					</td>
 					<td class="qc-board-table__num">
 						{{ e.wins }} / {{ e.losses }} / {{ e.draws }}

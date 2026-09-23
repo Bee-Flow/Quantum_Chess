@@ -436,7 +436,7 @@ class GameService {
 				throw new ApiException('invalid_argument', $this->l->t('Invalid group'), 400, ['field' => 'scopeGroup']);
 			}
 		} else {
-			$this->policy->assertCanInvite($uid, $opponent);
+			$opponent = $this->policy->assertCanInvite($uid, $opponent);
 		}
 		$this->policy->assertWithinLimits($uid, $opponent);
 
@@ -552,9 +552,8 @@ class GameService {
 			throw $this->invalidStatus();
 		}
 		if ($game->getStatus() !== Game::STATUS_OPEN) {
-			if ($game->getStatus() === Game::STATUS_ACTIVE && !$game->isParticipant($uid) && $this->wouldSeeChallenge($uid, $game)) {
-				throw $this->alreadyTaken();
-			}
+			// A taken challenge answers like any other game id: game ids of other people cannot be probed (§12.3).
+			// `already_taken` is only the answer of the join that lost the race below.
 			throw $this->notFound();
 		}
 		if (!$this->policy->canSeeOpenChallenge($uid, $game)) {
@@ -583,13 +582,6 @@ class GameService {
 
 	private function alreadyTaken(): ApiException {
 		return new ApiException('already_taken', $this->l->t('Someone was faster. The challenge is gone.'), 409);
-	}
-
-	/** Whether `$uid` could have seen this game as an open challenge (for the `already_taken` answer). */
-	private function wouldSeeChallenge(string $uid, Game $game): bool {
-		$copy = clone $game;
-		$copy->setStatus(Game::STATUS_OPEN);
-		return $this->policy->canSeeOpenChallenge($uid, $copy);
 	}
 
 	// ------------------------------------------------------------------ playing
@@ -862,6 +854,20 @@ class GameService {
 	}
 
 	public function rematch(int $id, string $uid): Game {
+		try {
+			return $this->requestRematch($id, $uid);
+		} catch (ApiException $e) {
+			// A simultaneous rematch request for the same game (a double click, or both players at once) won the race:
+			// answer as if it had come first (§8.5: the requester gets the pending game, the other player accepts it).
+			if (in_array($e->getErrorCode(), ['conflict', 'too_many_invitations'], true)
+				&& $this->games->findById($id)?->getRematchId() !== null) {
+				return $this->requestRematch($id, $uid);
+			}
+			throw $e;
+		}
+	}
+
+	private function requestRematch(int $id, string $uid): Game {
 		$old = $this->load($id, $uid);
 		$color = $old->colorOf($uid);
 		if ($color === null || !in_array($old->getStatus(), [Game::STATUS_FINISHED, Game::STATUS_ABORTED], true)) {
@@ -1000,6 +1006,8 @@ class GameService {
 					$this->games->deleteWithChildren((int)$game->getId());
 				}
 			});
+			// Notifications of this game carry the removed player's id, name, chat excerpts or a rematch offer.
+			$this->notifications->removeForGame($id);
 			if ($remaining !== null) {
 				$this->notifications->gameEndedDeleted($game, $remaining);
 			} elseif ($game->getStatus() === Game::STATUS_FINISHED && $game->getResultReason() === 'resignation' && !$accountDeleted) {

@@ -43,7 +43,7 @@
 			<div class="qc-review__main">
 				<TrainerBoard
 					:state="states[ply]"
-					:orientation="game.viewer"
+					:orientation="game.viewer ?? 'w'"
 					:lastMove="lastMove"
 					:arrows="arrows"
 					:names="game.names"
@@ -87,7 +87,7 @@
 					:plies="plies"
 					:total="game.moves.length"
 					:current="ply"
-					:viewer="game.viewer"
+					:viewer="game.viewer ?? 'w'"
 					:quantum="quantumFlags"
 					@select="go" />
 			</div>
@@ -119,7 +119,7 @@
 					:moves="entries.slice(0, ply)"
 					:analysis="null"
 					:context="{ kind: 'review', ply }"
-					:playerColor="game.viewer"
+					:playerColor="game.viewer ?? 'w'"
 					@showMove="chipMove" />
 			</aside>
 		</div>
@@ -151,7 +151,7 @@ import { reviewGame } from '../coach/reviewGame.js'
 import { findMove, moveNotation } from '../engine/index.js'
 import { resultSentence } from '../engine/ui/index.js'
 import { getGame } from '../services/api.js'
-import { resultText } from '../services/format.js'
+import { kingCaptureContext, resultText } from '../services/format.js'
 import { loadLocalGame } from '../services/localGames.js'
 import { readJson, writeJson } from '../services/storage.js'
 
@@ -194,15 +194,27 @@ const rollText = computed(() => {
 	if (!game.value || ply.value === 0) {
 		return ''
 	}
-	const s = game.value.steps[ply.value - 1]
-	return s.measurement ? resultSentence({ before: s.before, move: s.move, measurement: s.measurement, names: { mover: game.value.names[s.before.turn] } })?.text ?? '' : ''
+	const g = game.value
+	const s = g.steps[ply.value - 1]
+	if (!s.measurement) {
+		return ''
+	}
+	// The reviewer's point of view ("Your king was captured" for the loser); pass & play: the mover's.
+	const mover = s.before.turn
+	const other = mover === 'w' ? 'b' : 'w'
+	const pov = g.viewer === null || mover === g.viewer ? 'mover' : 'opponent'
+	return resultSentence({ before: s.before, move: s.move, measurement: s.measurement, pov, names: { mover: g.names[mover], opponent: g.names[other] } })?.text ?? ''
 })
 const resultLine = computed(() => {
 	const r = game.value?.result
 	if (!r) {
 		return ''
 	}
-	const text = resultText(r.result, r.reason, game.value.names)
+	const g = game.value
+	const extra = r.reason === 'king_captured' && g.moves.length
+		? kingCaptureContext({ code: g.moves[g.moves.length - 1].code, measurement: g.steps[g.steps.length - 1].measurement })
+		: {}
+	const text = resultText(r.result, r.reason, g.names, extra)
 	return `${text.title} · ${text.reason}`
 })
 const quantumFlags = computed(() => (game.value ? game.value.steps.map((s) => isQuantumMove(s.move, s.before.types[s.move.piece])) : []))
