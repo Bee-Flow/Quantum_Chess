@@ -85,7 +85,8 @@ export function useLlmOpponent({ record, persona, source, model = null, strength
 		cancelAiTask,
 		onError: () => {},
 		now: () => Date.now(),
-		...deps,
+		// useLocalGame passes every dependency, undefined when not injected: keep the defaults for those
+		...Object.fromEntries(Object.entries(deps).filter(([, v]) => v !== undefined)),
 	}
 	const thinking = ref(false)
 	const elapsedMs = ref(0)

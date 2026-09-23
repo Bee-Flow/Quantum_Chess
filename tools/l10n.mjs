@@ -19,8 +19,10 @@
  * dependency-free route used in development.
  */
 
-import { readdirSync, readFileSync, statSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
+/* eslint-disable no-console -- a command-line tool */
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -80,7 +82,7 @@ function readLiteral(src, pos, kind) {
 		i++
 		let part = ''
 		while (i < src.length && src[i] !== quote) {
-			let c = src[i]
+			const c = src[i]
 			if (c === '\\') {
 				const next = src[i + 1]
 				i += 2
@@ -89,17 +91,24 @@ function readLiteral(src, pos, kind) {
 					continue
 				}
 				switch (next) {
-				case 'n': part += '\n'; break
-				case 't': part += '\t'; break
-				case 'r': part += '\r'; break
-				case '\n': break
-				case 'u': {
-					const hex = src.slice(i, i + 4)
-					part += String.fromCharCode(parseInt(hex, 16))
-					i += 4
-					break
-				}
-				default: part += next
+					case 'n':
+						part += '\n'
+						break
+					case 't':
+						part += '\t'
+						break
+					case 'r':
+						part += '\r'
+						break
+					case '\n':
+						break
+					case 'u': {
+						const hex = src.slice(i, i + 4)
+						part += String.fromCharCode(parseInt(hex, 16))
+						i += 4
+						break
+					}
+					default: part += next
 				}
 				continue
 			}
@@ -111,7 +120,6 @@ function readLiteral(src, pos, kind) {
 			}
 			part += c
 			i++
-			c = src[i]
 		}
 		i++
 		value += part
@@ -392,8 +400,12 @@ function templateEntries() {
 	}))
 }
 
-/** Placeholders that must survive translation: {name}, %s, %1$s, %n. */
-const placeholders = (s) => (s.match(/\{[a-zA-Z0-9_]+\}|%(\d\$)?[sd]|%n/g) ?? []).sort().join(' ')
+/**
+ * Placeholders that must survive translation: {name}, %s, %1$s, %n.
+ *
+ * @param s
+ */
+const placeholders = (s) => [...new Set(s.match(/\{[a-zA-Z0-9_]+\}|%(\d\$)?[sd]|%n/g) ?? [])].sort().join(' ')
 
 const command = process.argv[2]
 if (command === 'extract') {
@@ -417,8 +429,7 @@ if (command === 'extract') {
 		const keys = new Set(template.map(keyOf))
 		const gone = old.filter((e) => !keys.has(keyOf(e)) && e.str.some(Boolean))
 		for (const e of gone) {
-			text += '\n' + [`msgid ${poQuote(e.id)}`, ...(e.plural !== undefined ? [`msgid_plural ${poQuote(e.plural)}`] : []),
-				...e.str.map((s, i) => (e.plural !== undefined ? `msgstr[${i}] ${poQuote(s)}` : `msgstr ${poQuote(s)}`))]
+			text += '\n' + [`msgid ${poQuote(e.id)}`, ...(e.plural !== undefined ? [`msgid_plural ${poQuote(e.plural)}`] : []), ...e.str.map((s, i) => (e.plural !== undefined ? `msgstr[${i}] ${poQuote(s)}` : `msgstr ${poQuote(s)}`))]
 				.join('\n').split('\n').map((l) => `#~ ${l}`).join('\n') + '\n'
 		}
 		writeFileSync(file, text)
@@ -456,10 +467,8 @@ if (command === 'extract') {
 		failures += missing
 		if (command === 'build') {
 			const json = JSON.stringify(translations, null, 4).slice(1, -2).split('\n').map((l) => l.replace(/^ {4}/, '    ')).join('\n')
-			writeFileSync(join(ROOT, 'l10n', `${lang}.js`),
-				`OC.L10N.register(\n    "${APP}",\n    {${json}\n},\n"${PLURAL_FORMS[lang]}");\n`)
-			writeFileSync(join(ROOT, 'l10n', `${lang}.json`),
-				`{ "translations": {${json}\n},"pluralForm" :"${PLURAL_FORMS[lang]}"\n}\n`)
+			writeFileSync(join(ROOT, 'l10n', `${lang}.js`), `OC.L10N.register(\n    "${APP}",\n    {${json}\n},\n"${PLURAL_FORMS[lang]}");\n`)
+			writeFileSync(join(ROOT, 'l10n', `${lang}.json`), `{ "translations": {${json}\n},"pluralForm" :"${PLURAL_FORMS[lang]}"\n}\n`)
 		}
 		console.info(`${lang}: ${entries.length - missing}/${entries.length} translated`)
 	}

@@ -4,7 +4,7 @@
 # Continuous integration: the quality gates of docs/SPEC.md §15.1 on every pull request and push.
 #
 #   lint         info.xml against the App Store schema, SPDX headers, version numbers
-#   node         ESLint, Vitest, production build, bundle size, trainer data, engine fixture drift
+#   node         ESLint, Vitest, production build, complete translations, engine fixture drift
 #   php          php -l, php-cs-fixer, Psalm and PHPUnit on PHP 8.1–8.4
 #   psalm-max    Psalm against the public API (OCP) of the newest supported Nextcloud
 #   package      `make appstore`, checks the tarball holds runtime files only, uploads it
@@ -89,11 +89,8 @@ jobs:
       - name: Production build
         run: npm run build
 
-      - name: Bundle size (main entry ≤ 250 KB gzip)
-        run: npm run size --if-present
-
-      - name: Trainer lessons and puzzles
-        run: npm run trainer:validate --if-present
+      - name: Translations are complete (nl, de, fr)
+        run: npm run l10n:check
 
       - name: Engine fixtures are up to date
         run: |

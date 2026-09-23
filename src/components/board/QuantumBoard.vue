@@ -1128,7 +1128,7 @@ const card = computed(() => {
 		return null
 	}
 	const { col, row } = squareXY(anchor, props.orientation)
-	const width = Math.min(260, 8 * S.value - 8)
+	const width = Math.min(290, 8 * S.value - 8)
 	const left = Math.max(4, Math.min(8 * S.value - width - 4, col * S.value + S.value / 2 - width / 2))
 	const style = { left: left + 'px', width: width + 'px' }
 	if (row >= 3) {

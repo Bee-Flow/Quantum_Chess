@@ -12,6 +12,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fallbackCandidate, moveKind, useLlmOpponent } from '../../../src/composables/useLlmOpponent.js'
 import { applyMove, initialState } from '../../../src/engine/index.js'
 import { personaById } from '../../../src/personas/index.js'
+import { requestAiMove as apiRequestAiMove } from '../../../src/services/api.js'
 
 vi.mock('../../../src/services/api.js', () => ({ requestAiMove: vi.fn(), cancelAiTask: vi.fn(async () => ({})) }))
 vi.mock('../../../src/services/aiTasks.js', () => ({ waitForAiTask: vi.fn() }))
@@ -51,6 +52,20 @@ function setup(answers, { strength = 'balanced', persona = 'professor', record =
 }
 
 describe('useLlmOpponent', () => {
+	it('uses the real API when a dependency is passed as undefined (as useLocalGame does)', async () => {
+		apiRequestAiMove.mockResolvedValueOnce({ status: 'done', move: 'e7-e5', comment: 'From the API', mood: 'happy' })
+		const rec = { ai: { answerMode: 'code', fallbackPlies: [], chat: [] } }
+		const opp = useLlmOpponent({ record: rec, persona: personaById('professor'), source: 'personal' }, {
+			candidates: async () => CANDS,
+			requestAiMove: undefined,
+			waitForAiTask: undefined,
+			cancelAiTask: undefined,
+		})
+		const r = await opp.chooseMove(state)
+		expect(apiRequestAiMove).toHaveBeenCalledTimes(1)
+		expect(r).toMatchObject({ code: 'e7-e5', by: 'ai', comment: 'From the API' })
+	})
+
 	it('plays a valid ✓ answer with its comment', async () => {
 		const { opp, bodies } = setup([{ status: 'done', move: 'e7-e5', comment: 'Classic!', mood: 'confident' }])
 		const r = await opp.chooseMove(state)

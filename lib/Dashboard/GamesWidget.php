@@ -115,7 +115,7 @@ class GamesWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget, IOptionWi
 				? $this->l->t('%s wants a rematch', [$name])
 				: $this->l->t('%s invited you', [$name]);
 			$subtitle = Notifier::timeControlLabel($this->l, $game->getTimeControl()) . ' · '
-				. ($game->getRatedRequested() === 1 ? $this->l->t('Rated') : $this->l->t('Casual'));
+				. ($game->getRatedRequested() === 1 ? $this->l->t('Rated') : $this->l->t('Unrated'));
 			return new WidgetItem($title, $subtitle, $link, $avatar, (string)$game->getId());
 		}
 		$subtitle = $this->l->t('Move %d', [intdiv($game->getPly(), 2) + 1]);

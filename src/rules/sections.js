@@ -188,7 +188,7 @@ export const RULES_SECTIONS = [
 				items: [
 					() => t('quantumchess', 'Before you move, the preview shows the chance of every result.'),
 					() => t('quantumchess', 'After a roll, the log shows a bar with one stretch per result (Missed, Moved, Captured) and a marker at the number rolled.'),
-					() => t('quantumchess', 'Online games: the server draws a fresh random number when your move is applied. Every roll is recorded and chained, and changes to moves you have already seen show a warning. Administrators carry an “admin” badge in rated games.'),
+					() => t('quantumchess', 'Online games: the server draws a fresh random number when your move is applied. Every roll is recorded and chained, and changes to moves you have already seen show a warning.'),
 					() => t('quantumchess', 'Local games remember each roll: undoing and playing the same move in the same position gives the same result, so undo cannot re-roll the dice. Undo marks the game as assisted.'),
 					() => t('quantumchess', 'The built-in engine and AI opponents do not know future rolls. They see the same odds you do.'),
 				],

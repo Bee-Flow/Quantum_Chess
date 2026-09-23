@@ -24,9 +24,10 @@ import { createServer } from 'node:http'
  * The answer for one chat request.
  *
  * @param {object} body request body
+ * @param {string} [comment] the opponent's comment on its move
  * @return {string}
  */
-function answerFor(body) {
+function answerFor(body, comment = 'A fine, solid move to start with!') {
 	const messages = Array.isArray(body.messages) ? body.messages : []
 	const system = messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n')
 	const user = messages.filter((m) => m.role === 'user').map((m) => m.content).join('\n')
@@ -37,16 +38,19 @@ function answerFor(body) {
 	if (user.includes('"pick"') || system.includes('"pick"')) {
 		return '{"pick": 1, "comment": "Candidate one, as computed.", "mood": "confident"}'
 	}
-	return '```json\n' + JSON.stringify({ move: candidate ?? 'e2-e4', comment: 'A fine, solid move to start with!', mood: 'confident' }) + '\n```'
+	return '```json\n' + JSON.stringify({ move: candidate ?? 'e2-e4', comment, mood: 'confident' }) + '\n```'
 }
 
 /**
  * @param {object} [options] options
  * @param {number} [options.port] port (0 = random)
  * @param {number} [options.slowMs] delay of the model `fake-slow`
+ * @param {string|string[]} [options.comment] the comment of the move answers (a list is used in turn)
  * @return {Promise<{baseUrl: string, port: number, requests: object[], close: () => Promise<void>}>}
  */
-export async function startFakeOpenAi({ port = 0, slowMs = 3000 } = {}) {
+export async function startFakeOpenAi({ port = 0, slowMs = 3000, comment } = {}) {
+	let answers = 0
+	const nextComment = () => (Array.isArray(comment) ? comment[answers++ % comment.length] : comment)
 	const requests = []
 	const server = createServer((req, res) => {
 		let raw = ''
@@ -90,7 +94,7 @@ export async function startFakeOpenAi({ port = 0, slowMs = 3000 } = {}) {
 					id: 'chatcmpl-fake',
 					object: 'chat.completion',
 					model: body.model,
-					choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: answerFor(body) } }],
+					choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: answerFor(body, nextComment()) } }],
 					usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
 				})
 				return

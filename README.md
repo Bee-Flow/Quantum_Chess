@@ -14,11 +14,11 @@ Quantum Chess lives inside your Nextcloud: challenge colleagues and family with 
 dashboard you already use, play the built-in engine or an AI opponent, or learn the game in ten minutes with the
 trainer.
 
-![A game in progress: a knight split over two squares, with its odds and a link to a rook](screenshots/01-game-ghosts.png)
+![A game in progress: a knight split over two squares, with its odds, a queen linked to it and a king in danger](screenshots/01-game-ghosts.png)
 
 - [Features](#features) · [Screenshots](#screenshots) · [The rules in one minute](#the-rules-in-one-minute)
 - [Installation](#installation) · [Administration](#administration) · [AI opponents and the AI coach](#ai-opponents-and-the-ai-coach)
-- [Multiplayer](#multiplayer) · [Privacy and security](#privacy-and-security)
+- [Multiplayer](#multiplayer) · [Privacy and security](#privacy-and-security) · [Planned](#planned)
 - [Development](#development) · [Credits](#credits) · [License](#license)
 
 ## Features
@@ -26,20 +26,20 @@ trainer.
 **Play**
 
 - 👥 **Online** correspondence games with anyone on your Nextcloud: invitations and open challenges, 1, 3 or 7 days
-  per move with reminders, draw offers, rematches, chat, Elo ratings and an opt-in leaderboard
+  per move, draw offers, rematches, chat with quick phrases, Elo ratings and an opt-in leaderboard
 - 🤖 **Computer**: the built-in engine with five levels, from *Wobbles* to *The Observer*, running in your browser
 - ✨ **AI opponents** with a personality, powered by Nextcloud Assistant, your organisation's provider or your own
   API key (OpenAI-compatible services such as OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama or LocalAI, and
   Anthropic)
-- 🪑 **Pass & play** on one device, with a tabletop mode
+- 🪑 **Pass & play** on one device
 
 **Learn**
 
 - Eleven short interactive lessons: the essentials in about ten minutes
-- Machine-verified puzzles, a sandbox lab and achievements
+- Eleven machine-verified puzzles
 - A coach with an evaluation bar, hints, threat warnings and move-quality badges, plus an AI coach you can ask about
   the position
-- Post-game review with an evaluation graph, accuracy, a luck ledger and a check of every roll
+- Post-game review with an evaluation graph and the key moments of the game
 
 **Native and fair**
 
@@ -48,9 +48,10 @@ trainer.
 - Notifications with actions in the web, mobile and desktop clients, and a dashboard widget
 - Every roll shows its exact odds before you move and explains itself afterwards
 - Online rolls are drawn by the server at the moment a move is applied and chained together, so later changes to
-  moves you have seen show up; fair play is protected in rated games
+  moves you have seen show up; the coach stays off in your running online games
 - API keys are stored encrypted on your server and never reach the browser. Nothing is sent anywhere except to the
   AI provider you choose.
+- In **English, Dutch, German and French** (the app, notifications, settings pages, lessons and rules)
 
 ## Screenshots
 
@@ -59,7 +60,7 @@ trainer.
 | ![Mid-game with ghosts and a link](screenshots/01-game-ghosts.png) | ![The roll: odds, suspense and the result](screenshots/02-roll.png) |
 | **Ghosts and links**: a split knight, its odds and a link | **The roll**: odds first, then the result and an explanation |
 | ![The lobby and the dashboard widget](screenshots/03-lobby-dashboard.png) | ![A trainer lesson](screenshots/04-trainer.png) |
-| **Lobby and dashboard**: your games, invitations and open challenges | **Trainer**: eleven lessons, puzzles and a lab |
+| **Lobby and dashboard**: your games, invitations and open challenges | **Trainer**: eleven lessons and eleven puzzles |
 | ![An AI opponent with a comment](screenshots/05-ai-opponent.png) | ![Dark theme](screenshots/06-dark.png) |
 | **AI opponents** with a personality | **Dark theme** and high contrast follow Nextcloud |
 | ![Phone layout](screenshots/07-phone.png) | |
@@ -118,13 +119,13 @@ Everything is configured in **Administration settings → Quantum Chess**; users
 ### Background jobs
 
 Correspondence games need a clock. The `GameMaintenanceJob` runs every 15 minutes: it expires unanswered invitations
-and open challenges, ends games whose move deadline passed, sends reminders (respecting quiet hours), deletes old chat
-and cleans up AI bookkeeping.
+and open challenges, ends games whose move deadline passed, ends games that never got their first moves, deletes old
+chat and cleans up AI bookkeeping.
 
 - Use **Cron** as the background job mode (Administration settings → Basic settings), with the system cron calling
   `cron.php` every 5 minutes, as the Nextcloud documentation recommends.
-- With *AJAX* or *Webcron* the app still behaves correctly: deadlines and expiry are also checked whenever a game is
-  opened. Reminders then arrive late, and the admin page shows a warning.
+- With *AJAX* or *Webcron* the app still behaves correctly: deadlines are also checked whenever a game is opened or
+  polled. The *Diagnostics* section of the admin page shows the background job mode.
 
 ### Multiplayer settings
 
@@ -141,9 +142,10 @@ and cleans up AI bookkeeping.
 
 ### Performance
 
-- A **distributed cache** (`memcache.distributed`, for example Redis) is recommended for instances with many online
-  players: an unchanged poll is then answered from the cache without touching the database. Without one, every poll
-  costs one indexed query.
+- An open online game polls the server; an unchanged poll costs one indexed query.
+- A **distributed cache** (`memcache.distributed`, for example Redis or APCu locally) is recommended: with it, AI
+  requests are limited to one at a time per user, provider model lists are cached for an hour and unsupported
+  parameters are remembered. Without a cache these optimisations are silently off.
 - The game engine and the computer opponent run in the browser (a web worker); the server only validates and applies
   online moves.
 
@@ -214,23 +216,20 @@ id), and an optional text you can append to the first-use notice (for example a 
 - **Correspondence play**: 1, 3 or 7 days per move (default 3), or no deadline for unrated games. When time runs out,
   the late player loses; it is a draw if the opponent has only a king left, and the game is aborted if the late player
   had not moved yet. Live clocks are not part of 1.0.
-- **Finding opponents**: invite anyone you can find in Nextcloud's user search, or post an open challenge. Each user
-  decides who may invite them (everyone, people in their groups, nobody) and can block people. Failed invitations
-  never reveal whether a user exists or has blocked you.
-- **Notifications** for invitations, your turn, reminders, draw offers, results and chat, with *Accept*, *Decline* and
-  *Rematch* actions in the web interface and the mobile and desktop clients. Each kind can be switched off in the
-  personal settings, and chat previews can be hidden.
+- **Finding opponents**: invite anyone you can find in Nextcloud's user search (Nextcloud's sharing restrictions to
+  groups apply), or post an open challenge. Failed invitations never reveal whether a user exists.
+- **Notifications** for invitations, your turn, draw offers, results and chat, with *Accept*, *Decline* and *Rematch*
+  actions in the web interface and the mobile and desktop clients, in each recipient's language. Each kind can be
+  switched off in the personal settings, and chat previews can be hidden.
 - **Updates**: open games poll the server adaptively (every 2 seconds right after your move, slower while you wait,
-  once a minute in background tabs); several open tabs of the same game share their updates.
+  once a minute in background tabs), with back-off and a banner when the connection is lost.
 - **Ratings**: Elo starting at 1200; the first 10 rated games use K = 40 (the rating is shown as provisional), then
-  K = 20. From the fourth rated game between the same two players within 24 hours, games are unrated. Colours in rated
-  games are assigned at random.
+  K = 20. Colours in rated games are assigned at random.
 - **Fair play**: in your own online games that are still running, the coach, hints, analysis and the AI coach are
-  unavailable, and the server refuses AI help for positions from rated games in progress. The king-danger ring and
-  the safety net stay, because they are rule information.
+  not available. The king-danger ring and the safety net stay, because they are rule information.
 - **Integrity**: the server draws every online roll with a cryptographic random number generator when it applies the
   move, stores it with its odds and chains each move to the previous one. Clients check the chain and warn if the
-  history of a game they have seen was altered later; the review's *Verify* re-checks every roll.
+  history of a game they have seen was altered later.
 
 ## Privacy and security
 
@@ -258,10 +257,9 @@ For your records of processing activities:
 | AI prompts and answers | not stored; the temporary TaskProcessing task is deleted after reading | – | – |
 | AI usage counters | app settings, per day and source, aggregated, no per-user logs | admins | 30 days |
 
-**Your data rights**: *Export my games* (`.qcg.json`) and *Delete my Quantum Chess data* in the personal settings.
-Deleting your data resigns your active games and then does what deleting the account does: pending invitations and
-open challenges are removed, finished games stay for the other player with your name replaced by "Deleted user",
-your chat messages, rating, settings and trainer progress are deleted.
+**Deleting an account** ends that user's running games (the opponent is notified), removes their pending invitations
+and open challenges, and keeps finished games for the other player with the name replaced by "Deleted user". A
+self-service *Export my games* and *Delete my Quantum Chess data* are [planned](#planned).
 
 ### Security notes
 
@@ -275,9 +273,22 @@ your chat messages, rating, settings and trainer progress are deleted.
 - **Rate limits** protect game creation, moves, chat, polling, AI requests and connection tests.
 - **Authorisation**: every game endpoint checks that you take part in the game and answers *not found* otherwise,
   so game ids cannot be probed. Moves are validated only by the server's engine; client states are never trusted.
-- Saving an admin secret and *Delete my data* require password confirmation.
+- Saving an admin secret requires password confirmation.
 
 Please report vulnerabilities privately, as described in the [security policy](.github/SECURITY.md).
+
+## Planned
+
+Designed, but not part of 1.0 (see [`docs/LEAN-1.0.md`](docs/LEAN-1.0.md)):
+
+- **Online**: move reminders and quiet hours, a personal invite policy and block list, *Export my games* and
+  *Delete my Quantum Chess data*, history filters, an admin badge, a limit on rated games between the same two
+  players, server-side refusal of AI help for rated games in progress, faster polling through the distributed cache
+  and shared updates between tabs.
+- **Board**: *Show the other result*, viewing one possibility, typed moves, the Letters piece set, haptics, tabletop
+  mode for pass & play, heat maps and more board themes.
+- **Trainer and coach**: the Lab, achievements and the trophy cabinet, hint tiers 3 and 4, accuracy, a luck ledger and
+  *Verify* in the review.
 
 ## Development
 
@@ -300,7 +311,8 @@ php ../../occ app:enable quantumchess
 | `make lint` | ESLint, `php -l`, php-cs-fixer, Psalm, `info.xml` against the App Store schema, SPDX headers |
 | `make e2e` | Playwright end-to-end tests against a running Nextcloud (see below) |
 | `make appstore` | The App Store package `build/artifacts/quantumchess.tar.gz` (runtime files only) |
-| `make l10n-pot`, `make l10n` | Extract strings and build translations ([`translationfiles/README.md`](translationfiles/README.md)) |
+| `npm run l10n:extract`, `npm run l10n:check` | Extract every translatable string; check that Dutch, German and French are complete ([`translationfiles/README.md`](translationfiles/README.md)) |
+| `npm run screenshots` | Regenerate the App Store screenshots from a running Nextcloud ([`screenshots/README.md`](screenshots/README.md)) |
 | `make help` | Every target |
 
 **End-to-end tests** run against a real Nextcloud with the app enabled. Point them at it with environment

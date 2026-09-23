@@ -206,7 +206,6 @@ const previewState = setupPosition({ fen: '4k3/8/8/8/8/8/8/2B1KN2 w - - 0 1', pr
 
 const coordinateOptions = [
 	{ value: 'inside', label: t('quantumchess', 'Inside') },
-	{ value: 'outside', label: t('quantumchess', 'Outside') },
 	{ value: 'all', label: t('quantumchess', 'All squares') },
 	{ value: 'off', label: t('quantumchess', 'Off') },
 ]
@@ -216,7 +215,7 @@ const formatOptions = [
 ]
 const ghostOptions = [
 	{ value: 'fade', label: t('quantumchess', 'Fade') },
-	{ value: 'solid', label: t('quantumchess', 'Solid') },
+	{ value: 'solid', label: t('quantumchess', 'Opaque') },
 ]
 const linkOptions = [
 	{ value: 'off', label: t('quantumchess', 'Off') },

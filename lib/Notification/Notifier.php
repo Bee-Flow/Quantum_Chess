@@ -137,7 +137,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 			case 'rematch':
 				$text = $subject === 'invite' ? $l->t('{user} invited you to a game of Quantum Chess') : $l->t('{user} wants a rematch');
 				$parts = [self::timeControlLabel($l, (string)($params['timeControl'] ?? 'corr:3d'))];
-				$parts[] = !empty($params['rated']) ? $l->t('Rated') : $l->t('Casual');
+				$parts[] = !empty($params['rated']) ? $l->t('Rated') : $l->t('Unrated');
 				$parts[] = match ($params['color'] ?? 'r') {
 					'w' => $l->t('You play White'),
 					'b' => $l->t('You play Black'),

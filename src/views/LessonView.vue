@@ -470,7 +470,7 @@ function startGame() {
 .qc-lesson__header {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: center;
+	align-items: flex-start;
 	gap: 8px 12px;
 	padding-inline-start: 36px;
 
@@ -491,6 +491,7 @@ function startGame() {
 
 .qc-lesson__dots {
 	display: flex;
+	align-self: center;
 	gap: 6px;
 	margin: 0;
 	padding: 0;

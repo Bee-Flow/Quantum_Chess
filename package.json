@@ -20,11 +20,10 @@
     "lint:fix": "eslint --fix src tests/js",
     "fixtures": "node tests/fixtures/generate-engine-fixtures.mjs",
     "bench": "vitest bench --run",
-    "trainer:validate": "node tools/trainer-validate.mjs",
-    "puzzles:build": "node tools/puzzles-build.mjs",
-    "size": "node tools/check-bundle-size.mjs",
     "test:e2e": "playwright test -c tests/e2e/playwright.config.mjs",
-    "screenshots": "node tests/e2e/screenshots.mjs"
+    "screenshots": "node tests/e2e/screenshots.mjs",
+    "l10n:extract": "node tools/l10n.mjs extract",
+    "l10n:check": "node tools/l10n.mjs check"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"

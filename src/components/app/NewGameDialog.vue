@@ -14,7 +14,11 @@
 		class="qc-new-game"
 		@update:open="(v) => !v && emit('close')">
 		<div class="qc-new-game__body">
-			<div class="qc-new-game__modes" role="radiogroup" :aria-label="t('quantumchess', 'Mode')">
+			<div
+				class="qc-new-game__modes"
+				role="radiogroup"
+				:aria-label="t('quantumchess', 'Mode')"
+				:style="{ '--qc-mode-count': modes.length }">
 				<button
 					v-for="m in modes"
 					:key="m.id"
@@ -25,8 +29,13 @@
 					:aria-checked="mode === m.id ? 'true' : 'false'"
 					:aria-disabled="m.disabled ? 'true' : undefined"
 					:title="m.disabled ? m.reason : undefined"
+					:tabindex="mode === m.id ? 0 : -1"
 					:data-test="'mode-' + m.id"
-					@click="!m.disabled && (mode = m.id)">
+					@click="!m.disabled && (mode = m.id)"
+					@keydown.left.prevent="stepMode(-1, $event)"
+					@keydown.right.prevent="stepMode(1, $event)"
+					@keydown.up.prevent="stepMode(-1, $event)"
+					@keydown.down.prevent="stepMode(1, $event)">
 					<NcIconSvgWrapper :path="m.icon" :size="28" />
 					<span>{{ m.label }}</span>
 				</button>
@@ -106,8 +115,16 @@
 			<!-- Pass & play -->
 			<template v-else-if="mode === 'local'">
 				<div class="qc-new-game__names">
-					<NcTextField v-model="local.white" :label="t('quantumchess', 'Name for White')" :maxlength="40" />
-					<NcTextField v-model="local.black" :label="t('quantumchess', 'Name for Black')" :maxlength="40" />
+					<NcTextField
+						v-model="local.white"
+						:label="t('quantumchess', 'Name for White')"
+						:placeholder="t('quantumchess', 'White')"
+						:maxlength="40" />
+					<NcTextField
+						v-model="local.black"
+						:label="t('quantumchess', 'Name for Black')"
+						:placeholder="t('quantumchess', 'Black')"
+						:maxlength="40" />
 				</div>
 				<NcCheckboxRadioSwitch v-model="local.autoFlip" type="switch">
 					{{ t('quantumchess', 'Turn the board to the side to move') }}
@@ -180,7 +197,7 @@
 <script setup>
 import { mdiAccountMultipleOutline, mdiCreationOutline, mdiEarth, mdiRobotOutline } from '@mdi/js'
 import { t } from '@nextcloud/l10n'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
@@ -223,7 +240,7 @@ const modes = computed(() => [
 
 const last = preferences.lastNewGame ?? {}
 const wanted = ['online', 'computer', 'ai', 'local'].includes(props.initialMode) ? props.initialMode : 'computer'
-const mode = ref(wanted === 'online' && !onlineAvailable ? 'computer' : wanted)
+const mode = ref((wanted === 'online' && !onlineAvailable) || (wanted === 'ai' && !ai.anyAvailable.value) ? 'computer' : wanted)
 const busy = ref(false)
 const errorText = ref('')
 
@@ -241,8 +258,9 @@ watch(availableSources, (list) => {
 	}
 }, { immediate: true })
 const local = reactive({
-	white: last.local?.white ?? t('quantumchess', 'White'),
-	black: last.local?.black ?? t('quantumchess', 'Black'),
+	// Empty means the default name, shown in the viewer's language ("White", "Wit", "Blancs", …)
+	white: last.local?.white ?? '',
+	black: last.local?.black ?? '',
 	autoFlip: last.local?.autoFlip ?? preferences.autoFlip ?? false,
 })
 const online = reactive({
@@ -360,6 +378,20 @@ const primaryLabel = computed(() => {
 })
 
 /**
+ * Arrow keys in the mode radio group: select the previous or next available mode and focus it.
+ *
+ * @param {number} dir -1 or 1
+ * @param {KeyboardEvent} event the key event
+ */
+function stepMode(dir, event) {
+	const list = modes.value.filter((m) => !m.disabled)
+	const at = list.findIndex((m) => m.id === mode.value)
+	const next = list[(at + dir + list.length) % list.length]
+	mode.value = next.id
+	nextTick(() => event.target.closest('[role=radiogroup]')?.querySelector('[aria-checked=true]')?.focus())
+}
+
+/**
  * Resolve a colour choice.
  *
  * @param {'w'|'b'|'r'} choice colour choice
@@ -404,8 +436,8 @@ async function start() {
 			rememberNewGame('ai', { persona: aiOpts.persona, source: aiOpts.source, strength: aiOpts.strength, color: aiOpts.color })
 			router.replace(`/play/ai/${record.id}`)
 		} else if (mode.value === 'local') {
-			const white = local.white.trim() || t('quantumchess', 'White')
-			const black = local.black.trim() || t('quantumchess', 'Black')
+			const white = local.white.trim() === t('quantumchess', 'White') ? '' : local.white.trim()
+			const black = local.black.trim() === t('quantumchess', 'Black') ? '' : local.black.trim()
 			const record = createLocalGame({
 				mode: 'local',
 				players: { w: { kind: 'local', name: white }, b: { kind: 'local', name: black } },
@@ -444,8 +476,12 @@ async function start() {
 
 .qc-new-game__modes {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+	grid-template-columns: repeat(var(--qc-mode-count, 4), minmax(0, 1fr));
 	gap: 8px;
+
+	@media (max-width: 480px) {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }
 
 .qc-new-game__mode {

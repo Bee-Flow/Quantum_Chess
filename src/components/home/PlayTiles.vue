@@ -46,7 +46,9 @@ const tiles = computed(() => {
 		out.push({ mode: 'online', icon: mdiEarth, title: t('quantumchess', 'Online'), subtitle: t('quantumchess', 'Play someone on this Nextcloud') })
 	}
 	out.push({ mode: 'computer', icon: mdiRobotOutline, title: t('quantumchess', 'Computer'), subtitle: t('quantumchess', 'Five levels, from Wobbles to The Observer') })
-	const firstReason = ai.sources.value.find((s) => !s.available)?.reason ?? null
+	// "Add your own API key" is the one reason the user can act on: show it first
+	const reasons = ai.sources.value.filter((s) => !s.available).map((s) => s.reason)
+	const firstReason = reasons.includes('no_key') ? 'no_key' : (reasons[0] ?? null)
 	out.push({
 		mode: 'ai',
 		icon: mdiCreationOutline,
@@ -128,6 +130,8 @@ function choose(tile) {
 .qc-tiles__subtitle {
 	color: var(--color-text-maxcontrast);
 	font-size: 14px;
+	font-weight: normal;
+	text-align: start;
 	line-height: 1.3;
 }
 </style>

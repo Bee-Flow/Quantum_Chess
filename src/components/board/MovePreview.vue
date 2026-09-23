@@ -69,7 +69,7 @@ const icon = computed(() => ICONS[props.info.label] ?? mdiDiceMultipleOutline)
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-	width: 260px;
+	width: 290px;
 	max-width: 100%;
 	padding: 10px 12px;
 	border-radius: var(--border-radius-container, 12px);

@@ -253,7 +253,7 @@ onMounted(load)
 
 .qc-stats__tiles {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 	gap: 8px;
 	margin: 0;
 }
@@ -274,6 +274,8 @@ onMounted(load)
 	dt {
 		color: var(--color-text-maxcontrast);
 		font-size: 13px;
+		white-space: normal;
+		overflow-wrap: anywhere;
 	}
 
 	dd {
