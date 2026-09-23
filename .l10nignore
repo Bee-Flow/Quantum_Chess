@@ -5,6 +5,7 @@
 # app root). Strings are extracted from the sources in src/, lib/, templates/ and appinfo/info.xml.
 # Built bundles (generated from src/)
 js/
+assets/
 build/
 # Development only (and generated test output)
 vendor/

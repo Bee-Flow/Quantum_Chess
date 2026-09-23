@@ -3,46 +3,34 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-// The six board themes of GAME-DESIGN §3.2 (attribute `data-board-theme` on every board root). Board colours never
-// follow the Nextcloud light/dark theme; in the dark theme only the squares layer is dimmed (QuantumBoard.vue).
-// tests/js/board/contrast.spec.js reads the colours of this file and checks every marker against both square
-// colours (≥ 3:1) and the badges (≥ 7:1).
+// The board themes of 1.0 (docs/LEAN-1.0.md): Classic (`wood`), Blue (`slate`) and Quantum, plus `contrast`, which is
+// chosen automatically under Nextcloud's high-contrast themes. Attribute `data-board-theme` on every board root.
+// Board colours never follow the Nextcloud light/dark theme; in the dark theme only the squares are dimmed.
+// tests/js/board/contrast.spec.js reads the colours of this file and checks the markers against both square colours.
 
 [data-board-theme] {
 	--qc-sq-light: #dee3e6;
 	--qc-sq-dark: #8ca2ad;
+	--qc-sq-light-text: #6f8796;
+	--qc-sq-dark-text: #f1f4f6;
 	--qc-board-ring: #3f1ca0;
 	--qc-square-border: transparent;
-	--qc-board-frame: rgb(0 0 0 / 0.1);
-}
-
-// nextcloud: follows the admin's primary colour with its lightness pinned (slate without oklch(from …) support)
-[data-board-theme='nextcloud'] {
-	--qc-sq-light: #dee3e6;
-	--qc-sq-dark: #8ca2ad;
-	--qc-board-ring: #3f1ca0;
-
-	@supports (color: oklch(from red l c h)) {
-		--qc-sq-light: oklch(from var(--color-primary-element, #00679e) 0.93 min(calc(c * 0.25), 0.04) h);
-		--qc-sq-dark: oklch(from var(--color-primary-element, #00679e) 0.66 min(calc(c * 0.5), 0.09) h);
-	}
+	--qc-board-frame: rgb(0 0 0 / 0.12);
 }
 
 [data-board-theme='wood'] {
 	--qc-sq-light: #f0d9b5;
 	--qc-sq-dark: #b58863;
-	--qc-board-ring: #3f1ca0;
-}
-
-[data-board-theme='green'] {
-	--qc-sq-light: #ebecd0;
-	--qc-sq-dark: #739552;
+	--qc-sq-light-text: #946f51;
+	--qc-sq-dark-text: #f7ead6;
 	--qc-board-ring: #3f1ca0;
 }
 
 [data-board-theme='slate'] {
 	--qc-sq-light: #dee3e6;
 	--qc-sq-dark: #8ca2ad;
+	--qc-sq-light-text: #6f8796;
+	--qc-sq-dark-text: #f1f4f6;
 	--qc-board-ring: #3f1ca0;
 }
 
@@ -50,13 +38,17 @@
 [data-board-theme='quantum'] {
 	--qc-sq-light: #e6e1f8;
 	--qc-sq-dark: #8a79c6;
+	--qc-sq-light-text: #6a5aa6;
+	--qc-sq-dark-text: #f3f0fc;
 	--qc-board-ring: #1f1147;
 }
 
-// contrast: chosen automatically under Nextcloud's high-contrast themes; square borders and solid markers
+// contrast: square borders and solid markers
 [data-board-theme='contrast'] {
 	--qc-sq-light: #ffffff;
 	--qc-sq-dark: #8a8a8a;
+	--qc-sq-light-text: #000000;
+	--qc-sq-dark-text: #ffffff;
 	--qc-board-ring: #1f1147;
 	--qc-square-border: rgb(0 0 0 / 0.55);
 	--qc-board-frame: #000000;

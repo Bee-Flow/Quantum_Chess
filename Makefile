@@ -23,7 +23,7 @@ TARBALL := $(ARTIFACTS_DIR)/$(APP_NAME).tar.gz
 
 # Everything the app needs at runtime. Anything else (src/, tests/, docs/, tools/, vendor/, node_modules/,
 # dotfiles) stays out of the package. .nextcloudignore removes unwanted files inside these paths.
-APPSTORE_PATHS := appinfo lib templates js css img l10n LICENSE README.md CHANGELOG.md
+APPSTORE_PATHS := appinfo lib templates js assets css img l10n LICENSE README.md CHANGELOG.md
 
 # Root of a Nextcloud server checkout (for occ). Defaults to the usual apps/<app> or custom_apps/<app> layout.
 NEXTCLOUD ?= $(abspath ../..)
@@ -166,8 +166,8 @@ l10n: $(TOOLS_DIR)/translationtool.phar ## Convert translationfiles/<lang>/quant
 
 # --- Housekeeping -----------------------------------------------------------------------------------------
 
-clean: ## Remove build output (build/, js/, css/*.css)
-	rm -rf $(BUILD_DIR) js
+clean: ## Remove build output (build/, js/, assets/, css/*.css)
+	rm -rf $(BUILD_DIR) js assets
 	rm -f css/*.css css/*.map
 
 distclean: clean ## Also remove node_modules/ and vendor/

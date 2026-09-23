@@ -5,7 +5,8 @@
 
 <!-- One piece graphic from the sprite (SPEC §14.6.2): captured trays, trophies, copy. -->
 <template>
-	<svg class="qc-piece-icon"
+	<svg
+		class="qc-piece-icon"
 		:class="{ 'qc-piece-icon--inline': inline }"
 		:width="size"
 		:height="size"
@@ -30,7 +31,7 @@ const props = defineProps({
 	color: { type: String, required: true },
 	/** Size in px */
 	size: { type: [Number, String], default: 18 },
-	/** Piece set (cburnett | letters); default: the preference */
+	/** Piece set (cburnett); default: the preference */
 	set: { type: String, default: null },
 	/** Hidden from screen readers (when the name is said next to it) */
 	decorative: { type: Boolean, default: false },

@@ -47,7 +47,7 @@ function sidePieces(state, color) {
 		const where = locs[id].length === 1
 			? squareName(locs[id][0].square)
 			: locs[id].map((l) => t('quantumchess', '{square} {percent}', { square: squareName(l.square), percent: percent(l.weight) }, undefined, TEXT))
-				.join(' ' + t('quantumchess', 'or') + ' ')
+					.join(' ' + t('quantumchess', 'or') + ' ')
 		if (type === 'p') {
 			pawns.push(where)
 		} else {

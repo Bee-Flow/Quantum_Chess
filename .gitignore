@@ -2,6 +2,7 @@
 /vendor/
 /build/
 /js/
+/assets/
 /css/*.css
 /css/*.map
 /.php-cs-fixer.cache

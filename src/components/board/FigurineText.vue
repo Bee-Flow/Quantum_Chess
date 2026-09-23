@@ -10,7 +10,8 @@
 <template>
 	<span class="qc-figurine-text">
 		<template v-for="(part, i) in parts" :key="i">
-			<PieceIcon v-if="part.piece"
+			<PieceIcon
+				v-if="part.piece"
 				:type="part.piece.type"
 				:color="part.piece.color"
 				:size="size"
@@ -32,8 +33,18 @@ const props = defineProps({
 })
 
 const FIG = {
-	'♔': ['k', 'w'], '♕': ['q', 'w'], '♖': ['r', 'w'], '♗': ['b', 'w'], '♘': ['n', 'w'], '♙': ['p', 'w'],
-	'♚': ['k', 'b'], '♛': ['q', 'b'], '♜': ['r', 'b'], '♝': ['b', 'b'], '♞': ['n', 'b'], '♟': ['p', 'b'],
+	'♔': ['k', 'w'],
+	'♕': ['q', 'w'],
+	'♖': ['r', 'w'],
+	'♗': ['b', 'w'],
+	'♘': ['n', 'w'],
+	'♙': ['p', 'w'],
+	'♚': ['k', 'b'],
+	'♛': ['q', 'b'],
+	'♜': ['r', 'b'],
+	'♝': ['b', 'b'],
+	'♞': ['n', 'b'],
+	'♟': ['p', 'b'],
 }
 
 const parts = computed(() => {

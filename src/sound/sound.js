@@ -11,8 +11,7 @@
  */
 
 /** Sound names of SPEC §14.3.2. */
-export const SOUND_NAMES = Object.freeze(['select', 'move', 'capture', 'split', 'merge', 'measure', 'captured', 'moved',
-	'missed', 'win', 'loss', 'yourMove', 'kingDanger', 'illegal'])
+export const SOUND_NAMES = Object.freeze(['select', 'move', 'capture', 'split', 'merge', 'measure', 'captured', 'moved', 'missed', 'win', 'loss', 'yourMove', 'kingDanger', 'illegal'])
 
 const SPEEDS = { slow: 1.5, normal: 1, fast: 0.5, off: 0.5 }
 const ATTACK = 0.005
@@ -197,7 +196,13 @@ function pinkNoise() {
 		const white = whiteNoise().getChannelData(0)
 		pinkBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
 		const data = pinkBuffer.getChannelData(0)
-		let b0 = 0; let b1 = 0; let b2 = 0; let b3 = 0; let b4 = 0; let b5 = 0; let b6 = 0
+		let b0 = 0
+		let b1 = 0
+		let b2 = 0
+		let b3 = 0
+		let b4 = 0
+		let b5 = 0
+		let b6 = 0
 		for (let i = 0; i < data.length; i++) {
 			const w = white[i % white.length]
 			b0 = 0.99886 * b0 + w * 0.0555179
@@ -254,59 +259,59 @@ export function playSound(name, { speed = 'normal' } = {}) {
 	const k = soundScale(speed)
 	const s = (ms) => (ms / 1000) * k
 	switch (name) {
-	case 'select':
-		tone({ freq: 880, dur: s(30), gain: 0.12 })
-		break
-	case 'move':
-		noiseBurst({ freq: 1200, q: 1.5, dur: s(60), gain: 0.22 })
-		tone({ freq: 300, dur: s(60), gain: 0.1 })
-		break
-	case 'capture':
-		noiseBurst({ freq: 1200, q: 1.5, dur: s(60), gain: 0.24 })
-		tone({ freq: 300, dur: s(60), gain: 0.1 })
-		tone({ freq: 180, dur: s(120), gain: 0.32 })
-		break
-	case 'split':
-		tone({ freq: 523.25, dur: s(180), gain: 0.1, detune: -6, pan: -0.3 })
-		tone({ freq: 783.99, dur: s(180), gain: 0.08, detune: 6, pan: 0.3 })
-		break
-	case 'merge':
-		tone({ freq: 523.25, dur: s(200), gain: 0.1, glideTo: 659.25, pan: -0.2 })
-		tone({ freq: 783.99, dur: s(200), gain: 0.08, glideTo: 659.25, pan: 0.2 })
-		break
-	case 'measure':
-		tone({ freq: 1318.51, dur: s(150), gain: 0.14 })
-		break
-	case 'captured':
-		tone({ freq: 1046.5, dur: s(400), gain: 0.16 })
-		tone({ freq: 1568, dur: s(330), gain: 0.09 })
-		tone({ freq: 2637, dur: s(120), gain: 0.025 })
-		break
-	case 'moved':
-	case 'missed':
-		tone({ freq: 196, dur: s(200), gain: 0.22, type: 'triangle' })
-		tone({ freq: 392, dur: s(90), gain: 0.04, type: 'triangle' })
-		break
-	case 'win':
-		[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone({ freq: f, at: s(i * 95), dur: s(i === 3 ? 215 : 150), gain: 0.13 }))
-		break
-	case 'loss':
-		tone({ freq: 329.63, dur: s(180), gain: 0.12 })
-		tone({ freq: 261.63, at: s(160), dur: s(190), gain: 0.12 })
-		break
-	case 'yourMove':
-		tone({ freq: 659.25, dur: s(130), gain: 0.12 })
-		tone({ freq: 880, at: s(110), dur: s(140), gain: 0.12 })
-		break
-	case 'kingDanger':
-		tone({ freq: 110, dur: s(90), gain: 0.2 })
-		tone({ freq: 110, at: s(110), dur: s(90), gain: 0.2 })
-		break
-	case 'illegal':
-		tone({ freq: 120, dur: s(40), gain: 0.06 })
-		break
-	default:
-		return false
+		case 'select':
+			tone({ freq: 880, dur: s(30), gain: 0.12 })
+			break
+		case 'move':
+			noiseBurst({ freq: 1200, q: 1.5, dur: s(60), gain: 0.22 })
+			tone({ freq: 300, dur: s(60), gain: 0.1 })
+			break
+		case 'capture':
+			noiseBurst({ freq: 1200, q: 1.5, dur: s(60), gain: 0.24 })
+			tone({ freq: 300, dur: s(60), gain: 0.1 })
+			tone({ freq: 180, dur: s(120), gain: 0.32 })
+			break
+		case 'split':
+			tone({ freq: 523.25, dur: s(180), gain: 0.1, detune: -6, pan: -0.3 })
+			tone({ freq: 783.99, dur: s(180), gain: 0.08, detune: 6, pan: 0.3 })
+			break
+		case 'merge':
+			tone({ freq: 523.25, dur: s(200), gain: 0.1, glideTo: 659.25, pan: -0.2 })
+			tone({ freq: 783.99, dur: s(200), gain: 0.08, glideTo: 659.25, pan: 0.2 })
+			break
+		case 'measure':
+			tone({ freq: 1318.51, dur: s(150), gain: 0.14 })
+			break
+		case 'captured':
+			tone({ freq: 1046.5, dur: s(400), gain: 0.16 })
+			tone({ freq: 1568, dur: s(330), gain: 0.09 })
+			tone({ freq: 2637, dur: s(120), gain: 0.025 })
+			break
+		case 'moved':
+		case 'missed':
+			tone({ freq: 196, dur: s(200), gain: 0.22, type: 'triangle' })
+			tone({ freq: 392, dur: s(90), gain: 0.04, type: 'triangle' })
+			break
+		case 'win':
+			[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone({ freq: f, at: s(i * 95), dur: s(i === 3 ? 215 : 150), gain: 0.13 }))
+			break
+		case 'loss':
+			tone({ freq: 329.63, dur: s(180), gain: 0.12 })
+			tone({ freq: 261.63, at: s(160), dur: s(190), gain: 0.12 })
+			break
+		case 'yourMove':
+			tone({ freq: 659.25, dur: s(130), gain: 0.12 })
+			tone({ freq: 880, at: s(110), dur: s(140), gain: 0.12 })
+			break
+		case 'kingDanger':
+			tone({ freq: 110, dur: s(90), gain: 0.2 })
+			tone({ freq: 110, at: s(110), dur: s(90), gain: 0.2 })
+			break
+		case 'illegal':
+			tone({ freq: 120, dur: s(40), gain: 0.06 })
+			break
+		default:
+			return false
 	}
 	return true
 }

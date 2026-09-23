@@ -8,13 +8,18 @@
   pages) render nothing while another one is mounted, so symbol ids stay unique.
 -->
 <template>
-	<!-- eslint-disable-next-line vue/no-v-html -- build-time SVG from img/pieces and generated letters, no user input -->
-	<div v-if="isOwner" class="qc-piece-sprite" aria-hidden="true" v-html="markup" />
+	<!-- eslint-disable vue/no-v-html -- build-time SVG from img/pieces, no user input -->
+	<div
+		v-if="isOwner"
+		class="qc-piece-sprite"
+		aria-hidden="true"
+		v-html="markup" />
+	<!-- eslint-enable vue/no-v-html -->
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount } from 'vue'
-import { spriteMarkup, spriteRegistry as registry } from './pieceSprite.js'
+import { spriteRegistry as registry, spriteMarkup } from './pieceSprite.js'
 
 const uid = registry.next++
 registry.mounted.push(uid)

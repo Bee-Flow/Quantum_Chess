@@ -24,59 +24,59 @@ import { t } from '@nextcloud/l10n'
  */
 export function reasonText(code, context = {}) {
 	switch (code) {
-	case 'game_over':
-		return t('quantumchess', 'The game is over.')
-	case 'malformed':
-		return t('quantumchess', 'That is not a valid move.')
-	case 'no_piece':
-		return t('quantumchess', 'There is no piece on that square.')
-	case 'not_your_piece':
-		return t('quantumchess', 'That piece belongs to your opponent.')
-	case 'piece_mismatch':
-		return t('quantumchess', 'The piece letter does not match the piece on that square.')
-	case 'merge_mismatch':
-		return t('quantumchess', 'Both squares must hold parts of the same piece.')
-	case 'cannot_split':
-		return t('quantumchess', 'Kings and pawns can\'t split.')
-	case 'cannot_merge':
-		return t('quantumchess', 'Kings and pawns can\'t merge.')
-	case 'not_superposed':
+		case 'game_over':
+			return t('quantumchess', 'The game is over.')
+		case 'malformed':
+			return t('quantumchess', 'That is not a valid move.')
+		case 'no_piece':
+			return t('quantumchess', 'There is no piece on that square.')
+		case 'not_your_piece':
+			return t('quantumchess', 'That piece belongs to your opponent.')
+		case 'piece_mismatch':
+			return t('quantumchess', 'The piece letter does not match the piece on that square.')
+		case 'merge_mismatch':
+			return t('quantumchess', 'Both squares must hold parts of the same piece.')
+		case 'cannot_split':
+			return t('quantumchess', 'Kings and pawns can\'t split.')
+		case 'cannot_merge':
+			return t('quantumchess', 'Kings and pawns can\'t merge.')
+		case 'not_superposed':
 		// TRANSLATORS: "ghost" is a piece that stands on several squares at once (RULES.md glossary)
-		return t('quantumchess', 'This piece is not a ghost, so there is nothing to measure.')
-	case 'castle_no_right':
-		return t('quantumchess', 'Castling on this side is no longer allowed.')
-	case 'castle_blocked':
-		return t('quantumchess', 'The squares between king and rook must be certainly empty.')
-	case 'unreachable':
-		return context.pawn
-			? t('quantumchess', 'Pawns move straight ahead and capture diagonally.')
-			: t('quantumchess', 'This piece can\'t move there.')
-	case 'promotion_required':
-		return t('quantumchess', 'Choose a piece to promote to.')
-	case 'promotion_invalid':
-		return t('quantumchess', 'Only a pawn reaching the last rank can promote.')
-	case 'nothing_to_capture':
-		return t('quantumchess', 'Pawns move diagonally only to capture, and there is nothing to capture there.')
-	case 'blocked':
-		return context.pawnPush
-			? t('quantumchess', 'Pawns can\'t capture straight ahead.')
-			: t('quantumchess', 'The way is blocked.')
-	case 'own_piece':
-		return t('quantumchess', 'Your own piece is on that square.')
-	case 'split_target_occupied':
-		return t('quantumchess', 'A split can only go to squares that are certainly empty.')
-	case 'split_blocked':
-		return t('quantumchess', 'Both paths are blocked in every possibility.')
-	case 'location_cap':
-		return t('quantumchess', 'A piece can stand on at most 4 squares.')
-	case 'budget_full':
-		return t('quantumchess', 'Budget full: merge or measure a piece first.')
-	case 'merge_target_own':
-		return t('quantumchess', 'Your own piece is on that square.')
-	case 'merge_part_stuck':
-		return t('quantumchess', 'One of the parts can\'t reach that square.')
-	default:
-		return t('quantumchess', 'That move is not possible.')
+			return t('quantumchess', 'This piece is not a ghost, so there is nothing to measure.')
+		case 'castle_no_right':
+			return t('quantumchess', 'Castling on this side is no longer allowed.')
+		case 'castle_blocked':
+			return t('quantumchess', 'The squares between king and rook must be certainly empty.')
+		case 'unreachable':
+			return context.pawn
+				? t('quantumchess', 'Pawns move straight ahead and capture diagonally.')
+				: t('quantumchess', 'This piece can\'t move there.')
+		case 'promotion_required':
+			return t('quantumchess', 'Choose a piece to promote to.')
+		case 'promotion_invalid':
+			return t('quantumchess', 'Only a pawn reaching the last rank can promote.')
+		case 'nothing_to_capture':
+			return t('quantumchess', 'Pawns move diagonally only to capture, and there is nothing to capture there.')
+		case 'blocked':
+			return context.pawnPush
+				? t('quantumchess', 'Pawns can\'t capture straight ahead.')
+				: t('quantumchess', 'The way is blocked.')
+		case 'own_piece':
+			return t('quantumchess', 'Your own piece is on that square.')
+		case 'split_target_occupied':
+			return t('quantumchess', 'A split can only go to squares that are certainly empty.')
+		case 'split_blocked':
+			return t('quantumchess', 'Both paths are blocked in every possibility.')
+		case 'location_cap':
+			return t('quantumchess', 'A piece can stand on at most 4 squares.')
+		case 'budget_full':
+			return t('quantumchess', 'Budget full: merge or measure a piece first.')
+		case 'merge_target_own':
+			return t('quantumchess', 'Your own piece is on that square.')
+		case 'merge_part_stuck':
+			return t('quantumchess', 'One of the parts can\'t reach that square.')
+		default:
+			return t('quantumchess', 'That move is not possible.')
 	}
 }
 
@@ -103,20 +103,20 @@ export function resolutionLabel(legalMove) {
  */
 export function resolutionText(label, { physics = false } = {}) {
 	switch (label) {
-	case 'certain':
-		return t('quantumchess', 'Certain')
-	case 'quantum':
-		return t('quantumchess', 'Quantum')
-	case 'roll-budget':
-		return physics
-			? t('quantumchess', 'Measurement (budget full)')
+		case 'certain':
+			return t('quantumchess', 'Certain')
+		case 'quantum':
+			return t('quantumchess', 'Quantum')
+		case 'roll-budget':
+			return physics
+				? t('quantumchess', 'Measurement (budget full)')
 			// TRANSLATORS: "Roll" is the random decision of a move (RULES.md glossary)
-			: t('quantumchess', 'Roll (budget full)')
-	default:
-		return physics
-			? t('quantumchess', 'Measurement')
+				: t('quantumchess', 'Roll (budget full)')
+		default:
+			return physics
+				? t('quantumchess', 'Measurement')
 			// TRANSLATORS: "Roll" is the random decision of a move (RULES.md glossary)
-			: t('quantumchess', 'Roll')
+				: t('quantumchess', 'Roll')
 	}
 }
 
@@ -128,17 +128,17 @@ export function resolutionText(label, { physics = false } = {}) {
  */
 export function outcomeLabel(key) {
 	switch (key) {
-	case 'miss':
+		case 'miss':
 		// TRANSLATORS: result of a roll: the move did not happen (RULES.md glossary "Captured / Moved / Missed")
-		return t('quantumchess', 'Missed')
-	case 'move':
+			return t('quantumchess', 'Missed')
+		case 'move':
 		// TRANSLATORS: result of a roll: the piece moved without capturing (RULES.md glossary)
-		return t('quantumchess', 'Moved')
-	case 'capture':
+			return t('quantumchess', 'Moved')
+		case 'capture':
 		// TRANSLATORS: result of a roll: the piece captured (RULES.md glossary)
-		return t('quantumchess', 'Captured')
-	default:
-		return key
+			return t('quantumchess', 'Captured')
+		default:
+			return key
 	}
 }
 

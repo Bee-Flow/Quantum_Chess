@@ -8,7 +8,8 @@
   one SVG, ghosts drawn with opacity only (no badges). Changing `state` animates solid pieces to their new squares.
 -->
 <template>
-	<svg class="qc-mini-board qc-scope"
+	<svg
+		class="qc-mini-board qc-scope"
 		:class="{ 'qc-mini-board--interactive': interactive }"
 		:data-board-theme="theme"
 		:width="size"
@@ -18,7 +19,8 @@
 		:aria-label="ariaLabel"
 		shape-rendering="crispEdges">
 		<g class="qc-mini-board__squares">
-			<rect v-for="cell in cells"
+			<rect
+				v-for="cell in cells"
 				:key="cell.square"
 				:x="cell.col"
 				:y="cell.row"
@@ -28,12 +30,13 @@
 				:role="interactive ? 'button' : undefined"
 				:tabindex="interactive ? 0 : undefined"
 				:aria-label="interactive ? cell.label : undefined"
-				@click="interactive && emit('square-click', cell.square)"
-				@keydown.enter.prevent="interactive && emit('square-click', cell.square)"
-				@keydown.space.prevent="interactive && emit('square-click', cell.square)" />
+				@click="interactive && emit('squareClick', cell.square)"
+				@keydown.enter.prevent="interactive && emit('squareClick', cell.square)"
+				@keydown.space.prevent="interactive && emit('squareClick', cell.square)" />
 		</g>
 		<g class="qc-mini-board__highlights" shape-rendering="geometricPrecision">
-			<rect v-for="h in highlightCells"
+			<rect
+				v-for="h in highlightCells"
 				:key="'h' + h.square"
 				:x="h.col + 0.06"
 				:y="h.row + 0.06"
@@ -44,7 +47,8 @@
 				:class="'qc-mini-board__highlight--' + h.kind" />
 		</g>
 		<g class="qc-mini-board__pieces" shape-rendering="geometricPrecision">
-			<use v-for="p in pieceList"
+			<use
+				v-for="p in pieceList"
 				:key="p.key"
 				class="qc-mini-board__piece"
 				:href="'#' + p.symbol"
@@ -56,7 +60,8 @@
 		</g>
 		<g v-if="arrowList.length > 0" class="qc-mini-board__arrows" shape-rendering="geometricPrecision">
 			<g v-for="(a, i) in arrowList" :key="'a' + i" :class="'qc-mini-board__arrow--' + a.kind">
-				<line :x1="a.x1"
+				<line
+					:x1="a.x1"
 					:y1="a.y1"
 					:x2="a.x2"
 					:y2="a.y2"
@@ -74,6 +79,8 @@ import { squareName, squareView } from '../../engine/index.js'
 import { boardPrefs } from './boardPreferences.js'
 import { ghostOpacity, isLightSquare, squareCentre, squareXY } from './geometry.js'
 import { pieceSymbolId } from './pieceSprite.js'
+import { isHighContrast, resolveBoardTheme } from './themes.js'
+
 import './styles.js'
 
 const props = defineProps({
@@ -89,7 +96,7 @@ const props = defineProps({
 	highlights: { type: Array, default: () => [] },
 	/** Arrows: [{from, to, kind, dashed?}] */
 	arrows: { type: Array, default: () => [] },
-	/** Squares are buttons (emits square-click) */
+	/** Squares are buttons (emits squareClick, listen with @square-click) */
 	interactive: { type: Boolean, default: false },
 	/** Board theme; default: the preference */
 	boardTheme: { type: String, default: null },
@@ -99,9 +106,9 @@ const props = defineProps({
 	label: { type: String, default: null },
 })
 
-const emit = defineEmits(['square-click'])
+const emit = defineEmits(['squareClick'])
 
-const theme = computed(() => props.boardTheme ?? boardPrefs.boardTheme)
+const theme = computed(() => resolveBoardTheme(props.boardTheme ?? boardPrefs.boardTheme, { highContrast: isHighContrast() }))
 const set = computed(() => props.pieceSet ?? boardPrefs.pieceSet)
 const ariaLabel = computed(() => props.label ?? t('quantumchess', 'Board preview'))
 

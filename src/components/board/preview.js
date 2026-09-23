@@ -57,24 +57,24 @@ function figSq(state, id, square) {
 function missLine(state, move, ex) {
 	const piece = figurine(state.types[move.piece], colorOfId(move.piece))
 	switch (ex.cause) {
-	case 'absent':
-		return t('quantumchess', 'Missed: your {piece} isn\'t on {from} in these possibilities.', { piece, from: joinOr(move.from.map(squareName)) }, undefined, TEXT)
-	case 'blocked': {
-		const b = ex.blockers[0]
-		return t('quantumchess', 'Missed: {blocker} may be in the way.', { blocker: figSq(state, b.piece, b.square) }, undefined, TEXT)
-	}
-	case 'own_piece':
-		return t('quantumchess', 'Missed: your own {occupant} may be on {square}.', {
-			occupant: figurine(state.types[ex.occupant.piece], colorOfId(ex.occupant.piece)),
-			square: squareName(move.to[0]),
-		}, undefined, TEXT)
-	case 'occupied':
-		return t('quantumchess', 'Missed: {square} may be occupied by {occupant}.', {
-			occupant: figurine(state.types[ex.occupant.piece], colorOfId(ex.occupant.piece)),
-			square: squareName(move.to[0]),
-		}, undefined, TEXT)
-	default:
-		return t('quantumchess', 'Missed: there may be nothing to capture on {square}.', { square: squareName(move.to[0]) }, undefined, TEXT)
+		case 'absent':
+			return t('quantumchess', 'Missed: your {piece} isn\'t on {from} in these possibilities.', { piece, from: joinOr(move.from.map(squareName)) }, undefined, TEXT)
+		case 'blocked': {
+			const b = ex.blockers[0]
+			return t('quantumchess', 'Missed: {blocker} may be in the way.', { blocker: figSq(state, b.piece, b.square) }, undefined, TEXT)
+		}
+		case 'own_piece':
+			return t('quantumchess', 'Missed: your own {occupant} may be on {square}.', {
+				occupant: figurine(state.types[ex.occupant.piece], colorOfId(ex.occupant.piece)),
+				square: squareName(move.to[0]),
+			}, undefined, TEXT)
+		case 'occupied':
+			return t('quantumchess', 'Missed: {square} may be occupied by {occupant}.', {
+				occupant: figurine(state.types[ex.occupant.piece], colorOfId(ex.occupant.piece)),
+				square: squareName(move.to[0]),
+			}, undefined, TEXT)
+		default:
+			return t('quantumchess', 'Missed: there may be nothing to capture on {square}.', { square: squareName(move.to[0]) }, undefined, TEXT)
 	}
 }
 

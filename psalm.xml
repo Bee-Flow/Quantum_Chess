@@ -8,6 +8,8 @@
 	resolveFromConfigFile="true"
 	findUnusedBaselineEntry="false"
 	findUnusedCode="false"
+	findUnusedIssueHandlerSuppression="false"
+	ensureOverrideAttribute="false"
 	phpVersion="8.1"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="https://getpsalm.org/schema/config"
@@ -32,6 +34,7 @@
 		<UndefinedDocblockClass>
 			<errorLevel type="suppress">
 				<referencedClass name="OC\*" />
+				<referencedClass name="Doctrine\DBAL\*" />
 			</errorLevel>
 		</UndefinedDocblockClass>
 		<DeprecatedMethod errorLevel="info" />

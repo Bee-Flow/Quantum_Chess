@@ -1,0 +1,28 @@
+/**
+ * SPDX-FileCopyrightText: 2026 BeeFlow
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+// App-wide styles of the shell (frontend-app). Component styles are scoped; the board tokens live in tokens.scss.
+
+.qc-app {
+	--qc-panel-gap: 24px;
+
+	// Visually hidden but available to screen readers.
+	.hidden-visually {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.qc-app *,
+	.qc-app *::before,
+	.qc-app *::after {
+		scroll-behavior: auto !important;
+	}
+}

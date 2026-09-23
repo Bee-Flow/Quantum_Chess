@@ -13,7 +13,8 @@ declare(strict_types=1);
  *
  * Web routes live under /index.php/apps/quantumchess/…, OCS routes (notification actions for the web, mobile and
  * desktop clients) under /ocs/v2.php/apps/quantumchess/…. Static paths are declared before the {id} routes, and
- * every {id}/{taskId} placeholder is numeric.
+ * every {id}/{taskId} placeholder is numeric. Deferred to 1.1 (docs/LEAN-1.0.md) and therefore not registered:
+ * game#export, game#exportAll (GET /api/games/{id}/export, /api/games/export) and me#deleteData (DELETE /api/me/data).
  */
 
 $id = ['id' => '\d+'];
@@ -29,7 +30,6 @@ return [
 		['name' => 'game#summary', 'url' => '/api/games/summary', 'verb' => 'GET'],
 		['name' => 'game#open', 'url' => '/api/games/open', 'verb' => 'GET'],
 		['name' => 'game#history', 'url' => '/api/games/history', 'verb' => 'GET'],
-		['name' => 'game#exportAll', 'url' => '/api/games/export', 'verb' => 'GET'],
 		['name' => 'game#ratedCheck', 'url' => '/api/games/rated-check', 'verb' => 'GET'],
 		['name' => 'game#recentOpponents', 'url' => '/api/users/recent', 'verb' => 'GET'],
 
@@ -48,7 +48,6 @@ return [
 		['name' => 'game#chat', 'url' => '/api/games/{id}/chat', 'verb' => 'POST', 'requirements' => $id],
 		['name' => 'game#mute', 'url' => '/api/games/{id}/mute', 'verb' => 'PUT', 'requirements' => $id],
 		['name' => 'game#rematch', 'url' => '/api/games/{id}/rematch', 'verb' => 'POST', 'requirements' => $id],
-		['name' => 'game#export', 'url' => '/api/games/{id}/export', 'verb' => 'GET', 'requirements' => $id],
 
 		// Statistics, leaderboard, trainer progress, preferences, personal data
 		['name' => 'stats#mine', 'url' => '/api/stats', 'verb' => 'GET'],
@@ -57,7 +56,6 @@ return [
 		['name' => 'stats#getProgress', 'url' => '/api/trainer/progress', 'verb' => 'GET'],
 		['name' => 'stats#setProgress', 'url' => '/api/trainer/progress', 'verb' => 'PUT'],
 		['name' => 'preferences#update', 'url' => '/api/settings/preferences', 'verb' => 'PUT'],
-		['name' => 'me#deleteData', 'url' => '/api/me/data', 'verb' => 'DELETE'],
 
 		// AI opponent and coach (LLM)
 		['name' => 'ai#providers', 'url' => '/api/ai/providers', 'verb' => 'GET'],

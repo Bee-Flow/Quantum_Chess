@@ -27,14 +27,16 @@
 	--qc-last-move: rgb(247 203 77 / 0.42);
 
 	// Outcomes: Captured uses success; Moved and Missed are neutral and never red
-	--qc-success: var(--color-success);
+	// Nextcloud 32+ uses --color-success etc. for pale backgrounds; the strong colours are --color-element-*.
+	--qc-success: var(--color-element-success, #099f05);
+	--qc-success-strong: color-mix(in srgb, var(--qc-success) 78%, #000);
 	--qc-neutral-outcome: var(--color-text-maxcontrast);
 	--qc-outcome-move: #8a94a3;
 	--qc-outcome-miss: #c3cad4;
 
 	// King ring
-	--qc-warning: var(--color-warning);
-	--qc-danger: var(--color-error);
+	--qc-warning: var(--color-element-warning, #bf7900);
+	--qc-danger: var(--color-element-error, #c90000);
 	--qc-ring-warning: #e09a00;
 	--qc-ring-danger: #d0263a;
 

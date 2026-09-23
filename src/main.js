@@ -4,5 +4,8 @@
  */
 import { createApp } from 'vue'
 import App from './App.vue'
+import { createAppRouter } from './router.js'
 
-createApp(App).mount('#content')
+const app = createApp(App)
+app.use(createAppRouter())
+app.mount('#content')

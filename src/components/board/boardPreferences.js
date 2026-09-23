@@ -17,7 +17,7 @@ const service = Object.values(services)[0] ?? null
 
 /** The board-related keys of PREFERENCE_DEFAULTS (SPEC §11.3). */
 export const BOARD_PREFERENCE_DEFAULTS = Object.freeze({
-	boardTheme: 'nextcloud',
+	boardTheme: 'slate',
 	pieceSet: 'cburnett',
 	coordinates: 'inside',
 	highlightLastMove: true,

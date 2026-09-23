@@ -9,10 +9,14 @@ declare(strict_types=1);
 
 namespace OCA\QuantumChess\AppInfo;
 
+use OCA\QuantumChess\Dashboard\GamesWidget;
+use OCA\QuantumChess\Listener\UserDeletedListener;
+use OCA\QuantumChess\Notification\Notifier;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\User\Events\UserDeletedEvent;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'quantumchess';
@@ -22,6 +26,9 @@ class Application extends App implements IBootstrap {
 	}
 
 	public function register(IRegistrationContext $context): void {
+		$context->registerNotifierService(Notifier::class);
+		$context->registerDashboardWidget(GamesWidget::class);
+		$context->registerEventListener(UserDeletedEvent::class, UserDeletedListener::class);
 	}
 
 	public function boot(IBootContext $context): void {

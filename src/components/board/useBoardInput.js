@@ -84,6 +84,7 @@ export function useBoardInput({ state, legalMoves = [], movableColor = null, int
 	const whatIf = ref(null)
 	const possibility = ref(null)
 	const feedback = shallowRef(null)
+	const panelOpen = ref(false)
 	const dontAskSafety = ref(false)
 	const listeners = new Set()
 	let feedbackSeq = 0
@@ -831,6 +832,25 @@ export function useBoardInput({ state, legalMoves = [], movableColor = null, int
 	}
 
 	/**
+	 * Whether the square holds a piece that may be picked up now (drag start).
+	 *
+	 * @param {number} square square
+	 * @return {boolean}
+	 */
+	function isMovablePiece(square) {
+		return canInteract.value && ownPiece(square) !== null
+	}
+
+	/**
+	 * Open or close the possibilities panel (W).
+	 *
+	 * @param {boolean} [open] the new state (default: toggle)
+	 */
+	function togglePanel(open) {
+		panelOpen.value = typeof open === 'boolean' ? open : !panelOpen.value
+	}
+
+	/**
 	 * Register a commit listener.
 	 *
 	 * @param {(move: object) => void} callback called with the committed LegalMove
@@ -901,6 +921,9 @@ export function useBoardInput({ state, legalMoves = [], movableColor = null, int
 		cycleWhatIf,
 		possibility,
 		viewPossibility,
+		panelOpen,
+		togglePanel,
+		isMovablePiece,
 		typeMove,
 		activate,
 		drop,

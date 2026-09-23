@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * SPDX-FileCopyrightText: 2026 BeeFlow
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+namespace OCA\QuantumChess\Db;
+
+use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Db\QBMapper;
+use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\IDBConnection;
+
+/**
+ * @template-extends QBMapper<Rating>
+ */
+class RatingMapper extends QBMapper {
+	public const TABLE = 'qchess_ratings';
+
+	public function __construct(IDBConnection $db) {
+		parent::__construct($db, self::TABLE, Rating::class);
+	}
+
+	public function findByUid(string $uid): ?Rating {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')->from(self::TABLE)->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid)));
+		try {
+			return $this->findEntity($qb);
+		} catch (DoesNotExistException) {
+			return null;
+		}
+	}
+
+	/** @return list<Rating> players with at least `$minGames` rated games, rated at or after `$activeSince` */
+	public function findEligible(int $minGames, int $activeSince): array {
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')->from(self::TABLE)
+			->where($qb->expr()->gte('rated_games', $qb->createNamedParameter($minGames, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->gte('last_rated_at', $qb->createNamedParameter($activeSince, IQueryBuilder::PARAM_INT)))
+			->orderBy('rating', 'DESC')->addOrderBy('rated_games', 'DESC')
+			->setMaxResults(1000);
+		return $this->findEntities($qb);
+	}
+
+	public function deleteByUid(string $uid): void {
+		$qb = $this->db->getQueryBuilder();
+		$qb->delete(self::TABLE)->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid)))->executeStatement();
+	}
+}

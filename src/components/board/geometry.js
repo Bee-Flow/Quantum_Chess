@@ -83,32 +83,32 @@ export function squareCentre(square, orientation = 'w') {
 export function stepSquare(square, key, orientation = 'w') {
 	let { col, row } = squareXY(square, orientation)
 	switch (key) {
-	case 'ArrowUp':
-		row = Math.max(0, row - 1)
-		break
-	case 'ArrowDown':
-		row = Math.min(7, row + 1)
-		break
-	case 'ArrowLeft':
-		col = Math.max(0, col - 1)
-		break
-	case 'ArrowRight':
-		col = Math.min(7, col + 1)
-		break
-	case 'Home':
-		col = 0
-		break
-	case 'End':
-		col = 7
-		break
-	case 'PageUp':
-		row = 0
-		break
-	case 'PageDown':
-		row = 7
-		break
-	default:
-		return square
+		case 'ArrowUp':
+			row = Math.max(0, row - 1)
+			break
+		case 'ArrowDown':
+			row = Math.min(7, row + 1)
+			break
+		case 'ArrowLeft':
+			col = Math.max(0, col - 1)
+			break
+		case 'ArrowRight':
+			col = Math.min(7, col + 1)
+			break
+		case 'Home':
+			col = 0
+			break
+		case 'End':
+			col = 7
+			break
+		case 'PageUp':
+			row = 0
+			break
+		case 'PageDown':
+			row = 7
+			break
+		default:
+			return square
 	}
 	return squareAt(col, row, orientation)
 }

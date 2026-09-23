@@ -12,6 +12,12 @@ export default defineConfig({
 		environment: 'node',
 		environmentMatchGlobs: [['**/*.vue.spec.js', 'happy-dom']],
 		testTimeout: 30000,
+		// @nextcloud/vue ships CSS imports: let Vite transform it for component tests
+		server: {
+			deps: {
+				inline: [/@nextcloud\/vue/],
+			},
+		},
 		benchmark: {
 			include: ['tests/js/**/*.bench.js'],
 		},

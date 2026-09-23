@@ -75,7 +75,7 @@ function sentence(ctx, P) {
 	const whereOf = (locs) => joinOr(locs.map((l) => sq(l.square)))
 	const fromText = joinOr(lm.from.map(sq))
 	const mentioned = new Set([X])
-	let text = ''
+	let text
 
 	if (lm.type === 'measure') {
 		vars.square = key
@@ -130,65 +130,65 @@ function sentence(ctx, P) {
 		const stays = after.length === 1 && lm.from.includes(after[0].square)
 		vars.where = whereOf(after)
 		switch (ex.cause) {
-		case 'absent':
-			text = pov === 'mover'
-				? t('quantumchess', 'Missed: your {piece} wasn\'t on {from}; it\'s on {where} · {p}', vars, undefined, TEXT)
-				: t('quantumchess', '{name}\'s {piece} was on {where}, not {from}. Nothing moved · {p}', vars, undefined, TEXT)
-			break
-		case 'blocked': {
-			const b = ex.blockers[0]
-			mentioned.add(b.piece)
-			vars.blocker = P(b.piece) + sq(b.square)
-			vars.from = stays ? sq(after[0].square) : fromText
-			if (pov === 'mover') {
-				text = stays
-					? t('quantumchess', 'Missed: {blocker} was in the way. {piece} stays on {from} · {p}', vars, undefined, TEXT)
-					: t('quantumchess', 'Missed: {blocker} was in the way · {p}', vars, undefined, TEXT)
-			} else {
-				text = colorOfId(b.piece) === viewer
-					? t('quantumchess', '{name}\'s {piece} was blocked by your {blocker} · {p}', vars, undefined, TEXT)
-					: t('quantumchess', '{name}\'s {piece} was blocked by {name}\'s own {blocker} · {p}', vars, undefined, TEXT)
+			case 'absent':
+				text = pov === 'mover'
+					? t('quantumchess', 'Missed: your {piece} wasn\'t on {from}; it\'s on {where} · {p}', vars, undefined, TEXT)
+					: t('quantumchess', '{name}\'s {piece} was on {where}, not {from}. Nothing moved · {p}', vars, undefined, TEXT)
+				break
+			case 'blocked': {
+				const b = ex.blockers[0]
+				mentioned.add(b.piece)
+				vars.blocker = P(b.piece) + sq(b.square)
+				vars.from = stays ? sq(after[0].square) : fromText
+				if (pov === 'mover') {
+					text = stays
+						? t('quantumchess', 'Missed: {blocker} was in the way. {piece} stays on {from} · {p}', vars, undefined, TEXT)
+						: t('quantumchess', 'Missed: {blocker} was in the way · {p}', vars, undefined, TEXT)
+				} else {
+					text = colorOfId(b.piece) === viewer
+						? t('quantumchess', '{name}\'s {piece} was blocked by your {blocker} · {p}', vars, undefined, TEXT)
+						: t('quantumchess', '{name}\'s {piece} was blocked by {name}\'s own {blocker} · {p}', vars, undefined, TEXT)
+				}
+				break
 			}
-			break
-		}
-		case 'own_piece': {
-			const occ = ex.occupant.piece
-			mentioned.add(occ)
-			vars.occupant = P(occ)
-			text = pov === 'mover'
-				? t('quantumchess', 'Missed: your {occupant} was on {square}, so the {piece} couldn\'t land there · {p}', vars, undefined, TEXT)
-				: t('quantumchess', '{name}\'s {piece} was stopped by {name}\'s own {occupant} · {p}', vars, undefined, TEXT)
-			break
-		}
-		case 'occupied': {
-			const occ = ex.occupant.piece
-			mentioned.add(occ)
-			vars.occupant = P(occ)
-			if (pov === 'mover') {
-				text = t('quantumchess', 'Missed: {square} was occupied by {occupant}. {piece} stays on {from} · {p}', vars, undefined, TEXT)
-			} else {
-				text = colorOfId(occ) === viewer
-					? t('quantumchess', '{name}\'s pawn found your {occupant} on {square} · {p}', vars, undefined, TEXT)
-					: t('quantumchess', '{name}\'s pawn found {name}\'s own {occupant} on {square} · {p}', vars, undefined, TEXT)
+			case 'own_piece': {
+				const occ = ex.occupant.piece
+				mentioned.add(occ)
+				vars.occupant = P(occ)
+				text = pov === 'mover'
+					? t('quantumchess', 'Missed: your {occupant} was on {square}, so the {piece} couldn\'t land there · {p}', vars, undefined, TEXT)
+					: t('quantumchess', '{name}\'s {piece} was stopped by {name}\'s own {occupant} · {p}', vars, undefined, TEXT)
+				break
 			}
-			break
-		}
-		default: {
+			case 'occupied': {
+				const occ = ex.occupant.piece
+				mentioned.add(occ)
+				vars.occupant = P(occ)
+				if (pov === 'mover') {
+					text = t('quantumchess', 'Missed: {square} was occupied by {occupant}. {piece} stays on {from} · {p}', vars, undefined, TEXT)
+				} else {
+					text = colorOfId(occ) === viewer
+						? t('quantumchess', '{name}\'s pawn found your {occupant} on {square} · {p}', vars, undefined, TEXT)
+						: t('quantumchess', '{name}\'s pawn found {name}\'s own {occupant} on {square} · {p}', vars, undefined, TEXT)
+				}
+				break
+			}
+			default: {
 			// no_enemy: a pawn found nothing to capture
-			const tp = ex.targetPiece
-			if (tp !== null && ex.targetPieceAfter.length > 0) {
-				mentioned.add(tp)
-				vars.target = P(tp)
-				vars.where = whereOf(ex.targetPieceAfter)
-				text = pov === 'mover'
-					? t('quantumchess', 'Missed: {square} was empty, the {target} is on {where}. {piece} stays on {from} · {p}', vars, undefined, TEXT)
-					: t('quantumchess', '{name}\'s pawn found {square} empty: your {target} is on {where} · {p}', vars, undefined, TEXT)
-			} else {
-				text = pov === 'mover'
-					? t('quantumchess', 'Missed: there was nothing to capture on {square} · {p}', vars, undefined, TEXT)
-					: t('quantumchess', '{name}\'s pawn found nothing to capture on {square} · {p}', vars, undefined, TEXT)
+				const tp = ex.targetPiece
+				if (tp !== null && ex.targetPieceAfter.length > 0) {
+					mentioned.add(tp)
+					vars.target = P(tp)
+					vars.where = whereOf(ex.targetPieceAfter)
+					text = pov === 'mover'
+						? t('quantumchess', 'Missed: {square} was empty, the {target} is on {where}. {piece} stays on {from} · {p}', vars, undefined, TEXT)
+						: t('quantumchess', '{name}\'s pawn found {square} empty: your {target} is on {where} · {p}', vars, undefined, TEXT)
+				} else {
+					text = pov === 'mover'
+						? t('quantumchess', 'Missed: there was nothing to capture on {square} · {p}', vars, undefined, TEXT)
+						: t('quantumchess', '{name}\'s pawn found nothing to capture on {square} · {p}', vars, undefined, TEXT)
+				}
 			}
-		}
 		}
 	}
 	const settled = ex.settled
