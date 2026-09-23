@@ -269,6 +269,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Recent versions of the notifications app ship runtime Composer dependencies (web push), which the
+      # server release tarball contains but a git checkout does not. Its post-install script only installs
+      # developer tools, so it is skipped.
+      - name: Install the notifications app's PHP dependencies
+        working-directory: apps/notifications
+        run: |
+          if [ -f composer.json ]; then
+            composer install --no-dev --no-interaction --no-progress --no-scripts --prefer-dist
+          fi
+
       - name: Set up Node from package.json engines
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -300,10 +310,13 @@ jobs:
           ./occ app:enable "$APP_NAME"
           ./occ app:list --enabled | grep -E "^\s+- ${APP_NAME}:"
 
+      # occ migrations:status is only registered in debug mode
       - name: Migrations
         run: |
+          ./occ config:system:set debug --value=true --type=boolean
           ./occ migrations:status "$APP_NAME"
           ./occ migrations:status "$APP_NAME" | grep -Eq 'New Migrations:\s+0' || { echo 'Migrations were not applied'; exit 1; }
+          ./occ config:system:set debug --value=false --type=boolean
 
       - name: Background job is registered
         run: ./occ background-job:list --limit=500 | grep -F 'OCA\QuantumChess\BackgroundJob\GameMaintenanceJob'

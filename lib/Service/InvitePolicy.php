@@ -72,6 +72,8 @@ class InvitePolicy {
 		};
 		if ($this->shareManager->shareWithGroupMembersOnly()) {
 			$excluded = $this->shareManager->shareWithGroupMembersOnlyExcludeGroupsList();
+			// Nextcloud 32 only documents the array return type, Nextcloud 33+ declares it natively.
+			/** @psalm-suppress RedundantCondition, TypeDoesNotContainType */
 			if (array_diff($sharedGroups(), is_array($excluded) ? $excluded : []) === []) {
 				return false;
 			}
