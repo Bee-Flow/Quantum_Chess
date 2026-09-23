@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 BeeFlow
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>quantumchess</id>
+	<name>Quantum Chess</name>
+	<summary>Chess with superposition, entanglement and measurement — play friends, the computer or an AI</summary>
+	<description><![CDATA[**Quantum Chess** brings quantum mechanics to the chessboard, right inside your Nextcloud.
+
+Pieces can be in two places at once. A knight can **split** into a superposition, a bishop can **merge** back together, sliding pieces become **entangled** with the pieces that may or may not block their way, and every capture is a **measurement** that collapses the board into one reality. You win by capturing the enemy king — there is no check, only probability.
+
+### Game modes
+- 👥 **Online multiplayer** against other users of your Nextcloud, with invitations, notifications, in-game chat, draw offers, rematches and an Elo leaderboard
+- 🤖 **Play the computer** – a built-in quantum-aware engine with five difficulty levels that runs in your browser
+- ✨ **Play an AI (LLM)** – challenge a large language model with its own personality. Use **Nextcloud Assistant** (the AI provider configured by your administrator), or bring your own key for any OpenAI-compatible API (OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama, LocalAI…) or Anthropic Claude
+- 🪑 **Pass & play** on one device
+
+### AI trainer
+- Interactive lessons that teach superposition, splitting, merging, entanglement and measurement step by step
+- Puzzles with instant feedback
+- A coach with an evaluation bar, hints, threat warnings, move-quality feedback and an AI coach you can ask questions about the position
+- Post-game review with an evaluation graph
+
+### Polished and native
+- Built with Nextcloud's own design components; follows your theme, dark mode and language
+- Probability badges, heat maps and entanglement highlighting to visualise the quantum state
+- Smooth animations and optional sound effects
+- Keyboard accessible, responsive on phone, tablet and desktop
+- Dashboard widget showing the games where it is your turn
+
+API keys you enter are stored encrypted on your Nextcloud server and are never sent to your browser.
+]]></description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author homepage="https://beeflow.nl">BeeFlow</author>
+	<namespace>QuantumChess</namespace>
+	<documentation>
+		<user>https://github.com/bee-flow/quantum_chess/blob/main/docs/RULES.md</user>
+		<admin>https://github.com/bee-flow/quantum_chess/blob/main/README.md</admin>
+		<developer>https://github.com/bee-flow/quantum_chess/blob/main/docs/SPEC.md</developer>
+	</documentation>
+	<category>games</category>
+	<website>https://github.com/bee-flow/quantum_chess</website>
+	<bugs>https://github.com/bee-flow/quantum_chess/issues</bugs>
+	<repository type="git">https://github.com/bee-flow/quantum_chess.git</repository>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/game-small.png">https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/game.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/lobby.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/trainer.png</screenshot>
+	<dependencies>
+		<php min-version="8.1"/>
+		<nextcloud min-version="32" max-version="35"/>
+	</dependencies>
+	<background-jobs>
+		<job>OCA\QuantumChess\BackgroundJob\CleanupJob</job>
+	</background-jobs>
+	<settings>
+		<admin>OCA\QuantumChess\Settings\AdminSettings</admin>
+		<admin-section>OCA\QuantumChess\Settings\Section</admin-section>
+		<personal>OCA\QuantumChess\Settings\PersonalSettings</personal>
+		<personal-section>OCA\QuantumChess\Settings\Section</personal-section>
+	</settings>
+	<navigations>
+		<navigation>
+			<name>Quantum Chess</name>
+			<route>quantumchess.page.index</route>
+			<icon>app.svg</icon>
+		</navigation>
+	</navigations>
+</info>
