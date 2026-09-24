@@ -96,7 +96,13 @@ class NextcloudAiProvider implements ProviderInterface {
 		if ($model !== null && $model !== '' && in_array($model, array_column($this->listModels(), 'id'), true)) {
 			$input['model'] = $model;
 		}
-		$task = new Task($type, $input, Application::APP_ID, $uid, self::CUSTOM_PREFIX . $options['purpose'] . ':' . bin2hex(random_bytes(6)));
+		$task = new Task(
+			$type,
+			$input,
+			Application::APP_ID,
+			$uid,
+			self::CUSTOM_PREFIX . $options['purpose'] . ':' . bin2hex(random_bytes(6)),
+		);
 		try {
 			$this->manager->scheduleTask($task);
 		} catch (\Throwable $e) {
@@ -145,7 +151,8 @@ class NextcloudAiProvider implements ProviderInterface {
 			return null;
 		}
 		$status = $task->getStatus();
-		if ($status === Task::STATUS_SCHEDULED || $status === Task::STATUS_RUNNING || $status === Task::STATUS_UNKNOWN) {
+		if ($status === Task::STATUS_SCHEDULED || $status === Task::STATUS_RUNNING
+			|| $status === Task::STATUS_UNKNOWN) {
 			return TaskStatus::pending();
 		}
 		$purpose = explode(':', (string)$task->getCustomId())[1] ?? 'move';
@@ -188,7 +195,15 @@ class NextcloudAiProvider implements ProviderInterface {
 	public function cleanup(int $endedBefore): void {
 		foreach ([Task::STATUS_SUCCESSFUL, Task::STATUS_FAILED, Task::STATUS_CANCELLED] as $status) {
 			try {
-				foreach ($this->manager->getTasks(null, null, Application::APP_ID, null, $status, null, $endedBefore) as $task) {
+				foreach ($this->manager->getTasks(
+					null,
+					null,
+					Application::APP_ID,
+					null,
+					$status,
+					null,
+					$endedBefore,
+				) as $task) {
 					$this->delete($task);
 				}
 			} catch (\Throwable $e) {
@@ -203,7 +218,8 @@ class NextcloudAiProvider implements ProviderInterface {
 		} catch (\Throwable) {
 			return null;
 		}
-		if ($task->getAppId() !== Application::APP_ID || !str_starts_with((string)$task->getCustomId(), self::CUSTOM_PREFIX)) {
+		if ($task->getAppId() !== Application::APP_ID
+			|| !str_starts_with((string)$task->getCustomId(), self::CUSTOM_PREFIX)) {
 			return null;
 		}
 		return $task;

@@ -29,7 +29,14 @@ namespace OCA\QuantumChess\Engine\Internal;
  * @internal
  */
 final class Describer {
-	private const TYPE_NAMES = ['k' => 'king', 'q' => 'queen', 'r' => 'rook', 'b' => 'bishop', 'n' => 'knight', 'p' => 'pawn'];
+	private const TYPE_NAMES = [
+		'k' => 'king',
+		'q' => 'queen',
+		'r' => 'rook',
+		'b' => 'bishop',
+		'n' => 'knight',
+		'p' => 'pawn',
+	];
 
 	/** At most this many links are written out; the rest is counted. */
 	private const MAX_LINKS = 12;
@@ -54,8 +61,8 @@ final class Describer {
 		$types = (string)$state['types'];
 		$names = Tables::$names;
 		$lines = [];
-		$lines[] = 'Quantum Chess (rules v1). You are ' . self::side($perspective) . '. Move ' . $state['fullmove'] . ', '
-			. self::side((string)$state['turn']) . ' to move.';
+		$lines[] = 'Quantum Chess (rules v1). You are ' . self::side($perspective) . '. Move ' . $state['fullmove']
+			. ', ' . self::side((string)$state['turn']) . ' to move.';
 		$lines[] = 'Certain pieces (FEN, uncertain pieces removed): ' . Views::certainFen($a);
 		$ghosts = [];
 		for ($id = 0; $id < 32; $id++) {
@@ -76,8 +83,8 @@ final class Describer {
 		}
 		$tail = [];
 		$tail[] = 'Possibilities: ' . $a->n . '. Budget: White ' . $a->budget(0) . '/' . Tables::BUDGET . ', Black '
-			. $a->budget(1) . '/' . Tables::BUDGET . '. King danger: White ' . Views::pct(Danger::kingDanger($a, 0)) . '%, Black '
-			. Views::pct(Danger::kingDanger($a, 1)) . '%.';
+			. $a->budget(1) . '/' . Tables::BUDGET . '. King danger: White ' . Views::pct(Danger::kingDanger($a, 0))
+			. '%, Black ' . Views::pct(Danger::kingDanger($a, 1)) . '%.';
 		if ($state['result'] !== null) {
 			/** @var array{result: string, reason: string} $result */
 			$result = $state['result'];
@@ -86,8 +93,9 @@ final class Describer {
 		// Keep the block within MAX_BYTES: drop link texts (they are counted instead) until it fits.
 		do {
 			$more = count($links) - count($linkTexts);
-			$linkLine = 'Links: ' . ($linkTexts === [] ? ($links === [] ? 'none' : $more . ' linked pairs') : implode('; ', $linkTexts)
-				. ($more > 0 ? '; and ' . $more . ' more' : ''));
+			$linkLine = 'Links: ' . ($linkTexts === []
+				? ($links === [] ? 'none' : $more . ' linked pairs')
+				: implode('; ', $linkTexts) . ($more > 0 ? '; and ' . $more . ' more' : ''));
 			$text = implode("\n", [...$lines, $linkLine, ...$tail]);
 		} while (strlen($text) > self::MAX_BYTES && array_pop($linkTexts) !== null);
 		return $text;

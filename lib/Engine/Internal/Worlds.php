@@ -12,7 +12,8 @@ namespace OCA\QuantumChess\Engine\Internal;
 /**
  * Per-world move functions and world bookkeeping (§4.3, §4.6–§4.9, §5.1 A2–A8, §5.3, §5.4).
  *
- * JavaScript twin: src/engine/outcomes.js, rescale.js, bookkeeping.js and hash.js. Section numbers (§) refer to docs/engine-rules.md.
+ * JavaScript twin: src/engine/outcomes.js, rescale.js, bookkeeping.js and hash.js. Section numbers (§) refer to
+ * docs/engine-rules.md.
  *
  * @internal
  */
@@ -319,6 +320,12 @@ final class Worlds {
 	 * @param array<string, mixed> $state
 	 */
 	public static function positionHash(array $state): string {
-		return self::hash((string)$state['turn'], (string)$state['castling'], (string)$state['ep'], (string)$state['types'], (array)$state['worlds']);
+		return self::hash(
+			(string)$state['turn'],
+			(string)$state['castling'],
+			(string)$state['ep'],
+			(string)$state['types'],
+			(array)$state['worlds'],
+		);
 	}
 }

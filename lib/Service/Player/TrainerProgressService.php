@@ -155,7 +155,11 @@ class TrainerProgressService {
 			$out[$k] = $v;
 		}
 		if (isset($a['lessons']) || isset($b['lessons'])) {
-			$out['lessons'] = self::mergeMap($a['lessons'] ?? [], $b['lessons'] ?? [], ['done' => 'or', 'stars' => 'max', 'at' => 'earliest']);
+			$out['lessons'] = self::mergeMap(
+				$a['lessons'] ?? [],
+				$b['lessons'] ?? [],
+				['done' => 'or', 'stars' => 'max', 'at' => 'earliest'],
+			);
 		}
 		if (isset($a['puzzles']) || isset($b['puzzles'])) {
 			$out['puzzles'] = self::mergeMap($a['puzzles'] ?? [], $b['puzzles'] ?? [],

@@ -43,11 +43,51 @@ use OCA\QuantumChess\Engine\Internal\Worlds;
  * they have decoded or validated themselves.
  *
  * @psalm-type GameResult = array{result: string, reason: string}
- * @psalm-type EngineState = array{v: int, types: string, worlds: list<array{0: string, 1: int}>, turn: string, castling: string, ep: string, halfmove: int, fullmove: int, ply: int, captured: list<int>, history: list<string>, result: GameResult|null}
+ * @psalm-type EngineState = array{
+ *     v: int,
+ *     types: string,
+ *     worlds: list<array{0: string, 1: int}>,
+ *     turn: string,
+ *     castling: string,
+ *     ep: string,
+ *     halfmove: int,
+ *     fullmove: int,
+ *     ply: int,
+ *     captured: list<int>,
+ *     history: list<string>,
+ *     result: GameResult|null,
+ * }
  * @psalm-type Outcome = array{key: string, weight: int}
- * @psalm-type LegalMove = array{type: string, from: list<int>, to: list<int>, promo?: string, code: string, piece: int, resolution: string, measured: bool, fallback: bool, capture: bool, happenWeight: int, outcomes: list<Outcome>, successProbability: float}
- * @psalm-type Measurement = array{key: string, u: int|null, captured: int|null, outcomes: list<Outcome>, fallback: bool}
- * @psalm-type OutcomeState = array{key: string, weight: int, probability: float, happened: bool, captured: int|null, state: EngineState}
+ * @psalm-type LegalMove = array{
+ *     type: string,
+ *     from: list<int>,
+ *     to: list<int>,
+ *     promo?: string,
+ *     code: string,
+ *     piece: int,
+ *     resolution: string,
+ *     measured: bool,
+ *     fallback: bool,
+ *     capture: bool,
+ *     happenWeight: int,
+ *     outcomes: list<Outcome>,
+ *     successProbability: float,
+ * }
+ * @psalm-type Measurement = array{
+ *     key: string,
+ *     u: int|null,
+ *     captured: int|null,
+ *     outcomes: list<Outcome>,
+ *     fallback: bool,
+ * }
+ * @psalm-type OutcomeState = array{
+ *     key: string,
+ *     weight: int,
+ *     probability: float,
+ *     happened: bool,
+ *     captured: int|null,
+ *     state: EngineState,
+ * }
  */
 final class Engine {
 	/** Rules version, stored as `v` in every state. */
@@ -134,7 +174,20 @@ final class Engine {
 	 * @throws InvalidStateException when a key is missing
 	 */
 	public function serializeState(array $state): string {
-		foreach (['v', 'types', 'worlds', 'turn', 'castling', 'ep', 'halfmove', 'fullmove', 'ply', 'captured', 'history', 'result'] as $k) {
+		foreach ([
+			'v',
+			'types',
+			'worlds',
+			'turn',
+			'castling',
+			'ep',
+			'halfmove',
+			'fullmove',
+			'ply',
+			'captured',
+			'history',
+			'result',
+		] as $k) {
 			if (!array_key_exists($k, $state)) {
 				throw new InvalidStateException('shape', 'missing key ' . $k);
 			}
@@ -342,7 +395,13 @@ final class Engine {
 	 * @throws IllegalMoveException when the move is illegal (the reason is the whyIllegal code)
 	 * @throws \InvalidArgumentException for a bad `$u`, `$outcome` or `$rng` result
 	 */
-	public function applyMove(array $state, array|string $move, ?int $u = null, ?string $outcome = null, ?callable $rng = null): array {
+	public function applyMove(
+		array $state,
+		array|string $move,
+		?int $u = null,
+		?string $outcome = null,
+		?callable $rng = null,
+	): array {
 		$a = $this->pipeline->analyze($state);
 		$rec = $this->recordOrThrow($a, $move);
 		if ($rec->resolution !== 'rolled') {
@@ -595,7 +654,13 @@ final class Engine {
 	 * uText, chosen}`.
 	 *
 	 * @param array<string, mixed> $record measurement record
-	 * @return array{decimals: int, intervals: list<array{key: string, start: int, end: int, startText: string, endText: string, chosen: bool}>, u: int|null, uText: string|null, chosen: string}
+	 * @return array{
+	 *     decimals: int,
+	 *     intervals: list<array{key: string, start: int, end: int, startText: string, endText: string, chosen: bool}>,
+	 *     u: int|null,
+	 *     uText: string|null,
+	 *     chosen: string,
+	 * }
 	 * @throws \InvalidArgumentException for a malformed record
 	 */
 	public function rollIntervals(array $record): array {
@@ -633,7 +698,14 @@ final class Engine {
 	 *
 	 * @throws \InvalidArgumentException for negative numbers
 	 */
-	public function chainNext(string $prev, int $ply, string $code, ?int $u, ?string $key, string $canonicalStateJsonAfter): string {
+	public function chainNext(
+		string $prev,
+		int $ply,
+		string $code,
+		?int $u,
+		?string $key,
+		string $canonicalStateJsonAfter,
+	): string {
 		if ($ply < 0 || ($u !== null && $u < 0)) {
 			throw new \InvalidArgumentException('ply and u must be non-negative integers');
 		}

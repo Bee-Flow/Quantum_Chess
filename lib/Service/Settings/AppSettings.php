@@ -42,7 +42,11 @@ class AppSettings {
 	// Typed access
 
 	private function bool(AdminSetting $setting): bool {
-		return $this->appConfig->getValueBool(Application::APP_ID, $setting->value, (bool)$setting->definition()->default);
+		return $this->appConfig->getValueBool(
+			Application::APP_ID,
+			$setting->value,
+			(bool)$setting->definition()->default,
+		);
 	}
 
 	private function int(AdminSetting $setting): int {
@@ -64,7 +68,12 @@ class AppSettings {
 
 	/** @return list<string> */
 	private function list(AdminSetting $setting): array {
-		$value = $this->appConfig->getValueArray(Application::APP_ID, $setting->value, [], $setting->definition()->lazy);
+		$value = $this->appConfig->getValueArray(
+			Application::APP_ID,
+			$setting->value,
+			[],
+			$setting->definition()->lazy,
+		);
 		return array_values(array_filter($value, 'is_string'));
 	}
 
@@ -118,14 +127,16 @@ class AppSettings {
 			}
 			$clean[$key] = [$setting, $value];
 		}
-		$sharedAllowLocal = array_key_exists(AdminSetting::SharedAllowLocal->value, $clean) && is_bool($clean[AdminSetting::SharedAllowLocal->value][1])
+		$sharedAllowLocal = array_key_exists(AdminSetting::SharedAllowLocal->value, $clean)
+			&& is_bool($clean[AdminSetting::SharedAllowLocal->value][1])
 			? $clean[AdminSetting::SharedAllowLocal->value][1] : $this->sharedAllowLocal();
 		$validated = [];
 		foreach ($clean as $key => [$setting, $value]) {
 			$validated[$key] = [$setting, $this->validate($setting, $value, $sharedAllowLocal)];
 		}
 		$provider = $validated[AdminSetting::SharedProvider->value][1] ?? null;
-		if (is_array($provider) && !ProviderConfig::sameEndpoint($this->sharedProvider(), ProviderConfig::fromStored($provider, true))) {
+		if (is_array($provider)
+			&& !ProviderConfig::sameEndpoint($this->sharedProvider(), ProviderConfig::fromStored($provider, true))) {
 			$this->keys->setShared(null);
 		}
 		foreach ($validated as [$setting, $value]) {
@@ -135,8 +146,15 @@ class AppSettings {
 				SettingDefinition::BOOL => $this->appConfig->setValueBool(Application::APP_ID, $key, (bool)$value),
 				SettingDefinition::INT => $this->appConfig->setValueInt(Application::APP_ID, $key, (int)$value),
 				SettingDefinition::ENUM => $this->appConfig->setValueString(Application::APP_ID, $key, (string)$value),
-				SettingDefinition::TEXT => $this->appConfig->setValueString(Application::APP_ID, $key, (string)$value, $lazy),
-				default => is_array($value) ? $this->appConfig->setValueArray(Application::APP_ID, $key, $value, $lazy) : null,
+				SettingDefinition::TEXT => $this->appConfig->setValueString(
+					Application::APP_ID,
+					$key,
+					(string)$value,
+					$lazy,
+				),
+				default => is_array($value)
+					? $this->appConfig->setValueArray(Application::APP_ID, $key, $value, $lazy)
+					: null,
 			};
 		}
 		return $this->getAdmin();
@@ -352,7 +370,10 @@ class AppSettings {
 	 * The organisation provider, or null when none is configured.
 	 */
 	public function sharedProvider(): ?ProviderConfig {
-		return ProviderConfig::fromStored($this->appConfig->getValueArray(Application::APP_ID, AdminSetting::SharedProvider->value, [], true), true);
+		return ProviderConfig::fromStored(
+			$this->appConfig->getValueArray(Application::APP_ID, AdminSetting::SharedProvider->value, [], true),
+			true,
+		);
 	}
 
 	/** @return list<string> */

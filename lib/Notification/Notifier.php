@@ -53,7 +53,11 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		return $this->l10nFactory->get(Application::APP_ID)->t('Quantum Chess');
 	}
 
-	public function preloadDataForParsing(array $notifications, string $languageCode, NotificationPreloadReason $reason): void {
+	public function preloadDataForParsing(
+		array $notifications,
+		string $languageCode,
+		NotificationPreloadReason $reason,
+	): void {
 		foreach ($notifications as $notification) {
 			if ($notification->getApp() === Application::APP_ID && $notification->getObjectType() === 'game') {
 				$this->game((int)$notification->getObjectId());
@@ -143,8 +147,12 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		switch ($subject) {
 			case 'invite':
 			case 'rematch':
-				$text = $subject === 'invite' ? $l->t('{user} invited you to a game of Quantum Chess') : $l->t('{user} wants a rematch');
-				$parts = [TimeControl::fromStored((string)($params['timeControl'] ?? TimeControl::DEFAULT->value))->label($l)];
+				$text = $subject === 'invite'
+					? $l->t('{user} invited you to a game of Quantum Chess')
+					: $l->t('{user} wants a rematch');
+				$parts = [
+					TimeControl::fromStored((string)($params['timeControl'] ?? TimeControl::DEFAULT->value))->label($l),
+				];
 				$parts[] = !empty($params['rated']) ? $l->t('Rated') : $l->t('Unrated');
 				$parts[] = match ($params['color'] ?? 'r') {
 					'w' => $l->t('You play White'),
@@ -160,15 +168,21 @@ class Notifier implements INotifier, IPreloadableNotifier {
 				break;
 			case 'invite_accepted':
 			case 'open_joined':
-				$text = $subject === 'invite_accepted' ? $l->t('{user} accepted your invitation') : $l->t('{user} joined your open challenge');
-				$message = !empty($params['yourMove']) ? $l->t('It\'s your move.') : $l->t('Waiting for their first move.');
+				$text = $subject === 'invite_accepted'
+					? $l->t('{user} accepted your invitation')
+					: $l->t('{user} joined your open challenge');
+				$message = !empty($params['yourMove'])
+					? $l->t('It\'s your move.')
+					: $l->t('Waiting for their first move.');
 				break;
 			case 'invite_declined':
 				$text = $l->t('{user} declined your invitation');
 				break;
 			case 'your_turn':
 				$text = $l->t('Your move against {user}');
-				$message = is_array($params['lastMove'] ?? null) ? $this->describer->describe($l, $params['lastMove']) : '';
+				$message = is_array($params['lastMove'] ?? null)
+					? $this->describer->describe($l, $params['lastMove'])
+					: '';
 				break;
 			case 'draw_offer':
 				$text = $l->t('{user} offers a draw');
@@ -186,9 +200,13 @@ class Notifier implements INotifier, IPreloadableNotifier {
 				$message = self::reasonLabel($l, is_string($params['reason'] ?? null) ? $params['reason'] : null);
 				if (is_int($params['rating'] ?? null) && is_int($params['delta'] ?? null)) {
 					$delta = $params['delta'];
-					$message .= ' · ' . $l->t('Rating %1$d (%2$s)', [$params['rating'], ($delta >= 0 ? '+' : '−') . (string)abs($delta)]);
+					$message .= ' · ' . $l->t('Rating %1$d (%2$s)', [
+						$params['rating'],
+						($delta >= 0 ? '+' : '−') . (string)abs($delta),
+					]);
 				}
-				if ($actor !== null && $game->getRematchId() === null && $game->opponentOf($notification->getUser()) !== null) {
+				if ($actor !== null && $game->getRematchId() === null
+					&& $game->opponentOf($notification->getUser()) !== null) {
 					$this->addAction($notification, $l->t('Rematch'), 'rematch', $id, false);
 				}
 				break;
@@ -197,7 +215,9 @@ class Notifier implements INotifier, IPreloadableNotifier {
 				if (is_string($params['phrase'] ?? null)) {
 					$message = self::phraseLabel($l, $params['phrase']);
 				} else {
-					$message = is_string($params['excerpt'] ?? null) && $params['excerpt'] !== '' ? $params['excerpt'] : $l->t('New message');
+					$message = is_string($params['excerpt'] ?? null) && $params['excerpt'] !== ''
+						? $params['excerpt']
+						: $l->t('New message');
 				}
 				break;
 			case 'game_ended_deleted':
@@ -217,11 +237,20 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		return $notification;
 	}
 
-	private function addAction(INotification $notification, string $label, string $method, int $id, bool $primary): void {
+	private function addAction(
+		INotification $notification,
+		string $label,
+		string $method,
+		int $id,
+		bool $primary,
+	): void {
 		$action = $notification->createAction();
 		$action->setLabel($method)
 			->setParsedLabel($label)
-			->setLink($this->url->linkToOCSRouteAbsolute('quantumchess.ocs_game.' . $method, ['id' => $id]), IAction::TYPE_POST)
+			->setLink(
+				$this->url->linkToOCSRouteAbsolute('quantumchess.ocs_game.' . $method, ['id' => $id]),
+				IAction::TYPE_POST,
+			)
 			->setPrimary($primary);
 		$notification->addParsedAction($action);
 	}

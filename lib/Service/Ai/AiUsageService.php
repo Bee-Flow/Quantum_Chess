@@ -61,9 +61,19 @@ class AiUsageService {
 		$user = $this->userManager->get($uid);
 		if ($user !== null) {
 			try {
-				$this->limiter->registerUserRequest('quantumchess-ai', $this->settings->aiRequestsPerHour(), 3600, $user);
+				$this->limiter->registerUserRequest(
+					'quantumchess-ai',
+					$this->settings->aiRequestsPerHour(),
+					3600,
+					$user,
+				);
 			} catch (IRateLimitExceededException) {
-				throw new ApiException(ApiError::AiRateLimited, $this->l->t('You have reached the hourly limit for AI requests. Please try again later.'), [], self::RETRY_AFTER);
+				throw new ApiException(
+					ApiError::AiRateLimited,
+					$this->l->t('You have reached the hourly limit for AI requests. Please try again later.'),
+					[],
+					self::RETRY_AFTER,
+				);
 			}
 		}
 		// The one-at-a-time rule needs an atomic add, which only a memory cache offers.
@@ -93,7 +103,12 @@ class AiUsageService {
 	 * @return array{nextcloud: int, shared: int, personal: int}
 	 */
 	public function today(): array {
-		$counts = $this->appConfig->getValueArray(Application::APP_ID, 'usage_' . date('Ymd', $this->time->getTime()), [], true);
+		$counts = $this->appConfig->getValueArray(
+			Application::APP_ID,
+			'usage_' . date('Ymd', $this->time->getTime()),
+			[],
+			true,
+		);
 		return [
 			'nextcloud' => (int)($counts['nextcloud'] ?? 0),
 			'shared' => (int)($counts['shared'] ?? 0),

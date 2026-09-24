@@ -39,14 +39,37 @@ class RatingService {
 	/**
 	 * The player's rating and results, or null before their first finished online game.
 	 *
-	 * @return array{rating: int, provisional: bool, ratedGames: int, peak: int, games: int, wins: int, losses: int, draws: int, listed: ?bool, lastRatedAt: ?int}|null */
+	 * @return array{
+	 *     rating: int,
+	 *     provisional: bool,
+	 *     ratedGames: int,
+	 *     peak: int,
+	 *     games: int,
+	 *     wins: int,
+	 *     losses: int,
+	 *     draws: int,
+	 *     listed: ?bool,
+	 *     lastRatedAt: ?int,
+	 * }|null
+	 */
 	public function get(string $uid): ?array {
 		$row = $this->mapper->findByUid($uid);
 		return $row === null ? null : $this->toArray($row);
 	}
 
 	/**
-	 * @return array{rating: int, provisional: bool, ratedGames: int, peak: int, games: int, wins: int, losses: int, draws: int, listed: ?bool, lastRatedAt: ?int}
+	 * @return array{
+	 *     rating: int,
+	 *     provisional: bool,
+	 *     ratedGames: int,
+	 *     peak: int,
+	 *     games: int,
+	 *     wins: int,
+	 *     losses: int,
+	 *     draws: int,
+	 *     listed: ?bool,
+	 *     lastRatedAt: ?int,
+	 * }
 	 */
 	public function toArray(Rating $row): array {
 		return [
@@ -172,7 +195,11 @@ class RatingService {
 			$before = $white ? $game->getRatingWBefore() : $game->getRatingBBefore();
 			$delta = $white ? $game->getRatingWDelta() : $game->getRatingBDelta();
 			if ($before !== null && $delta !== null) {
-				$points[] = ['gameId' => $game->getId(), 't' => (int)$game->getFinishedAt(), 'rating' => $before + $delta];
+				$points[] = [
+					'gameId' => $game->getId(),
+					't' => (int)$game->getFinishedAt(),
+					'rating' => $before + $delta,
+				];
 			}
 		}
 		return array_reverse($points);
@@ -182,7 +209,16 @@ class RatingService {
 	 * The players who may appear on the leaderboard: at least `$minGames` rated games, the last one at or after
 	 * `$activeSince`.
 	 *
-	 * @return list<array{uid: string, rating: int, provisional: bool, ratedGames: int, wins: int, losses: int, draws: int, listed: ?bool}>
+	 * @return list<array{
+	 *     uid: string,
+	 *     rating: int,
+	 *     provisional: bool,
+	 *     ratedGames: int,
+	 *     wins: int,
+	 *     losses: int,
+	 *     draws: int,
+	 *     listed: ?bool,
+	 * }>
 	 */
 	public function leaderboardRows(int $minGames, int $activeSince): array {
 		return array_map(fn (Rating $row) => [

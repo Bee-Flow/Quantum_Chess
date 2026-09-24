@@ -20,7 +20,20 @@ namespace OCA\QuantumChess\Engine\Internal;
  * @psalm-import-type EngineState from \OCA\QuantumChess\Engine\Engine
  */
 final class StateValidator {
-	private const STATE_KEYS = ['v', 'types', 'worlds', 'turn', 'castling', 'ep', 'halfmove', 'fullmove', 'ply', 'captured', 'history', 'result'];
+	private const STATE_KEYS = [
+		'v',
+		'types',
+		'worlds',
+		'turn',
+		'castling',
+		'ep',
+		'halfmove',
+		'fullmove',
+		'ply',
+		'captured',
+		'history',
+		'result',
+	];
 	private const MAX_SAFE_INTEGER = 9007199254740991;
 
 	/**
@@ -121,7 +134,8 @@ final class StateValidator {
 		if ($turn !== 'w' && $turn !== 'b') {
 			return self::fail('shape', 'turn must be w or b');
 		}
-		if (!is_string($castling) || $castling === '' || strlen($castling) > 4 || preg_match('/^(?:-|K?Q?k?q?)$/D', $castling) !== 1) {
+		if (!is_string($castling) || $castling === '' || strlen($castling) > 4
+			|| preg_match('/^(?:-|K?Q?k?q?)$/D', $castling) !== 1) {
 			return self::fail('shape', 'castling must be - or a subset of KQkq in order');
 		}
 		if (!is_string($ep) || ($ep !== '-' && preg_match('/^[a-h][1-8]$/D', $ep) !== 1)) {
@@ -271,7 +285,10 @@ final class StateValidator {
 			$s0 = $s0 === false ? -1 : $s0;
 			for ($i = 1; $i < $n; $i++) {
 				if ($s0 < 0 || $worlds[$i][0][$s0] !== $ch) {
-					return self::fail($ty === 'p' ? 'I3' : 'I4', ($ty === 'p' ? 'pawn ' : 'king ') . $id . ' must be classical');
+					return self::fail(
+						$ty === 'p' ? 'I3' : 'I4',
+						($ty === 'p' ? 'pawn ' : 'king ') . $id . ' must be classical',
+					);
 				}
 			}
 			if ($ty === 'p' && ($s0 < 8 || $s0 >= 56)) {
@@ -289,7 +306,10 @@ final class StateValidator {
 				$rc = Tables::$letter[$c['rook']];
 				foreach ($worlds as [$b]) {
 					if ($b[$c['from']] !== $kc || $b[$c['rookFrom']] !== $rc) {
-						return self::fail('I9', 'castling flag ' . $flag . ' needs king and rook on their home squares');
+						return self::fail(
+							'I9',
+							'castling flag ' . $flag . ' needs king and rook on their home squares',
+						);
 					}
 				}
 			}

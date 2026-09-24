@@ -31,7 +31,14 @@ final class Setup {
 	/**
 	 * Parse the FEN fields. Accepts 4 to 6 fields (halfmove and fullmove default to 0 and 1).
 	 *
-	 * @return array{pieces: array{0: list<array{sq: int, type: string}>, 1: list<array{sq: int, type: string}>}, turn: string, flags: string, ep: string, halfmove: int, fullmove: int}
+	 * @return array{
+	 *     pieces: array{0: list<array{sq: int, type: string}>, 1: list<array{sq: int, type: string}>},
+	 *     turn: string,
+	 *     flags: string,
+	 *     ep: string,
+	 *     halfmove: int,
+	 *     fullmove: int,
+	 * }
 	 */
 	public static function parseFen(mixed $fen): array {
 		if (!is_string($fen)) {
@@ -77,7 +84,8 @@ final class Setup {
 		$castle = $fields[2];
 		$flags = '';
 		if ($castle !== '-') {
-			if (preg_match('/^[KQkq]{1,4}$/D', $castle) !== 1 || count(array_unique(str_split($castle))) !== strlen($castle)) {
+			if (preg_match('/^[KQkq]{1,4}$/D', $castle) !== 1
+				|| count(array_unique(str_split($castle))) !== strlen($castle)) {
 				throw new SetupException('bad_fen', 'bad castling field');
 			}
 			foreach (Tables::CASTLING_FLAGS as $f) {
@@ -98,7 +106,14 @@ final class Setup {
 		if ($fullmove === null || $fullmove < 1) {
 			throw new SetupException('bad_fen', 'fullmove must be ≥ 1');
 		}
-		return ['pieces' => $pieces, 'turn' => $turn, 'flags' => $flags, 'ep' => $ep, 'halfmove' => $halfmove, 'fullmove' => $fullmove];
+		return [
+			'pieces' => $pieces,
+			'turn' => $turn,
+			'flags' => $flags,
+			'ep' => $ep,
+			'halfmove' => $halfmove,
+			'fullmove' => $fullmove,
+		];
 	}
 
 	/**

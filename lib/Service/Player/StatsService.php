@@ -61,7 +61,8 @@ class StatsService {
 		$online = $row;
 		unset($online['lastRatedAt']);
 		$online['rank'] = $rank;
-		$online['askListing'] = $mode !== 'off' && $row['listed'] === null && $row['ratedGames'] >= self::ASK_LISTING_AFTER;
+		$online['askListing'] = $mode !== 'off' && $row['listed'] === null
+			&& $row['ratedGames'] >= self::ASK_LISTING_AFTER;
 		return [
 			'online' => $online,
 			'local' => $this->localStats($uid),
@@ -127,7 +128,11 @@ class StatsService {
 				'draws' => $row['draws'],
 			];
 		}
-		usort($entries, fn (array $a, array $b) => [$b['rating'], $b['ratedGames'], $a['displayName']] <=> [$a['rating'], $a['ratedGames'], $b['displayName']]);
+		usort(
+			$entries,
+			fn (array $a, array $b) => [$b['rating'], $b['ratedGames'], $a['displayName']]
+				<=> [$a['rating'], $a['ratedGames'], $b['displayName']],
+		);
 		$myRank = null;
 		foreach ($entries as $i => $entry) {
 			$entries[$i] = ['rank' => $i + 1] + $entry;
@@ -158,7 +163,11 @@ class StatsService {
 	 * The results of local games: against the computer player per level, against each LLM opponent, and the number
 	 * of pass-and-play games.
 	 *
-	 * @return array{engine: array<array-key, array{w: int, l: int, d: int}>, llm: array<array-key, array{w: int, l: int, d: int}>, hotseat: array{games: int}}
+	 * @return array{
+	 *     engine: array<array-key, array{w: int, l: int, d: int}>,
+	 *     llm: array<array-key, array{w: int, l: int, d: int}>,
+	 *     hotseat: array{games: int},
+	 * }
 	 */
 	public function localStats(string $uid): array {
 		$stored = $this->documents->get($uid, self::LOCAL_KEY);

@@ -20,7 +20,14 @@ interface ProviderInterface {
 	 * effort of Anthropic models; either may be null.
 	 *
 	 * @param list<array{role: 'system'|'user'|'assistant', content: string}> $messages
-	 * @param array{model: ?string, maxTokens: int, temperature: ?float, effort: ?string, safetyId: ?string, purpose: 'move'|'coach'} $options
+	 * @param array{
+	 *     model: ?string,
+	 *     maxTokens: int,
+	 *     temperature: ?float,
+	 *     effort: ?string,
+	 *     safetyId: ?string,
+	 *     purpose: 'move'|'coach',
+	 * } $options
 	 * @throws ProviderException
 	 */
 	public function chat(array $messages, array $options): ChatResult;

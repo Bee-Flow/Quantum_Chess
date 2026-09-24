@@ -18,7 +18,13 @@ namespace OCA\QuantumChess\Engine\Internal;
  * @internal
  */
 final class RollDisplay {
-	private const DEFAULT_LABELS = ['miss' => 'Missed', 'move' => 'Moved', 'capture' => 'Captured', 'rolled' => 'rolled', 'forced' => 'forced'];
+	private const DEFAULT_LABELS = [
+		'miss' => 'Missed',
+		'move' => 'Moved',
+		'capture' => 'Captured',
+		'rolled' => 'rolled',
+		'forced' => 'forced',
+	];
 
 	/**
 	 * dec_d(x): floor(x · 10^d / 2^24) printed with d decimals (truncation, never rounding).
@@ -72,7 +78,13 @@ final class RollDisplay {
 	 * Structured roll display: the decimals, every interval and the roll.
 	 *
 	 * @param array<string, mixed> $record measurement record
-	 * @return array{decimals: int, intervals: list<array{key: string, start: int, end: int, startText: string, endText: string, chosen: bool}>, u: int|null, uText: string|null, chosen: string}
+	 * @return array{
+	 *     decimals: int,
+	 *     intervals: list<array{key: string, start: int, end: int, startText: string, endText: string, chosen: bool}>,
+	 *     u: int|null,
+	 *     uText: string|null,
+	 *     chosen: string,
+	 * }
 	 */
 	public static function intervals(array $record): array {
 		[$outcomes, $key, $u] = self::read($record);

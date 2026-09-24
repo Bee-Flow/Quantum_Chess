@@ -52,7 +52,10 @@ class InvitationService {
 	 */
 	public function create(string $uid, array $request): Game {
 		if (!$this->policy->isMultiplayerUser($uid)) {
-			throw new ApiException(ApiError::MultiplayerDisabled, $this->l->t('Online games are not available for you.'));
+			throw new ApiException(
+				ApiError::MultiplayerDisabled,
+				$this->l->t('Online games are not available for you.'),
+			);
 		}
 		$opponent = $request['opponent'] ?? null;
 		if ($opponent !== null && (!is_string($opponent) || $opponent === '')) {
@@ -76,7 +79,9 @@ class InvitationService {
 		if ($message !== null && !is_string($message)) {
 			throw ApiException::invalidArgument('message', $this->l->t('Invalid message'));
 		}
-		$message = $message === null ? null : mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $message) ?? ''), 0, 200);
+		$message = $message === null
+			? null
+			: mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $message) ?? ''), 0, 200);
 		$scopeGroup = $request['scopeGroup'] ?? null;
 		if ($scopeGroup !== null && (!is_string($scopeGroup) || $opponent !== null || $scopeGroup === '')) {
 			throw ApiException::invalidArgument('scopeGroup', $this->l->t('Invalid group'));
@@ -85,11 +90,17 @@ class InvitationService {
 			throw new ApiException(ApiError::RatedNeedsDeadline, $this->l->t('Rated games need a time limit.'));
 		}
 		if ($rated && !$this->settings->ratedEnabled()) {
-			throw new ApiException(ApiError::RatedNotAllowed, $this->l->t('Rated games are turned off on this server.'));
+			throw new ApiException(
+				ApiError::RatedNotAllowed,
+				$this->l->t('Rated games are turned off on this server.'),
+			);
 		}
 		if ($opponent === null) {
 			if (!$this->settings->openChallengesEnabled()) {
-				throw new ApiException(ApiError::OpenChallengesDisabled, $this->l->t('Open challenges are turned off on this server.'));
+				throw new ApiException(
+					ApiError::OpenChallengesDisabled,
+					$this->l->t('Open challenges are turned off on this server.'),
+				);
 			}
 			if ($scopeGroup !== null && !$this->policy->isInGroup($uid, $scopeGroup)) {
 				throw ApiException::invalidArgument('scopeGroup', $this->l->t('Invalid group'));

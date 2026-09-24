@@ -44,7 +44,8 @@ final class Notation {
 				if ($rec->castle !== null) {
 					$head = $rec->t > $rec->f ? 'O-O' : 'O-O-O';
 				} else {
-					$head = $letter . $names[$rec->f] . $sep . $names[$rec->t] . ($rec->promo === null ? '' : '=' . strtoupper($rec->promo));
+					$head = $letter . $names[$rec->f] . $sep . $names[$rec->t]
+						. ($rec->promo === null ? '' : '=' . strtoupper($rec->promo));
 				}
 				break;
 			case 'split':
@@ -65,7 +66,12 @@ final class Notation {
 				}
 			}
 		}
-		$after = $pipeline->applyRecord($a, $rec, $rec->resolution === 'rolled' ? $key : $rec->resolution, true)['state'];
+		$after = $pipeline->applyRecord(
+			$a,
+			$rec,
+			$rec->resolution === 'rolled' ? $key : $rec->resolution,
+			true,
+		)['state'];
 		$result = $after['result'];
 		$won = is_array($result) && in_array($result['reason'] ?? null, Tables::WIN_REASONS, true);
 		return $head . $suffix . ($won ? ' #' : '');

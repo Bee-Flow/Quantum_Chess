@@ -46,7 +46,12 @@ final class AnswerParser {
 				$comment = is_string($data['comment'] ?? null) ? self::comment($data['comment']) : '';
 				$mood = is_string($data['mood'] ?? null) ? strtolower(trim($data['mood'])) : '';
 				if ($move !== null || $pick !== null) {
-					return ['move' => $move, 'pick' => $pick, 'comment' => $comment, 'mood' => in_array($mood, self::MOODS, true) ? $mood : 'thinking'];
+					return [
+						'move' => $move,
+						'pick' => $pick,
+						'comment' => $comment,
+						'mood' => in_array($mood, self::MOODS, true) ? $mood : 'thinking',
+					];
 				}
 			}
 		}

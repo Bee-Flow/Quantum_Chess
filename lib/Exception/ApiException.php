@@ -103,7 +103,10 @@ class ApiException extends \RuntimeException {
 	}
 
 	public function toResponse(): JSONResponse {
-		$response = new JSONResponse(['error' => $this->getErrorCode(), 'message' => $this->getMessage()] + $this->extra, $this->getStatus());
+		$response = new JSONResponse(
+			['error' => $this->getErrorCode(), 'message' => $this->getMessage()] + $this->extra,
+			$this->getStatus(),
+		);
 		if ($this->retryAfter !== null) {
 			$response->addHeader('Retry-After', (string)$this->retryAfter);
 		}

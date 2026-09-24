@@ -47,7 +47,16 @@ class AiRequestValidator {
 	 *                                      `candidates` (1 to 6 legal moves ranked by the computer player),
 	 *                                      `message`, `feedback` (the rejected answer of a retry) and `answerMode`
 	 *                                      (`code` or `index`)
-	 * @return LlmRequest<array{persona: string, color: string, language: string, history: list<array{ply: int, code: string, key: ?string, weight: ?int}>, candidates: list<array{code: string, E: float, tags: list<string>, ok: bool}>, message: ?string, feedback: ?array{answer: string, reason: string}, answerMode: string}>
+	 * @return LlmRequest<array{
+	 *     persona: string,
+	 *     color: string,
+	 *     language: string,
+	 *     history: list<array{ply: int, code: string, key: ?string, weight: ?int}>,
+	 *     candidates: list<array{code: string, E: float, tags: list<string>, ok: bool}>,
+	 *     message: ?string,
+	 *     feedback: ?array{answer: string, reason: string},
+	 *     answerMode: string,
+	 * }>
 	 * @throws ApiException invalid_argument, invalid_state, or the errors of AiSourceService::resolve()
 	 */
 	public function move(string $uid, array $request): LlmRequest {
@@ -73,7 +82,8 @@ class AiRequestValidator {
 		}
 		$feedback = $request['feedback'] ?? null;
 		if ($feedback !== null) {
-			if (!is_array($feedback) || !is_string($feedback['answer'] ?? null) || !is_string($feedback['reason'] ?? null)
+			if (!is_array($feedback) || !is_string($feedback['answer'] ?? null)
+				|| !is_string($feedback['reason'] ?? null)
 				|| !isset(PromptBuilder::REASON_TEXT[$feedback['reason']])) {
 				throw $this->invalid('feedback');
 			}
@@ -102,7 +112,20 @@ class AiRequestValidator {
 	 * @param array<string, mixed> $request `source`, `model`, `language`, `state`, `history`, `analysis` (of the
 	 *                                      computer player), `context`, `player` (`color` and `skill`), `chat` (the
 	 *                                      last turns) and `question`
-	 * @return LlmRequest<array{language: string, history: list<array{ply: int, code: string, key: ?string, weight: ?int}>, analysis: array{E: ?float, best: list<array{code: string, E: ?float, line: list<string>}>, threats: list<string>, lastMove: ?array{code: string, label: ?string, deltaE: ?float}}, context: array{kind: string, title: ?string, goal: ?string, ply: ?int}, player: array{color: string, skill: string}, chat: list<array{role: string, text: string}>, question: string}>
+	 * @return LlmRequest<array{
+	 *     language: string,
+	 *     history: list<array{ply: int, code: string, key: ?string, weight: ?int}>,
+	 *     analysis: array{
+	 *         E: ?float,
+	 *         best: list<array{code: string, E: ?float, line: list<string>}>,
+	 *         threats: list<string>,
+	 *         lastMove: ?array{code: string, label: ?string, deltaE: ?float},
+	 *     },
+	 *     context: array{kind: string, title: ?string, goal: ?string, ply: ?int},
+	 *     player: array{color: string, skill: string},
+	 *     chat: list<array{role: string, text: string}>,
+	 *     question: string,
+	 * }>
 	 * @throws ApiException invalid_argument, invalid_state, or the errors of AiSourceService::resolve()
 	 */
 	public function coach(string $uid, array $request): LlmRequest {
@@ -182,7 +205,11 @@ class AiRequestValidator {
 		try {
 			return $this->engine->validateState($request['state'] ?? null);
 		} catch (InvalidStateException $e) {
-			throw new ApiException(ApiError::InvalidState, $this->l->t('The position is not valid.'), ['invariant' => $e->getInvariant()]);
+			throw new ApiException(
+				ApiError::InvalidState,
+				$this->l->t('The position is not valid.'),
+				['invariant' => $e->getInvariant()],
+			);
 		}
 	}
 
@@ -199,7 +226,8 @@ class AiRequestValidator {
 		}
 		$list = [];
 		foreach (array_values($value) as $candidate) {
-			if (!is_array($candidate) || !is_string($candidate['code'] ?? null) || !is_numeric($candidate['E'] ?? null)) {
+			if (!is_array($candidate) || !is_string($candidate['code'] ?? null)
+				|| !is_numeric($candidate['E'] ?? null)) {
 				throw $this->invalid('candidates');
 			}
 			$move = strlen($candidate['code']) <= 32 ? $this->engine->findMove($state, $candidate['code']) : null;
@@ -233,14 +261,21 @@ class AiRequestValidator {
 		}
 		$list = [];
 		foreach (array_slice(array_values($value), -$max) as $entry) {
-			if (!is_array($entry) || !is_int($entry['ply'] ?? null) || $entry['ply'] < 0 || $entry['ply'] > Engine::MAX_PLY
+			if (!is_array($entry) || !is_int($entry['ply'] ?? null)
+				|| $entry['ply'] < 0 || $entry['ply'] > Engine::MAX_PLY
 				|| !is_string($entry['code'] ?? null) || preg_match(self::CODE_REGEX, $entry['code']) !== 1) {
 				continue;
 			}
 			$key = $entry['key'] ?? null;
 			$weight = $entry['weight'] ?? null;
-			$valid = is_string($key) && in_array($key, Engine::OUTCOME_KEYS, true) && is_int($weight) && $weight >= 0 && $weight <= Engine::T;
-			$list[] = ['ply' => $entry['ply'], 'code' => $entry['code'], 'key' => $valid ? $key : null, 'weight' => $valid ? $weight : null];
+			$valid = is_string($key) && in_array($key, Engine::OUTCOME_KEYS, true)
+				&& is_int($weight) && $weight >= 0 && $weight <= Engine::T;
+			$list[] = [
+				'ply' => $entry['ply'],
+				'code' => $entry['code'],
+				'key' => $valid ? $key : null,
+				'weight' => $valid ? $weight : null,
+			];
 		}
 		return $list;
 	}
@@ -248,7 +283,12 @@ class AiRequestValidator {
 	/**
 	 * The computer player's analysis; numbers are clamped and invalid entries dropped.
 	 *
-	 * @return array{E: ?float, best: list<array{code: string, E: ?float, line: list<string>}>, threats: list<string>, lastMove: ?array{code: string, label: ?string, deltaE: ?float}}
+	 * @return array{
+	 *     E: ?float,
+	 *     best: list<array{code: string, E: ?float, line: list<string>}>,
+	 *     threats: list<string>,
+	 *     lastMove: ?array{code: string, label: ?string, deltaE: ?float},
+	 * }
 	 */
 	private function analysis(mixed $value): array {
 		$value = is_array($value) ? $value : [];
@@ -284,7 +324,12 @@ class AiRequestValidator {
 			];
 		}
 		$e = $number($value['E'] ?? null);
-		return ['E' => $e === null ? null : max(0.0, $e), 'best' => $best, 'threats' => $threats, 'lastMove' => $lastMove];
+		return [
+			'E' => $e === null ? null : max(0.0, $e),
+			'best' => $best,
+			'threats' => $threats,
+			'lastMove' => $lastMove,
+		];
 	}
 
 	/**
@@ -310,7 +355,12 @@ class AiRequestValidator {
 			return $x;
 		};
 		$ply = $value['ply'] ?? null;
-		return ['kind' => $kind, 'title' => $text('title'), 'goal' => $text('goal'), 'ply' => is_int($ply) && $ply >= 0 ? $ply : null];
+		return [
+			'kind' => $kind,
+			'title' => $text('title'),
+			'goal' => $text('goal'),
+			'ply' => is_int($ply) && $ply >= 0 ? $ply : null,
+		];
 	}
 
 	/**
@@ -324,7 +374,8 @@ class AiRequestValidator {
 		}
 		$turns = [];
 		foreach (array_slice(array_values($value), -4) as $turn) {
-			if (is_array($turn) && in_array($turn['role'] ?? null, ['user', 'coach'], true) && is_string($turn['text'] ?? null)) {
+			if (is_array($turn) && in_array($turn['role'] ?? null, ['user', 'coach'], true)
+				&& is_string($turn['text'] ?? null)) {
 				$turns[] = ['role' => (string)$turn['role'], 'text' => mb_substr($turn['text'], 0, 600)];
 			}
 		}

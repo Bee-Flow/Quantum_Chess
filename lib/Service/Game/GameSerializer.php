@@ -26,7 +26,11 @@ use OCP\IUserManager;
  * lifetime of the request.
  */
 class GameSerializer {
-	private const KIND_NAMES = [ChatMessage::KIND_TEXT => 'text', ChatMessage::KIND_SYSTEM => 'system', ChatMessage::KIND_PHRASE => 'phrase'];
+	private const KIND_NAMES = [
+		ChatMessage::KIND_TEXT => 'text',
+		ChatMessage::KIND_SYSTEM => 'system',
+		ChatMessage::KIND_PHRASE => 'phrase',
+	];
 
 	/** @var array<string, ?string> */
 	private array $names = [];
@@ -153,7 +157,11 @@ class GameSerializer {
 				continue;
 			}
 			$letter = (string)$cell['type'];
-			$cells[] = [$square, $cell['color'] === 'w' ? strtoupper($letter) : $letter, $this->engine->pct((int)$cell['weight'])];
+			$cells[] = [
+				$square,
+				$cell['color'] === 'w' ? strtoupper($letter) : $letter,
+				$this->engine->pct((int)$cell['weight']),
+			];
 		}
 		return $cells;
 	}
@@ -165,7 +173,9 @@ class GameSerializer {
 		}
 		if (!array_key_exists($uid, $this->ratings)) {
 			$row = $this->ratingService->get($uid);
-			$this->ratings[$uid] = $row === null ? null : ['rating' => $row['rating'], 'provisional' => $row['provisional']];
+			$this->ratings[$uid] = $row === null
+				? null
+				: ['rating' => $row['rating'], 'provisional' => $row['provisional']];
 		}
 		return $this->ratings[$uid];
 	}
@@ -197,7 +207,9 @@ class GameSerializer {
 			'canResign' => $active,
 			'canRematch' => $rematch,
 			'ratings' => ['w' => $this->rating($game->getWhiteUid()), 'b' => $this->rating($game->getBlackUid())],
-			'ratingBefore' => $game->getRatingWBefore() === null ? null : ['w' => $game->getRatingWBefore(), 'b' => $game->getRatingBBefore()],
+			'ratingBefore' => $game->getRatingWBefore() === null
+				? null
+				: ['w' => $game->getRatingWBefore(), 'b' => $game->getRatingBBefore()],
 			'muted' => $color !== null && ($color === 'w' ? $game->getMuteW() : $game->getMuteB()) === 1,
 			'chatCount' => $game->getChatCount(),
 			'chatOpen' => $chatOpen && $color !== null,
@@ -253,7 +265,9 @@ class GameSerializer {
 			'id' => $message->getId(),
 			'kind' => self::KIND_NAMES[$kind] ?? 'text',
 			'userId' => $uid,
-			'displayName' => $uid === null ? ($kind === ChatMessage::KIND_SYSTEM ? null : $this->l->t('Deleted user')) : ($this->userRef($uid)['displayName'] ?? null),
+			'displayName' => $uid === null
+				? ($kind === ChatMessage::KIND_SYSTEM ? null : $this->l->t('Deleted user'))
+				: ($this->userRef($uid)['displayName'] ?? null),
 			'message' => $message->getMessage(),
 			'params' => $params === null ? null : json_decode($params, true),
 			'createdAt' => $message->getCreatedAt(),
@@ -271,7 +285,10 @@ class GameSerializer {
 		foreach (['yourTurn', 'waiting', 'invitations', 'outgoing', 'open', 'recent'] as $key) {
 			$dto[$key] = array_map(fn (Game $g) => $this->summary($g, $viewer), $groups[$key] ?? []);
 		}
-		$dto['counts'] = ['yourTurn' => count($groups['yourTurn'] ?? []), 'invitations' => count($groups['invitations'] ?? [])];
+		$dto['counts'] = [
+			'yourTurn' => count($groups['yourTurn'] ?? []),
+			'invitations' => count($groups['invitations'] ?? []),
+		];
 		return $dto;
 	}
 }

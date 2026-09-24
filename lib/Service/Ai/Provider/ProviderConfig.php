@@ -64,7 +64,12 @@ final class ProviderConfig {
 	 * @return array{preset: string, kind: string, baseUrl: string, model: string, label?: string}
 	 */
 	public function toArray(): array {
-		$array = ['preset' => $this->preset, 'kind' => $this->kind->value, 'baseUrl' => $this->baseUrl, 'model' => $this->model];
+		$array = [
+			'preset' => $this->preset,
+			'kind' => $this->kind->value,
+			'baseUrl' => $this->baseUrl,
+			'model' => $this->model,
+		];
 		if ($this->label !== null) {
 			$array['label'] = $this->label;
 		}

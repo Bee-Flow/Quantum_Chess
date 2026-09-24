@@ -35,7 +35,13 @@ use OCP\IUserSession;
  * The "Quantum Chess" dashboard widget: invitations first, then the games waiting for the user's move, nearest
  * deadline first. It is shown to users who may play online.
  */
-class GamesWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget, IOptionWidget, IReloadableWidget, IConditionalWidget {
+class GamesWidget implements
+	IAPIWidgetV2,
+	IIconWidget,
+	IButtonWidget,
+	IOptionWidget,
+	IReloadableWidget,
+	IConditionalWidget {
 
 	public function __construct(
 		private readonly IL10N $l,
@@ -112,7 +118,9 @@ class GamesWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget, IOptionWi
 	private function item(Game $game, string $uid): WidgetItem {
 		$other = $game->opponentOf($uid);
 		$name = $other === null ? $this->l->t('Deleted user') : ($this->userManager->getDisplayName($other) ?? $other);
-		$avatar = $other === null ? '' : $this->url->linkToRouteAbsolute('core.avatar.getAvatar', ['userId' => $other, 'size' => 64]);
+		$avatar = $other === null
+			? ''
+			: $this->url->linkToRouteAbsolute('core.avatar.getAvatar', ['userId' => $other, 'size' => 64]);
 		$link = $this->appUrl('/game/' . $game->getId());
 		if ($game->getStatus() === Game::STATUS_PENDING) {
 			$title = $game->getRematchOf() !== null
@@ -131,7 +139,17 @@ class GamesWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget, IOptionWi
 				? $this->l->n('%n day left', '%n days left', intdiv($left, GameClock::DAY))
 				: $this->l->n('%n hour left', '%n hours left', max(1, intdiv($left, GameClock::HOUR))));
 		}
-		$overlay = $this->url->getAbsoluteURL($this->url->imagePath(Application::APP_ID, 'overlay-king-' . ($game->colorOf($uid) === 'b' ? 'b' : 'w') . '.svg'));
-		return new WidgetItem($this->l->t('Your move against %s', [$name]), $subtitle, $link, $avatar, (string)$game->getId(), $overlay);
+		$overlay = $this->url->getAbsoluteURL($this->url->imagePath(
+			Application::APP_ID,
+			'overlay-king-' . ($game->colorOf($uid) === 'b' ? 'b' : 'w') . '.svg',
+		));
+		return new WidgetItem(
+			$this->l->t('Your move against %s', [$name]),
+			$subtitle,
+			$link,
+			$avatar,
+			(string)$game->getId(),
+			$overlay,
+		);
 	}
 }

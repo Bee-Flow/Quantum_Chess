@@ -58,7 +58,10 @@ abstract class ApiController extends Controller {
 			return $e->toResponse();
 		} catch (\Throwable $e) {
 			$this->logger->error($e->getMessage(), ['exception' => $e]);
-			return new JSONResponse(['error' => ApiError::Internal->value, 'message' => 'Internal error'], ApiError::Internal->status());
+			return new JSONResponse(
+				['error' => ApiError::Internal->value, 'message' => 'Internal error'],
+				ApiError::Internal->status(),
+			);
 		}
 	}
 

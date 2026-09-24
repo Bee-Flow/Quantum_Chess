@@ -81,7 +81,10 @@ class InvitePolicy {
 		$shared = null;
 		$sharedGroups = function () use (&$shared, $from, $to): array {
 			if ($shared === null) {
-				$shared = array_values(array_intersect($this->groupManager->getUserGroupIds($from), $this->groupManager->getUserGroupIds($to)));
+				$shared = array_values(array_intersect(
+					$this->groupManager->getUserGroupIds($from),
+					$this->groupManager->getUserGroupIds($to),
+				));
 			}
 			return $shared;
 		};
@@ -124,7 +127,10 @@ class InvitePolicy {
 	public function assertWithinLimits(string $from, ?string $to): void {
 		if ($to === null) {
 			if ($this->games->countCreated($from, Game::STATUS_OPEN) >= self::MAX_OPEN) {
-				throw new ApiException(ApiError::TooManyOpen, $this->l->t('You already have %d open challenges.', [self::MAX_OPEN]));
+				throw new ApiException(
+					ApiError::TooManyOpen,
+					$this->l->t('You already have %d open challenges.', [self::MAX_OPEN]),
+				);
 			}
 		} elseif ($this->games->countCreated($from, Game::STATUS_PENDING) >= self::MAX_PENDING
 			|| $this->games->countPendingPair($from, $to) >= 1) {
@@ -140,7 +146,10 @@ class InvitePolicy {
 	 */
 	public function assertActiveLimit(string $uid): void {
 		if ($this->games->countActive($uid) >= $this->settings->maxActiveGames()) {
-			throw new ApiException(ApiError::TooManyActive, $this->l->t('You have reached the maximum number of running games.'));
+			throw new ApiException(
+				ApiError::TooManyActive,
+				$this->l->t('You have reached the maximum number of running games.'),
+			);
 		}
 	}
 
@@ -154,7 +163,8 @@ class InvitePolicy {
 	 */
 	public function canSeeOpenChallenge(string $viewer, Game $game): bool {
 		$creator = $game->getCreatorUid();
-		if ($game->getStatus() !== Game::STATUS_OPEN || $creator === null || $creator === $viewer || !$this->isMultiplayerUser($viewer)) {
+		if ($game->getStatus() !== Game::STATUS_OPEN || $creator === null || $creator === $viewer
+			|| !$this->isMultiplayerUser($viewer)) {
 			return false;
 		}
 		$group = $game->getScopeGroup();

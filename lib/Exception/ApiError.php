@@ -61,8 +61,8 @@ enum ApiError: string {
 	 */
 	public function status(): int {
 		return match ($this) {
-			self::InvalidArgument, self::RatedNeedsDeadline, self::RatedNotAllowed, self::OwnChallenge, self::IllegalMove,
-			self::InvalidState, self::UrlNotAllowed => Http::STATUS_BAD_REQUEST,
+			self::InvalidArgument, self::RatedNeedsDeadline, self::RatedNotAllowed, self::OwnChallenge,
+			self::IllegalMove, self::InvalidState, self::UrlNotAllowed => Http::STATUS_BAD_REQUEST,
 			self::MultiplayerDisabled, self::OpenChallengesDisabled, self::NotYourTurn, self::ChatDisabled,
 			self::AiUnavailable => Http::STATUS_FORBIDDEN,
 			self::NotFound, self::UserNotFound => Http::STATUS_NOT_FOUND,

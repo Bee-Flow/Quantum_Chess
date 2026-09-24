@@ -53,7 +53,11 @@ class AiSourceService {
 			$source['noticeAcked'] = in_array($source['id'], $acked, true);
 		}
 		unset($source);
-		return ['sources' => $sources, 'default' => $this->defaultOf($uid, $sources), 'privacyNotice' => $this->settings->aiPrivacyNotice()];
+		return [
+			'sources' => $sources,
+			'default' => $this->defaultOf($uid, $sources),
+			'privacyNotice' => $this->settings->aiPrivacyNotice(),
+		];
 	}
 
 	/**
@@ -88,27 +92,48 @@ class AiSourceService {
 			AiSource::Personal => $this->personal($uid),
 		};
 		if (!$info['available']) {
-			throw new ApiException(ApiError::AiUnavailable, $this->l->t('This AI source is not available.'), ['reason' => $info['reason']]);
+			throw new ApiException(
+				ApiError::AiUnavailable,
+				$this->l->t('This AI source is not available.'),
+				['reason' => $info['reason']],
+			);
 		}
 		if ($source === AiSource::Nextcloud) {
 			return ProviderConnection::nextcloud();
 		}
-		$provider = $source === AiSource::Shared ? $this->settings->sharedProvider() : $this->aiSettings->personalProvider($uid);
+		$provider = $source === AiSource::Shared
+			? $this->settings->sharedProvider()
+			: $this->aiSettings->personalProvider($uid);
 		if ($provider === null) {
-			throw new ApiException(ApiError::AiUnavailable, $this->l->t('This AI source is not available.'), ['reason' => 'not_configured']);
+			throw new ApiException(
+				ApiError::AiUnavailable,
+				$this->l->t('This AI source is not available.'),
+				['reason' => 'not_configured'],
+			);
 		}
 		try {
-			$allowLocal = $this->urlGuard->check($provider->baseUrl, $source->value, $this->settings->sharedAllowLocal(), $this->settings->localAllowlist())['allowLocal'];
+			$allowLocal = $this->urlGuard->check(
+				$provider->baseUrl,
+				$source->value,
+				$this->settings->sharedAllowLocal(),
+				$this->settings->localAllowlist(),
+			)['allowLocal'];
 		} catch (UrlNotAllowedException) {
 			// the allow-list changed after the provider was saved
-			throw new ApiException(ApiError::UrlNotAllowed, $this->providers->urlMessage('local'), ['field' => 'baseUrl']);
+			throw new ApiException(
+				ApiError::UrlNotAllowed,
+				$this->providers->urlMessage('local'),
+				['field' => 'baseUrl'],
+			);
 		}
 		return new ProviderConnection(
 			$source,
 			$provider->kind,
 			$provider->preset,
 			$provider->baseUrl,
-			$provider->model !== '' ? $provider->model : (Presets::get($provider->preset)['suggestedModels'][0] ?? null),
+			$provider->model !== ''
+				? $provider->model
+				: (Presets::get($provider->preset)['suggestedModels'][0] ?? null),
 			$source === AiSource::Shared ? $this->keys->getShared() : $this->keys->getPersonal($uid),
 			$allowLocal,
 			$source === AiSource::Shared ? $this->settings->sharedModelAllowlist() : [],
@@ -164,7 +189,8 @@ class AiSourceService {
 			$reason = 'disabled';
 		} elseif (!$this->settings->inGroups($uid, $this->settings->sharedGroups())) {
 			$reason = 'not_allowed';
-		} elseif ($provider === null || ($provider->model === '' && Presets::get($provider->preset)['suggestedModels'] === [])) {
+		} elseif ($provider === null
+			|| ($provider->model === '' && Presets::get($provider->preset)['suggestedModels'] === [])) {
 			$reason = 'not_configured';
 		} elseif (Presets::get($provider->preset)['keyRequired'] && $this->keys->getShared() === null) {
 			$reason = 'not_configured';
@@ -179,7 +205,9 @@ class AiSourceService {
 			'reason' => $reason,
 			'preset' => $provider?->preset,
 			'model' => $provider === null ? null : ($provider->model !== '' ? $provider->model : null),
-			'models' => $provider !== null && $this->settings->sharedModelAllowlist() !== [] ? $this->settings->sharedModelAllowlist() : null,
+			'models' => $provider !== null && $this->settings->sharedModelAllowlist() !== []
+				? $this->settings->sharedModelAllowlist()
+				: null,
 		];
 	}
 
@@ -192,7 +220,8 @@ class AiSourceService {
 			$reason = 'disabled';
 		} elseif ($provider === null) {
 			$reason = 'not_configured';
-		} elseif (Presets::get($provider->preset)['keyRequired'] && ($info['hasKey'] === false || $info['keyUnreadable'])) {
+		} elseif (Presets::get($provider->preset)['keyRequired']
+			&& ($info['hasKey'] === false || $info['keyUnreadable'])) {
 			$reason = 'no_key';
 		} elseif ($provider->model === '' && Presets::get($provider->preset)['suggestedModels'] === []) {
 			$reason = 'not_configured';

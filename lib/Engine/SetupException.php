@@ -19,7 +19,9 @@ class SetupException extends \RuntimeException {
 		private string $reason,
 		private ?string $detail = null,
 	) {
-		parent::__construct('setup failed: ' . $reason . ($detail !== null && $detail !== '' ? ' (' . $detail . ')' : ''));
+		parent::__construct(
+			'setup failed: ' . $reason . ($detail !== null && $detail !== '' ? ' (' . $detail . ')' : ''),
+		);
 	}
 
 	/**

@@ -35,7 +35,13 @@ class ProviderValidator {
 	 * @param list<string> $allowlist the local addresses personal providers may use
 	 * @throws ApiException invalid_argument or url_not_allowed
 	 */
-	public function validate(string $field, array $value, string $scope, bool $sharedAllowLocal, array $allowlist): ProviderConfig {
+	public function validate(
+		string $field,
+		array $value,
+		string $scope,
+		bool $sharedAllowLocal,
+		array $allowlist,
+	): ProviderConfig {
 		$presetId = $value['preset'] ?? null;
 		if (!is_string($presetId) || !Presets::exists($presetId)) {
 			throw $this->invalid($field);
@@ -55,7 +61,11 @@ class ProviderValidator {
 			try {
 				$baseUrl = $this->urlGuard->check($url, $scope, $sharedAllowLocal, $allowlist)['url'];
 			} catch (UrlNotAllowedException $e) {
-				throw new ApiException(ApiError::UrlNotAllowed, $this->urlMessage($e->getMessage()), ['field' => $field]);
+				throw new ApiException(
+					ApiError::UrlNotAllowed,
+					$this->urlMessage($e->getMessage()),
+					['field' => $field],
+				);
 			}
 		}
 		return new ProviderConfig($presetId, ProviderKind::from($preset['kind']), $baseUrl, $model);
@@ -74,7 +84,9 @@ class ProviderValidator {
 	public function urlMessage(string $reason): string {
 		return match ($reason) {
 			'https_required' => $this->l->t('The address must start with https://.'),
-			'local' => $this->l->t('This local address is not allowed. Ask your administrator to add it to the list of allowed local servers.'),
+			'local' => $this->l->t(
+				'This local address is not allowed. Ask your administrator to add it to the list of allowed local servers.',
+			),
 			default => $this->l->t('This is not a valid server address.'),
 		};
 	}

@@ -54,7 +54,16 @@ final class MoveRecord {
 	/**
 	 * The castling table entry of a castling move, otherwise null.
 	 *
-	 * @var array{flag: string, king: int, from: int, to: int, rook: int, rookFrom: int, rookTo: int, empty: list<int>}|null
+	 * @var array{
+	 *     flag: string,
+	 *     king: int,
+	 *     from: int,
+	 *     to: int,
+	 *     rook: int,
+	 *     rookFrom: int,
+	 *     rookTo: int,
+	 *     empty: list<int>,
+	 * }|null
 	 */
 	public ?array $castle = null;
 	/** Pawn move kind: 'push', 'double', 'diagonal', or null for other pieces. */
@@ -122,7 +131,8 @@ final class MoveRecord {
 		$names = Tables::$names;
 		switch ($rec->kind) {
 			case 'standard':
-				return $names[$rec->f] . '-' . $names[$rec->t] . ($rec->promo === null ? '' : '=' . strtoupper($rec->promo));
+				return $names[$rec->f] . '-' . $names[$rec->t]
+					. ($rec->promo === null ? '' : '=' . strtoupper($rec->promo));
 			case 'split':
 				return $names[$rec->f] . '-' . $names[$rec->t] . '|' . $names[$rec->t2];
 			case 'merge':

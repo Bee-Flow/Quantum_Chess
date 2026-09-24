@@ -74,23 +74,46 @@ class ConnectionTester {
 		}
 		if ($apiKey === '') {
 			// The saved key is only sent to the address it was saved for (a changed address needs the key again).
-			$stored = $scope === AiSource::Shared->value ? $this->settings->sharedProvider() : $this->aiSettings->personalProvider($uid);
+			$stored = $scope === AiSource::Shared->value
+				? $this->settings->sharedProvider()
+				: $this->aiSettings->personalProvider($uid);
 			if (ProviderConfig::sameEndpoint($stored, $provider)) {
-				$apiKey = $scope === AiSource::Shared->value ? $this->keys->getShared() : $this->keys->getPersonal($uid);
+				$apiKey = $scope === AiSource::Shared->value
+					? $this->keys->getShared()
+					: $this->keys->getPersonal($uid);
 			}
 		}
 		try {
-			$allowLocal = $this->urlGuard->check($provider->baseUrl, $scope, $this->settings->sharedAllowLocal(), $this->settings->localAllowlist())['allowLocal'];
+			$allowLocal = $this->urlGuard->check(
+				$provider->baseUrl,
+				$scope,
+				$this->settings->sharedAllowLocal(),
+				$this->settings->localAllowlist(),
+			)['allowLocal'];
 		} catch (UrlNotAllowedException) {
 			return self::failure('url_not_allowed');
 		}
-		$connection = new ProviderConnection(AiSource::from($scope), $provider->kind, $provider->preset, $provider->baseUrl, $provider->model, $apiKey, $allowLocal, []);
+		$connection = new ProviderConnection(
+			AiSource::from($scope),
+			$provider->kind,
+			$provider->preset,
+			$provider->baseUrl,
+			$provider->model,
+			$apiKey,
+			$allowLocal,
+			[],
+		);
 		try {
 			$models = $this->providers->create($uid, $connection)->listModels();
 		} catch (ProviderException $e) {
 			return self::failure($e->getUpstream());
 		}
-		return ['ok' => true, 'code' => null, 'modelCount' => count($models), 'models' => array_slice($models, 0, self::MAX_MODELS)];
+		return [
+			'ok' => true,
+			'code' => null,
+			'modelCount' => count($models),
+			'models' => array_slice($models, 0, self::MAX_MODELS),
+		];
 	}
 
 	/**

@@ -255,7 +255,10 @@ class NotificationService {
 		try {
 			foreach (self::FAMILIES[$family] as $subject) {
 				$n = $this->manager->createNotification();
-				$n->setApp(Application::APP_ID)->setUser($uid)->setObject('game', (string)$gameId)->setSubject($subject);
+				$n->setApp(Application::APP_ID)
+					->setUser($uid)
+					->setObject('game', (string)$gameId)
+					->setSubject($subject);
 				$this->manager->markProcessed($n);
 			}
 		} catch (\Throwable $e) {
@@ -269,7 +272,14 @@ class NotificationService {
 	 * @param array<string, mixed> $parameters the subject parameters that Notifier renders
 	 * @param string $switch the name of the user's notification switch
 	 */
-	private function send(string $uid, Game $game, string $subject, array $parameters, string $family, string $switch): void {
+	private function send(
+		string $uid,
+		Game $game,
+		string $subject,
+		array $parameters,
+		string $family,
+		string $switch,
+	): void {
 		$this->clear($uid, $game->getId(), $family);
 		try {
 			if (!($this->settings->notificationSwitches($uid)[$switch] ?? true)) {

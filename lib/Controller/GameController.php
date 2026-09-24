@@ -51,7 +51,11 @@ final class GameController extends ApiController {
 
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		return $this->respond(fn (string $uid) => $this->serializer->lobby($this->queries->getLobby($uid), $uid, $this->queries->lobbyToken($uid)));
+		return $this->respond(fn (string $uid) => $this->serializer->lobby(
+			$this->queries->getLobby($uid),
+			$uid,
+			$this->queries->lobbyToken($uid),
+		));
 	}
 
 	/**
@@ -62,7 +66,9 @@ final class GameController extends ApiController {
 	public function summary(): JSONResponse {
 		return $this->respond(function (string $uid): JSONResponse {
 			$token = $this->queries->lobbyToken($uid);
-			$response = new JSONResponse(['rev' => $token] + $this->queries->countActionNeeded($uid) + ['now' => $this->clock->now()]);
+			$response = new JSONResponse(
+				['rev' => $token] + $this->queries->countActionNeeded($uid) + ['now' => $this->clock->now()],
+			);
 			$response->setETag($token);
 			return $response;
 		});
@@ -71,7 +77,10 @@ final class GameController extends ApiController {
 	#[NoAdminRequired]
 	public function open(): JSONResponse {
 		return $this->respond(fn (string $uid) => [
-			'games' => array_map(fn (Game $g) => $this->serializer->summary($g, $uid), $this->queries->getLobby($uid)['open']),
+			'games' => array_map(
+				fn (Game $g) => $this->serializer->summary($g, $uid),
+				$this->queries->getLobby($uid)['open'],
+			),
 		]);
 	}
 
@@ -79,7 +88,10 @@ final class GameController extends ApiController {
 	public function history(string $status = 'finished', ?string $cursor = null, int $limit = 20): JSONResponse {
 		return $this->respond(function (string $uid) use ($status, $cursor, $limit): array {
 			$page = $this->queries->history($uid, ['status' => $status, 'cursor' => $cursor, 'limit' => $limit]);
-			return ['games' => array_map(fn (Game $g) => $this->serializer->summary($g, $uid), $page['games']), 'next' => $page['next']];
+			return [
+				'games' => array_map(fn (Game $g) => $this->serializer->summary($g, $uid), $page['games']),
+				'next' => $page['next'],
+			];
 		});
 	}
 
@@ -95,7 +107,10 @@ final class GameController extends ApiController {
 	#[NoAdminRequired]
 	public function recentOpponents(): JSONResponse {
 		return $this->respond(fn (string $uid) => [
-			'users' => array_values(array_filter(array_map(fn (string $o) => $this->serializer->userRef($o), $this->queries->recentOpponents($uid)))),
+			'users' => array_values(array_filter(array_map(
+				fn (string $o) => $this->serializer->userRef($o),
+				$this->queries->recentOpponents($uid),
+			))),
 		]);
 	}
 
@@ -104,8 +119,22 @@ final class GameController extends ApiController {
 	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 30, period: 3600)]
-	public function create(?string $opponent = null, mixed $color = 'r', mixed $rated = true, mixed $timeControl = 'corr:3d', mixed $message = null, mixed $scopeGroup = null): JSONResponse {
-		return $this->respond(function (string $uid) use ($opponent, $color, $rated, $timeControl, $message, $scopeGroup): array {
+	public function create(
+		?string $opponent = null,
+		mixed $color = 'r',
+		mixed $rated = true,
+		mixed $timeControl = 'corr:3d',
+		mixed $message = null,
+		mixed $scopeGroup = null,
+	): JSONResponse {
+		return $this->respond(function (string $uid) use (
+			$opponent,
+			$color,
+			$rated,
+			$timeControl,
+			$message,
+			$scopeGroup,
+		): array {
 			$game = $this->invitations->create($uid, [
 				'opponent' => $opponent === '' ? null : $opponent,
 				'color' => $color,
@@ -158,25 +187,33 @@ final class GameController extends ApiController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function accept(int $id): JSONResponse {
-		return $this->respond(fn (string $uid) => ['game' => $this->serializer->live($this->invitations->accept($id, $uid), $uid)]);
+		return $this->respond(fn (string $uid) => [
+			'game' => $this->serializer->live($this->invitations->accept($id, $uid), $uid),
+		]);
 	}
 
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function decline(int $id): JSONResponse {
-		return $this->respond(fn (string $uid) => ['game' => $this->serializer->summary($this->invitations->decline($id, $uid), $uid)]);
+		return $this->respond(fn (string $uid) => [
+			'game' => $this->serializer->summary($this->invitations->decline($id, $uid), $uid),
+		]);
 	}
 
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function cancel(int $id): JSONResponse {
-		return $this->respond(fn (string $uid) => ['game' => $this->serializer->summary($this->invitations->cancel($id, $uid), $uid)]);
+		return $this->respond(fn (string $uid) => [
+			'game' => $this->serializer->summary($this->invitations->cancel($id, $uid), $uid),
+		]);
 	}
 
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 30, period: 600)]
 	public function join(int $id): JSONResponse {
-		return $this->respond(fn (string $uid) => ['game' => $this->serializer->live($this->invitations->join($id, $uid), $uid)]);
+		return $this->respond(fn (string $uid) => [
+			'game' => $this->serializer->live($this->invitations->join($id, $uid), $uid),
+		]);
 	}
 
 	/**
@@ -185,7 +222,13 @@ final class GameController extends ApiController {
 	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 120, period: 60)]
-	public function move(int $id, mixed $code = null, mixed $ply = null, mixed $clientId = null, mixed $thinkMs = null): JSONResponse {
+	public function move(
+		int $id,
+		mixed $code = null,
+		mixed $ply = null,
+		mixed $clientId = null,
+		mixed $thinkMs = null,
+	): JSONResponse {
 		return $this->respond(function (string $uid) use ($id, $code, $ply, $clientId, $thinkMs): array {
 			if (!is_string($code) || $code === '' || strlen($code) > 32) {
 				throw ApiException::invalidArgument('code', 'Invalid move');
@@ -194,10 +237,19 @@ final class GameController extends ApiController {
 				throw ApiException::invalidArgument('ply', 'Invalid ply');
 			}
 			try {
-				$result = $this->gameplay->move($id, $uid, $code, $ply, is_string($clientId) ? $clientId : null, is_int($thinkMs) ? $thinkMs : null);
+				$result = $this->gameplay->move(
+					$id,
+					$uid,
+					$code,
+					$ply,
+					is_string($clientId) ? $clientId : null,
+					is_int($thinkMs) ? $thinkMs : null,
+				);
 			} catch (GameConflictException $e) {
 				$full = $this->queries->getFull($id, $uid);
-				throw $e->withExtra(['game' => $this->serializer->full($full['game'], $uid, $full['moves'], $full['chat'])]);
+				throw $e->withExtra([
+					'game' => $this->serializer->full($full['game'], $uid, $full['moves'], $full['chat']),
+				]);
 			} catch (ApiException $e) {
 				if ($e->getError() !== ApiError::NotYourTurn) {
 					throw $e;
@@ -221,13 +273,17 @@ final class GameController extends ApiController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function resign(int $id): JSONResponse {
-		return $this->respond(fn (string $uid) => ['game' => $this->serializer->live($this->gameplay->resign($id, $uid), $uid)]);
+		return $this->respond(fn (string $uid) => [
+			'game' => $this->serializer->live($this->gameplay->resign($id, $uid), $uid),
+		]);
 	}
 
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function abort(int $id): JSONResponse {
-		return $this->respond(fn (string $uid) => ['game' => $this->serializer->live($this->gameplay->abort($id, $uid), $uid)]);
+		return $this->respond(fn (string $uid) => [
+			'game' => $this->serializer->live($this->gameplay->abort($id, $uid), $uid),
+		]);
 	}
 
 	/**
@@ -236,7 +292,12 @@ final class GameController extends ApiController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function draw(int $id, mixed $action = null): JSONResponse {
-		return $this->respond(fn (string $uid) => ['game' => $this->serializer->live($this->gameplay->draw($id, $uid, is_string($action) ? $action : ''), $uid)]);
+		return $this->respond(fn (string $uid) => [
+			'game' => $this->serializer->live(
+				$this->gameplay->draw($id, $uid, is_string($action) ? $action : ''),
+				$uid,
+			),
+		]);
 	}
 
 	/**
@@ -246,7 +307,12 @@ final class GameController extends ApiController {
 	#[UserRateLimit(limit: 30, period: 60)]
 	public function chat(int $id, mixed $message = null, mixed $phrase = null): JSONResponse {
 		return $this->respond(function (string $uid) use ($id, $message, $phrase): array {
-			$line = $this->chat->send($id, $uid, is_string($message) ? $message : null, is_string($phrase) ? $phrase : null);
+			$line = $this->chat->send(
+				$id,
+				$uid,
+				is_string($message) ? $message : null,
+				is_string($phrase) ? $phrase : null,
+			);
 			return ['message' => $this->serializer->chat($line), 'rev' => $this->queries->get($id, $uid)->getRev()];
 		});
 	}
@@ -260,6 +326,8 @@ final class GameController extends ApiController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 30, period: 3600)]
 	public function rematch(int $id): JSONResponse {
-		return $this->respond(fn (string $uid) => ['game' => $this->serializer->live($this->invitations->rematch($id, $uid), $uid)]);
+		return $this->respond(fn (string $uid) => [
+			'game' => $this->serializer->live($this->invitations->rematch($id, $uid), $uid),
+		]);
 	}
 }
