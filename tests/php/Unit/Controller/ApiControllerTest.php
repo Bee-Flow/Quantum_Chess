@@ -73,7 +73,9 @@ final class ApiControllerTest extends TestCase {
 
 	private function request(): IRequest {
 		$request = $this->createMock(IRequest::class);
-		$request->method('getHeader')->willReturnCallback(fn (string $name) => $name === 'Content-Length' ? (string)$this->contentLength : '');
+		$request->method('getHeader')->willReturnCallback(
+			fn (string $name) => $name === 'Content-Length' ? (string)$this->contentLength : '',
+		);
 		$request->method('getParams')->willReturnCallback(fn () => $this->params);
 		return $request;
 	}
@@ -95,19 +97,46 @@ final class ApiControllerTest extends TestCase {
 	private function gameController(?string $userId = 'alice'): GameController {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(GameBuilder::NOW);
-		return new GameController($this->request(), $this->l10n(), $this->logger(), $userId, $this->queries, $this->invitations, $this->gameplay,
-			$this->createMock(ChatService::class), $this->serializer, new GameClock($time));
+		return new GameController(
+			$this->request(),
+			$this->l10n(),
+			$this->logger(),
+			$userId,
+			$this->queries,
+			$this->invitations,
+			$this->gameplay,
+			$this->createMock(ChatService::class),
+			$this->serializer,
+			new GameClock($time),
+		);
 	}
 
 	private function aiController(?string $userId = 'alice'): AiController {
-		return new AiController($this->request(), $this->l10n(), $this->logger(), $userId, $this->createMock(LlmService::class),
-			$this->createMock(AiSourceService::class), $this->createMock(AiSettingsService::class));
+		return new AiController(
+			$this->request(),
+			$this->l10n(),
+			$this->logger(),
+			$userId,
+			$this->createMock(LlmService::class),
+			$this->createMock(AiSourceService::class),
+			$this->createMock(AiSettingsService::class),
+		);
 	}
 
 	private function settingsController(?string $userId = 'alice'): SettingsController {
-		return new SettingsController($this->request(), $this->l10n(), $this->logger(), $userId, $this->createMock(AppSettings::class),
-			$this->createMock(AiSettingsService::class), $this->createMock(MultiplayerSettingsService::class), $this->createMock(AiSourceService::class),
-			$this->createMock(ConnectionTester::class), $this->createMock(AdminStatusService::class), $this->createMock(IGroupManager::class));
+		return new SettingsController(
+			$this->request(),
+			$this->l10n(),
+			$this->logger(),
+			$userId,
+			$this->createMock(AppSettings::class),
+			$this->createMock(AiSettingsService::class),
+			$this->createMock(MultiplayerSettingsService::class),
+			$this->createMock(AiSourceService::class),
+			$this->createMock(ConnectionTester::class),
+			$this->createMock(AdminStatusService::class),
+			$this->createMock(IGroupManager::class),
+		);
 	}
 
 	/**
@@ -125,18 +154,32 @@ final class ApiControllerTest extends TestCase {
 	}
 
 	public function testApiErrors(): void {
-		$this->invitations->method('accept')->willThrowException(new ApiException(ApiError::TooManyActive, 'Too many games'));
-		$this->gameplay->method('draw')->willThrowException(new ApiException(ApiError::DrawNotAllowed, 'Not now', ['availableAtPly' => 6]));
+		$this->invitations->method('accept')
+			->willThrowException(new ApiException(ApiError::TooManyActive, 'Too many games'));
+		$this->gameplay->method('draw')
+			->willThrowException(new ApiException(ApiError::DrawNotAllowed, 'Not now', ['availableAtPly' => 6]));
 		$this->invitations->method('cancel')->willThrowException(new ApiException(ApiError::AiBusy, 'Wait', [], 5));
 		$controller = $this->gameController();
-		$this->assertSame([429, ['error' => 'too_many_active', 'message' => 'Too many games'], []], self::answer($controller->accept(7)));
-		$this->assertSame([409, ['error' => 'draw_not_allowed', 'message' => 'Not now', 'availableAtPly' => 6], []], self::answer($controller->draw(7, 'offer')));
-		$this->assertSame([429, ['error' => 'ai_busy', 'message' => 'Wait'], ['Retry-After' => '5']], self::answer($controller->cancel(7)));
+		$this->assertSame(
+			[429, ['error' => 'too_many_active', 'message' => 'Too many games'], []],
+			self::answer($controller->accept(7)),
+		);
+		$this->assertSame(
+			[409, ['error' => 'draw_not_allowed', 'message' => 'Not now', 'availableAtPly' => 6], []],
+			self::answer($controller->draw(7, 'offer')),
+		);
+		$this->assertSame(
+			[429, ['error' => 'ai_busy', 'message' => 'Wait'], ['Retry-After' => '5']],
+			self::answer($controller->cancel(7)),
+		);
 	}
 
 	public function testUnexpectedErrorsAreLoggedAndHidden(): void {
 		$this->gameplay->method('resign')->willThrowException(new \RuntimeException('database down'));
-		$this->assertSame([500, ['error' => 'internal', 'message' => 'Internal error'], []], self::answer($this->gameController()->resign(7)));
+		$this->assertSame(
+			[500, ['error' => 'internal', 'message' => 'Internal error'], []],
+			self::answer($this->gameController()->resign(7)),
+		);
 		$this->assertCount(1, $this->logged);
 		$this->assertStringContainsString('database down', $this->logged[0]);
 	}
@@ -147,9 +190,22 @@ final class ApiControllerTest extends TestCase {
 		$this->assertSame($expected, self::answer($this->gameController(null)->index()));
 		$this->assertSame($expected, self::answer($this->aiController(null)->providers()));
 		$this->assertSame($expected, self::answer($this->settingsController(null)->getPersonal()));
-		$stats = new StatsController($this->request(), $this->l10n(), $this->logger(), null, $this->createMock(StatsService::class), $this->createMock(TrainerProgressService::class));
+		$stats = new StatsController(
+			$this->request(),
+			$this->l10n(),
+			$this->logger(),
+			null,
+			$this->createMock(StatsService::class),
+			$this->createMock(TrainerProgressService::class),
+		);
 		$this->assertSame($expected, self::answer($stats->mine()));
-		$preferences = new PreferencesController($this->request(), $this->l10n(), $this->logger(), null, $this->createMock(PreferencesService::class));
+		$preferences = new PreferencesController(
+			$this->request(),
+			$this->l10n(),
+			$this->logger(),
+			null,
+			$this->createMock(PreferencesService::class),
+		);
 		$this->assertSame($expected, self::answer($preferences->update([])));
 	}
 
@@ -169,12 +225,29 @@ final class ApiControllerTest extends TestCase {
 	}
 
 	public function testDocumentsMustBeObjects(): void {
-		$preferences = new PreferencesController($this->request(), $this->l10n(), $this->logger(), 'alice', $this->createMock(PreferencesService::class));
-		$this->assertSame([400, ['error' => 'invalid_argument', 'message' => 'Invalid preferences', 'field' => 'preferences'], []],
-			self::answer($preferences->update('dark')));
-		$stats = new StatsController($this->request(), $this->l10n(), $this->logger(), 'alice', $this->createMock(StatsService::class), $this->createMock(TrainerProgressService::class));
-		$this->assertSame([400, ['error' => 'invalid_argument', 'message' => 'Invalid progress', 'field' => 'progress'], []],
-			self::answer($stats->setProgress(5)));
+		$preferences = new PreferencesController(
+			$this->request(),
+			$this->l10n(),
+			$this->logger(),
+			'alice',
+			$this->createMock(PreferencesService::class),
+		);
+		$this->assertSame(
+			[400, ['error' => 'invalid_argument', 'message' => 'Invalid preferences', 'field' => 'preferences'], []],
+			self::answer($preferences->update('dark')),
+		);
+		$stats = new StatsController(
+			$this->request(),
+			$this->l10n(),
+			$this->logger(),
+			'alice',
+			$this->createMock(StatsService::class),
+			$this->createMock(TrainerProgressService::class),
+		);
+		$this->assertSame(
+			[400, ['error' => 'invalid_argument', 'message' => 'Invalid progress', 'field' => 'progress'], []],
+			self::answer($stats->setProgress(5)),
+		);
 	}
 
 	public function testAMoveConflictCarriesTheCurrentGame(): void {
@@ -188,18 +261,36 @@ final class ApiControllerTest extends TestCase {
 			$this->throwException(new ApiException(ApiError::IllegalMove, 'No', ['reason' => 'blocked'])),
 		);
 		$controller = $this->gameController();
-		$this->assertSame([409, ['error' => 'conflict', 'message' => 'Changed', 'game' => ['full' => true]], []], self::answer($controller->move(7, 'e2-e4', 0)));
-		$this->assertSame([403, ['error' => 'not_your_turn', 'message' => 'Wait', 'game' => ['live' => true]], []], self::answer($controller->move(7, 'e2-e4', 0)));
-		$this->assertSame([400, ['error' => 'illegal_move', 'message' => 'No', 'reason' => 'blocked'], []], self::answer($controller->move(7, 'e2-e4', 0)));
-		$this->assertSame([400, ['error' => 'invalid_argument', 'message' => 'Invalid move', 'field' => 'code'], []], self::answer($controller->move(7, str_repeat('a', 33), 0)));
-		$this->assertSame([400, ['error' => 'invalid_argument', 'message' => 'Invalid ply', 'field' => 'ply'], []], self::answer($controller->move(7, 'e2-e4', '1')));
+		$this->assertSame(
+			[409, ['error' => 'conflict', 'message' => 'Changed', 'game' => ['full' => true]], []],
+			self::answer($controller->move(7, 'e2-e4', 0)),
+		);
+		$this->assertSame(
+			[403, ['error' => 'not_your_turn', 'message' => 'Wait', 'game' => ['live' => true]], []],
+			self::answer($controller->move(7, 'e2-e4', 0)),
+		);
+		$this->assertSame(
+			[400, ['error' => 'illegal_move', 'message' => 'No', 'reason' => 'blocked'], []],
+			self::answer($controller->move(7, 'e2-e4', 0)),
+		);
+		$this->assertSame(
+			[400, ['error' => 'invalid_argument', 'message' => 'Invalid move', 'field' => 'code'], []],
+			self::answer($controller->move(7, str_repeat('a', 33), 0)),
+		);
+		$this->assertSame(
+			[400, ['error' => 'invalid_argument', 'message' => 'Invalid ply', 'field' => 'ply'], []],
+			self::answer($controller->move(7, 'e2-e4', '1')),
+		);
 	}
 
 	public function testSummaryCarriesAnETag(): void {
 		$this->queries->method('lobbyToken')->willReturn('u1.o2');
 		$this->queries->method('countActionNeeded')->willReturn(['yourTurn' => 1, 'invitations' => 0]);
 		$response = $this->gameController()->summary();
-		$this->assertSame([200, ['rev' => 'u1.o2', 'yourTurn' => 1, 'invitations' => 0, 'now' => GameBuilder::NOW], []], self::answer($response));
+		$this->assertSame(
+			[200, ['rev' => 'u1.o2', 'yourTurn' => 1, 'invitations' => 0, 'now' => GameBuilder::NOW], []],
+			self::answer($response),
+		);
 		$this->assertSame('u1.o2', $response->getETag());
 	}
 }

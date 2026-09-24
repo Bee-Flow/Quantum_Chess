@@ -59,7 +59,13 @@ final class NotificationServiceTest extends TestCase {
 		});
 		$settings = $this->createMock(MultiplayerSettingsService::class);
 		$settings->method('notificationSwitches')->willReturnCallback(fn (string $uid) => ($switches[$uid] ?? []) + [
-			'invites' => true, 'yourTurn' => true, 'reminders' => true, 'drawOffers' => true, 'results' => true, 'chat' => true, 'previews' => true,
+			'invites' => true,
+			'yourTurn' => true,
+			'reminders' => true,
+			'drawOffers' => true,
+			'results' => true,
+			'chat' => true,
+			'previews' => true,
 		]);
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1790000000);
@@ -76,11 +82,24 @@ final class NotificationServiceTest extends TestCase {
 		$move->setMeasurement('{"key":"capture","u":1,"captured":28,"outcomes":[{"key":"miss","weight":8388608},{"key":"capture","weight":8388608}],"fallback":false}');
 		$service->yourTurn($this->game(), $move, 'p');
 		$entries = $log->getArrayCopy();
-		$this->assertSame([['processed', 'bob:your_turn']], array_map(fn ($e) => [$e[0], $e[1]], array_slice($entries, 0, 1)));
+		$this->assertSame(
+			[['processed', 'bob:your_turn']],
+			array_map(fn ($e) => [$e[0], $e[1]], array_slice($entries, 0, 1)),
+		);
 		$this->assertSame('notify', $entries[1][0]);
 		$this->assertSame('bob:your_turn', $entries[1][1]);
-		$this->assertSame(['code' => 'f3-e5', 'notation' => 'Nf3xe5 {capture 50%}', 'color' => 'w', 'key' => 'capture', 'weight' => 8388608, 'capturedType' => 'p'], $entries[1][2]['lastMove']);
-		$this->assertSame(['alice', 2, 3], [$entries[1][2]['actor'], $entries[1][2]['moveNumber'], $entries[1][2]['ply']]);
+		$this->assertSame([
+			'code' => 'f3-e5',
+			'notation' => 'Nf3xe5 {capture 50%}',
+			'color' => 'w',
+			'key' => 'capture',
+			'weight' => 8388608,
+			'capturedType' => 'p',
+		], $entries[1][2]['lastMove']);
+		$this->assertSame(
+			['alice', 2, 3],
+			[$entries[1][2]['actor'], $entries[1][2]['moveNumber'], $entries[1][2]['ply']],
+		);
 	}
 
 	public function testSwitchesSuppressCreationOnly(): void {
@@ -88,7 +107,11 @@ final class NotificationServiceTest extends TestCase {
 		$game = $this->game();
 		$game->setDrawOffer('w');
 		$service->drawOffered($game);
-		$this->assertSame(['processed'], array_unique(array_column($log->getArrayCopy(), 0)), 'cleared but not created');
+		$this->assertSame(
+			['processed'],
+			array_unique(array_column($log->getArrayCopy(), 0)),
+			'cleared but not created',
+		);
 	}
 
 	public function testMutedChatAndPreviews(): void {
@@ -103,7 +126,11 @@ final class NotificationServiceTest extends TestCase {
 		$this->assertNull($notify[0][2]['excerpt'], 'previews off: no excerpt');
 		$game->setMuteB(1);
 		$service->chat($game, $message);
-		$this->assertCount(1, array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify'), 'muted: no notification');
+		$this->assertCount(
+			1,
+			array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify'),
+			'muted: no notification',
+		);
 	}
 
 	public function testGameOverSkipsTheResigner(): void {

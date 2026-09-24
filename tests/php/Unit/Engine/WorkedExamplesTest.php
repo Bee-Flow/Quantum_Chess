@@ -82,25 +82,41 @@ final class WorkedExamplesTest extends TestCase {
 	public function testW2SolidPieceAttacksAGhost(): void {
 		$w2 = $this->pos('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6']);
 		$m = $this->e->findMove($w2, 'c1-h6');
-		$this->assertSame([['key' => 'move', 'weight' => 8388608], ['key' => 'capture', 'weight' => 8388608]], $m['outcomes'] ?? null);
+		$this->assertSame(
+			[['key' => 'move', 'weight' => 8388608], ['key' => 'capture', 'weight' => 8388608]],
+			$m['outcomes'] ?? null,
+		);
 		$this->assertSame('rolled', $m['resolution'] ?? null);
 		$move = $this->e->applyMove($w2, 'c1-h6', 5033164);
-		$this->assertSame([['....A........................................h.E............a...', self::T]], $move['state']['worlds']);
+		$this->assertSame(
+			[['....A........................................h.E............a...', self::T]],
+			$move['state']['worlds'],
+		);
 		$this->assertSame('move', $move['measurement']['key'] ?? null);
 		$cap = $this->e->applyMove($w2, 'c1-h6', 8388608);
-		$this->assertSame([['....A..........................................E............a...', self::T]], $cap['state']['worlds']);
+		$this->assertSame(
+			[['....A..........................................E............a...', self::T]],
+			$cap['state']['worlds'],
+		);
 		$this->assertSame('{"key":"capture","u":8388608,"captured":23,"outcomes":[{"key":"move","weight":8388608},{"key":"capture","weight":8388608}],"fallback":false}', json_encode($cap['measurement']));
 		$this->assertSame('Bc1xh6 {capture 50%}', $this->e->moveNotation($w2, 'c1-h6', $cap['measurement']));
 		$this->assertSame(0, $cap['state']['halfmove']);
 		// With the knight split g4-e3|h6 instead, the e3 part blocks the lane.
 		$alt = $this->pos('4k3/8/8/8/6n1/8/8/2B1K3 w - - 0 1', ['g4-e3|h6']);
-		$this->assertSame([['key' => 'miss', 'weight' => 8388608], ['key' => 'capture', 'weight' => 8388608]], $this->e->findMove($alt, 'c1-h6')['outcomes'] ?? null);
+		$this->assertSame(
+			[['key' => 'miss', 'weight' => 8388608], ['key' => 'capture', 'weight' => 8388608]],
+			$this->e->findMove($alt, 'c1-h6')['outcomes'] ?? null,
+		);
 	}
 
 	public function testW3GhostAttacksGhost(): void {
 		$s = $this->pos('4k3/8/3b4/8/8/8/8/4K1N1 w - - 0 1', ['g1-f3|h3', 'd6-c7|e5']);
 		$this->assertCount(4, $s['worlds']);
-		$this->assertSame([['key' => 'miss', 'weight' => 8388608], ['key' => 'move', 'weight' => 4194304], ['key' => 'capture', 'weight' => 4194304]], $this->e->findMove($s, 'f3-e5')['outcomes'] ?? null);
+		$this->assertSame([
+			['key' => 'miss', 'weight' => 8388608],
+			['key' => 'move', 'weight' => 4194304],
+			['key' => 'capture', 'weight' => 4194304],
+		], $this->e->findMove($s, 'f3-e5')['outcomes'] ?? null);
 		$miss = $this->play($s, 'f3-e5', 0);
 		$this->assertSame(['h3' => self::T], $this->loc($miss, 7));
 		$this->assertSame(['e5' => 8388608, 'c7' => 8388608], $this->loc($miss, 20));
@@ -117,12 +133,23 @@ final class WorkedExamplesTest extends TestCase {
 		$this->assertSame([2, 22], $this->e->links($s)[0] ?? null);
 		$this->assertSame([[2, 22]], $this->e->linkGroups($s));
 		$cvA4 = $this->e->conditionalView($s, 24);
-		$this->assertSame(['piece' => 2, 'weight' => 8388608, 'probability' => 1.0], $cvA4[0] ?? null, 'the rook 100% on a1');
+		$this->assertSame(
+			['piece' => 2, 'weight' => 8388608, 'probability' => 1.0],
+			$cvA4[0] ?? null,
+			'the rook 100% on a1',
+		);
 		$cvA8 = $this->e->conditionalView($s, 56);
-		$this->assertSame(['piece' => 22, 'weight' => 8388608, 'probability' => 1.0], $cvA8[26] ?? null, 'the knight 100% on c4');
+		$this->assertSame(
+			['piece' => 22, 'weight' => 8388608, 'probability' => 1.0],
+			$cvA8[26] ?? null,
+			'the knight 100% on c4',
+		);
 		$this->assertNull($this->e->conditionalView($s, 35), 'd5 is certainly empty');
 		$this->assertSame('?a4', $this->e->findMove($s, '?c4')['code'] ?? null, 'a Measure may name any square');
-		$this->assertSame([['key' => 'a4', 'weight' => 8388608], ['key' => 'c4', 'weight' => 8388608]], $this->e->findMove($s, '?a4')['outcomes'] ?? null);
+		$this->assertSame(
+			[['key' => 'a4', 'weight' => 8388608], ['key' => 'c4', 'weight' => 8388608]],
+			$this->e->findMove($s, '?a4')['outcomes'] ?? null,
+		);
 		$a4 = $this->play($s, '?a4', 3);
 		$this->assertSame(['a1' => self::T], $this->loc($a4, 2), 'the rook collapses with the knight');
 		$c4 = $this->play($s, '?a4', 9000000);
@@ -132,7 +159,11 @@ final class WorkedExamplesTest extends TestCase {
 
 	public function testW5SplitWithOneLaneBlockedInSomeWorlds(): void {
 		$s = $this->play($this->pos('4k3/8/8/8/8/6n1/8/1K1R4 b - - 0 1'), 'g3-f1|h5');
-		$this->assertSame('d1-h1|d5', $this->e->findMove($s, 'd1-d5|h1')['code'] ?? null, 'index order h1 = 7 < d5 = 35');
+		$this->assertSame(
+			'd1-h1|d5',
+			$this->e->findMove($s, 'd1-d5|h1')['code'] ?? null,
+			'index order h1 = 7 < d5 = 35',
+		);
 		$s = $this->play($s, 'd1-h1|d5');
 		$this->assertSame([
 			['.A.................................C...g....................a...', 4194304],
@@ -153,10 +184,16 @@ final class WorkedExamplesTest extends TestCase {
 		$this->assertSame([['key' => 'capture', 'weight' => self::T]], $merge['outcomes'] ?? null);
 		$r = $this->e->applyMove($w6, 'd4|h5-h8', null, 'miss');
 		$this->assertNull($r['measurement'], 'a certain move ignores a forced outcome');
-		$this->assertSame([['....A..........................................................B', self::T]], $r['state']['worlds']);
+		$this->assertSame(
+			[['....A..........................................................B', self::T]],
+			$r['state']['worlds'],
+		);
 		$this->assertSame(['result' => '1-0', 'reason' => 'king_captured'], $r['state']['result']);
 		$this->assertSame('Qd4|h5xh8 #', $this->e->moveNotation($w6, 'd4|h5-h8'));
-		$this->assertSame([['key' => 'miss', 'weight' => 8388608], ['key' => 'capture', 'weight' => 8388608]], $this->e->findMove($w6, 'h5-h8')['outcomes'] ?? null);
+		$this->assertSame(
+			[['key' => 'miss', 'weight' => 8388608], ['key' => 'capture', 'weight' => 8388608]],
+			$this->e->findMove($w6, 'h5-h8')['outcomes'] ?? null,
+		);
 		$miss = $this->play($w6, 'h5-h8', 100);
 		$this->assertSame(['d4' => self::T], $this->loc($miss, 1));
 	}
@@ -166,7 +203,10 @@ final class WorkedExamplesTest extends TestCase {
 		$s['turn'] = 'w';
 		$s['history'] = [$this->e->positionHash($s)];
 		$s = $this->e->validateState($s);
-		$this->assertSame([['key' => 'miss', 'weight' => 12582912], ['key' => 'capture', 'weight' => 4194304]], $this->e->findMove($s, 'd3-e4')['outcomes'] ?? null);
+		$this->assertSame(
+			[['key' => 'miss', 'weight' => 12582912], ['key' => 'capture', 'weight' => 4194304]],
+			$this->e->findMove($s, 'd3-e4')['outcomes'] ?? null,
+		);
 		$miss = $this->play($s, 'd3-e4', 3000000);
 		$this->assertSame(['d5' => 5592405, 'h6' => 11184811], $this->loc($miss, 23));
 		// The d3 pawn is not on a start square: it gets the lowest free pawn id, 8.
@@ -182,7 +222,10 @@ final class WorkedExamplesTest extends TestCase {
 		$m = $this->e->findMove($s, 'h1-h8');
 		$this->assertTrue($m['fallback'] ?? null);
 		$this->assertSame('rolled', $m['resolution'] ?? null);
-		$this->assertSame([['key' => 'miss', 'weight' => 8388608], ['key' => 'move', 'weight' => 8388608]], $m['outcomes'] ?? null);
+		$this->assertSame(
+			[['key' => 'miss', 'weight' => 8388608], ['key' => 'move', 'weight' => 8388608]],
+			$m['outcomes'] ?? null,
+		);
 		$r = $this->e->applyMove($s, 'h1-h8', 9000000);
 		$this->assertTrue($r['measurement']['fallback'] ?? null);
 		$this->assertCount(8, $r['state']['worlds']);
@@ -192,7 +235,10 @@ final class WorkedExamplesTest extends TestCase {
 
 	public function testW9PawnProbeDoublePushAndEnPassant(): void {
 		$s = $this->pos('4k3/8/8/8/3p2n1/8/4P3/4K3 w - - 0 1', ['g4-e3|h6']);
-		$this->assertSame([['key' => 'miss', 'weight' => 8388608], ['key' => 'move', 'weight' => 8388608]], $this->e->findMove($s, 'e2-e4')['outcomes'] ?? null);
+		$this->assertSame(
+			[['key' => 'miss', 'weight' => 8388608], ['key' => 'move', 'weight' => 8388608]],
+			$this->e->findMove($s, 'e2-e4')['outcomes'] ?? null,
+		);
 		$miss = $this->play($s, 'e2-e4', 1);
 		$this->assertSame(['e2' => self::T], $this->loc($miss, 12));
 		$this->assertSame(['e3' => self::T], $this->loc($miss, 22));
@@ -219,8 +265,14 @@ final class WorkedExamplesTest extends TestCase {
 
 	public function testW11RandomnessVectors(): void {
 		$w2 = $this->pos('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6']);
-		$this->assertSame(8388608, $this->e->applyMove($w2, 'c1-h6', rng: static fn (): float => 0.5)['measurement']['u'] ?? null);
-		$this->assertSame(16777215, $this->e->applyMove($w2, 'c1-h6', rng: static fn (): float => 0.999999999)['measurement']['u'] ?? null);
+		$this->assertSame(
+			8388608,
+			$this->e->applyMove($w2, 'c1-h6', rng: static fn (): float => 0.5)['measurement']['u'] ?? null,
+		);
+		$this->assertSame(
+			16777215,
+			$this->e->applyMove($w2, 'c1-h6', rng: static fn (): float => 0.999999999)['measurement']['u'] ?? null,
+		);
 	}
 
 	public function testW12IndexOrderWithOddWeights(): void {
@@ -233,7 +285,10 @@ final class WorkedExamplesTest extends TestCase {
 		$s = $this->play($s, 'e8-d8');
 		$this->assertSame('fa1e4e870feb98ca', self::lastHash($s));
 		$this->assertSame('?h3', $this->e->findMove($s, '?a4')['code'] ?? null);
-		$this->assertSame([['key' => 'h3', 'weight' => 8388609], ['key' => 'a4', 'weight' => 8388607]], $this->e->findMove($s, '?h3')['outcomes'] ?? null);
+		$this->assertSame(
+			[['key' => 'h3', 'weight' => 8388609], ['key' => 'a4', 'weight' => 8388607]],
+			$this->e->findMove($s, '?h3')['outcomes'] ?? null,
+		);
 		$this->assertSame('221bc0511bf8b8f6', self::lastHash($this->play($s, '?h3', 0)));
 		$this->assertSame('221bc0511bf8b8f6', self::lastHash($this->play($s, '?h3', 8388608)));
 		$this->assertSame('c8c6e6a2d75059ea', self::lastHash($this->play($s, '?h3', 8388609)));
@@ -286,11 +341,17 @@ final class WorkedExamplesTest extends TestCase {
 		$q = $this->pos('4k3/8/8/8/8/8/8/2QQK3 w - - 0 1');
 		$this->assertSame('..IBA.......................................................a...', $q['worlds'][0][0]);
 		$this->assertSame('kqrrbbnnqpppppppkqrrbbnnpppppppp', $q['types']);
-		$this->assertSame([2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], $q['captured']);
+		$this->assertSame(
+			[2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+			$q['captured'],
+		);
 		$this->assertSame('3a386523ce53fad7', self::lastHash($q));
 		$ep = $this->pos('4k3/8/8/8/3pP3/8/8/4K1N1 b - e3 0 1', ['g1-f3|h3']);
 		$this->assertSame(['b', 'e3', 'e2f094948d875644'], [$ep['turn'], $ep['ep'], self::lastHash($ep)]);
 		$this->assertTrue($this->e->isLegal($ep, 'd4-e3'));
-		$this->assertSame(['result' => null], ['result' => $this->pos('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6@capture'])['result']]);
+		$this->assertSame(
+			['result' => null],
+			['result' => $this->pos('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6@capture'])['result']],
+		);
 	}
 }

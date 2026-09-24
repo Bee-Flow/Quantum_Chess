@@ -65,7 +65,12 @@ final class PerformanceTest extends TestCase {
 			}
 		}
 		$p95 = self::percentile($times, 0.95);
-		fwrite(STDERR, sprintf("\n[php engine] move request on a 64-world state: median %.2f ms, p95 %.2f ms (n = %d)\n", self::percentile($times, 0.5), $p95, count($times)));
+		fwrite(STDERR, sprintf(
+			"\n[php engine] move request on a 64-world state: median %.2f ms, p95 %.2f ms (n = %d)\n",
+			self::percentile($times, 0.5),
+			$p95,
+			count($times),
+		));
 		$this->assertLessThan(self::BUDGET_MS * self::CI_MARGIN, $p95);
 	}
 
@@ -91,7 +96,11 @@ final class PerformanceTest extends TestCase {
 			$views[] = (hrtime(true) - $t) / 1e6;
 			$this->assertNotEmpty($moves);
 		}
-		fwrite(STDERR, sprintf("[php engine] generateMoves on a 64-world state: median %.2f ms; views + describeForLlm: median %.2f ms\n", self::percentile($gen, 0.5), self::percentile($views, 0.5)));
+		fwrite(STDERR, sprintf(
+			"[php engine] generateMoves on a 64-world state: median %.2f ms; views + describeForLlm: median %.2f ms\n",
+			self::percentile($gen, 0.5),
+			self::percentile($views, 0.5),
+		));
 		$this->assertLessThan(50.0, self::percentile($gen, 0.95));
 		$this->assertLessThan(50.0, self::percentile($views, 0.95));
 	}

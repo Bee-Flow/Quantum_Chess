@@ -51,6 +51,9 @@ final class GameMaintenanceJobTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->never())->method('info');
 
-		$this->runJob(['expired' => 0, 'timedOut' => 0, 'abandoned' => 0, 'chatPurged' => 0, 'gamesPurged' => 0], $logger);
+		$this->runJob(
+			['expired' => 0, 'timedOut' => 0, 'abandoned' => 0, 'chatPurged' => 0, 'gamesPurged' => 0],
+			$logger,
+		);
 	}
 }

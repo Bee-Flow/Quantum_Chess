@@ -25,8 +25,12 @@ final class PageControllerTest extends TestCase {
 	public function testTheShortLinkRedirectsToTheGameRouteOfTheApp(): void {
 		$url = $this->createMock(IURLGenerator::class);
 		$url->method('linkToRoute')->with('quantumchess.page.index')->willReturn('/apps/quantumchess/');
-		$controller = new PageController($this->createMock(IRequest::class), $this->createMock(IUserSession::class), $url,
-			$this->createMock(InitialStateService::class));
+		$controller = new PageController(
+			$this->createMock(IRequest::class),
+			$this->createMock(IUserSession::class),
+			$url,
+			$this->createMock(InitialStateService::class),
+		);
 
 		$this->assertSame('/apps/quantumchess/#/game/42', $controller->game(42)->getRedirectURL());
 	}
