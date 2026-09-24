@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 1 (GAME-DESIGN §5.1.2): no check; capturing the king wins; the king ring; "cannot escape". */
+/** Lesson 1: no check; capturing the king wins; the king ring; "cannot escape". */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L01',
-	slug: 'capture-king',
 	order: 1,
 	group: 'essentials',
 	minutes: 2,

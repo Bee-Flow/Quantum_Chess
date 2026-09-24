@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Puzzle P08 (GAME-DESIGN §5.2.2). */
+/** Puzzle P08. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'P08',
@@ -13,7 +13,6 @@ export default {
 	stars: 2,
 	type: 'max',
 	side: 'w',
-	horizon: 1,
 	setup: { fen: '7k/7p/6p1/8/8/8/8/Q3K3 w - - 0 1', prelude: ['a1-c3|a8', 'c3-b2|d4'] },
 	accepted: ['b2|a8-h8', 'd4|a8-h8'],
 	value: 75,

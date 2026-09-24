@@ -5,8 +5,8 @@
  */
 
 /**
- * The hash-chain check (SPEC §14.4.5, §8.7): a correct game verifies, an edited roll or chain is found, a deleted
- * player is not an alarm, and the stored (ply, chain) of this browser must still be there.
+ * The hash-chain check: a correct game verifies, an edited roll or chain is found, a deleted player is not an alarm,
+ * and the stored (ply, chain) of this browser must still be there.
  */
 
 import { beforeEach, describe, expect, it } from 'vitest'

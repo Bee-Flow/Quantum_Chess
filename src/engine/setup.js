@@ -4,19 +4,24 @@
  */
 
 /**
- * Setup positions (ENGINE-RULES Appendix A): `{state}` or `{fen, prelude?}`. Deterministic, never random.
+ * Setup positions (Appendix A): `{state}` or `{fen, prelude?}`. Deterministic, never random.
+ *
+ * PHP twin: lib/Engine/Internal/Setup.php (`certainFen` is in lib/Engine/Internal/Views.php).
+ * Section numbers (§) and appendices refer to docs/engine-rules.md.
  */
 
-import { analyse } from './analysis.js'
+import { analyze } from './analysis.js'
 import { applyRecord } from './apply.js'
 import { castlingAfter } from './bookkeeping.js'
 import { CASTLING_FLAGS, INITIAL_TYPES, START_SQUARES, T } from './constants.js'
 import { SetupError } from './errors.js'
 import { hashParts } from './hash.js'
-import { resolveMove } from './moves.js'
+import { resolveMove } from './moveInput.js'
 import { parseMoveCode } from './parser.js'
 import { letterOf } from './squares.js'
 import { makeState, validateState } from './state.js'
+
+/** @typedef {import('./types.js').EngineState} EngineState */
 
 const FEN_PIECES = 'kqrbnp'
 
@@ -200,8 +205,8 @@ function preludeItem(item) {
  *   `@key` for a rolled move) applied with A1–A8, then turn/halfmove/fullmove/ep from the FEN, castling = FEN flags ∩
  *   the state-based condition, ply 0, history [hash], and validateState.
  *
- * @param {{state?: object, fen?: string, prelude?: Array<string|{code: string, outcome?: string}>}} spec setup spec
- * @return {object} state
+ * @param {{state?: EngineState, fen?: string, prelude?: Array<string|{code: string, outcome?: string}>}} spec setup spec
+ * @return {EngineState} state
  * @throws {SetupError} with one of the setup error codes
  */
 export function setupPosition(spec) {
@@ -257,7 +262,7 @@ export function setupPosition(spec) {
 		if (parsed === null || parsed.castle !== undefined) {
 			throw new SetupError('prelude_bad_code', code)
 		}
-		const X = analyse(state).occ[parsed.from[0]]
+		const X = analyze(state).occ[parsed.from[0]]
 		if (X < 0) {
 			throw new SetupError('prelude_illegal', 'no_piece')
 		}
@@ -274,7 +279,7 @@ export function setupPosition(spec) {
 			history: state.history,
 			result: null,
 		})
-		const a = analyse(state)
+		const a = analyze(state)
 		const r = resolveMove(a, code)
 		if (r.reason !== undefined) {
 			throw new SetupError('prelude_illegal', r.reason)
@@ -324,11 +329,11 @@ export function setupPosition(spec) {
 /**
  * FEN of the certain part of a position: every certain piece, ghosts removed (used by describeForLlm).
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {string}
  */
 export function certainFen(state) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const rows = []
 	for (let r = 7; r >= 0; r--) {
 		let row = ''

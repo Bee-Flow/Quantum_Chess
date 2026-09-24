@@ -10,14 +10,15 @@ export default createAppConfig({
 	'settings-personal': 'src/settings-personal.js',
 }, {
 	inlineCSS: { relativeCSSInjection: true },
-	// the AI worker is emitted to assets/ under a content hash: clear it like js/, or old workers pile up (and ship)
+	// the computer player's Web Worker is emitted to assets/ under a content hash: clear it like js/, or old workers
+	// pile up (and ship)
 	emptyOutputDirectory: { additionalDirectories: ['assets'] },
 	config: {
 		worker: {
 			format: 'es',
 		},
 		build: {
-			// the quantum engine + AI make a big but cache-friendly chunk
+			// the rules engine and the computer player make a big but cache-friendly chunk
 			chunkSizeWarningLimit: 2048,
 		},
 	},

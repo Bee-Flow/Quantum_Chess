@@ -4,16 +4,15 @@
  */
 
 /**
- * The result sentence of a roll (GAME-DESIGN §3.6.2, pillar 2 "Odds before, explanation after"), from both points of
- * view, with the rarity line; and a plain move sentence for the screen-reader live region (GAME-DESIGN §9.1).
- * JS-only and display-only.
+ * The result sentence of a roll, from both points of view, with the rarity line; and a plain move sentence for the
+ * screen-reader live region. The player sees the odds before a move and an explanation after it. Display only.
  */
 
 import { n, t } from '@nextcloud/l10n'
 import { findMove, pct, pieceLocations, squareName, T } from '../index.js'
 import { explainOutcome } from './explainOutcome.js'
 import { formatProbability } from './format.js'
-import { capitalise, colorName, colorOfId, figurine, pieceName, pieceTypeName, sentenceCase, TEXT } from './pieces.js'
+import { capitalize, colorName, colorOfId, figurine, pieceName, pieceTypeName, sentenceCase, TEXT } from './pieces.js'
 
 /**
  * Join square names with "or" ("f8", "f8 or g7", "a1, b2 or c3").
@@ -201,7 +200,7 @@ function sentence(ctx, P) {
 }
 
 /**
- * The result sentence of a rolled move (GAME-DESIGN §3.6.2).
+ * The result sentence of a rolled move.
  *
  * Returns null for moves without a measurement record: nothing random happened, so there is no result chip.
  * Otherwise `{glyph, text, rarity, speech, key, weight, probability, tone}`:
@@ -210,9 +209,10 @@ function sentence(ctx, P) {
  * - `rarity` is "A 1-in-N result." (p ≤ 20 %) or, for the mover, "Unlucky: that capture was 85% likely." when a
  *   capture of at least 80 % did not happen; null otherwise. Never taunting.
  *
+ * Callers may pass the state after the move as `after`; it is ignored, because the explanation replays the move.
+ *
  * @param {object} input input
  * @param {object} input.before state before the move
- * @param {object} [input.after] state after the move (not needed: the explanation replays the move)
  * @param {object|string} input.move the LegalMove (or its code)
  * @param {object|null} input.measurement the measurement record
  * @param {'mover'|'opponent'} [input.pov] point of view
@@ -277,7 +277,7 @@ function spokenPercent(weight) {
 }
 
 /**
- * A plain sentence for a move, for the screen-reader live region (GAME-DESIGN §9.1): "White knight splits from g1
+ * A plain sentence for a move, for the screen-reader live region: "White knight splits from g1
  * to f3 and h3, 50 percent each." For rolled moves it is the spoken result sentence.
  *
  * @param {object} input input
@@ -295,7 +295,7 @@ export function moveSentence({ before, after, move, measurement = null, pov = 'm
 		return resultSentence({ before, move: lm, measurement, pov, names }).speech
 	}
 	const color = colorOfId(lm.piece)
-	const piece = capitalise(pieceName(before.types[lm.piece], color))
+	const piece = capitalize(pieceName(before.types[lm.piece], color))
 	const sq = squareName
 	const locs = pieceLocations(after)[lm.piece]
 	const spread = locs.map((l) => t('quantumchess', '{square} {percent}', { square: sq(l.square), percent: spokenPercent(l.weight) }, undefined, TEXT))

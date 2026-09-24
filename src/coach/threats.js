@@ -4,11 +4,13 @@
  */
 
 /**
- * Threat warnings and opportunities (GAME-DESIGN §5.3.3): pCap(X) = the opponent's best single-move chance to
- * capture piece X, as if it were the opponent's turn; the maximum over moves, not the sum.
+ * Threat warnings and opportunities: pCap(X) = the opponent's best single-move chance to capture piece X, as if it were
+ * the opponent's turn; the maximum over moves, not the sum.
  */
 
 import { generateMoves, getOutcomes, kingDanger, otherColor, pieceLocations, positionHash, T } from '../engine/index.js'
+
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
 
 /** Piece values in pawns (for the expected loss). */
 export const VALUES = Object.freeze({ p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 })
@@ -16,7 +18,7 @@ export const VALUES = Object.freeze({ p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 })
 /**
  * The state with `color` to move (a copy with a fresh history when the turn has to change).
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {'w'|'b'} color side to move
  * @return {object}
  */
@@ -32,7 +34,7 @@ export function withTurn(state, color) {
 /**
  * The threats against `color`'s pieces (kings excluded; their danger is the king ring).
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {'w'|'b'} color the threatened side
  * @return {Array<{id: number, type: string, pCap: number, expectedLoss: number, square: number, from: number}>}
  *   sorted by expected loss
@@ -94,7 +96,7 @@ export function visibleThreats(threats, level) {
 /**
  * The chance (0..1) that `color` can capture the enemy king with its best move if it were its turn.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {'w'|'b'} color attacker
  * @return {number}
  */
@@ -105,7 +107,7 @@ export function kingShot(state, color) {
 /**
  * The most likely square of a piece.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {number} id piece id
  * @return {number|null}
  */

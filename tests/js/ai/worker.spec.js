@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * The Web Worker protocol of the computer player: the worker entry, the client with a fake Worker (priorities,
+ * cancellation, errors), the main-thread fallbacks, and the device benchmark.
+ */
+
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { BENCH_KEY } from '../../../src/ai/benchmark.js'
 import * as client from '../../../src/ai/client.js'
@@ -12,7 +17,7 @@ import { E, POS } from './helpers.js'
 /**
  * Wait until a condition holds (polling the event loop).
  *
- * @param {function(): boolean} cond condition
+ * @param {() => boolean} cond condition
  * @param {number} [ms] timeout
  * @return {Promise<void>}
  */
@@ -27,8 +32,8 @@ async function until(cond, ms = 20000) {
 }
 
 /**
- * A stand-in for the module worker that speaks the protocol of SPEC §4.4 with the real job code, in slices so that
- * `terminate()` stops it like a real worker.
+ * A stand-in for the module worker that speaks the worker protocol (see src/ai/worker.js) with the real job code,
+ * in slices so that `terminate()` stops it like a real worker.
  */
 class FakeWorker {
 	static instances = []

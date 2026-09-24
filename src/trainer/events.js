@@ -4,12 +4,23 @@
  */
 
 /**
- * The only trainer entry point of other modules (SPEC §14.8.3): `reportGameEvent(event)`, fire and forget.
- * In 1.0 it completes the graduation lesson (L11) when its game is won; achievements and counters are deferred
- * (docs/LEAN-1.0.md), so every other event is ignored.
+ * The trainer's handling of game events, which other features report through `report.js`: the graduation lesson (L11)
+ * is completed when its game against the computer is won without help.
  */
 
 import { readJson, removeKey, writeJson } from '../services/storage.js'
+import { recordLesson } from './progress.js'
+
+/**
+ * A game event reported to the trainer.
+ *
+ * @typedef {object} GameEvent
+ * @property {'gameOver'} type what happened
+ * @property {'computer'|'ai'|'local'} mode the kind of local game
+ * @property {boolean} won the local user won
+ * @property {boolean} assisted the user took help (hints, the coach, undo)
+ * @property {string} [gameId] the local game id
+ */
 
 /** localStorage key of the local game started from lesson 11. */
 export const GRADUATION_KEY = 'quantumchess.trainer.graduationGame'
@@ -27,9 +38,9 @@ export function markGraduationGame(id) {
 }
 
 /**
- * Report a game event.
+ * Handle a game event: a won, unassisted game against the computer that was started from lesson 11 completes it.
  *
- * @param {object} event SPEC §14.8.3 event
+ * @param {GameEvent} event the event
  */
 export function reportGameEvent(event) {
 	if (event?.type !== 'gameOver' || !event.won || event.assisted || event.mode !== 'computer') {
@@ -41,5 +52,5 @@ export function reportGameEvent(event) {
 	}
 	pendingId = null
 	removeKey(GRADUATION_KEY)
-	import('./progress.js').then((m) => m.recordLesson('L11', 3)).catch(() => {})
+	recordLesson('L11', 3)
 }

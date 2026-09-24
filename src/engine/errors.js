@@ -4,6 +4,14 @@
  */
 
 /**
+ * The errors the engine throws.
+ *
+ * PHP twins: lib/Engine/IllegalMoveException.php, InvalidStateException.php and SetupException.php;
+ * `EngineArgumentError` corresponds to PHP's `\InvalidArgumentException`.
+ * Section numbers (§) refer to docs/engine-rules.md.
+ */
+
+/**
  * Thrown by `applyMove` when the move is not legal. `code` is the `whyIllegal` reason (§4.11).
  */
 export class IllegalMoveError extends Error {

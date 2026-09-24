@@ -8,13 +8,8 @@ declare(strict_types=1);
  */
 
 /**
- * HTTP routes of Quantum Chess. This file is part of the implementation contract: docs/SPEC.md §7.3 lists every
- * route with its request, response, errors, rate limit and owning module.
- *
- * Web routes live under /index.php/apps/quantumchess/…, OCS routes (notification actions for the web, mobile and
- * desktop clients) under /ocs/v2.php/apps/quantumchess/…. Static paths are declared before the {id} routes, and
- * every {id}/{taskId} placeholder is numeric. Deferred to 1.1 (docs/LEAN-1.0.md) and therefore not registered:
- * game#export, game#exportAll (GET /api/games/{id}/export, /api/games/export) and me#deleteData (DELETE /api/me/data).
+ * The HTTP routes of Quantum Chess, documented in docs/development/api.md. Web routes live under
+ * /index.php/apps/quantumchess/ and OCS routes (the notification actions) under /ocs/v2.php/apps/quantumchess/.
  */
 
 $id = ['id' => '\d+'];

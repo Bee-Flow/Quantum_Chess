@@ -13,7 +13,10 @@ use OCP\AppFramework\Db\Entity;
 use OCP\DB\Types;
 
 /**
- * Rating and online result counts of one user (docs/SPEC.md §5.4).
+ * The Elo rating and the online result counts of one user.
+ *
+ * `listed` is the user's leaderboard choice: 1 (listed), 0 (not listed) or null (not decided, the admin's
+ * leaderboard mode applies).
  *
  * @method string getUid()
  * @method void setUid(string $v)

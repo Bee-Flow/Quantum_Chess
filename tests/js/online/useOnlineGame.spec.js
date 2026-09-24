@@ -5,14 +5,14 @@
  */
 
 /**
- * useOnlineGame (SPEC §14.4.5, GAME-DESIGN §7.5): optimistic certain/quantum moves, rolled moves through startRoll
- * landing on the server's roll, retries with the same clientId, the sticky failure banner, conflict adoption,
- * polled moves replayed with their recorded u (only the last one animated), the chain alarm and chat.
+ * useOnlineGame: optimistic certain/quantum moves, rolled moves through startRoll landing on the server's roll, retries
+ * with the same clientId, the sticky failure banner, conflict adoption, polled moves replayed with their recorded u
+ * (only the last one animated), the chain alarm and chat.
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { applyMove, serializeState } from '../../../src/engine/index.js'
-import { useOnlineGame } from '../../../src/online/useOnlineGame.js'
+import { useOnlineGame } from '../../../src/online/composables/useOnlineGame.js'
 import { live, makeGame } from './fixtures.js'
 
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showInfo: vi.fn(), showSuccess: vi.fn() }))
@@ -114,7 +114,7 @@ describe('useOnlineGame', () => {
 		expect(c.myColor.value).toBe('w')
 		expect(c.interactive.value).toBe(true)
 		expect(c.fairPlayLock.value).toBe(true)
-		expect(c.can.value).toMatchObject({ resign: true, abort: false, offerDraw: true, coach: false })
+		expect(c.can.value).toMatchObject({ resign: true, abort: false, offerDraw: true })
 		expect(c.players.value.w.statusText).toContain('Your move')
 		expect(c.players.value.b).toMatchObject({ name: 'Bob', rating: 1210, provisional: true })
 	})

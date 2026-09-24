@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 3 (GAME-DESIGN §5.1.2): merge onto a square both parts reach; merge to safety; the converging capture. */
+/** Lesson 3: merge onto a square both parts reach; merge to safety; the converging capture. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L03',
-	slug: 'merge',
 	order: 3,
 	group: 'essentials',
 	minutes: 2,

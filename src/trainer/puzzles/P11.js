@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Puzzle P11 (GAME-DESIGN §5.2.2). */
+/** Puzzle P11. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'P11',
@@ -13,7 +13,6 @@ export default {
 	stars: 3,
 	type: 'survive',
 	side: 'b',
-	horizon: 1,
 	setup: { fen: 'R5k1/4rppp/8/8/8/1K6/8/8 b - - 0 1' },
 	accepted: ['e7-e1|e8', 'e7-e2|e8', 'e7-e3|e8', 'e7-e4|e8', 'e7-e5|e8', 'e7-e6|e8', 'e7-b7|e8'],
 	value: 50,

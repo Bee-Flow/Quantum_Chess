@@ -17,13 +17,17 @@ after that, every release is step 5: bump the version, tag, publish a GitHub rel
 | 4 | Store the key and an App Store token as GitHub secrets | GitHub repository settings | 5 minutes |
 | 5 | Release | GitHub | 10 minutes per release |
 
-You need an account on [apps.nextcloud.com](https://apps.nextcloud.com) (you have one), the public GitHub repository
+You need an account on [apps.nextcloud.com](https://apps.nextcloud.com), the public GitHub repository
 `bee-flow/quantum_chess` with `appinfo/info.xml` on its `main` branch, and `openssl` (included in macOS and Linux;
 on Windows use Git Bash or WSL).
 
 ---
 
-## 1. Create the private key and the certificate request (once)
+## One-time setup (maintainers)
+
+Steps 1 to 4 connect the repository to the App Store. They are done once, by a maintainer.
+
+### 1. Create the private key and the certificate request
 
 ```sh
 mkdir -p ~/.nextcloud/certificates && cd ~/.nextcloud/certificates
@@ -37,7 +41,7 @@ This creates two files:
   need a new certificate (see [Troubleshooting](#troubleshooting)).
 - `quantumchess.csr`: the certificate signing request. It contains only the public key and may be shared.
 
-## 2. Request the certificate from Nextcloud (once)
+### 2. Request the certificate from Nextcloud
 
 Nextcloud signs certificates through pull requests to
 [nextcloud/app-certificate-requests](https://github.com/nextcloud/app-certificate-requests).
@@ -84,7 +88,7 @@ curl -fsSLO https://github.com/nextcloud/app-certificate-requests/raw/master/qua
 openssl x509 -in quantumchess.crt -noout -subject -issuer    # subject CN = quantumchess, issuer: Nextcloud
 ```
 
-## 3. Register the app in the App Store (once)
+### 3. Register the app in the App Store
 
 1. Open https://apps.nextcloud.com/developer/apps/new (logged in).
 2. **Certificate**: paste the full contents of `quantumchess.crt`.
@@ -95,7 +99,7 @@ openssl x509 -in quantumchess.crt -noout -subject -issuer    # subject CN = quan
    and paste all lines of the output.
 4. Click **Register**. The app now exists in the App Store, without releases yet.
 
-## 4. Store the secrets in GitHub (once)
+### 4. Store the secrets in GitHub
 
 1. Get your App Store API token: https://apps.nextcloud.com/account/token (the *API token* page of your account).
 2. In GitHub open **bee-flow/quantum_chess → Settings → Secrets and variables → Actions → New repository secret**
@@ -197,37 +201,3 @@ sudo -u www-data php occ integrity:check-app quantumchess    # no output means e
 | App Store upload: *401* or *403* | The `APPSTORE_TOKEN` is wrong or was regenerated. Copy it again from https://apps.nextcloud.com/account/token. |
 | A server reports *Code integrity check failed* for Quantum Chess | Files were changed after signing (for example edited by hand on the server), or the tarball was rebuilt without signing. Reinstall the published release. |
 | The private key is lost or leaked | Create a new key and request (step 1) and open a new pull request (step 2) that explains the reason, so Nextcloud can revoke the old certificate. Register the app again with the new certificate (step 3; releases signed with the old key are removed) and update `APP_PRIVATE_KEY` (step 4). |
-
----
-
-## Samenvatting in het Nederlands
-
-Apps in de Nextcloud App Store zijn **digitaal ondertekend**. Stap 1 tot en met 4 doe je **één keer**; daarna is elke
-release alleen stap 5.
-
-1. **Sleutel maken** (eenmalig, op je eigen computer):
-   `openssl req -nodes -newkey rsa:4096 -keyout quantumchess.key -out quantumchess.csr -subj "/CN=quantumchess"`.
-   Bewaar `quantumchess.key` geheim en maak een back-up; zet hem nooit in Git.
-2. **Certificaat aanvragen** (eenmalig): open een pull request op
-   https://github.com/nextcloud/app-certificate-requests die het bestand `quantumchess/quantumchess.csr` toevoegt.
-   Zorg dat de broncode openbaar is met `appinfo/info.xml` op de `main`-branch, dat je GitHub-profiel een openbaar
-   e-mailadres heeft, en dat de commit ondertekend is met `Signed-off-by: Naam <e-mail>` (`git commit -s`). Na de
-   merge staat het certificaat op `…/raw/master/quantumchess/quantumchess.crt`.
-3. **App registreren** (eenmalig) op https://apps.nextcloud.com/developer/apps/new: plak het certificaat en de
-   handtekening van de app-id:
-   `echo -n "quantumchess" | openssl dgst -sha512 -sign quantumchess.key | openssl base64`.
-4. **GitHub-secrets** (eenmalig): voeg in de repository onder *Settings → Secrets and variables → Actions*
-   `APP_PRIVATE_KEY` (de volledige inhoud van `quantumchess.key`) en `APPSTORE_TOKEN` (je API-token van
-   https://apps.nextcloud.com/account/token) toe.
-5. **Release uitbrengen** (elke keer): verhoog het versienummer in `appinfo/info.xml`, `package.json`
-   (`npm version X.Y.Z --no-git-tag-version`) en `CHANGELOG.md` (bij een pre-release zoals `1.1.0-beta.1` blijven de
-   notities onder `## [Unreleased]` staan, want die sectie toont de App Store dan); controleer met
-   `make version-check`; commit, maak de tag `vX.Y.Z`, push, en publiceer een GitHub-release voor die tag. De workflow bouwt de app, ondertekent hem met
-   `occ integrity:sign-app`, maakt het tarball-bestand, hangt het aan de release en uploadt het naar de App Store.
-
-Lukt de workflow niet, dan kan het ook met de hand: `make appstore`, daarna
-`make sign KEY="$HOME/…/quantumchess.key" CERT="$HOME/…/quantumchess.crt" NEXTCLOUD=/pad/naar/nextcloud` (schrijf
-`$HOME`, niet `~`: alleen bash vult `~` na `=` in), het tarball-bestand als `quantumchess-vX.Y.Z.tar.gz` (eerst
-kopiëren onder die naam) uploaden naar de GitHub-release, en op
-https://apps.nextcloud.com/developer/apps/releases/new de download-URL en de handtekening
-(`build/artifacts/quantumchess.tar.gz.sig`) invullen.

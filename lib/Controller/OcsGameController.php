@@ -12,8 +12,9 @@ namespace OCA\QuantumChess\Controller;
 use OCA\QuantumChess\AppInfo\Application;
 use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Exception\ApiException;
-use OCA\QuantumChess\Service\GameSerializer;
-use OCA\QuantumChess\Service\GameService;
+use OCA\QuantumChess\Service\Game\GameplayService;
+use OCA\QuantumChess\Service\Game\GameSerializer;
+use OCA\QuantumChess\Service\Game\InvitationService;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
@@ -25,29 +26,33 @@ use OCP\AppFramework\OCSController;
 use OCP\IRequest;
 
 /**
- * Notification actions for the web, mobile and desktop clients (docs/SPEC.md §7.3 OCS routes).
+ * The actions of the app's notifications (Accept, Decline, Rematch), as OCS routes so that the web, mobile and
+ * desktop clients can call them.
+ *
+ * Errors use Nextcloud's OCS exceptions: 404 and 403 keep their status, everything else is a 400.
  */
 #[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]
-class OcsGameController extends OCSController {
+final class OcsGameController extends OCSController {
 	public function __construct(
 		IRequest $request,
-		private GameService $service,
-		private GameSerializer $serializer,
-		private ?string $userId,
+		private readonly InvitationService $invitations,
+		private readonly GameplayService $gameplay,
+		private readonly GameSerializer $serializer,
+		private readonly ?string $userId,
 	) {
 		parent::__construct(Application::APP_ID, $request);
 	}
 
 	/**
-	 * @param callable(string): Game $fn
+	 * @param callable(string): Game $action receives the user id
 	 * @throws OCSNotFoundException|OCSForbiddenException|OCSBadRequestException
 	 */
-	private function run(callable $fn): DataResponse {
+	private function run(callable $action): DataResponse {
 		if ($this->userId === null) {
 			throw new OCSNotFoundException();
 		}
 		try {
-			$game = $fn($this->userId);
+			$game = $action($this->userId);
 		} catch (ApiException $e) {
 			throw match ($e->getStatus()) {
 				404 => new OCSNotFoundException($e->getMessage()),
@@ -64,7 +69,7 @@ class OcsGameController extends OCSController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function accept(int $id): DataResponse {
-		return $this->run(fn (string $uid) => $this->service->accept($id, $uid));
+		return $this->run(fn (string $uid) => $this->invitations->accept($id, $uid));
 	}
 
 	/**
@@ -73,7 +78,7 @@ class OcsGameController extends OCSController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function decline(int $id): DataResponse {
-		return $this->run(fn (string $uid) => $this->service->decline($id, $uid));
+		return $this->run(fn (string $uid) => $this->invitations->decline($id, $uid));
 	}
 
 	/**
@@ -82,7 +87,7 @@ class OcsGameController extends OCSController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function drawAccept(int $id): DataResponse {
-		return $this->run(fn (string $uid) => $this->service->draw($id, $uid, 'accept'));
+		return $this->run(fn (string $uid) => $this->gameplay->draw($id, $uid, 'accept'));
 	}
 
 	/**
@@ -91,7 +96,7 @@ class OcsGameController extends OCSController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function drawDecline(int $id): DataResponse {
-		return $this->run(fn (string $uid) => $this->service->draw($id, $uid, 'decline'));
+		return $this->run(fn (string $uid) => $this->gameplay->draw($id, $uid, 'decline'));
 	}
 
 	/**
@@ -100,6 +105,6 @@ class OcsGameController extends OCSController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 60)]
 	public function rematch(int $id): DataResponse {
-		return $this->run(fn (string $uid) => $this->service->rematch($id, $uid));
+		return $this->run(fn (string $uid) => $this->invitations->rematch($id, $uid));
 	}
 }

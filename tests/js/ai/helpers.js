@@ -4,25 +4,14 @@
  */
 
 /**
- * Shared helpers of the AI tests.
+ * Shared helpers of the computer-player tests. Section numbers (§) refer to docs/engine-rules.md.
  */
 
-import * as E from '../../../src/engine/index.js'
+import { E, S } from '../engine/helpers.js'
 
-export { E }
+export { E, S }
 
-/**
- * Setup shortcut.
- *
- * @param {string} fen FEN
- * @param {string[]} [prelude] prelude codes
- * @return {object}
- */
-export function S(fen, prelude = []) {
-	return E.setupPosition({ fen, prelude })
-}
-
-/** Named positions from ENGINE-RULES §10 and GAME-DESIGN §5 used across the tests. */
+/** Named positions used across the tests: worked examples of §10 and typical middlegames. */
 export const POS = {
 	start: () => E.initialState(),
 	// W2: a solid bishop attacks a ghost knight (50 %).

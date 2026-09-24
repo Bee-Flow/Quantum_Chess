@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 8 (GAME-DESIGN §5.1.2): the budget limit, the budget-full roll, and Measure as a deliberate move. */
+/** Lesson 8: the budget limit, the budget-full roll, and Measure as a deliberate move. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L08',
-	slug: 'measure',
 	order: 8,
 	group: 'deeper',
 	minutes: 3,

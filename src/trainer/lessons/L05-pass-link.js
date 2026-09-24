@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 5 (GAME-DESIGN §5.1.2): sliding past a maybe-occupied square rolls nothing and links the pieces. */
+/** Lesson 5: sliding past a maybe-occupied square rolls nothing and links the pieces. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L05',
-	slug: 'pass-link',
 	order: 5,
 	group: 'essentials',
 	minutes: 2,

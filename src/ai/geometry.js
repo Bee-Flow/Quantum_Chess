@@ -4,8 +4,13 @@
  */
 
 /**
- * Precomputed board geometry for the AI's evaluation and move ordering (square index = rank · 8 + file,
- * ENGINE-RULES §2.1). These are heuristics helpers only: legality always comes from the engine.
+ * Precomputed board geometry for the computer player's evaluation and move ordering (square index = rank · 8 + file,
+ * as in the rules engine). These are heuristic helpers only: legality always comes from the rules engine.
+ *
+ * The tables deliberately stay separate from src/engine/geometry.js, although both describe the same board. The
+ * order in which these lists enumerate squares drives the move ordering and the capture generation of the search, and
+ * with it the moves the computer player chooses under a node budget. Sharing the engine's tables (which list targets
+ * in a different order) would silently change the computer player's play.
  */
 
 /** Direction deltas: 0–3 orthogonal (N, S, E, W), 4–7 diagonal (NE, NW, SE, SW). */
@@ -80,7 +85,7 @@ export function distance(a, b) {
  * @param {number} s square
  * @return {number}
  */
-export function centreDistance(s) {
+export function centerDistance(s) {
 	const f = s & 7
 	const r = s >> 3
 	return Math.max(3 - f, f - 4) + Math.max(3 - r, r - 4)

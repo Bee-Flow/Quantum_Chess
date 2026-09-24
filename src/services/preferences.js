@@ -4,18 +4,23 @@
  */
 
 /**
- * In-app preferences (SPEC §11.3): one JSON document per user, loaded from the `preferences` initial state, merged
- * over PREFERENCE_DEFAULTS, changed live and saved debounced (500 ms) through `PUT /api/settings/preferences`.
- * Unknown keys are preserved. `preferences.effective` resolves the automatic values.
+ * The in-app preferences: one JSON document per user, loaded from the `preferences` initial state, merged over
+ * PREFERENCE_DEFAULTS, changed live and saved with a debounce (500 ms) through `PUT /api/settings/preferences`. Unknown
+ * keys are preserved. `preferences.effective` resolves the values that are chosen automatically.
  */
 
-import { computed, reactive, ref, toRaw } from 'vue'
+import { computed, reactive, toRaw } from 'vue'
+import { useMediaQuery } from '../composables/useMediaQuery.js'
 import { initial } from './initialState.js'
 
+/**
+ * Every preference with its default. `null` means "chosen automatically" (see `preferences.effective`). Keys that no
+ * screen offers any more (`vibration`, `tabletop`, `navCollapsed`) stay, because users have them stored.
+ */
 export const PREFERENCE_DEFAULTS = Object.freeze({
 	v: 1,
 	// Board
-	boardTheme: 'slate', // wood (Classic) | slate (Blue) | quantum; contrast is automatic (LEAN-1.0: three themes)
+	boardTheme: 'slate', // wood (Classic) | slate (Blue) | quantum; the high-contrast variant follows the system
 	pieceSet: 'cburnett',
 	coordinates: 'inside', // inside | outside | all | off
 	highlightLastMove: true,
@@ -87,23 +92,31 @@ export function mergePreferences(stored) {
 	return out
 }
 
+/** The primary pointer is coarse (a touch screen). */
+export const coarsePointer = useMediaQuery('(pointer: coarse)')
+
+/** The system asks for reduced motion. */
+export const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
+
 /**
+ * The "Confirm moves" setting in effect: `null` means "by pointer" (rolled moves on touch screens, never otherwise).
  *
- * @param query
+ * @param {string|null} value the stored value: never | rolled | always, or null
+ * @return {string} never | rolled | always
  */
-function media(query) {
-	const r = ref(false)
-	if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-		const mq = window.matchMedia(query)
-		r.value = mq.matches
-		mq.addEventListener?.('change', (e) => {
-			r.value = e.matches
-		})
-	}
-	return r
+export function resolveConfirmMoves(value) {
+	return value ?? (coarsePointer.value ? 'rolled' : 'never')
 }
-const coarse = media('(pointer: coarse)')
-const reduced = media('(prefers-reduced-motion: reduce)')
+
+/**
+ * The animation speed in effect: `null` means normal, or off when the system asks for reduced motion.
+ *
+ * @param {string|null} value the stored value: slow | normal | fast | off, or null
+ * @return {string} slow | normal | fast | off
+ */
+export function resolveAnimationSpeed(value) {
+	return value ?? (reducedMotion.value ? 'off' : 'normal')
+}
 
 const progress = initial('trainerProgress', {})
 
@@ -120,8 +133,8 @@ function lessonsDone() {
 /** The reactive preferences (defaults merged). */
 export const preferences = reactive(mergePreferences(initial('preferences', {})))
 
-const effectiveConfirm = computed(() => preferences.confirmMoves ?? (coarse.value ? 'rolled' : 'never'))
-const effectiveSpeed = computed(() => preferences.animationSpeed ?? (reduced.value ? 'off' : 'normal'))
+const effectiveConfirm = computed(() => resolveConfirmMoves(preferences.confirmMoves))
+const effectiveSpeed = computed(() => resolveAnimationSpeed(preferences.animationSpeed))
 const effectiveCoach = computed(() => preferences.coachLevel ?? (lessonsDone() >= 6 ? 'standard' : 'beginner'))
 
 // `effective` is not enumerable: it is never saved.
@@ -181,20 +194,10 @@ function scheduleSave() {
  * Change one preference (live, saved debounced).
  *
  * @param {string} key preference key
- * @param {any} value new value
+ * @param {unknown} value new value
  */
 export function setPreference(key, value) {
 	preferences[key] = value
-	scheduleSave()
-}
-
-/**
- * Change several preferences.
- *
- * @param {object} patch key → value
- */
-export function updatePreferences(patch) {
-	Object.assign(preferences, patch)
 	scheduleSave()
 }
 

@@ -14,6 +14,8 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
+ * Queries of the `qchess_chat` table.
+ *
  * @template-extends QBMapper<ChatMessage>
  */
 class ChatMapper extends QBMapper {

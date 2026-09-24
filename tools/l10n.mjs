@@ -14,6 +14,8 @@
  *                                 that are no longer in the template obsolete (#~)
  *   node tools/l10n.mjs build     converts translationfiles/<lang>/quantumchess.po into l10n/<lang>.js and .json
  *   node tools/l10n.mjs check     lists untranslated entries per language and placeholder mismatches; exits 1 on any
+ *   node tools/l10n.mjs verify    compares the strings of the sources with the committed template, without writing
+ *                                 anything; exits 1 when a string was added or removed (only references may differ)
  *
  * `make l10n-pot` / `make l10n` (Nextcloud's translationtool.phar) produce the same files; this script is the
  * dependency-free route used in development.
@@ -34,19 +36,19 @@ const PLURAL_FORMS = {
 	nl: 'nplurals=2; plural=(n != 1);',
 	de: 'nplurals=2; plural=(n != 1);',
 	// Nextcloud offers German twice ("Deutsch" de and "Deutsch (Förmlich: Sie)" de_DE) and does not fall back from
-	// de_DE to de for apps, so de_DE needs its own files (l10n/GLOSSARY.md).
+	// de_DE to de for apps, so de_DE needs its own files (translationfiles/GLOSSARY.md).
 	de_DE: 'nplurals=2; plural=(n != 1);',
 	fr: 'nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;',
 }
 const LANGUAGES = Object.keys(PLURAL_FORMS)
 
-/** Source folders and the paths below them that are never shipped (development-only screens). */
+/** Source folders, and the paths below them that hold no translatable text (the rules engine is locale-free). */
 const SOURCES = [
 	{ dir: 'src', ext: ['.js', '.vue'], kind: 'js' },
 	{ dir: 'lib', ext: ['.php'], kind: 'php' },
 	{ dir: 'templates', ext: ['.php'], kind: 'php' },
 ]
-const SKIP = [/^src\/components\/board\/dev\//, /^lib\/Engine\//]
+const SKIP = [/^lib\/Engine\//]
 
 /**
  * @param {string} dir absolute directory
@@ -406,7 +408,8 @@ function templateEntries() {
 /**
  * Placeholders that must survive translation: {name}, %s, %1$s, %n.
  *
- * @param s
+ * @param {string} s source or translated text
+ * @return {string} its placeholders, sorted and space-separated
  */
 const placeholders = (s) => [...new Set(s.match(/\{[a-zA-Z0-9_]+\}|%(\d\$)?[sd]|%n/g) ?? [])].sort().join(' ')
 
@@ -478,7 +481,28 @@ if (command === 'extract') {
 	if (command === 'check') {
 		process.exitCode = failures ? 1 : 0
 	}
+} else if (command === 'verify') {
+	const { entries, problems } = extract()
+	const inSources = new Set([...entries.values()].map(keyOf))
+	const inTemplate = new Set(templateEntries().map(keyOf))
+	const added = [...inSources].filter((key) => !inTemplate.has(key))
+	const removed = [...inTemplate].filter((key) => !inSources.has(key))
+	const show = (key) => JSON.stringify(key.replace('\u0000', ' | '))
+	for (const key of added) {
+		console.warn(`not in the template: ${show(key)}`)
+	}
+	for (const key of removed) {
+		console.warn(`no longer in the sources: ${show(key)}`)
+	}
+	for (const p of problems) {
+		console.warn(p)
+	}
+	console.info(`${inSources.size} strings in the sources, ${inTemplate.size} in ${relative(ROOT, POT)}: ${added.length} added, ${removed.length} removed`)
+	if (added.length || removed.length) {
+		console.warn('Run npm run l10n:extract and review the change: a changed source string loses its translations.')
+	}
+	process.exitCode = added.length || removed.length || problems.length ? 1 : 0
 } else {
-	console.info('usage: node tools/l10n.mjs extract|merge|build|check')
+	console.info('usage: node tools/l10n.mjs extract|merge|build|check|verify')
 	process.exitCode = 2
 }

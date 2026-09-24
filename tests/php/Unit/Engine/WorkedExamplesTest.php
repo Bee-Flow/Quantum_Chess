@@ -13,8 +13,8 @@ use OCA\QuantumChess\Engine\Engine;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The worked examples W1–W17 of ENGINE-RULES §10 with the numbers the document states (typed in, independent of the
- * generated fixtures).
+ * The worked examples W1–W17 of docs/engine-rules.md §10 with the numbers the document states (typed in,
+ * independent of the generated fixtures).
  */
 final class WorkedExamplesTest extends TestCase {
 	private const T = Engine::T;

@@ -4,9 +4,8 @@
  */
 
 /**
- * First-launch benchmark (GAME-DESIGN §6.1 "Pacing", SPEC §4.1): a 300 ms search of a fixed middlegame gives the
- * device's node rate. Slow devices keep the levels' think times (so levels 4–5 simply search less deep) and the coach
- * defaults to Standard with 400 ms.
+ * First-launch benchmark: a 300 ms search of a fixed middlegame gives the device's node rate. Slow devices keep the
+ * levels' think times (so levels 4–5 simply search less deep) and the coach defaults to Standard with 400 ms.
  *
  * The result is cached in `localStorage` (`quantumchess.engine.v1.bench`) by the page; the worker has no storage and
  * only measures.
@@ -15,18 +14,21 @@
 import { setupPosition } from '../engine/index.js'
 import { ENGINE_VERSION } from './levels.js'
 import { Searcher } from './search.js'
+import { NO_SLICE, runSync } from './tasks.js'
 
-/** localStorage key of the cached result (SPEC §14.9). */
+/** @typedef {import('./tasks.js').SliceContext} SliceContext */
+
+/** localStorage key of the cached result. Stored client data: never rename it. */
 export const BENCH_KEY = 'quantumchess.engine.v1.bench'
 
 /** Measuring time in ms. */
-export const BENCH_MS = 300
+const BENCH_MS = 300
 
 /** Below this many nodes per second a device counts as slow (a desktop does about 15 000). */
-export const SLOW_NPS = 4000
+const SLOW_NPS = 4000
 
 /** A cached result is re-measured after this long (ms). */
-export const BENCH_MAX_AGE = 30 * 24 * 3600 * 1000
+const BENCH_MAX_AGE = 30 * 24 * 3600 * 1000
 
 const BENCH_POSITION = {
 	fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 0 1',
@@ -36,12 +38,12 @@ const BENCH_POSITION = {
 /**
  * Benchmark task (generator, yields between slices).
  *
- * @param {{slice: function(): number}} [ctx] slicing context
+ * @param {SliceContext} [ctx] slicing context
  * @param {object} [options] `{timeMs = BENCH_MS, now?}`
  * @yields {void}
  * @return {{nodesPerSecond: number, slow: boolean}}
  */
-export function* benchmarkTask(ctx = { slice: () => Infinity }, options = {}) {
+export function* benchmarkTask(ctx = NO_SLICE, options = {}) {
 	const now = options.now || (() => performance.now())
 	const searcher = new Searcher(setupPosition(BENCH_POSITION), {
 		level: 5,
@@ -64,13 +66,9 @@ export function* benchmarkTask(ctx = { slice: () => Infinity }, options = {}) {
  * @return {{nodesPerSecond: number, slow: boolean}}
  */
 export function benchmark() {
-	const task = benchmarkTask()
-	let r = task.next()
-	while (!r.done) {
-		r = task.next()
-	}
-	writeCachedBenchmark(r.value)
-	return r.value
+	const result = runSync(benchmarkTask())
+	writeCachedBenchmark(result)
+	return result
 }
 
 /**
@@ -87,7 +85,7 @@ function storage() {
 }
 
 /**
- * The cached benchmark result for this engine version, or null.
+ * The cached benchmark result of this version of the computer player, or null.
  *
  * @param {number} [nowMs] current time (ms since the epoch)
  * @return {{nodesPerSecond: number, slow: boolean}|null}

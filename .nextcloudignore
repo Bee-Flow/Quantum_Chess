@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # Files that must not reach the App Store package. `make appstore` copies only the runtime paths
-# (appinfo, lib, templates, js, css, img, l10n, LICENSE, README.md, CHANGELOG.md) and applies these
+# (appinfo, lib, templates, js, assets, img, l10n, LICENSE, README.md, CHANGELOG.md) and applies these
 # patterns inside them (tar --exclude-from). One pattern per line; a pattern matches any path component.
 .DS_Store
 Thumbs.db
@@ -14,5 +14,3 @@ Thumbs.db
 *.rej
 *.bak
 appinfo/signature.json
-# translator documentation (links to docs/ and translationfiles/, which are not shipped)
-GLOSSARY.md

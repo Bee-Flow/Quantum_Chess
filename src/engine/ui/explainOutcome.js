@@ -4,22 +4,23 @@
  */
 
 /**
- * explainOutcome (GAME-DESIGN G4, §3.5.5, §3.6.2). JS-only and display-only: never parity-tested, never used by
- * the rules. It replays the per-world function of a move to say *why* an outcome happened, by weight.
+ * explainOutcome: replays the per-world function of a move to say *why* an outcome happened, by weight, so that every
+ * roll can be explained after the fact. Display only: never parity-tested, never used by the rules.
  */
 
-import { analyse } from '../analysis.js'
+import { analyze } from '../analysis.js'
 import { applyRecord } from '../apply.js'
 import { T } from '../constants.js'
 import { IllegalMoveError } from '../errors.js'
 import { TYPE_P } from '../geometry.js'
-import { legalOf, resolveMove } from '../moves.js'
+import { resolveMove } from '../moveInput.js'
+import { legalOf } from '../moveRecord.js'
 import { recordKeys } from '../outcomes.js'
 import { idOfCode } from '../squares.js'
 import { pieceLocations } from '../views.js'
 
 /** Causes of a Missed, in the order used to break ties. */
-export const MISS_CAUSES = Object.freeze(['absent', 'blocked', 'own_piece', 'occupied', 'no_enemy'])
+const MISS_CAUSES = Object.freeze(['absent', 'blocked', 'own_piece', 'occupied', 'no_enemy'])
 
 /**
  * Why did this world miss? Returns [cause, blocker square or -1, occupant id or -1].
@@ -84,7 +85,7 @@ function missCause(rec, b) {
  * @return {object}
  */
 export function explainOutcome(state, move, key) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const r = resolveMove(a, move)
 	if (r.reason !== undefined) {
 		throw new IllegalMoveError(r.reason, move)

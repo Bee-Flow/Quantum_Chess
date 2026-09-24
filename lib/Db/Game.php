@@ -13,7 +13,14 @@ use OCP\AppFramework\Db\Entity;
 use OCP\DB\Types;
 
 /**
- * An online game (docs/SPEC.md §5.1).
+ * An online game: its players, status, current position, clock, draw offers, rating snapshot and chat counters.
+ *
+ * `rev` is the optimistic-locking revision; every change of the row increments it (see GameRepository::save()).
+ * Colours are stored as `'w'` and `'b'`.
+ *
+ * Reserved columns, part of the schema but not used by the current version: `start_state` (a custom start position,
+ * always null), `reminders` and `ext_days` (deadline reminders and extensions, always 0) and `visibility`
+ * (always 0).
  *
  * @method string|null getCreatorUid()
  * @method void setCreatorUid(?string $v)
@@ -113,6 +120,9 @@ class Game extends Entity {
 	public const STATUS_ABORTED = 'aborted';
 	public const FINAL_STATUSES = [self::STATUS_FINISHED, self::STATUS_DECLINED, self::STATUS_CANCELLED, self::STATUS_EXPIRED, self::STATUS_ABORTED];
 
+	/** After a declined draw offer, the same player may offer again once this many plies have been played. */
+	public const DRAW_COOLDOWN_PLIES = 6;
+
 	protected $creatorUid;
 	protected $opponentUid;
 	protected $whiteUid;
@@ -171,7 +181,7 @@ class Game extends Entity {
 		return $uid !== '' && in_array($uid, [$this->whiteUid, $this->blackUid, $this->creatorUid, $this->opponentUid], true);
 	}
 
-	/** Colour of `$uid` once the game started, else null. */
+	/** The colour of `$uid` once the game has started, else null. */
 	public function colorOf(string $uid): ?string {
 		if ($uid === '') {
 			return null;
@@ -189,11 +199,11 @@ class Game extends Entity {
 		return $color === 'w' ? $this->whiteUid : $this->blackUid;
 	}
 
-	/** The other player (by colour once started, else creator/opponent). */
+	/** The other player: by colour once the game has started, else the creator or the invited opponent. */
 	public function opponentOf(string $uid): ?string {
 		$color = $this->colorOf($uid);
 		if ($color !== null) {
-			return $this->uidOf($color === 'w' ? 'b' : 'w');
+			return $this->uidOf(self::otherColor($color));
 		}
 		if ($this->creatorUid === $uid) {
 			return $this->opponentUid;
@@ -206,5 +216,28 @@ class Game extends Entity {
 
 	public function isFinal(): bool {
 		return in_array($this->status, self::FINAL_STATUSES, true);
+	}
+
+	/** Whether the game was played and is over: finished with a result, or aborted. */
+	public function hasEnded(): bool {
+		return $this->status === self::STATUS_FINISHED || $this->status === self::STATUS_ABORTED;
+	}
+
+	/** Whether the game waits for an opponent: an invitation or an open challenge. */
+	public function isAwaitingOpponent(): bool {
+		return $this->status === self::STATUS_PENDING || $this->status === self::STATUS_OPEN;
+	}
+
+	/** The opposite colour. */
+	public static function otherColor(string $color): string {
+		return $color === 'w' ? 'b' : 'w';
+	}
+
+	/**
+	 * The ply from which `$color` may offer a draw again after a declined offer, or null when nothing limits it.
+	 */
+	public function drawAvailableAtPly(string $color): ?int {
+		$last = $color === 'w' ? $this->lastDrawW : $this->lastDrawB;
+		return $last === null ? null : $last + self::DRAW_COOLDOWN_PLIES;
 	}
 }

@@ -4,11 +4,11 @@
  */
 
 /**
- * Playwright configuration of the end-to-end tests (docs/SPEC.md §15.2). They run against a running Nextcloud with
- * the app enabled; see tests/e2e/README.md for the environment variables.
+ * Playwright configuration of the end-to-end tests: the browser specs in this directory and the API specs in api/.
+ * They run against a running Nextcloud with the app enabled; tests/e2e/README.md lists the environment variables.
  *
  *   npx playwright test -c tests/e2e/playwright.config.mjs            (npm run test:e2e, make e2e)
- *   npx playwright test -c tests/e2e/playwright.config.mjs --headed game
+ *   npx playwright test -c tests/e2e/playwright.config.mjs --headed online-game
  */
 import { defineConfig, devices } from '@playwright/test'
 import { env } from './helpers/env.mjs'
@@ -51,7 +51,7 @@ export default defineConfig({
 			use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 }, launchOptions },
 		},
 		{
-			// Tests tagged @phone also run at phone size (G1 responsive layout)
+			// Tests tagged @phone also run at phone size
 			name: 'phone',
 			grep: /@phone/,
 			use: { ...devices['Pixel 7'], launchOptions },

@@ -4,8 +4,8 @@
  */
 
 /**
- * Static evaluation (GAME-DESIGN §6.1) on the marginals W(X@s): O(64 · worlds) to read the state, then O(pieces)
- * instead of one evaluation per possibility.
+ * Static evaluation of the computer player, computed on the per-state features (`features.js`): O(64 · worlds) to
+ * read the state, then O(pieces) instead of one evaluation per possibility.
  *
  * Terms: material (certain: every live piece stands somewhere in every possibility), piece-square tables weighted by
  * the marginals, king exposure (a heavy penalty × `kingDanger`, because there is no check), hanging material
@@ -18,11 +18,17 @@
  */
 
 import { budget, kingDanger, kingTrapped, T } from '../engine/index.js'
-import { centreDistance, distance, KING, KNIGHT, PAWN_ATTACKS, RAYS } from './geometry.js'
+import { features, VALUE_OF } from './features.js'
+import { centerDistance, distance, KING } from './geometry.js'
 import { LEAF_K, PIECE_VALUES } from './levels.js'
+import { KING_EG, KING_MG, PASSED, PST } from './pieceSquareTables.js'
 
-/** Weights of the evaluation terms (centipawns). Exported for tests and tuning. */
-export const EVAL_WEIGHTS = Object.freeze({
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+
+/** @typedef {import('./features.js').Features} Features */
+
+/** Weights of the evaluation terms (centipawns). */
+const EVAL_WEIGHTS = Object.freeze({
 	kingShot: 1200, // non-mover's king exposure: the mover may capture it now
 	ownKingDanger: 70, // mover's own king exposure (it can still react)
 	certainDanger: 140, // mover's own king certainly capturable but not trapped: forced to react
@@ -41,519 +47,12 @@ export const EVAL_WEIGHTS = Object.freeze({
 	budgetFullBonus: 20, // when the opponent's budget is full
 })
 
-const PAWN_PST = [
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	50,
-	50,
-	50,
-	50,
-	50,
-	50,
-	50,
-	50,
-	10,
-	10,
-	20,
-	30,
-	30,
-	20,
-	10,
-	10,
-	5,
-	5,
-	10,
-	25,
-	25,
-	10,
-	5,
-	5,
-	0,
-	0,
-	0,
-	20,
-	20,
-	0,
-	0,
-	0,
-	5,
-	-5,
-	-10,
-	0,
-	0,
-	-10,
-	-5,
-	5,
-	5,
-	10,
-	10,
-	-20,
-	-20,
-	10,
-	10,
-	5,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-]
-const KNIGHT_PST = [
-	-50,
-	-40,
-	-30,
-	-30,
-	-30,
-	-30,
-	-40,
-	-50,
-	-40,
-	-20,
-	0,
-	0,
-	0,
-	0,
-	-20,
-	-40,
-	-30,
-	0,
-	10,
-	15,
-	15,
-	10,
-	0,
-	-30,
-	-30,
-	5,
-	15,
-	20,
-	20,
-	15,
-	5,
-	-30,
-	-30,
-	0,
-	15,
-	20,
-	20,
-	15,
-	0,
-	-30,
-	-30,
-	5,
-	10,
-	15,
-	15,
-	10,
-	5,
-	-30,
-	-40,
-	-20,
-	0,
-	5,
-	5,
-	0,
-	-20,
-	-40,
-	-50,
-	-40,
-	-30,
-	-30,
-	-30,
-	-30,
-	-40,
-	-50,
-]
-const BISHOP_PST = [
-	-20,
-	-10,
-	-10,
-	-10,
-	-10,
-	-10,
-	-10,
-	-20,
-	-10,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	-10,
-	-10,
-	0,
-	5,
-	10,
-	10,
-	5,
-	0,
-	-10,
-	-10,
-	5,
-	5,
-	10,
-	10,
-	5,
-	5,
-	-10,
-	-10,
-	0,
-	10,
-	10,
-	10,
-	10,
-	0,
-	-10,
-	-10,
-	10,
-	10,
-	10,
-	10,
-	10,
-	10,
-	-10,
-	-10,
-	5,
-	0,
-	0,
-	0,
-	0,
-	5,
-	-10,
-	-20,
-	-10,
-	-10,
-	-10,
-	-10,
-	-10,
-	-10,
-	-20,
-]
-const ROOK_PST = [
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	5,
-	10,
-	10,
-	10,
-	10,
-	10,
-	10,
-	5,
-	-5,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	-5,
-	-5,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	-5,
-	-5,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	-5,
-	-5,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	-5,
-	-5,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	-5,
-	0,
-	0,
-	0,
-	5,
-	5,
-	0,
-	0,
-	0,
-]
-const QUEEN_PST = [
-	-20,
-	-10,
-	-10,
-	-5,
-	-5,
-	-10,
-	-10,
-	-20,
-	-10,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	-10,
-	-10,
-	0,
-	5,
-	5,
-	5,
-	5,
-	0,
-	-10,
-	-5,
-	0,
-	5,
-	5,
-	5,
-	5,
-	0,
-	-5,
-	0,
-	0,
-	5,
-	5,
-	5,
-	5,
-	0,
-	-5,
-	-10,
-	5,
-	5,
-	5,
-	5,
-	5,
-	0,
-	-10,
-	-10,
-	0,
-	5,
-	0,
-	0,
-	0,
-	0,
-	-10,
-	-20,
-	-10,
-	-10,
-	-5,
-	-5,
-	-10,
-	-10,
-	-20,
-]
-const KING_MG_PST = [
-	-30,
-	-40,
-	-40,
-	-50,
-	-50,
-	-40,
-	-40,
-	-30,
-	-30,
-	-40,
-	-40,
-	-50,
-	-50,
-	-40,
-	-40,
-	-30,
-	-30,
-	-40,
-	-40,
-	-50,
-	-50,
-	-40,
-	-40,
-	-30,
-	-30,
-	-40,
-	-40,
-	-50,
-	-50,
-	-40,
-	-40,
-	-30,
-	-20,
-	-30,
-	-30,
-	-40,
-	-40,
-	-30,
-	-30,
-	-20,
-	-10,
-	-20,
-	-20,
-	-20,
-	-20,
-	-20,
-	-20,
-	-10,
-	20,
-	20,
-	0,
-	0,
-	0,
-	0,
-	20,
-	20,
-	20,
-	30,
-	10,
-	0,
-	0,
-	10,
-	30,
-	20,
-]
-const KING_EG_PST = [
-	-50,
-	-40,
-	-30,
-	-20,
-	-20,
-	-30,
-	-40,
-	-50,
-	-30,
-	-20,
-	-10,
-	0,
-	0,
-	-10,
-	-20,
-	-30,
-	-30,
-	-10,
-	20,
-	30,
-	30,
-	20,
-	-10,
-	-30,
-	-30,
-	-10,
-	30,
-	40,
-	40,
-	30,
-	-10,
-	-30,
-	-30,
-	-10,
-	30,
-	40,
-	40,
-	30,
-	-10,
-	-30,
-	-30,
-	-10,
-	20,
-	30,
-	30,
-	20,
-	-10,
-	-30,
-	-30,
-	-30,
-	0,
-	0,
-	0,
-	0,
-	-30,
-	-30,
-	-50,
-	-30,
-	-30,
-	-30,
-	-30,
-	-30,
-	-30,
-	-50,
-]
-
-/**
- * Tables per colour, indexed by square (a1 = 0): the tables above are written rank 8 first.
- *
- * @param {number[]} table rank-8-first table
- * @return {Int16Array[]} [white, black]
- */
-function sides(table) {
-	const w = new Int16Array(64)
-	const b = new Int16Array(64)
-	for (let s = 0; s < 64; s++) {
-		const f = s & 7
-		const r = s >> 3
-		w[s] = table[(7 - r) * 8 + f]
-		b[s] = table[r * 8 + f]
-	}
-	return [w, b]
-}
-
-const PST = {
-	p: sides(PAWN_PST),
-	n: sides(KNIGHT_PST),
-	b: sides(BISHOP_PST),
-	r: sides(ROOK_PST),
-	q: sides(QUEEN_PST),
-}
-const KING_MG = sides(KING_MG_PST)
-const KING_EG = sides(KING_EG_PST)
-const PASSED = [0, 5, 10, 20, 35, 60, 100, 0]
-
-const FEATURES = new WeakMap()
-
-/** Type letter → index: p 0, n 1, b 2, r 3, q 4, k 5. */
-const TYPE_INDEX = { p: 0, n: 1, b: 2, r: 3, q: 4, k: 5 }
-const VALUE_OF = [100, 300, 300, 500, 900, 0]
-const ATTACKER_VALUE_OF = [100, 300, 300, 500, 900, 2000]
-const MOBILITY_OF = [0, 4, 4, 2, 1, 0]
+/** Game phase weight by type index: the phase runs from 24 (all minor and major pieces) down to 0 (endgame). */
 const PHASE_OF = [0, 1, 1, 2, 4, 0]
-const PST_OF = [PST.p, PST.n, PST.b, PST.r, PST.q]
-const SCRATCH_WEIGHT = new Float64Array(64)
-const SCRATCH_GAIN = new Float64Array(32)
 const SCRATCH_FILES = new Int8Array(16)
 
 /**
- * Offsets into `features().att`: attack probability of colour c at s is `att[c * 64 + s]`, the value of its cheapest
- * attacker with probability ≥ 0.2 is `att[CHEAP + c * 64 + s]`.
- */
-export const CHEAP = 128
-
-/**
- * Convert centipawns to an expected score: `1 / (1 + e^(−cp / k))` (GD §5.3.1).
+ * Convert centipawns to an expected score: `1 / (1 + e^(−cp / k))`.
  *
  * @param {number} cp centipawns (any point of view)
  * @param {number} [k] scale, default LEAF_K
@@ -581,259 +80,10 @@ export function toCp(e, k = LEAF_K) {
 }
 
 /**
- * Per-state marginals and attack maps, cached per state object (states are immutable).
- *
- * - `occ[s]`: the id that may stand on s, or −1; `p[s]`: its probability there; `ti[id]`: type index
- *   (p n b r q k = 0…5); `partsCount[id]`: number of squares of the piece (0 = captured); `kingSq[c]`.
- * - `att`: see `CHEAP`. Attack probabilities use an independence approximation over the squares of a lane.
- * - `mobility[c]` in centipawns; `threats`: `[w1, w2, b1, b2]`, the two largest expected capture gains of each
- *   colour (per victim piece, the best over its squares).
- *
- * @param {object} state engine state
- * @return {object}
- */
-export function features(state) {
-	let f = FEATURES.get(state)
-	if (f !== undefined) {
-		return f
-	}
-	const worlds = state.worlds
-	const n = worlds.length
-	const occ = new Int8Array(64).fill(-1)
-	const p = new Float64Array(64)
-	if (n === 1) {
-		const b = worlds[0][0]
-		for (let s = 0; s < 64; s++) {
-			const c = b.charCodeAt(s)
-			if (c !== 46) {
-				occ[s] = c < 0x61 ? c - 0x41 : c - 0x61 + 16
-				p[s] = 1
-			}
-		}
-	} else {
-		const weight = SCRATCH_WEIGHT
-		weight.fill(0)
-		for (let i = 0; i < n; i++) {
-			const b = worlds[i][0]
-			const w = worlds[i][1]
-			for (let s = 0; s < 64; s++) {
-				const c = b.charCodeAt(s)
-				if (c !== 46) {
-					weight[s] += w
-					if (occ[s] < 0) {
-						occ[s] = c < 0x61 ? c - 0x41 : c - 0x61 + 16
-					}
-				}
-			}
-		}
-		for (let s = 0; s < 64; s++) {
-			if (occ[s] >= 0) {
-				p[s] = weight[s] / T
-			}
-		}
-	}
-	const types = state.types
-	const ti = new Int8Array(32)
-	for (let id = 0; id < 32; id++) {
-		ti[id] = TYPE_INDEX[types[id]]
-	}
-	const partsCount = new Int8Array(32)
-	const kingSq = [-1, -1]
-	for (let s = 0; s < 64; s++) {
-		const id = occ[s]
-		if (id >= 0) {
-			partsCount[id]++
-			if (id === 0) {
-				kingSq[0] = s
-			} else if (id === 16) {
-				kingSq[1] = s
-			}
-		}
-	}
-	f = { occ, p, ti, types, partsCount, kingSq, n, att: null, mobility: null, threats: null, base: undefined }
-	attackMaps(f)
-	FEATURES.set(state, f)
-	return f
-}
-
-/**
- * Fill the attack maps, mobility and capture threats of a feature object.
- *
- * @param {object} f features
- */
-function attackMaps(f) {
-	const { occ, p, ti } = f
-	const att = new Float64Array(256)
-	att.fill(Infinity, CHEAP)
-	let mob0 = 0
-	let mob1 = 0
-	for (let from = 0; from < 64; from++) {
-		const id = occ[from]
-		if (id < 0) {
-			continue
-		}
-		const c = id < 16 ? 0 : 1
-		const base = c * 64
-		const type = ti[id]
-		const pf = p[from]
-		const val = ATTACKER_VALUE_OF[type]
-		if (type === 0) {
-			const list = PAWN_ATTACKS[c][from]
-			for (let j = 0; j < list.length; j++) {
-				const k = base + list[j]
-				if (pf > att[k]) {
-					att[k] = pf
-				}
-				if (pf >= 0.2 && val < att[CHEAP + k]) {
-					att[CHEAP + k] = val
-				}
-			}
-			continue
-		}
-		let mob = 0
-		if (type === 1 || type === 5) {
-			const list = type === 1 ? KNIGHT[from] : KING[from]
-			for (let j = 0; j < list.length; j++) {
-				const s = list[j]
-				const k = base + s
-				if (pf > att[k]) {
-					att[k] = pf
-				}
-				if (pf >= 0.2 && val < att[CHEAP + k]) {
-					att[CHEAP + k] = val
-				}
-				const o = occ[s]
-				if (o < 0 || (o < 16 ? 0 : 1) !== c) {
-					mob += pf
-				}
-			}
-		} else {
-			const d0 = type === 2 ? 4 : 0
-			const d1 = type === 3 ? 4 : 8
-			for (let d = d0; d < d1; d++) {
-				const ray = RAYS[from * 8 + d]
-				let clear = 1
-				for (let j = 0; j < ray.length; j++) {
-					const s = ray[j]
-					const pa = pf * clear
-					const k = base + s
-					if (pa > att[k]) {
-						att[k] = pa
-					}
-					if (pa >= 0.2 && val < att[CHEAP + k]) {
-						att[CHEAP + k] = val
-					}
-					const o = occ[s]
-					if (o < 0) {
-						mob += pa
-						continue
-					}
-					if ((o < 16 ? 0 : 1) !== c) {
-						mob += pa
-					}
-					if (o !== id) {
-						clear *= 1 - p[s]
-						if (clear < 0.05) {
-							break
-						}
-					}
-				}
-			}
-		}
-		if (c === 0) {
-			mob0 += mob * MOBILITY_OF[type]
-		} else {
-			mob1 += mob * MOBILITY_OF[type]
-		}
-	}
-	f.att = att
-	f.mobility = [mob0, mob1]
-	// Capture threats: for each piece part of the victim colour, the gain available to the attacker colour.
-	const threats = [0, 0, 0, 0]
-	for (let a = 0; a < 2; a++) {
-		const gain = SCRATCH_GAIN
-		gain.fill(0)
-		const v = 1 - a
-		for (let s = 0; s < 64; s++) {
-			const id = occ[s]
-			if (id < 0 || (id < 16 ? 0 : 1) !== v || ti[id] === 5) {
-				continue
-			}
-			const pa = att[a * 64 + s]
-			if (pa <= 0) {
-				continue
-			}
-			const val = VALUE_OF[ti[id]]
-			let cost = 0
-			if (att[v * 64 + s] >= 0.5) {
-				const ch = att[CHEAP + a * 64 + s]
-				cost = ch === Infinity ? val : Math.min(ch, val)
-			}
-			const g = pa * p[s] * (val - cost)
-			if (g > gain[id]) {
-				gain[id] = g
-			}
-		}
-		let g1 = 0
-		let g2 = 0
-		for (let id = 0; id < 32; id++) {
-			const g = gain[id]
-			if (g > g1) {
-				g2 = g1
-				g1 = g
-			} else if (g > g2) {
-				g2 = g
-			}
-		}
-		threats[a * 2] = g1
-		threats[a * 2 + 1] = g2
-	}
-	f.threats = threats
-}
-
-/**
- * Expected loss (centipawns) of each piece of a colour to a capture by the other side, from the attack map:
- * P(attack) × P(piece there) × (value − the cheapest attacker's value when the square is defended). Kings are 0
- * (their danger is `kingDanger`). Used by the candidate tags `saves:` and `hangs:` and the coach.
- *
- * @param {object} state engine state
- * @param {'w'|'b'} color the colour of the threatened pieces
- * @return {Float64Array} length 32, by piece id
- */
-export function pieceThreats(state, color) {
-	const f = features(state)
-	const { occ, p, ti, att } = f
-	const v = color === 'w' ? 0 : 1
-	const a = 1 - v
-	const out = new Float64Array(32)
-	for (let s = 0; s < 64; s++) {
-		const id = occ[s]
-		if (id < 0 || (id < 16 ? 0 : 1) !== v || ti[id] === 5) {
-			continue
-		}
-		const pa = att[a * 64 + s]
-		if (pa <= 0) {
-			continue
-		}
-		const val = VALUE_OF[ti[id]]
-		let cost = 0
-		if (att[v * 64 + s] >= 0.5) {
-			const ch = att[CHEAP + a * 64 + s]
-			cost = ch === Infinity ? val : Math.min(ch, val)
-		}
-		const g = pa * p[s] * (val - cost)
-		if (g > out[id]) {
-			out[id] = g
-		}
-	}
-	return out
-}
-
-/**
  * Material of a colour in centipawns (PIECE_VALUES; kings count 0). Material is certain in this game: every live
  * piece stands somewhere in every possibility.
  *
- * @param {object} state engine state
+ * @param {EngineState} state engine state
  * @param {'w'|'b'} color colour
  * @return {number}
  */
@@ -851,15 +101,15 @@ export function materialOf(state, color) {
 /**
  * Everything except the king-exposure terms, in centipawns from White's point of view. Cached on the features.
  *
- * @param {object} state engine state
+ * @param {EngineState} state engine state
  * @return {number}
  */
-export function baseCp(state) {
-	const f = features(state)
-	if (f.base !== undefined) {
-		return f.base
+function baseCp(state) {
+	const feat = features(state)
+	if (feat.base !== undefined) {
+		return feat.base
 	}
-	const { occ, p, ti, partsCount, att } = f
+	const { occ, p, ti, partsCount, att } = feat
 	let phase = 0
 	let mat0 = 0
 	let mat1 = 0
@@ -907,7 +157,7 @@ export function baseCp(state) {
 		if (t === 5) {
 			v = KING_MG[c][s] * (1 - eg) + KING_EG[c][s] * eg
 		} else {
-			v = PST_OF[t][c][s]
+			v = PST[t][c][s]
 			if (t === 0) {
 				files[c * 8 + (s & 7)]++
 			}
@@ -937,7 +187,7 @@ export function baseCp(state) {
 			if ((file === 0 || files[own + file - 1] === 0) && (file === 7 || files[own + file + 1] === 0)) {
 				structure -= sign * EVAL_WEIGHTS.isolated
 			}
-			if (isPassed(f, s, c)) {
+			if (isPassed(feat, s, c)) {
 				const rel = c === 0 ? s >> 3 : 7 - (s >> 3)
 				structure += sign * PASSED[rel] * (0.5 + eg)
 			}
@@ -956,7 +206,7 @@ export function baseCp(state) {
 	let kings = 0
 	if (eg < 1) {
 		for (let c = 0; c < 2; c++) {
-			const k = f.kingSq[c]
+			const k = feat.kingSq[c]
 			if (k < 0) {
 				continue
 			}
@@ -985,15 +235,16 @@ export function baseCp(state) {
 	}
 	// Mop-up: a bare king is driven to the edge and approached.
 	let mop = 0
-	if (f.kingSq[0] >= 0 && f.kingSq[1] >= 0) {
+	if (feat.kingSq[0] >= 0 && feat.kingSq[1] >= 0) {
 		if (nonPawn1 === 0 && pawns1 === 0 && mat0 >= 300) {
-			mop += 10 * centreDistance(f.kingSq[1]) + 4 * (7 - distance(f.kingSq[0], f.kingSq[1]))
+			mop += 10 * centerDistance(feat.kingSq[1]) + 4 * (7 - distance(feat.kingSq[0], feat.kingSq[1]))
 		}
 		if (nonPawn0 === 0 && pawns0 === 0 && mat1 >= 300) {
-			mop -= 10 * centreDistance(f.kingSq[0]) + 4 * (7 - distance(f.kingSq[0], f.kingSq[1]))
+			mop -= 10 * centerDistance(feat.kingSq[0]) + 4 * (7 - distance(feat.kingSq[0], feat.kingSq[1]))
 		}
 	}
-	// Quantum bookkeeping: own budget above 1 costs readability, a full enemy budget turns its quantum moves into rolls.
+	// Quantum bookkeeping: own budget above 1 costs readability; a full enemy budget turns its quantum moves into
+	// rolls.
 	const b0 = superposed0 ? budget(state, 'w') : 1
 	const b1 = superposed1 ? budget(state, 'b') : 1
 	let quantum = (b1 - b0) * EVAL_WEIGHTS.budgetUnit
@@ -1006,26 +257,26 @@ export function baseCp(state) {
 	// Threats: the mover realises part of its best capture; the other side's two best threats weigh on the mover.
 	const mover = state.turn === 'w' ? 0 : 1
 	const msign = mover === 0 ? 1 : -1
-	const th = f.threats
+	const th = feat.threats
 	const m1 = th[mover * 2]
 	const o1 = th[(1 - mover) * 2]
 	const o2 = th[(1 - mover) * 2 + 1]
 	const threats = msign * (EVAL_WEIGHTS.threatMover * m1 - EVAL_WEIGHTS.threatFirst * o1 - EVAL_WEIGHTS.threatSecond * o2)
-	const mobility = f.mobility[0] - f.mobility[1]
+	const mobility = feat.mobility[0] - feat.mobility[1]
 	const tempo = msign * EVAL_WEIGHTS.tempo
-	f.base = mat0 - mat1 + pst + structure + bonus + kings + mop + quantum + threats + mobility + tempo
-	return f.base
+	feat.base = mat0 - mat1 + pst + structure + bonus + kings + mop + quantum + threats + mobility + tempo
+	return feat.base
 }
 
 /**
  * Is the pawn on s (colour c) passed? (No enemy pawn in front on its own or an adjacent file.)
  *
- * @param {object} f features
+ * @param {Features} feat features
  * @param {number} s square
  * @param {number} c colour index
  * @return {boolean}
  */
-function isPassed(f, s, c) {
+function isPassed(feat, s, c) {
 	const file = s & 7
 	const rank = s >> 3
 	const step = c === 0 ? 1 : -1
@@ -1035,8 +286,8 @@ function isPassed(f, s, c) {
 			continue
 		}
 		for (let r = rank + step; r >= 0 && r < 8; r += step) {
-			const id = f.occ[r * 8 + x]
-			if (id >= 0 && f.ti[id] === 0 && (id < 16 ? 0 : 1) !== c) {
+			const id = feat.occ[r * 8 + x]
+			if (id >= 0 && feat.ti[id] === 0 && (id < 16 ? 0 : 1) !== c) {
 				return false
 			}
 		}
@@ -1045,13 +296,13 @@ function isPassed(f, s, c) {
 }
 
 /**
- * Static evaluation in centipawns from White's point of view (SPEC §4.1). Includes king exposure: the side not to
+ * Static evaluation in centipawns from White's point of view. Includes king exposure: the side not to
  * move pays `kingShot × kingDanger` (the mover could capture its king now), the mover a smaller amount.
  *
  * Params: `{ignoreKing: 'w'|'b'|null}` evaluates as if that side's king were never in danger (the "does not notice
  * danger to its own king" behaviour of the low levels).
  *
- * @param {object} state engine state (a game that is over evaluates to ±10000 or 0)
+ * @param {EngineState} state engine state (a game that is over evaluates to ±10000 or 0)
  * @param {object} [params] options
  * @return {number}
  */
@@ -1078,7 +329,7 @@ export function evaluate(state, params = {}) {
  * - A mover whose own king is certainly capturable is lost (0) when it is trapped (E1b), and pays a penalty
  *   otherwise.
  *
- * @param {object} state engine state (result null)
+ * @param {EngineState} state engine state (result null)
  * @param {number} ignoreKing colour index (0 White, 1 Black) whose king danger is ignored, or −1
  * @return {number} in [0, 1]
  */

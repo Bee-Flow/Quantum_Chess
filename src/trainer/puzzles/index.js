@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** The 1.0 puzzle set (GAME-DESIGN §5.2.2), in order. */
+/** The puzzles, in order. */
 
 import P01 from './P01.js'
 import P02 from './P02.js'

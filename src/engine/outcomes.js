@@ -4,12 +4,18 @@
  */
 
 /**
- * Per-world move functions (ENGINE-RULES §4.3, §4.6–§4.9, pipeline step A2 and the filter of A3).
+ * Per-world move functions (§4.3, §4.6–§4.9, pipeline step A2 and the filter of A3).
+ *
+ * PHP twin: lib/Engine/Internal/Worlds.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { T } from './constants.js'
-import { CAPTURE, mergeSourceIn, MISS, MOVE, standardKeyIn } from './moves.js'
+import { CAPTURE, MISS, MOVE } from './moveRecord.js'
+import { mergeSourceIn, standardKeyIn } from './moveRules.js'
 import { letterOf, SQUARE_NAMES } from './squares.js'
+
+/** @typedef {import('./types.js').Analysis} Analysis */
+/** @typedef {import('./moveRecord.js').MoveRecord} MoveRecord */
 
 const KEY_CODE = { miss: MISS, move: MOVE, capture: CAPTURE }
 
@@ -22,7 +28,7 @@ const KEY_CODE = { miss: MISS, move: MOVE, capture: CAPTURE }
  * @param {string} ch letter
  * @return {string}
  */
-export function moveOnBoard(b, f, t, ch) {
+function moveOnBoard(b, f, t, ch) {
 	if (f < t) {
 		return b.slice(0, f) + '.' + b.slice(f + 1, t) + ch + b.slice(t + 1)
 	}
@@ -44,7 +50,7 @@ function clearOnBoard(b, s) {
  * The outcome keys of a record, as they appear in getOutcomes: the outcome keys for a rolled move, otherwise the
  * single pseudo-key (`certain`/`quantum`) that stands for "no filter".
  *
- * @param {object} rec record
+ * @param {MoveRecord} rec record
  * @return {string[]}
  */
 export function recordKeys(rec) {
@@ -57,7 +63,7 @@ export function recordKeys(rec) {
 /**
  * Does this outcome of the record capture a piece? (A rolled `capture`, or the single outcome of a certain capture.)
  *
- * @param {object} rec record
+ * @param {MoveRecord} rec record
  * @param {string} key outcome key from recordKeys
  * @return {boolean}
  */
@@ -72,8 +78,8 @@ export function outcomeCaptures(rec, key) {
  * Apply the per-world function of a record to every world and keep only the worlds of one outcome key (A2, A3).
  * The result is not canonical yet (unsorted, possibly with duplicates, sum ≤ T).
  *
- * @param {object} a analysis of the state before the move
- * @param {object} rec legal record
+ * @param {Analysis} a analysis of the state before the move
+ * @param {MoveRecord} rec legal record
  * @param {string} key outcome key to keep (`certain`/`quantum` keep everything)
  * @return {{boards: string[], weights: number[], total: number}}
  */

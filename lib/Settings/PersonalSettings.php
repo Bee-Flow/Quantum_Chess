@@ -15,8 +15,8 @@ use OCP\Settings\ISettings;
 use OCP\Util;
 
 /**
- * Personal settings → Quantum Chess (docs/GAME-DESIGN.md §8.2). The Vue app loads its data from
- * `GET /api/settings/personal` and `GET /api/settings/multiplayer`.
+ * The page "Personal settings → Quantum Chess". The web app on it loads its data from `GET /api/settings/personal`
+ * and `GET /api/settings/multiplayer`.
  */
 class PersonalSettings implements ISettings {
 	public function getForm(): TemplateResponse {

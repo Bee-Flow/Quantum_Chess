@@ -4,8 +4,10 @@
  */
 
 /**
- * ENGINE-RULES §4.10, §4.11: the generated list is sorted and unique, single-move evaluation agrees with the
+ * The legal move list (§4.10, §4.11): the generated list is sorted and unique, single-move evaluation agrees with the
  * generator, and a brute force over every candidate move agrees with whyIllegal and findMove.
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -31,7 +33,7 @@ describe('generator consistency', () => {
 		return out
 	}
 
-	it('the list is sorted by the §4.10 tuple, unique, and equals single-move evaluation', () => {
+	it('the list is sorted by the canonical tuple, unique, and equals single-move evaluation', () => {
 		const tuple = (m) => {
 			const kind = ['standard', 'split', 'merge', 'measure'].indexOf(m.type)
 			if (m.type === 'standard') {

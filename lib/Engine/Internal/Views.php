@@ -10,7 +10,10 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine\Internal;
 
 /**
- * Derived views (ENGINE-RULES §8), identical in both engines. Mirrors src/engine/views.js and fairplay.js.
+ * Derived views (§8), identical in both engines, the fair-play support keys (Appendix D) and the certain FEN.
+ *
+ * JavaScript twin: src/engine/views.js, fairplay.js and `certainFen` in setup.js.
+ * Section numbers (§) and appendices refer to docs/engine-rules.md.
  *
  * @internal
  */
@@ -188,8 +191,65 @@ final class Views {
 	}
 
 	/**
+	 * moveRisk(s, m) (§8): Σ over the outcomes of W_o · (0 if o captures the enemy king, else kingDanger(state_o,
+	 * mover)), divided by 2^48. Exact: the numerator is an integer ≤ 2^48.
+	 */
+	public static function moveRisk(Analysis $a, MoveRecord $rec): float {
+		if ($rec->risk !== null) {
+			return $rec->risk;
+		}
+		if (self::unaffectedDanger($a, $rec)) {
+			$rec->risk = (float)Danger::kingDanger($a, $a->ci) / Tables::TF;
+			return $rec->risk;
+		}
+		$enemyKing = $a->ci === 0 ? 16 : 0;
+		$num = 0;
+		foreach (Worlds::recordKeys($rec) as $i => $key) {
+			$W = $rec->resolution === 'rolled' ? $rec->outcomes[$i]['weight'] : Tables::T;
+			if ($rec->captureId === $enemyKing && Worlds::outcomeCaptures($rec, $key)) {
+				continue;
+			}
+			[$boards, $weights, $total] = Worlds::outcomeBoards($a, $rec, $key);
+			$D = Danger::of($boards, $weights, $a->typeCodes, $a->ci);
+			if ($total < Tables::T && $D > 0) {
+				if ($D === $total) {
+					$D = Tables::T;
+				} else {
+					// Partial danger after a roll: measure it on the exact rescaled state (§5.3).
+					$worlds = Worlds::canonical($boards, $weights);
+					$D = Danger::of(array_column($worlds, 0), Worlds::rescale(array_column($worlds, 1)), $a->typeCodes, $a->ci);
+				}
+			}
+			$num += $W * $D;
+		}
+		$rec->risk = (float)$num / Tables::T2F;
+		return $rec->risk;
+	}
+
+	/**
+	 * Can this move leave the mover's king danger unchanged for sure? True for a move that is not rolled, captures
+	 * nothing, does not move the king and touches no square on a line through the mover's king.
+	 */
+	private static function unaffectedDanger(Analysis $a, MoveRecord $rec): bool {
+		if ($rec->resolution === 'rolled' || $rec->wCap > 0 || $rec->type === Tables::TYPE_K) {
+			return false;
+		}
+		$kingLoc = $a->locs[$a->ci === 0 ? 0 : 16];
+		if ($kingLoc === []) {
+			return false;
+		}
+		$k = $kingLoc[0];
+		foreach ([$rec->f, $rec->t, $rec->f2, $rec->t2] as $s) {
+			if ($s >= 0 && isset(Tables::$dirOf[$k * 64 + $s])) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
 	 * The 64 support characters of a state: the type letter of occ(s), upper case for White, lower case for
-	 * Black, `.` when the square is certainly empty (ENGINE-RULES App. D).
+	 * Black, `.` when the square is certainly empty (Appendix D).
 	 */
 	public static function supportSquares(Analysis $a): string {
 		$out = '';

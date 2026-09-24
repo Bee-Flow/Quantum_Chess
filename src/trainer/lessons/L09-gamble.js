@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 9 (GAME-DESIGN §5.1.2): the chance of success is not everything; probe with your cheapest piece. */
+/** Lesson 9: the chance of success is not everything; probe with your cheapest piece. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L09',
-	slug: 'gamble',
 	order: 9,
 	group: 'deeper',
 	minutes: 2,

@@ -4,9 +4,11 @@
  */
 
 /**
- * ENGINE-RULES §12 property tests over thousands of seeded random playouts: I1–I12 after every move, conservation
+ * Property tests (§12) over thousands of seeded random playouts: I1–I12 after every move, conservation
  * of T, the budget, B(¬mover) never grows, notation round trip, determinism, immutability, and cross-checks of the
  * fast implementations against naive transcriptions of the definitions (kingDanger, kingTrapped, legality).
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { describe, expect, it } from 'vitest'

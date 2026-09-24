@@ -15,9 +15,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * ER §2.7: validateState rejects every broken invariant with the same code as the JS engine (the cases of
+ * validateState (§2.7) rejects every broken invariant with the same code as the JavaScript engine (the cases of
  * tests/js/engine/validate.spec.js), accepts JSON text and arrays, returns a canonical copy and never lets
  * anything but InvalidStateException escape.
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 final class ValidateStateTest extends TestCase {
 	private const T = Engine::T;
@@ -289,9 +291,9 @@ final class ValidateStateTest extends TestCase {
 		}
 	}
 
-	public function testRulesOfTheIntegrationNotes(): void {
-		// engine-js decision 7: k on a pawn id (I8), result/reason mismatch (I11), king_captured with the winner's
-		// king captured (I4).
+	public function testKingTypeOnPawnIdReasonMismatchAndWinnersKingCaptured(): void {
+		// A king type on a pawn id (I8), a result that does not match its reason (I11), and king_captured with the
+		// winner's own king in the captured list (I4).
 		$s = self::base();
 		$s['types'][9] = 'k';
 		$this->assertSame('I8', self::code(self::rehash($s)));
@@ -309,7 +311,8 @@ final class ValidateStateTest extends TestCase {
 
 	public function testAGameWonByCapturingTheKingAfterBareKingsIsValid(): void {
 		// W16: the last defender is taken with the kings adjacent (E2 yields, D18), then the king is captured: 30
-		// pieces plus a king are captured. (The JS engine caps captured at 30 here; reported to engine-js.)
+		// pieces plus a king are captured. Known divergence: the JavaScript validator caps captured at 30 ids and
+		// rejects this final state.
 		$e = self::engine();
 		$s = $e->setupPosition(['fen' => '8/8/4k3/3n4/4K3/8/8/8 w - - 0 1']);
 		$s = $e->applyMove($s, 'e4-d5')['state'];

@@ -4,8 +4,8 @@
  */
 
 /**
- * The trainer progress document (SPEC §14.8.4, GAME-DESIGN §5.6): mirrored in localStorage and synced with
- * `PUT /api/trainer/progress` (debounced 2 s). The merge is the same as `TrainerProgressService::mergeDocs`.
+ * The trainer progress document: mirrored in localStorage and synced with `PUT /api/trainer/progress` (debounced 2 s).
+ * Both sides merge the same way (`lib/Service/Player/TrainerProgressService.php`), so any device may push its copy.
  */
 
 import { reactive } from 'vue'
@@ -101,7 +101,7 @@ function mergeCounters(a, b) {
 }
 
 /**
- * Merge two progress documents (SPEC §14.8.4).
+ * Merge two progress documents.
  *
  * @param {object} a stored document
  * @param {object} b incoming document
@@ -145,7 +145,7 @@ export function mergeProgress(a, b) {
 }
 
 /**
- * Stars for a finished lesson (GAME-DESIGN §5.1.1): 3 = no hints and no retries; 2 = at most 2 hints or 1 retry.
+ * Stars for a finished lesson: 3 = no hints and no retries; 2 = at most 2 hints or 1 retry.
  *
  * @param {number} hints hints used
  * @param {number} retries retries
@@ -159,7 +159,7 @@ export function lessonStars(hints, retries) {
 }
 
 /**
- * Stars for a solved puzzle (GAME-DESIGN §5.2.1): 3 = first try, no hints; 2 = at most one hint or a second try.
+ * Stars for a solved puzzle: 3 = first try, no hints; 2 = at most one hint or a second try.
  *
  * @param {number} tries attempts including the solving one
  * @param {number} hints hints used

@@ -4,7 +4,7 @@
  */
 
 /**
- * The spoken description of a position (GAME-DESIGN §9.1, the **D** key): "White: king e1; queen d1; knight f3 50
+ * The spoken description of a position for screen readers (the **D** key): "White: king e1; queen d1; knight f3 50
  * percent or h3 50 percent; … Black: …; 4 possibilities; budget White 2 of 8, Black 1 of 8; White to move."
  */
 
@@ -72,7 +72,7 @@ export function describePosition(state, { orientation = 'w' } = {}) {
 	const order = orientation === 'b' ? ['b', 'w'] : ['w', 'b']
 	const parts = order.map((c) => t('quantumchess', '{color}: {pieces}.', { color: colorName(c), pieces: sidePieces(state, c) }, undefined, TEXT))
 	const worlds = worldCount(state)
-	// TRANSLATORS: "possibility" is one complete chessboard that could be the real one (RULES.md glossary)
+	// TRANSLATORS: "possibility" is one complete chessboard that could be the real one (see the glossary)
 	parts.push(n('quantumchess', '%n possibility.', '%n possibilities.', worlds))
 	parts.push(t('quantumchess', 'Budget White {w} of 8, Black {b} of 8.', { w: budget(state, 'w'), b: budget(state, 'b') }, undefined, TEXT))
 	for (const c of order) {

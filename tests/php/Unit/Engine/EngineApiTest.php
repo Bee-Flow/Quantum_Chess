@@ -16,8 +16,10 @@ use OCA\QuantumChess\Engine\SetupException;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The public contract of SPEC §3.4 beyond the fixtures: shapes, sampling precedence (ER §5.2), exceptions, the
- * cache being invisible, and the conveniences the backend relies on (SPEC §8.4).
+ * The public contract of the Engine facade beyond the fixtures: shapes, sampling precedence (§5.2), exceptions, the
+ * cache being invisible, and the sequence of calls the server makes for an online move.
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 final class EngineApiTest extends TestCase {
 	private Engine $e;
@@ -44,7 +46,7 @@ final class EngineApiTest extends TestCase {
 		$this->assertSame('merge_part_stuck', Engine::ILLEGAL_REASONS[22]);
 		$this->assertCount(10, Engine::SETUP_ERRORS);
 		$this->assertSame(['king_captured', 'king_trapped', 'bare_kings', 'repetition', 'fifty_moves', 'max_ply', 'no_moves'], Engine::RESULT_REASONS);
-		$this->assertSame(PHP_INT_SIZE, 8, 'ER §12: 64-bit PHP');
+		$this->assertSame(PHP_INT_SIZE, 8, 'the engine needs 64-bit integers');
 	}
 
 	public function testInitialStateIsAFreshCanonicalArray(): void {
@@ -265,8 +267,9 @@ final class EngineApiTest extends TestCase {
 		$this->assertSame(5, $this->e->setupPosition(['fen' => '4k3/8/8/8/8/8/8/4K3 w - - 0000000000000000000005 1'])['halfmove']);
 	}
 
-	public function testGameServiceFlow(): void {
-		// SPEC §8.4 steps 4–6 exactly as GameService will call them.
+	public function testServerMoveFlow(): void {
+		// The calls the server makes for an online move: find the move, draw u only for a rolled move, apply it,
+		// write its notation, serialise the new state, extend the hash chain, and validate the stored state again.
 		$engine = new Engine();
 		$state = $engine->validateState(Engine::START_JSON);
 		$chain = $engine->chainStart(7, 'alice', 'bob', 1790000000);

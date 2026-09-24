@@ -4,7 +4,7 @@
  */
 
 /**
- * Built-in engine benchmarks (`npm run bench`, GAME-DESIGN §9.3 "Engine levels: think times of §6.1 ± 10 %").
+ * Computer-player benchmarks (`npm run bench`). Each level must keep to its think time within about 10 %.
  *
  * - "think": the search alone, on a middlegame with ghosts on both sides. Levels 4 and 5 search for their full think
  *   time (2.5 s, 5 s); levels 1–3 stop at their depth and are usually faster.
@@ -16,7 +16,7 @@
 import { bench, describe } from 'vitest'
 import { analyze } from '../../../src/ai/analyze.js'
 import { benchmark } from '../../../src/ai/benchmark.js'
-import { bestMove } from '../../../src/ai/bestmove.js'
+import { bestMove } from '../../../src/ai/bestMove.js'
 import { LEVELS } from '../../../src/ai/levels.js'
 import { E } from './helpers.js'
 
@@ -27,7 +27,7 @@ const POSITION = E.setupPosition({
 const JSON_POSITION = JSON.stringify(POSITION)
 let seed = 1
 
-describe('built-in engine: think time per level (GD §6.1)', () => {
+describe('computer player: think time per level', () => {
 	for (const level of LEVELS) {
 		const iterations = level.level >= 4 ? 2 : 5
 		bench(`level ${level.level} ${level.name}: think (budget ${level.timeMs} ms)`, () => {
@@ -40,7 +40,7 @@ describe('built-in engine: think time per level (GD §6.1)', () => {
 	}
 })
 
-describe('built-in engine: analysis budgets', () => {
+describe('computer player: analysis budgets', () => {
 	bench('coach analysis (600 ms, multiPV 3)', () => {
 		analyze(JSON.parse(JSON_POSITION), { timeMs: 600 })
 	}, { iterations: 3, time: 0, warmupIterations: 0, warmupTime: 0 })

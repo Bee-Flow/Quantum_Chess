@@ -4,14 +4,20 @@
  */
 
 /**
- * The hash-chain check of online games (SPEC §14.4.5, §8.7, ENGINE-RULES §9.4). Every stored move is replayed with
- * its recorded `u`; the recomputed chain must equal the server's chain of every move and the game head, and the last
- * `(ply, chain)` this browser saw of a game (localStorage `quantumchess.chain.v1`) must still be there. A game with a
- * deleted player cannot be verified (the uid of `chain_0` is gone), which is not an alarm.
+ * The hash-chain check of online games. Every stored move is replayed with its recorded `u`; the recomputed chain must
+ * equal the server's chain of every move and the game head, and the last `(ply, chain)` this browser saw of a game
+ * (localStorage `quantumchess.chain.v1`) must still be there. A game with a deleted player cannot be verified (the uid
+ * of `chain_0` is gone), which is not an alarm.
  */
 
 import { applyMove, chainNext, chainStart, initialState } from '../engine/index.js'
 import { readJson, writeJson } from '../services/storage.js'
+
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+/** @typedef {import('../services/api.js').GameFull} GameFull */
+/** @typedef {import('../services/api.js').GameLive} GameLive */
+/** @typedef {import('../services/api.js').GameSummary} GameSummary */
+/** @typedef {import('../services/api.js').MoveDTO} MoveDTO */
 
 export const CHAIN_STORAGE_KEY = 'quantumchess.chain.v1'
 const MAX_STORED = 200
@@ -19,8 +25,8 @@ const MAX_STORED = 200
 /**
  * Replay one stored move (MoveDTO) on a state with the recorded roll.
  *
- * @param {object} before state before the move
- * @param {object} dto MoveDTO {code, measurement}
+ * @param {EngineState} before state before the move
+ * @param {MoveDTO} dto the stored move {code, measurement}
  * @return {{state: object, move: object, measurement: object|null}}
  */
 export function replayMove(before, dto) {
@@ -31,7 +37,7 @@ export function replayMove(before, dto) {
 /**
  * `chain_0` of a started game, or null when it cannot be computed (a player's account was deleted).
  *
- * @param {object} game GameLive / GameFull
+ * @param {GameLive|GameFull} game the game
  * @return {string|null}
  */
 export function chainSeed(game) {
@@ -47,7 +53,7 @@ export function chainSeed(game) {
  * The chain after a replayed move.
  *
  * @param {string} prev previous chain
- * @param {object} dto MoveDTO
+ * @param {MoveDTO} dto the stored move
  * @param {{state: object, move: object, measurement: object|null}} applied replay result
  * @return {string}
  */
@@ -59,7 +65,7 @@ export function chainAfter(prev, dto, applied) {
 /**
  * Whether a replayed move agrees with the stored record (same outcome key).
  *
- * @param {object} dto MoveDTO
+ * @param {MoveDTO} dto the stored move
  * @param {{measurement: object|null}} applied replay result
  * @return {boolean}
  */
@@ -75,7 +81,7 @@ export function sameMeasurement(dto, applied) {
 /**
  * The storage key of a game: id and creation time, so that a reused id (a reset database) never raises an alarm.
  *
- * @param {object} game GameSummary
+ * @param {GameSummary} game the game
  * @return {string}
  */
 export function chainKey(game) {
@@ -123,7 +129,7 @@ export function storeChain(id, ply, chain) {
 /**
  * Replay a whole game and check its chain.
  *
- * @param {object} game GameFull (moves in ply order)
+ * @param {GameFull} game the game (moves in ply order)
  * @return {{states: object[], steps: object[], status: 'ok'|'altered'|'unverifiable', alteredPly: number|null}}
  */
 export function verifyGame(game) {

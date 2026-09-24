@@ -4,7 +4,9 @@
  */
 
 /**
- * Roll display (ENGINE-RULES §9.4): the half-open interval of every outcome and the roll, printed by truncation.
+ * Roll display (§9.4): the half-open interval of every outcome and the roll, printed by truncation.
+ *
+ * PHP twin: lib/Engine/Internal/RollDisplay.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { T } from './constants.js'
@@ -83,7 +85,7 @@ export function rollIntervals(record) {
  * translated `labels` (`{miss, move, capture, rolled, forced}`) for the UI.
  *
  * @param {{key: string, u: number|null, outcomes: Array<{key: string, weight: number}>}} record measurement record
- * @param {object} [labels] label overrides
+ * @param {{miss?: string, move?: string, capture?: string, rolled?: string, forced?: string}} [labels] label overrides
  * @return {string}
  */
 export function rollDisplay(record, labels) {

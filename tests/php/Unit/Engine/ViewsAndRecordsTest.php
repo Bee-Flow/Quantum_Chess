@@ -14,8 +14,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * views.json (derived views, ER §8) and records.json (chain, roll display, roll identity, support keys, certain
+ * views.json (derived views, §8) and records.json (chain, roll display, roll identity, support keys, certain
  * FEN, SHA-256).
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 final class ViewsAndRecordsTest extends TestCase {
 	private Engine $engine;
@@ -87,7 +89,7 @@ final class ViewsAndRecordsTest extends TestCase {
 	}
 
 	public function testChainVectorOfTheRules(): void {
-		// ER §9.4: W2 played as game 42, alice vs bob, created at 1790000000.
+		// The chain vector of §9.4: W2 played as game 42, alice vs bob, created at 1790000000.
 		$c0 = $this->engine->chainStart(42, 'alice', 'bob', 1790000000);
 		$this->assertSame('049816ae57365c0bfe28b2358e4ff9b460d91765ee10fcbc8714a3a0d2163c75', $c0);
 		$w2 = $this->engine->setupPosition(['fen' => '4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', 'prelude' => ['g8-f6|h6']]);

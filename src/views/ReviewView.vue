@@ -4,9 +4,9 @@
 -->
 
 <!--
-  The post-game review (SPEC §14.6.6, GAME-DESIGN §5.4): the game replayed with its recorded rolls, the worker
-  analysis (400 ms per ply, progress, cached per game and engine version), the evaluation graph, key moments with
-  Show, stepping through the moves and the AI coach chat (route /review/:source/:id).
+  The post-game review (route /review/:source/:id): the board with step buttons, the evaluation graph, the analysis
+  progress, the quality of the shown move, the key moments, the move list and the coach chat. The game and its analysis
+  come from useGameReview.
 -->
 <template>
 	<NcEmptyContent
@@ -41,7 +41,7 @@
 
 		<div class="qc-review__body">
 			<div class="qc-review__main">
-				<TrainerBoard
+				<StandaloneBoard
 					:state="states[ply]"
 					:orientation="game.viewer ?? 'w'"
 					:lastMove="lastMove"
@@ -130,7 +130,7 @@
 import { mdiArrowLeft, mdiChevronLeft, mdiChevronRight, mdiPageFirst, mdiPageLast } from '@mdi/js'
 import { t } from '@nextcloud/l10n'
 import { useHotKey } from '@nextcloud/vue/composables/useHotKey'
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { onBeforeUnmount, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
@@ -138,137 +138,38 @@ import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcProgressBar from '@nextcloud/vue/components/NcProgressBar'
-import CoachChat from '../components/coach/CoachChat.vue'
-import QualityBadge from '../components/coach/QualityBadge.vue'
-import MoveList from '../components/game/MoveList.vue'
-import EvalGraph from '../components/review/EvalGraph.vue'
-import KeyMoments from '../components/review/KeyMoments.vue'
-import TrainerBoard from '../components/trainer/TrainerBoard.vue'
-import { analyzeGame, ENGINE_VERSION } from '../ai/client.js'
-import { keyMoments } from '../coach/keyMoments.js'
-import { isQuantumMove, qualityOfPly } from '../coach/quality.js'
-import { reviewGame } from '../coach/reviewGame.js'
-import { findMove, moveNotation } from '../engine/index.js'
-import { resultSentence } from '../engine/ui/index.js'
-import { getGame } from '../services/api.js'
-import { kingCaptureContext, resultText } from '../services/format.js'
-import { loadLocalGame } from '../services/localGames.js'
-import { readJson, writeJson } from '../services/storage.js'
+import StandaloneBoard from '../board/components/StandaloneBoard.vue'
+import CoachChat from '../coach/components/CoachChat.vue'
+import QualityBadge from '../coach/components/QualityBadge.vue'
+import MoveList from '../game/components/MoveList.vue'
+import EvalGraph from '../review/components/EvalGraph.vue'
+import KeyMoments from '../review/components/KeyMoments.vue'
+import { useGameReview } from '../review/composables/useGameReview.js'
 
 const route = useRoute()
 const router = useRouter()
-const game = shallowRef(null)
-const error = ref(null)
-const ply = ref(0)
-const plies = shallowRef([])
-const analysing = ref(false)
-const analysisError = ref(false)
-const activeMoment = ref(null)
-const arrows = shallowRef([])
-let ctrl = null
-
-const states = computed(() => game.value?.states ?? [])
-const entries = computed(() => {
-	const g = game.value
-	if (!g) {
-		return []
-	}
-	return g.moves.map((m, i) => ({
-		ply: g.states[i].ply,
-		color: g.states[i].turn,
-		code: m.code,
-		notation: moveNotation(g.states[i], g.steps[i].move, g.steps[i].measurement),
-		measurement: g.steps[i].measurement,
-		u: m.u,
-		by: 'human',
-	}))
-})
-const lastMove = computed(() => {
-	if (!game.value || ply.value === 0) {
-		return null
-	}
-	const s = game.value.steps[ply.value - 1]
-	return { move: s.move, key: s.measurement?.key ?? null }
-})
-const rollText = computed(() => {
-	if (!game.value || ply.value === 0) {
-		return ''
-	}
-	const g = game.value
-	const s = g.steps[ply.value - 1]
-	if (!s.measurement) {
-		return ''
-	}
-	// The reviewer's point of view ("Your king was captured" for the loser); pass & play: the mover's.
-	const mover = s.before.turn
-	const other = mover === 'w' ? 'b' : 'w'
-	const pov = g.viewer === null || mover === g.viewer ? 'mover' : 'opponent'
-	return resultSentence({ before: s.before, move: s.move, measurement: s.measurement, pov, names: { mover: g.names[mover], opponent: g.names[other] } })?.text ?? ''
-})
-const resultLine = computed(() => {
-	const r = game.value?.result
-	if (!r) {
-		return ''
-	}
-	const g = game.value
-	const extra = r.reason === 'king_captured' && g.moves.length
-		? kingCaptureContext({ code: g.moves[g.moves.length - 1].code, measurement: g.steps[g.steps.length - 1].measurement })
-		: {}
-	const text = resultText(r.result, r.reason, g.names, extra)
-	return `${text.title} · ${text.reason}`
-})
-const quantumFlags = computed(() => (game.value ? game.value.steps.map((s) => isQuantumMove(s.move, s.before.types[s.move.piece])) : []))
-const moments = computed(() => keyMoments(plies.value))
-const currentQuality = computed(() => {
-	const p = plies.value[ply.value - 1]
-	return p ? qualityOfPly(p, quantumFlags.value[ply.value - 1]) : null
-})
-
-/**
- * Select a position.
- *
- * @param {number} k moves played
- */
-function go(k) {
-	if (!game.value) {
-		return
-	}
-	ply.value = Math.max(0, Math.min(game.value.moves.length, k))
-	arrows.value = []
-	activeMoment.value = null
-}
-
-/**
- * Show a key moment: the position before the move, with the played and the best move.
- *
- * @param {object} m moment
- */
-function showMoment(m) {
-	const index = game.value.states.findIndex((s) => s.ply === m.ply)
-	go(index < 0 ? 0 : index)
-	activeMoment.value = m.ply
-	const s = game.value.states[ply.value]
-	const list = []
-	const best = findMove(s, m.bestCode)
-	const playedMove = findMove(s, m.code)
-	if (playedMove && m.code !== m.bestCode) {
-		list.push({ from: playedMove.from[0], to: playedMove.to[0], kind: 'played' })
-	}
-	if (best) {
-		list.push({ from: best.from[0], to: best.to[0], kind: 'best' })
-	}
-	arrows.value = list
-}
-
-/**
- * Draw a move chip of the coach chat.
- *
- * @param {{code: string|null}} e event
- */
-function chipMove(e) {
-	const m = e?.code ? findMove(states.value[ply.value], e.code) : null
-	arrows.value = m ? [{ from: m.from[0], to: m.to[0], kind: 'best' }] : []
-}
+const review = useGameReview({ source: route.params.source, id: String(route.params.id) })
+const {
+	game,
+	error,
+	ply,
+	plies,
+	analysing,
+	analysisError,
+	activeMoment,
+	arrows,
+	states,
+	entries,
+	lastMove,
+	rollText,
+	resultLine,
+	quantumFlags,
+	moments,
+	currentQuality,
+	go,
+	showMoment,
+	chipMove,
+} = review
 
 /** Leave the review. */
 function back() {
@@ -279,84 +180,8 @@ function back() {
 	}
 }
 
-/**
- * Load the game of the route.
- *
- * @return {Promise<object|null>} reviewGame() input
- */
-async function load() {
-	const source = route.params.source
-	const id = String(route.params.id)
-	if (source === 'local') {
-		const rec = loadLocalGame(id)
-		if (!rec) {
-			error.value = t('quantumchess', 'This game is not on this device any more.')
-			return null
-		}
-		return { source, id, local: rec }
-	}
-	try {
-		const g = await getGame(id)
-		if (!['finished', 'aborted'].includes(g?.status)) {
-			error.value = t('quantumchess', 'Available after the game.')
-			return null
-		}
-		return { source, id, online: g }
-	} catch {
-		error.value = t('quantumchess', 'The game could not be loaded.')
-		return null
-	}
-}
-
-/** Run (or restore) the analysis. */
-async function analyse() {
-	const g = game.value
-	const key = `quantumchess.review.v1.${g.source}.${g.id}.${ENGINE_VERSION}`
-	const cached = readJson(key, null)
-	if (cached?.plies?.length === g.moves.length || (cached?.complete && cached.plies)) {
-		plies.value = cached.plies
-		return
-	}
-	analysing.value = true
-	ctrl = new AbortController()
-	const got = []
-	try {
-		const res = await analyzeGame({ startState: g.startState, moves: g.moves }, {
-			msPerPly: 400,
-			level: 4,
-			signal: ctrl.signal,
-			onProgress: (p) => {
-				got.push(p)
-				plies.value = [...got]
-			},
-		})
-		plies.value = res.plies
-		writeJson(key, { plies: res.plies, complete: true })
-	} catch (e) {
-		if (e?.name !== 'AbortError') {
-			analysisError.value = true
-		}
-	} finally {
-		analysing.value = false
-	}
-}
-
-onMounted(async () => {
-	const input = await load()
-	if (!input) {
-		return
-	}
-	try {
-		game.value = reviewGame(input)
-	} catch {
-		error.value = t('quantumchess', 'The game could not be replayed.')
-		return
-	}
-	ply.value = game.value.moves.length
-	import('../trainer/events.js').then((m) => m.reportGameEvent({ type: 'reviewOpened' })).catch(() => {})
-	analyse()
-})
-onBeforeUnmount(() => ctrl?.abort())
+onMounted(() => review.start())
+onBeforeUnmount(() => review.stop())
 
 useHotKey('ArrowLeft', () => go(ply.value - 1))
 useHotKey('ArrowRight', () => go(ply.value + 1))

@@ -4,8 +4,8 @@
 -->
 
 <!--
-  The app shell (SPEC §14.2, GAME-DESIGN §2.2): navigation, the routed view, the New game and settings dialogs, the
-  AI privacy notice and the piece sprite (mounted once).
+  The app shell: navigation, the routed view, the New game and settings dialogs, the privacy notice of the LLM sources
+  and the piece sprite (mounted once).
 -->
 <template>
 	<NcContent appName="quantumchess" class="qc-app">
@@ -21,7 +21,6 @@
 		<AppSettingsDialog v-if="settingsOpen" :open="settingsOpen" @update:open="onSettingsOpen" />
 		<AiNoticeDialog />
 		<PieceSprite />
-		<component :is="achievementToasts" v-if="achievementToasts" />
 	</NcContent>
 </template>
 
@@ -32,23 +31,21 @@ import { computed, defineAsyncComponent, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NcAppContent from '@nextcloud/vue/components/NcAppContent'
 import NcContent from '@nextcloud/vue/components/NcContent'
-import AiNoticeDialog from './components/ai/AiNoticeDialog.vue'
-import AppNavigation from './components/app/AppNavigation.vue'
-import PieceSprite from './components/board/PieceSprite.vue'
-import { optionalComponent } from './composables/modules.js'
-import { useLobbyState } from './composables/useLobbyState.js'
-import { unlockAudio } from './sound/sound.js'
+import AppNavigation from './app/components/AppNavigation.vue'
+import PieceSprite from './board/components/PieceSprite.vue'
+import AiNoticeDialog from './llm/components/AiNoticeDialog.vue'
+import { useLobby } from './online/composables/useLobby.js'
+import { unlockAudio } from './services/sound.js'
 
 import './styles/tokens.scss'
 import './styles/app.scss'
 
-const NewGameDialog = defineAsyncComponent(() => import('./components/app/NewGameDialog.vue'))
-const AppSettingsDialog = defineAsyncComponent(() => import('./components/settings/AppSettingsDialog.vue'))
+const NewGameDialog = defineAsyncComponent(() => import('./app/components/NewGameDialog.vue'))
+const AppSettingsDialog = defineAsyncComponent(() => import('./app/components/AppSettingsDialog.vue'))
 
 const route = useRoute()
 const router = useRouter()
-const lobby = useLobbyState()
-const achievementToasts = optionalComponent('trainer', 'AchievementToasts')
+const lobby = useLobby()
 
 const newGameOpen = computed(() => route.name === 'new-game')
 const settingsOpen = computed(() => route.query.dialog === 'settings')
@@ -86,15 +83,15 @@ function onSettingsOpen(open) {
 	}
 }
 
-// Tab title: "(2) Quantum Chess - Nextcloud" while games wait for the user (GAME-DESIGN §2.2). Passed as pageTitle,
+// Tab title: "(2) Quantum Chess - Nextcloud" while games wait for the user. Passed as pageTitle,
 // because NcAppContent otherwise adds the app name from an injected ref and shows "[object Object]".
 const pageTitle = computed(() => {
-	const n = lobby.counts?.value?.total ?? 0
+	const n = lobby.counts.value.total
 	const name = t('quantumchess', 'Quantum Chess')
 	return n > 0 ? `(${n}) ${name}` : name
 })
 
-// The navigation collapses on game routes when the board would get too small (GAME-DESIGN §2.2).
+// The navigation collapses on game routes when the board would get too small.
 watch(() => route.name, (name) => {
 	if ((name === 'local-game' || name === 'online-game') && window.innerWidth < 1280) {
 		emit('toggle-navigation', { open: false })
@@ -102,7 +99,7 @@ watch(() => route.name, (name) => {
 })
 
 onMounted(() => {
-	lobby.start?.()
+	lobby.start()
 	const unlock = () => {
 		unlockAudio()
 		window.removeEventListener('pointerdown', unlock)

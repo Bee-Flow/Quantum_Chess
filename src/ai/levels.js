@@ -4,10 +4,15 @@
  */
 
 /**
- * The five built-in computer levels (GAME-DESIGN §6.1), the AI-opponent strengths (§6.4), piece values and the
- * leaf conversion constant (§5.3.1). Pure data: safe to import from Node tools, the worker and the UI.
+ * The computer player's level table: the five levels, the strengths at which it proposes candidate moves to an LLM
+ * opponent, piece values and the leaf conversion constant. Pure data: safe to import from Node tools, the worker and
+ * the UI thread.
  *
- * Level fields (SPEC §4.2 plus the fields GD §6.1 needs):
+ * Vocabulary: the **rules engine** (src/engine) knows the rules; the **computer player** (src/ai) is the built-in
+ * opponent that searches with it; an **LLM opponent** is a persona whose moves a language model picks from the
+ * computer player's candidates.
+ *
+ * Level fields:
  * - `depth`: nominal search depth in plies (the search deepens iteratively up to it within `timeMs`).
  * - `quiescence`: `'captures'` (captures with P ≥ 50 % and king shots) or `'full'` (captures with P ≥ 25 %, all king
  *   shots, deeper).
@@ -31,13 +36,16 @@
  * - `lmr`, `star2`: late-move reductions (splits) and Star2 probing at chance nodes.
  */
 
-/** Version of the built-in engine: part of review cache keys (SPEC §14.6.6). Bump when values change. */
+/**
+ * Version of the computer player. It is part of the cache key of stored game reviews and benchmark results: bump it
+ * whenever evaluation, search or levels change the values it reports.
+ */
 export const ENGINE_VERSION = 'qc-ai-1.0.0'
 
-/** Leaf conversion constant: `E = 1 / (1 + e^(−cp / LEAF_K))` (GD §5.3.1). */
+/** Leaf conversion constant from centipawns to expected score: `E = 1 / (1 + e^(−cp / LEAF_K))`. */
 export const LEAF_K = 250
 
-/** Piece values in centipawns (SPEC §4.1). The king has no material value. */
+/** Piece values in centipawns. The king has no material value. */
 export const PIECE_VALUES = Object.freeze({ p: 100, n: 300, b: 300, r: 500, q: 900, k: 0 })
 
 /** Level 5 uses the exact solver when at most this many pieces … */
@@ -48,7 +56,7 @@ export const SOLVER_MAX_WORLDS = 16
 
 const ALL_SPLIT_TYPES = Object.freeze(['n', 'b', 'r', 'q'])
 
-/** The five levels, index = level − 1 (GD §6.1). */
+/** The five levels, index = level − 1. */
 export const LEVELS = Object.freeze([
 	Object.freeze({
 		level: 1,
@@ -193,7 +201,10 @@ export const LEVELS = Object.freeze([
 	}),
 ])
 
-/** Strength settings of the AI opponent (GD §6.4): which level and think time produce the candidates. */
+/**
+ * Strengths of an LLM opponent: which level and think time produce its candidate moves, and how far below the best a
+ * candidate may be to count as acceptable.
+ */
 export const STRENGTHS = Object.freeze({
 	relaxed: Object.freeze({ level: 3, timeMs: 400, toleranceFactor: 2.5 }),
 	balanced: Object.freeze({ level: 4, timeMs: 800, toleranceFactor: 1 }),

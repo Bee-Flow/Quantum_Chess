@@ -4,8 +4,8 @@
  */
 
 /**
- * Exact solver for small positions (GAME-DESIGN §5.2.1, SPEC §4.3): puzzles, lesson checks, the level-5 endgame
- * and the coach's "♚ in N".
+ * Exact solver for small positions: puzzle verification, lesson checks, the level-5 endgame and the coach's
+ * "♚ in N".
  *
  * It enumerates **every** legal move and every outcome with the real rules (`getOutcomes`, including the trapped-king
  * end E1b, so "cannot escape" counts as a win) up to a fixed number of plies. No heuristics: values are exact
@@ -22,16 +22,19 @@
  *
  * `horizon` counts the solver side's moves (default 1). The plies searched are `2·horizon − 1` for `forced`/`max`
  * (the opponent's replies in between) and `2·horizon` for `survive`/`material` (ending with the opponent's reply),
- * plus one when the opponent is to move first. `plies` overrides this (e.g. the 3-ply material grading of lesson L9).
+ * plus one when the opponent is to move first. `plies` overrides this (for example a 3-ply material grading).
  */
 
 import { generateMoves, getOutcomes } from '../engine/index.js'
 import { PIECE_VALUES } from './levels.js'
 
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+/** @typedef {import('../engine/types.js').LegalMove} LegalMove */
+
 export const SOLVER_GOALS = Object.freeze(['forced', 'max', 'survive', 'material'])
 
 /** Tolerance for the accepted sets of `max` and `survive` (probability) and `material` (pawns). */
-export const SOLVER_TOLERANCE = Object.freeze({ max: 0.005, survive: 0.005, material: 0.005 })
+const SOLVER_TOLERANCE = Object.freeze({ max: 0.005, survive: 0.005, material: 0.005 })
 
 const KING_PAWNS = 100
 
@@ -41,7 +44,7 @@ class Limit {}
 /**
  * Material of a colour in pawns, counting a live king as KING_PAWNS.
  *
- * @param {object} state state
+ * @param {EngineState} state state
  * @param {'w'|'b'} color colour
  * @return {number}
  */
@@ -78,7 +81,7 @@ export function pliesFor(goal, horizon, opponentFirst) {
  * (`material`). Decision nodes use alpha-beta, chance nodes Star1 with exact bounds, and a transposition table keeps
  * bounds per position and depth; every root move is still searched with a full window, so its value is exact.
  *
- * @param {object} state engine state
+ * @param {EngineState} state engine state
  * @param {object} [options] `{goal = 'forced', horizon = 1, side = state.turn, nodeLimit = 200000, plies?}`
  * @return {{value: number, moves: Array<{code: string, value: number}>, accepted: string[], exact: boolean, nodes: number, plies: number}}
  */
@@ -159,7 +162,7 @@ export function solve(state, options = {}) {
 	 * Chance node: the average over the outcomes of a move, with Star1 cut-offs outside (alpha, beta).
 	 *
 	 * @param {object} s position
-	 * @param {object} m LegalMove
+	 * @param {LegalMove} m LegalMove
 	 * @param {number} k plies left after the move
 	 * @param {number} alpha lower bound
 	 * @param {number} beta upper bound

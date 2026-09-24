@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * Shared helpers of the rules-engine tests: setup and play shortcuts, and crafted states for the edge cases.
+ */
+
 import * as E from '../../../src/engine/index.js'
 
 export { E }
@@ -71,8 +75,8 @@ export function locOf(state, id) {
  * Pick a legal move uniformly with a seeded rng and play it with a seeded u.
  *
  * @param {object} state state
- * @param {function(): number} rng seeded rng
- * @param {function(object[]): object} [choose] custom chooser
+ * @param {() => number} rng seeded rng
+ * @param {(moves: object[], rng: () => number) => object} [choose] custom chooser
  * @return {{state: object, move: object, measurement: object|null, u: number|null}}
  */
 export function randomStep(state, rng, choose) {

@@ -4,8 +4,8 @@
 -->
 
 <!--
-  Home, the lobby (GAME-DESIGN §2.3): play tiles, the online sections (frontend-online), games to continue on this
-  device, the trainer card and recent games; an empty state for new players. First paint comes from initial state.
+  Home, the lobby: play tiles, the online sections, games to continue on this device, the trainer card and recent games;
+  an empty state for new players. The first paint comes from the initial state, without an API request.
 -->
 <template>
 	<div class="qc-home">
@@ -17,7 +17,7 @@
 				<PlayTiles />
 			</section>
 
-			<component :is="lobbySections" v-if="lobbySections" />
+			<LobbyOnlineSections />
 
 			<section v-if="continueGames.length" class="qc-home__section">
 				<h2 class="qc-home__heading">
@@ -50,11 +50,8 @@
 				</template>
 				<template #action>
 					<div class="qc-home__empty-actions">
-						<NcButton v-if="hasTrainer" to="/trainer">
+						<NcButton to="/trainer">
 							{{ t('quantumchess', 'Start the trainer') }}
-						</NcButton>
-						<NcButton v-else :to="{ name: 'rules' }">
-							{{ t('quantumchess', 'Read the rules') }}
 						</NcButton>
 						<NcButton variant="primary" :to="{ name: 'new-game' }">
 							{{ t('quantumchess', 'New game') }}
@@ -65,8 +62,8 @@
 		</div>
 
 		<aside class="qc-home__side">
-			<component :is="trainerCard" v-if="trainerCard" />
-			<component :is="recentGames" v-if="recentGames" />
+			<TrainerCard />
+			<RecentGames />
 			<section class="qc-home__section qc-home__rules">
 				<h2 class="qc-home__heading">
 					{{ t('quantumchess', 'New to Quantum Chess?') }}
@@ -87,24 +84,21 @@
 
 <script setup>
 import { t } from '@nextcloud/l10n'
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
-import QuantumKnightIllustration from '../components/app/QuantumKnightIllustration.vue'
-import MiniBoard from '../components/board/MiniBoard.vue'
-import PlayTiles from '../components/home/PlayTiles.vue'
-import { LEVELS } from '../ai/levels.js'
-import { hasView, optionalComponent } from '../composables/modules.js'
-import { useLobbyState } from '../composables/useLobbyState.js'
+import MiniBoard from '../board/components/MiniBoard.vue'
+import PlayTiles from '../home/components/PlayTiles.vue'
+import QuantumKnightIllustration from '../home/components/QuantumKnightIllustration.vue'
 import { applyMove, initialState } from '../engine/index.js'
-import { personaById } from '../personas/index.js'
-import { listLocalGames, loadLocalGame } from '../services/localGames.js'
+import { listLocalGames, loadLocalGame } from '../game/localGames.js'
+import { localGameTitle } from '../game/localPlayers.js'
+import { useLobby } from '../online/composables/useLobby.js'
 
-const hasTrainer = hasView('TrainerHomeView')
-const lobbySections = optionalComponent('lobby', 'LobbyOnlineSections')
-const recentGames = optionalComponent('lobby', 'RecentGames')
-const trainerCard = optionalComponent('trainer', 'TrainerCard')
-const lobbyState = useLobbyState()
+const LobbyOnlineSections = defineAsyncComponent(() => import('../online/components/lobby/LobbyOnlineSections.vue'))
+const RecentGames = defineAsyncComponent(() => import('../online/components/lobby/RecentGames.vue'))
+const TrainerCard = defineAsyncComponent(() => import('../trainer/components/TrainerCard.vue'))
+const lobbyState = useLobby()
 
 const splitDemo = applyMove(initialState(), 'g1-f3|h3').state
 
@@ -118,16 +112,7 @@ const continueGames = computed(() => localIndex
 		if (!rec?.state) {
 			return null
 		}
-		const p = rec.players ?? {}
-		const other = rec.humanColor ? p[rec.humanColor === 'w' ? 'b' : 'w'] : null
-		let name
-		if (rec.mode === 'computer') {
-			name = t('quantumchess', 'vs {name}', { name: LEVELS[(other?.level ?? 1) - 1]?.name ?? '' })
-		} else if (rec.mode === 'ai') {
-			name = t('quantumchess', 'vs {name}', { name: personaById(other?.persona)?.name ?? '' })
-		} else {
-			name = t('quantumchess', '{white} vs {black}', { white: p.w?.name || t('quantumchess', 'White'), black: p.b?.name || t('quantumchess', 'Black') })
-		}
+		const name = localGameTitle(rec)
 		const moveNo = rec.state.fullmove
 		const yourMove = rec.humanColor === null || rec.state.turn === rec.humanColor
 		return {
@@ -144,7 +129,7 @@ const continueGames = computed(() => localIndex
 	.filter(Boolean))
 
 const isEmpty = computed(() => {
-	const l = lobbyState.lobby?.value
+	const l = lobbyState.lobby.value
 	const online = l ? ['yourTurn', 'waiting', 'invitations', 'outgoing', 'recent'].some((k) => (l[k] ?? []).length > 0) : false
 	return localIndex.length === 0 && !online
 })

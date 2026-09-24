@@ -10,7 +10,8 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine;
 
 /**
- * An illegal move (ENGINE-RULES §4.11). The reason is the first failing `whyIllegal` code, for example `blocked`.
+ * An illegal move (docs/engine-rules.md §4.11). The reason is the first failing `whyIllegal` code, for example
+ * `blocked`. JavaScript twin: `IllegalMoveError` in src/engine/errors.js.
  */
 class IllegalMoveException extends \RuntimeException {
 	public function __construct(

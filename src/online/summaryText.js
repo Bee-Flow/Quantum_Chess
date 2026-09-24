@@ -8,7 +8,11 @@
  */
 
 import { n, t } from '@nextcloud/l10n'
+import { otherColor } from '../engine/index.js'
 import { formatDeadline } from '../services/format.js'
+
+/** @typedef {import('../services/api.js').GameSummary} GameSummary */
+/** @typedef {import('../services/api.js').UserRef} UserRef */
 
 /**
  * "3 days per move" / "No deadline".
@@ -27,9 +31,9 @@ export function timeControlText(tc) {
 /**
  * The other player of a game from the viewer's side.
  *
- * @param {object} g GameSummary
+ * @param {GameSummary} g the game
  * @param {string|null} me viewer uid
- * @return {object|null} UserRef
+ * @return {UserRef|null}
  */
 export function otherPlayer(g, me) {
 	if (g.white && g.black) {
@@ -44,14 +48,14 @@ export function otherPlayer(g, me) {
 /**
  * The viewer's colour before and after the start: "You play White", "Colours are drawn at the start".
  *
- * @param {object} g GameSummary
+ * @param {GameSummary} g the game
  * @param {string|null} me viewer uid
  * @return {string}
  */
 export function colorText(g, me) {
 	let color = g.myColor
 	if (!color && g.colorChoice && g.colorChoice !== 'r') {
-		color = g.creator?.userId === me ? g.colorChoice : (g.colorChoice === 'w' ? 'b' : 'w')
+		color = g.creator?.userId === me ? g.colorChoice : otherColor(g.colorChoice)
 	}
 	if (color === 'w') {
 		return t('quantumchess', 'You play White')
@@ -65,7 +69,7 @@ export function colorText(g, me) {
 /**
  * "Move 14 · 18 h left".
  *
- * @param {object} g GameSummary
+ * @param {GameSummary} g the game
  * @param {number} now Unix seconds
  * @return {string}
  */
@@ -78,7 +82,7 @@ export function progressText(g, now) {
 /**
  * The result from the viewer's side with the rating change: "Won · +12", "Lost", "Draw", "Aborted".
  *
- * @param {object} g GameSummary
+ * @param {GameSummary} g the game
  * @return {{text: string, outcome: 'win'|'loss'|'draw'|'aborted', delta: string}}
  */
 export function outcomeText(g) {

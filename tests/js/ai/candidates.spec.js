@@ -3,13 +3,17 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * candidates: the ranked moves offered to an LLM opponent and their tag grammar.
+ */
+
 import { describe, expect, it } from 'vitest'
 import { candidates } from '../../../src/ai/candidates.js'
 import { E, POS, S } from './helpers.js'
 
 const QUICK = { timeMs: Infinity, nodeBudget: 5000 }
 
-/** Tag grammar of SPEC §4.3. */
+/** The tag grammar documented in src/ai/candidates.js. */
 const TAG = /^(king-capture:\d{1,3}|certain-capture|converging|traps-king|capture:\d{1,3}:[qrbnp]|threatens-king:\d{1,3}|probe|split|merge|measure|defends-king|saves:[qrbnp]|hangs:[qrbnp]|risky|safe|trap)$/
 
 /**
@@ -25,7 +29,7 @@ function tagsOf(list, code) {
 	return c.tags
 }
 
-describe('candidates (GD §6.4 step 1)', () => {
+describe('candidates for an LLM opponent', () => {
 	it('returns up to six moves best first with E for the side to move, tags and ✓', () => {
 		const list = candidates(POS.middlegame(), { strength: 'balanced', tolerance: 0.04, ...QUICK })
 		expect(list.length).toBe(6)

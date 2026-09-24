@@ -5,7 +5,7 @@
 
 /**
  * Collects browser console errors, uncaught exceptions and failed app requests of a page, so a test can assert
- * that a flow ran cleanly (docs/SPEC.md §15.2: "assert no console errors").
+ * that a flow ran cleanly.
  */
 
 /**

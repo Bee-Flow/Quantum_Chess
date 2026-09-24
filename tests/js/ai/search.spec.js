@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * The expectimax search: tactics found within fixed node budgets (deterministic), results and search mechanics.
+ */
+
 import { describe, expect, it } from 'vitest'
 import { search, Searcher } from '../../../src/ai/search.js'
 import { E, POS, S } from './helpers.js'
@@ -44,7 +48,7 @@ describe('search: tactics (node budgets, deterministic)', () => {
 		expect(['b2|a8-h8', 'd4|a8-h8']).toContain(r.code)
 	})
 
-	it('plays the pawn probe that wins most in L9 (not the knight that can be lost)', () => {
+	it('plays the pawn probe that wins most in the gamble lesson (not the knight that can be lost)', () => {
 		const l9 = S('6k1/5ppp/8/2q5/4PN2/7P/5PP1/6K1 w - - 0 1', ['c5-d5|h5'])
 		const r = search(l9, { level: 4, timeMs: Infinity, nodeBudget: 60000 })
 		expect(['e4-d5', 'f4-d5']).toContain(r.code)

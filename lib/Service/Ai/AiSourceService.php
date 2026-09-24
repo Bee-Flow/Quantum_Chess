@@ -9,28 +9,45 @@ declare(strict_types=1);
 
 namespace OCA\QuantumChess\Service\Ai;
 
+use OCA\QuantumChess\Exception\ApiError;
 use OCA\QuantumChess\Exception\ApiException;
-use OCA\QuantumChess\Service\SettingsService;
+use OCA\QuantumChess\Service\Ai\Provider\NextcloudAiProvider;
+use OCA\QuantumChess\Service\Ai\Provider\Presets;
+use OCA\QuantumChess\Service\Ai\Provider\ProviderConnection;
+use OCA\QuantumChess\Service\Ai\Provider\ProviderValidator;
+use OCA\QuantumChess\Service\Ai\Provider\UrlGuard;
+use OCA\QuantumChess\Service\Ai\Provider\UrlNotAllowedException;
+use OCA\QuantumChess\Service\Settings\AppSettings;
 use OCP\IL10N;
 
 /**
- * AI source availability (docs/SPEC.md §10.1): Nextcloud AI, the organisation provider and the user's own key, in
- * this default order.
+ * Which LLM sources a user may use, and how to reach them.
+ *
+ * A source is available when the administrator enabled it for the user, it is configured completely, and its limits
+ * are not used up. When unavailable, `reason` says why: `disabled`, `no_provider`, `not_allowed`, `not_configured`,
+ * `no_key` or `cap_reached`. The user's preferred source is the default when available, otherwise the first available
+ * source in the order of AiSource.
  */
 class AiSourceService {
 	public function __construct(
-		private SettingsService $settings,
-		private KeyStore $keys,
-		private NextcloudAiProvider $nextcloudAi,
-		private AiUsageService $usage,
-		private UrlGuard $urlGuard,
-		private IL10N $l,
+		private readonly AppSettings $settings,
+		private readonly AiSettingsService $aiSettings,
+		private readonly KeyStore $keys,
+		private readonly NextcloudAiProvider $nextcloudAi,
+		private readonly AiUsageService $usage,
+		private readonly UrlGuard $urlGuard,
+		private readonly ProviderValidator $providers,
+		private readonly IL10N $l,
 	) {
 	}
 
-	/** @return array{sources: list<array<string, mixed>>, default: ?string, privacyNotice: string} */
+	/**
+	 * The sources with their availability and details, the default source and the administrator's privacy notice.
+	 *
+	 * @return array{sources: list<array<string, mixed>>, default: ?string, privacyNotice: string}
+	 */
 	public function sourcesFor(string $uid): array {
-		$acked = $this->settings->noticeAcked($uid);
+		$acked = $this->aiSettings->noticeAcked($uid);
 		$sources = [$this->nextcloud($uid), $this->shared($uid), $this->personal($uid)];
 		foreach ($sources as &$source) {
 			$source['noticeAcked'] = in_array($source['id'], $acked, true);
@@ -39,7 +56,11 @@ class AiSourceService {
 		return ['sources' => $sources, 'default' => $this->defaultOf($uid, $sources), 'privacyNotice' => $this->settings->aiPrivacyNotice()];
 	}
 
-	/** @return array{nextcloud: bool, shared: bool, personal: bool, any: bool, default: ?string} */
+	/**
+	 * Which sources are available, for the initial state of the app page.
+	 *
+	 * @return array{nextcloud: bool, shared: bool, personal: bool, any: bool, default: ?string}
+	 */
 	public function summary(string $uid): array {
 		$sources = [$this->nextcloud($uid), $this->shared($uid), $this->personal($uid)];
 		$available = [];
@@ -56,52 +77,49 @@ class AiSourceService {
 	}
 
 	/**
-	 * The connection settings of an available source.
+	 * The connection to an available source.
 	 *
-	 * @return array{source: string, kind: string, preset: ?string, baseUrl: ?string, model: ?string, apiKey: ?string, allowLocal: bool, modelAllowlist: list<string>}
-	 * @throws ApiException 403 ai_unavailable
+	 * @throws ApiException ai_unavailable, or url_not_allowed when the provider's address is no longer allowed
 	 */
-	public function resolve(string $uid, string $source): array {
+	public function resolve(string $uid, AiSource $source): ProviderConnection {
 		$info = match ($source) {
-			'nextcloud' => $this->nextcloud($uid),
-			'shared' => $this->shared($uid),
-			'personal' => $this->personal($uid),
-			default => throw new ApiException('invalid_argument', $this->l->t('Invalid value'), 400, ['field' => 'source']),
+			AiSource::Nextcloud => $this->nextcloud($uid),
+			AiSource::Shared => $this->shared($uid),
+			AiSource::Personal => $this->personal($uid),
 		};
 		if (!$info['available']) {
-			throw new ApiException('ai_unavailable', $this->l->t('This AI source is not available.'), 403, ['reason' => $info['reason']]);
+			throw new ApiException(ApiError::AiUnavailable, $this->l->t('This AI source is not available.'), ['reason' => $info['reason']]);
 		}
-		if ($source === 'nextcloud') {
-			return ['source' => $source, 'kind' => 'nextcloud', 'preset' => null, 'baseUrl' => null, 'model' => null, 'apiKey' => null, 'allowLocal' => false, 'modelAllowlist' => []];
+		if ($source === AiSource::Nextcloud) {
+			return ProviderConnection::nextcloud();
 		}
-		$provider = $source === 'shared' ? $this->settings->sharedProvider() : $this->settings->personalProvider($uid);
+		$provider = $source === AiSource::Shared ? $this->settings->sharedProvider() : $this->aiSettings->personalProvider($uid);
 		if ($provider === null) {
-			throw new ApiException('ai_unavailable', $this->l->t('This AI source is not available.'), 403, ['reason' => 'not_configured']);
+			throw new ApiException(ApiError::AiUnavailable, $this->l->t('This AI source is not available.'), ['reason' => 'not_configured']);
 		}
-		$allowLocal = false;
 		try {
-			$allowLocal = $this->urlGuard->check($provider['baseUrl'], $source === 'shared' ? 'shared' : 'personal', $this->settings->sharedAllowLocal(), $this->settings->localAllowlist())['allowLocal'];
+			$allowLocal = $this->urlGuard->check($provider->baseUrl, $source->value, $this->settings->sharedAllowLocal(), $this->settings->localAllowlist())['allowLocal'];
 		} catch (UrlNotAllowedException) {
 			// the allow-list changed after the provider was saved
-			throw new ApiException('url_not_allowed', $this->settings->urlMessage('local'), 400, ['field' => 'baseUrl']);
+			throw new ApiException(ApiError::UrlNotAllowed, $this->providers->urlMessage('local'), ['field' => 'baseUrl']);
 		}
-		return [
-			'source' => $source,
-			'kind' => $provider['kind'],
-			'preset' => $provider['preset'],
-			'baseUrl' => $provider['baseUrl'],
-			'model' => $provider['model'] !== '' ? $provider['model'] : (Presets::get($provider['preset'])['suggestedModels'][0] ?? null),
-			'apiKey' => $source === 'shared' ? $this->keys->getShared() : $this->keys->getPersonal($uid),
-			'allowLocal' => $allowLocal,
-			'modelAllowlist' => $source === 'shared' ? $this->settings->sharedModelAllowlist() : [],
-		];
+		return new ProviderConnection(
+			$source,
+			$provider->kind,
+			$provider->preset,
+			$provider->baseUrl,
+			$provider->model !== '' ? $provider->model : (Presets::get($provider->preset)['suggestedModels'][0] ?? null),
+			$source === AiSource::Shared ? $this->keys->getShared() : $this->keys->getPersonal($uid),
+			$allowLocal,
+			$source === AiSource::Shared ? $this->settings->sharedModelAllowlist() : [],
+		);
 	}
 
 	/**
 	 * @param list<array<string, mixed>> $sources
 	 */
 	private function defaultOf(string $uid, array $sources): ?string {
-		$preferred = $this->settings->defaultSource($uid);
+		$preferred = $this->aiSettings->defaultSource($uid);
 		foreach ($sources as $source) {
 			if ($source['id'] === $preferred && $source['available']) {
 				return $preferred;
@@ -128,7 +146,7 @@ class AiSourceService {
 			}
 		}
 		return [
-			'id' => 'nextcloud',
+			'id' => AiSource::Nextcloud->value,
 			'label' => $this->l->t('Nextcloud AI'),
 			'available' => $reason === null,
 			'reason' => $reason,
@@ -146,46 +164,46 @@ class AiSourceService {
 			$reason = 'disabled';
 		} elseif (!$this->settings->inGroups($uid, $this->settings->sharedGroups())) {
 			$reason = 'not_allowed';
-		} elseif ($provider === null || ($provider['model'] === '' && Presets::get($provider['preset'])['suggestedModels'] === [])) {
+		} elseif ($provider === null || ($provider->model === '' && Presets::get($provider->preset)['suggestedModels'] === [])) {
 			$reason = 'not_configured';
-		} elseif (Presets::get($provider['preset'])['keyRequired'] && $this->keys->getShared() === null) {
+		} elseif (Presets::get($provider->preset)['keyRequired'] && $this->keys->getShared() === null) {
 			$reason = 'not_configured';
 		} elseif ($this->usage->sharedCapReached()) {
 			$reason = 'cap_reached';
 		}
-		$label = $provider !== null && $provider['label'] !== '' ? $provider['label'] : $this->l->t('Organisation AI');
+		$label = $provider !== null && $provider->label !== '' ? $provider->label : $this->l->t('Organisation AI');
 		return [
-			'id' => 'shared',
+			'id' => AiSource::Shared->value,
 			'label' => $label,
 			'available' => $reason === null,
 			'reason' => $reason,
-			'preset' => $provider['preset'] ?? null,
-			'model' => $provider === null ? null : ($provider['model'] !== '' ? $provider['model'] : null),
+			'preset' => $provider?->preset,
+			'model' => $provider === null ? null : ($provider->model !== '' ? $provider->model : null),
 			'models' => $provider !== null && $this->settings->sharedModelAllowlist() !== [] ? $this->settings->sharedModelAllowlist() : null,
 		];
 	}
 
 	/** @return array<string, mixed> */
 	private function personal(string $uid): array {
-		$provider = $this->settings->personalProvider($uid);
+		$provider = $this->aiSettings->personalProvider($uid);
 		$info = $this->keys->personalInfo($uid);
 		$reason = null;
 		if (!$this->settings->allowPersonalKeys()) {
 			$reason = 'disabled';
 		} elseif ($provider === null) {
 			$reason = 'not_configured';
-		} elseif (Presets::get($provider['preset'])['keyRequired'] && ($info['hasKey'] === false || $info['keyUnreadable'])) {
+		} elseif (Presets::get($provider->preset)['keyRequired'] && ($info['hasKey'] === false || $info['keyUnreadable'])) {
 			$reason = 'no_key';
-		} elseif ($provider['model'] === '' && Presets::get($provider['preset'])['suggestedModels'] === []) {
+		} elseif ($provider->model === '' && Presets::get($provider->preset)['suggestedModels'] === []) {
 			$reason = 'not_configured';
 		}
 		return [
-			'id' => 'personal',
+			'id' => AiSource::Personal->value,
 			'label' => $this->l->t('My own API key'),
 			'available' => $reason === null,
 			'reason' => $reason,
-			'preset' => $provider['preset'] ?? null,
-			'model' => $provider === null ? null : ($provider['model'] !== '' ? $provider['model'] : null),
+			'preset' => $provider?->preset,
+			'model' => $provider === null ? null : ($provider->model !== '' ? $provider->model : null),
 			'keyHint' => $info['keyHint'],
 		];
 	}

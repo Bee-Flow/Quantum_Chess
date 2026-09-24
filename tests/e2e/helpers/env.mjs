@@ -4,8 +4,8 @@
  */
 
 /**
- * Settings of the end-to-end tests, read from environment variables (tests/e2e/README.md lists them all).
- * Defaults match the development Nextcloud of docs/SPEC.md §15.2.
+ * Settings of the end-to-end tests, read from environment variables (tests/e2e/README.md lists them all). The
+ * defaults are those of a development Nextcloud on http://127.0.0.1:8080 with the documented test users.
  */
 import { existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -41,7 +41,7 @@ function read(names, fallback) {
 
 /**
  * Root directory of the Nextcloud server (the directory holding `occ`): QC_NC_ROOT, else the server this app
- * sits in (apps/quantumchess or custom_apps/quantumchess), else the development server of SPEC §15.2.
+ * sits in (apps/quantumchess or custom_apps/quantumchess).
  *
  * @return {string|null}
  */
@@ -49,7 +49,6 @@ function findServerRoot() {
 	const candidates = [
 		read(['QC_NC_ROOT', 'NC_ROOT']),
 		resolve(appRoot, '..', '..'),
-		'/tmp/claude-0/nc/server',
 	].filter(Boolean)
 	return candidates.find((dir) => existsSync(join(dir, 'occ'))) ?? null
 }

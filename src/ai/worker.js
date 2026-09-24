@@ -4,7 +4,7 @@
  */
 
 /**
- * Web Worker entry of the built-in engine (SPEC §4.4).
+ * Web Worker entry of the computer player.
  *
  * Request `{id, type, payload}` with `type` ∈ `bestMove, analyze, evaluateMove, candidates, solve, analyzeGame,
  * benchmark, cancel` (`cancel` payload: `{id}`). Responses `{id, type: 'progress' | 'result' | 'error', payload}`;

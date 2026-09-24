@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 2 (GAME-DESIGN §5.1.2): make a split, read the badges, meet the budget pips. */
+/** Lesson 2: make a split, read the badges, meet the budget pips. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L02',
-	slug: 'split',
 	order: 2,
 	group: 'essentials',
 	minutes: 2,

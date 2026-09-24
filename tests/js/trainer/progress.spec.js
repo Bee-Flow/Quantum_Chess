@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * Trainer progress: merging local and stored progress, the stars of lessons and puzzles, and the progress store.
+ */
+
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../../src/services/api.js', () => ({
@@ -13,7 +17,7 @@ vi.mock('../../../src/services/api.js', () => ({
 const { lessonStars, mergeProgress, nextLesson, progress, puzzleStars, recordLesson, refreshProgress } = await import('../../../src/trainer/progress.js')
 const { reportGameEvent, markGraduationGame } = await import('../../../src/trainer/events.js')
 
-describe('progress merge (SPEC §14.8.4)', () => {
+describe('progress merge', () => {
 	it('merges lessons, puzzles, achievements, counters, xp and streak', () => {
 		const a = {
 			v: 1,

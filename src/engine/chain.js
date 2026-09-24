@@ -4,13 +4,17 @@
  */
 
 /**
- * Game record integrity chain (ENGINE-RULES §9.4) and the local roll memo identity (§9.3).
+ * Game record integrity chain (§9.4) and the local roll memo identity (§9.3).
+ *
+ * PHP twin: the chain functions of lib/Engine/Engine.php (`chainStart`, `chainNext`, `rollIdentity`). Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { positionHash } from './hash.js'
 import { stripPromo } from './parser.js'
 import { sha256hex } from './sha256.js'
 import { serializeState } from './state.js'
+
+/** @typedef {import('./types.js').EngineState} EngineState */
 
 /**
  * Check a non-negative integer that is printed as plain decimal.
@@ -49,7 +53,7 @@ export function chainStart(gameId, whiteUid, blackUid, createdAt) {
  * @param {string} code canonical code
  * @param {number|null} u recorded u, or null when the move was not rolled (or forced)
  * @param {string|null} key measurement key, or null without a record
- * @param {object|string} stateAfter state after the move, or its canonical JSON
+ * @param {EngineState|string} stateAfter state after the move, or its canonical JSON
  * @return {string}
  */
 export function chainNext(previous, ply, code, u, key, stateAfter) {
@@ -62,7 +66,7 @@ export function chainNext(previous, ply, code, u, key, stateAfter) {
 /**
  * Roll memo identity (§9.3): decimal(ply) + "/" + positionHash(stateBefore) + "/" + stripPromo(code).
  *
- * @param {object} stateBefore state before the move
+ * @param {EngineState} stateBefore state before the move
  * @param {string} code canonical code
  * @return {string}
  */

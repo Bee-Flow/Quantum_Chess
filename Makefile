@@ -6,7 +6,7 @@
 #   make                    list the targets
 #   make build              install JS dependencies (npm ci, only when needed) and build js/
 #   make test               JS unit tests (Vitest) and PHP unit tests (PHPUnit)
-#   make lint               ESLint, php -l, php-cs-fixer, Psalm, info.xml schema, SPDX headers
+#   make lint               ESLint, comment references, php -l, php-cs-fixer, Psalm, info.xml schema, SPDX headers
 #   make appstore           build/artifacts/quantumchess.tar.gz with runtime files only
 #   make sign KEY=… CERT=…  code-sign the package with occ and write the tarball signature
 #   make e2e                Playwright end-to-end tests against a running Nextcloud
@@ -23,7 +23,7 @@ TARBALL := $(ARTIFACTS_DIR)/$(APP_NAME).tar.gz
 
 # Everything the app needs at runtime. Anything else (src/, tests/, docs/, tools/, vendor/, node_modules/,
 # dotfiles) stays out of the package. .nextcloudignore removes unwanted files inside these paths.
-APPSTORE_PATHS := appinfo lib templates js assets css img l10n LICENSE README.md CHANGELOG.md
+APPSTORE_PATHS := appinfo lib templates js assets img l10n LICENSE README.md CHANGELOG.md
 
 # Root of a Nextcloud server checkout (for occ). Defaults to the usual apps/<app> or custom_apps/<app> layout.
 NEXTCLOUD ?= $(abspath ../..)
@@ -44,10 +44,10 @@ TAR_REPRO := $(shell $(TAR) --version 2>/dev/null | grep -q 'GNU tar' && echo '-
 
 # Files that must carry an SPDX header (generated, vendored and fixture files are excluded)
 SPDX_GLOBS := '*.php' '*.js' '*.mjs' '*.cjs' '*.ts' '*.vue' '*.scss' '*.yml' '*.yaml'
-SPDX_EXCLUDE := ^(js|css|vendor|node_modules|l10n|build|tests/fixtures)/
+SPDX_EXCLUDE := ^(js|assets|vendor|node_modules|l10n|build|tests/fixtures)/
 
 .DEFAULT_GOAL := help
-.PHONY: help build dev test test-js test-php lint lint-js lint-php cs psalm lint-xml lint-spdx appstore sign \
+.PHONY: help build dev test test-js test-php lint lint-js lint-refs lint-php cs psalm lint-xml lint-spdx appstore sign \
 	check-runtime-deps version-check e2e l10n-pot l10n clean distclean
 
 help: ## List the targets
@@ -82,10 +82,13 @@ test-js: node_modules/.package-lock.json ## Run the Vitest unit tests
 test-php: vendor/autoload.php ## Run the PHPUnit unit tests
 	$(COMPOSER) run test:unit
 
-lint: lint-js lint-php cs psalm lint-xml lint-spdx ## Run every linter and static check
+lint: lint-js lint-refs lint-php cs psalm lint-xml lint-spdx ## Run every linter and static check
 
-lint-js: node_modules/.package-lock.json ## ESLint
+lint-js: node_modules/.package-lock.json ## ESLint (fails on warnings too)
 	$(NPM) run lint
+
+lint-refs: ## Check doc paths, Markdown links and planning references in comments
+	$(NPM) run lint:refs
 
 lint-php: ## php -l on every PHP file
 	$(COMPOSER) run lint
@@ -152,8 +155,7 @@ sign: ## Sign the package: make sign KEY=quantumchess.key CERT=quantumchess.crt 
 # --- End-to-end and translations --------------------------------------------------------------------------
 
 e2e: node_modules/.package-lock.json ## Playwright tests against a running Nextcloud (see tests/e2e/README.md)
-	@[ -d node_modules/@playwright/test ] || { echo "@playwright/test is not installed (devDependency, see tests/e2e/README.md)"; exit 1; }
-	npx --no -- playwright test -c tests/e2e/playwright.config.mjs
+	$(NPM) run test:e2e
 
 TRANSLATIONTOOL_URL := https://raw.githubusercontent.com/nextcloud/docker-ci/master/translations/translationtool/translationtool.phar
 
@@ -172,9 +174,8 @@ l10n: $(TOOLS_DIR)/translationtool.phar ## Convert translationfiles/<lang>/quant
 
 # --- Housekeeping -----------------------------------------------------------------------------------------
 
-clean: ## Remove build output (build/, js/, assets/, css/*.css)
+clean: ## Remove build output (build/, js/, assets/)
 	rm -rf $(BUILD_DIR) js assets
-	rm -f css/*.css css/*.map
 
 distclean: clean ## Also remove node_modules/ and vendor/
 	rm -rf node_modules vendor

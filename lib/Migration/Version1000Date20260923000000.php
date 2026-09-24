@@ -16,14 +16,15 @@ use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 /**
- * Creates the four tables of docs/SPEC.md §5, including the columns reserved for later versions.
+ * Creates the app's tables: `qchess_games`, `qchess_moves`, `qchess_chat` and `qchess_ratings`.
+ *
+ * Some columns of `qchess_games` are reserved and not used yet; the Game entity lists them.
  */
 class Version1000Date20260923000000 extends SimpleMigrationStep {
 	/**
 	 * @param Closure(): ISchemaWrapper $schemaClosure
 	 */
 	public function changeSchema(IOutput $output, Closure $schemaClosure, array $options): ?ISchemaWrapper {
-		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
 
 		if (!$schema->hasTable('qchess_games')) {

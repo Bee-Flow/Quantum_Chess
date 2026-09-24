@@ -4,26 +4,40 @@
  */
 
 /**
- * Applying a move (ENGINE-RULES §5): the A1–A9 pipeline, sampling, getOutcomes and the end checks (§6).
+ * Applying a move (§5): the A1–A9 pipeline, sampling, getOutcomes and the end checks (§6).
+ *
+ * PHP twin: lib/Engine/Internal/Pipeline.php (the pipeline and the end checks) and Engine.php (sampling,
+ * getOutcomes). Section numbers (§) refer to docs/engine-rules.md.
  */
 
-import { analyse } from './analysis.js'
+import { analyze } from './analysis.js'
 import { castlingAfter, epAfter, halfmoveAfter, typesAfter } from './bookkeeping.js'
 import { FIFTY_MOVE_PLIES, MAX_PLY, REPETITION_COUNT, T } from './constants.js'
 import { dangerA, trappedInfo } from './danger.js'
 import { EngineArgumentError, IllegalMoveError } from './errors.js'
 import { hashParts } from './hash.js'
-import { legalOf, resolveMove, someRecord } from './moves.js'
+import { someRecord } from './moveGenerator.js'
+import { resolveMove } from './moveInput.js'
+import { legalOf } from './moveRecord.js'
 import { canonicalWorlds, recordKeys, recordOutcomeBoards } from './outcomes.js'
 import { rescaleWeights } from './rescale.js'
 import { checkU, keyForU, randomU, uFromRandom } from './rng.js'
 import { makeState } from './state.js'
 
+/** @typedef {import('./types.js').ApplyResult} ApplyResult */
+/** @typedef {import('./types.js').Analysis} Analysis */
+/** @typedef {import('./types.js').EngineState} EngineState */
+/** @typedef {import('./types.js').GameResult} GameResult */
+/** @typedef {import('./types.js').Measurement} Measurement */
+/** @typedef {import('./types.js').MoveInput} MoveInput */
+/** @typedef {import('./types.js').OutcomeState} OutcomeState */
+/** @typedef {import('./moveRecord.js').MoveRecord} MoveRecord */
+
 /**
  * Pick the outcome of a rolled record (§5.2). Returns the key and the u used (null when forced).
  *
- * @param {object} rec rolled record
- * @param {object} opts options ({outcome}, {u} or {rng})
+ * @param {MoveRecord} rec rolled record
+ * @param {{outcome?: string|null, u?: number|null, rng?: (() => number)|null}} opts options
  * @return {{key: string, u: number|null}}
  */
 function sample(rec, opts) {
@@ -49,12 +63,12 @@ function sample(rec, opts) {
 /**
  * Steps A2–A9 for a legal record and a chosen outcome key.
  *
- * @param {object} a analysis of the state before the move
- * @param {object} rec legal record
+ * @param {Analysis} a analysis of the state before the move
+ * @param {MoveRecord} rec legal record
  * @param {string} key outcome key for a rolled move, or the resolution (`certain`/`quantum`) otherwise
  * @param {boolean} trapped run E1b
  * @param {boolean} endChecks run A9 at all (false inside a setup prelude)
- * @return {{state: object, key: string, captured: number}}
+ * @return {{state: EngineState, key: string, captured: number}}
  */
 export function applyRecord(a, rec, key, trapped, endChecks) {
 	const prev = a.state
@@ -108,11 +122,11 @@ export function applyRecord(a, rec, key, trapped, endChecks) {
 /**
  * The end checks E1–E6 (§6) on a new state whose result is still null.
  *
- * @param {object} state new state
+ * @param {EngineState} state new state
  * @param {'w'|'b'} mover the side that just moved
  * @param {number} captured captured id or -1
  * @param {boolean} trapped run E1b
- * @return {object|null}
+ * @return {GameResult|null}
  */
 function endResult(state, mover, captured, trapped) {
 	const win = mover === 'w' ? '1-0' : '0-1'
@@ -120,7 +134,7 @@ function endResult(state, mover, captured, trapped) {
 	if (captured === 0 || captured === 16) {
 		return { result: win, reason: 'king_captured' }
 	}
-	const na = analyse(state)
+	const na = analyze(state)
 	let info = null
 	// E1b
 	if (trapped) {
@@ -171,9 +185,9 @@ function endResult(state, mover, captured, trapped) {
 /**
  * Resolve the input or throw IllegalMoveError (A1).
  *
- * @param {object} a analysis
+ * @param {Analysis} a analysis
  * @param {unknown} move move input
- * @return {object} record
+ * @return {MoveRecord} record
  */
 function recordOrThrow(a, move) {
 	const r = resolveMove(a, move)
@@ -186,11 +200,11 @@ function recordOrThrow(a, move) {
 /**
  * Build the measurement record (§5.5) of a rolled move.
  *
- * @param {object} rec record
+ * @param {MoveRecord} rec record
  * @param {string} key chosen key
  * @param {number|null} u roll used, or null when forced
  * @param {number} captured captured id or -1
- * @return {object}
+ * @return {Measurement}
  */
 function measurementOf(rec, key, u, captured) {
 	return {
@@ -212,14 +226,14 @@ function measurementOf(rec, key, u, captured) {
  * - `rng`: a function returning a double in [0, 1); u = floor(r · 2^24).
  * - default: a CSPRNG roll (§9.1).
  *
- * @param {object} state valid engine state
- * @param {object|string} move move object, LegalMove or code
- * @param {{outcome?: string, u?: number, rng?: function(): number}} [opts] options
- * @return {{state: object, move: object, measurement: object|null}}
+ * @param {EngineState} state valid engine state
+ * @param {MoveInput} move move object, LegalMove or code
+ * @param {{outcome?: string, u?: number, rng?: () => number}} [opts] options
+ * @return {ApplyResult}
  * @throws {IllegalMoveError} when the move is illegal (code = whyIllegal reason)
  */
 export function applyMove(state, move, opts = {}) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const rec = recordOrThrow(a, move)
 	const options = opts || {}
 	if (rec.resolution === 'rolled') {
@@ -235,9 +249,9 @@ export function applyMove(state, move, opts = {}) {
  * All possible results of a move (§5.6): one entry per outcome of a rolled move (key order), otherwise one entry
  * with key `certain` or `quantum` and weight T. Entry: `{key, weight, probability, happened, captured, state}`.
  *
- * @param {object} state valid engine state
- * @param {object|string} move move input
- * @return {object[]}
+ * @param {EngineState} state valid engine state
+ * @param {MoveInput} move move input
+ * @return {OutcomeState[]}
  * @throws {IllegalMoveError} when the move is illegal
  */
 export function getOutcomes(state, move) {
@@ -247,13 +261,13 @@ export function getOutcomes(state, move) {
 /**
  * getOutcomes with or without E1b.
  *
- * @param {object} state valid engine state
- * @param {object|string} move move input
+ * @param {EngineState} state valid engine state
+ * @param {MoveInput} move move input
  * @param {boolean} trapped run E1b in the outcome states
- * @return {object[]}
+ * @return {OutcomeState[]}
  */
 function outcomesOf(state, move, trapped) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const rec = recordOrThrow(a, move)
 	const keys = recordKeys(rec)
 	const out = new Array(keys.length)
@@ -277,9 +291,9 @@ function outcomesOf(state, move, trapped) {
  * **Search only.** Like getOutcomes, but the outcome states skip E1b (Appendix C): a search finds the forced king
  * capture one ply later anyway. States produced this way MUST NOT be stored, shown or sent to the server.
  *
- * @param {object} state valid engine state
- * @param {object|string} move move input (a LegalMove of this state is fastest)
- * @return {object[]}
+ * @param {EngineState} state valid engine state
+ * @param {MoveInput} move move input (a LegalMove of this state is fastest)
+ * @return {OutcomeState[]}
  */
 export function outcomesForSearch(state, move) {
 	return outcomesOf(state, move, false)
@@ -289,13 +303,13 @@ export function outcomesForSearch(state, move) {
  * **Search only.** Apply a move with a forced outcome key (or the only result of a move that is not rolled),
  * skipping E1b. States produced this way MUST NOT be stored, shown or sent to the server.
  *
- * @param {object} state valid engine state
- * @param {object|string} move move input
+ * @param {EngineState} state valid engine state
+ * @param {MoveInput} move move input
  * @param {string|null} [key] outcome key for a rolled move (ignored otherwise)
- * @return {object} the new state
+ * @return {EngineState} the new state
  */
 export function applyForSearch(state, move, key = null) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const rec = recordOrThrow(a, move)
 	if (rec.resolution === 'rolled') {
 		if (!rec.outcomes.some((o) => o.key === key)) {

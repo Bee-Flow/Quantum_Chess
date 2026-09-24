@@ -10,11 +10,14 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine;
 
 use OCA\QuantumChess\Engine\Internal\Analysis;
-use OCA\QuantumChess\Engine\Internal\Core;
+use OCA\QuantumChess\Engine\Internal\Danger;
 use OCA\QuantumChess\Engine\Internal\Describer;
+use OCA\QuantumChess\Engine\Internal\MoveGenerator;
+use OCA\QuantumChess\Engine\Internal\MoveInput;
 use OCA\QuantumChess\Engine\Internal\MoveRecord;
-use OCA\QuantumChess\Engine\Internal\Moves;
+use OCA\QuantumChess\Engine\Internal\Notation;
 use OCA\QuantumChess\Engine\Internal\Parser;
+use OCA\QuantumChess\Engine\Internal\Pipeline;
 use OCA\QuantumChess\Engine\Internal\RollDisplay;
 use OCA\QuantumChess\Engine\Internal\Setup;
 use OCA\QuantumChess\Engine\Internal\StateValidator;
@@ -23,15 +26,28 @@ use OCA\QuantumChess\Engine\Internal\Views;
 use OCA\QuantumChess\Engine\Internal\Worlds;
 
 /**
- * The Quantum Chess rules engine, PHP twin of src/engine (normative rules: docs/ENGINE-RULES.md; API: SPEC §3.4).
+ * The Quantum Chess rules engine: the only entry point into the PHP rules engine, and the twin of the JavaScript
+ * engine's public API (src/engine/index.js).
  *
  * Pure and deterministic: no clock, locale, network or database; the only randomness is the default roll of
- * {@see applyMove()} (`random_int`). States are the canonical arrays of ER §2.5 (lists stay lists, keys in order)
+ * {@see applyMove()} (`random_int`). States are the canonical arrays of §2.5 (lists stay lists, keys in order)
  * and are never mutated. Derived data of recently used states is cached inside the instance, keyed by the exact
  * state, so repeated calls on one position (find, apply, notation, views) do the work once.
  *
  * Methods that take a state expect a valid one: check untrusted input with {@see validateState()} first.
  * Results are byte-identical to the JavaScript engine on the parity fixtures (tests/fixtures/engine).
+ *
+ * Section numbers (§) and appendices refer to docs/engine-rules.md, the normative rules.
+ *
+ * The Psalm types below describe what the engine returns. Parameters stay `array<string, mixed>`: callers pass states
+ * they have decoded or validated themselves.
+ *
+ * @psalm-type GameResult = array{result: string, reason: string}
+ * @psalm-type EngineState = array{v: int, types: string, worlds: list<array{0: string, 1: int}>, turn: string, castling: string, ep: string, halfmove: int, fullmove: int, ply: int, captured: list<int>, history: list<string>, result: GameResult|null}
+ * @psalm-type Outcome = array{key: string, weight: int}
+ * @psalm-type LegalMove = array{type: string, from: list<int>, to: list<int>, promo?: string, code: string, piece: int, resolution: string, measured: bool, fallback: bool, capture: bool, happenWeight: int, outcomes: list<Outcome>, successProbability: float}
+ * @psalm-type Measurement = array{key: string, u: int|null, captured: int|null, outcomes: list<Outcome>, fallback: bool}
+ * @psalm-type OutcomeState = array{key: string, weight: int, probability: float, happened: bool, captured: int|null, state: EngineState}
  */
 final class Engine {
 	/** Rules version, stored as `v` in every state. */
@@ -49,60 +65,62 @@ final class Engine {
 	public const MAX_PLY = 1200;
 	/** Link threshold of links(): |T·W(a∧b) − W(a)·W(b)| ≥ 2^36. */
 	public const LINK_THRESHOLD = 68719476736;
-	/** Canonical JSON of the start position (ER §2.5). */
+	/** Canonical JSON of the start position (§2.5). */
 	public const START_JSON = Tables::START_JSON;
 	public const START_HASH = Tables::START_HASH;
 	public const PIECE_TYPES = ['k', 'q', 'r', 'b', 'n', 'p'];
 	public const PROMOTION_TYPES = ['q', 'r', 'b', 'n'];
 	public const CASTLING_FLAGS = Tables::CASTLING_FLAGS;
-	/** Result reasons written by the engine (ER §6). */
+	/** Result reasons written by the engine (§6). */
 	public const RESULT_REASONS = Tables::RESULT_REASONS;
 	/** Reasons that are a win for the mover. */
 	public const WIN_REASONS = Tables::WIN_REASONS;
-	/** `whyIllegal` reason codes in check order (ER §4.11). */
+	/** `whyIllegal` reason codes in check order (§4.11). */
 	public const ILLEGAL_REASONS = Tables::ILLEGAL_REASONS;
-	/** Setup error codes (ER Appendix A). */
+	/** Setup error codes (Appendix A). */
 	public const SETUP_ERRORS = Tables::SETUP_ERRORS;
 	/** Outcome keys of standard moves and merges, in key order. */
 	public const OUTCOME_KEYS = Tables::OUTCOME_KEYS;
 
-	private Core $core;
+	private Pipeline $pipeline;
 
 	public function __construct() {
 		Tables::init();
-		$this->core = new Core();
+		$this->pipeline = new Pipeline();
 	}
 
 	// ---------------------------------------------------------------- states
 
 	/**
-	 * The start position (ER §2.5).
+	 * The start position (§2.5).
 	 *
-	 * @return array<string, mixed>
+	 * @return EngineState
 	 */
 	public function initialState(): array {
-		/** @var array<string, mixed> */
+		/** @var EngineState */
 		return json_decode(self::START_JSON, true, 16, JSON_THROW_ON_ERROR);
 	}
 
 	/**
-	 * Strictly validate untrusted input (a decoded array or a JSON string) against I1–I12 (ER §2.7).
+	 * Strictly validate untrusted input (a decoded array or a JSON string) against I1–I12 (§2.7).
 	 *
-	 * @return array<string, mixed> a fresh canonical copy
+	 * @return EngineState a fresh canonical copy
 	 * @throws InvalidStateException with the invariant (`shape`, `I1` … `I12`)
 	 */
 	public function validateState(mixed $data): array {
 		$r = StateValidator::validate($data);
 		if (!$r['ok']) {
+			/** @var array{ok: false, error: string, message: string} $r */
 			throw new InvalidStateException($r['error'], $r['message']);
 		}
+		/** @var array{ok: true, state: EngineState} $r */
 		return $r['state'];
 	}
 
 	/**
 	 * json_decode + validateState.
 	 *
-	 * @return array<string, mixed>
+	 * @return EngineState
 	 * @throws InvalidStateException
 	 */
 	public function parseState(string $json): array {
@@ -110,7 +128,7 @@ final class Engine {
 	}
 
 	/**
-	 * Canonical JSON (ER §2.6). Rebuilds the key order, so it is safe for states that went through other code.
+	 * Canonical JSON (§2.6). Rebuilds the key order, so it is safe for states that went through other code.
 	 *
 	 * @param array<string, mixed> $state
 	 * @throws InvalidStateException when a key is missing
@@ -151,12 +169,12 @@ final class Engine {
 	}
 
 	/**
-	 * Position hash (ER §5.4): FNV-1a-64, 16 lowercase hex digits.
+	 * Position hash (§5.4): FNV-1a-64, 16 lowercase hex digits.
 	 *
 	 * @param array<string, mixed> $state
 	 */
 	public function positionHash(array $state): string {
-		Core::checkShape($state);
+		Pipeline::checkShape($state);
 		return Worlds::positionHash($state);
 	}
 
@@ -164,7 +182,7 @@ final class Engine {
 	 * The result (`{result, reason}`, a copy) or null while the game runs.
 	 *
 	 * @param array<string, mixed> $state
-	 * @return array{result: string, reason: string}|null
+	 * @return GameResult|null
 	 */
 	public function gameResult(array $state): ?array {
 		$r = $state['result'] ?? null;
@@ -177,21 +195,21 @@ final class Engine {
 	// ---------------------------------------------------------------- moves
 
 	/**
-	 * Every legal move of the side to move in canonical order (ER §4.10), as LegalMove arrays with the keys
+	 * Every legal move of the side to move in canonical order (§4.10), as LegalMove arrays with the keys
 	 * `type, from, to, promo?, code, piece, resolution, measured, fallback, capture, happenWeight, outcomes,
 	 * successProbability`. Empty when the game is over.
 	 *
 	 * @param array<string, mixed> $state
-	 * @return list<array<string, mixed>>
+	 * @return list<LegalMove>
 	 */
 	public function generateMoves(array $state): array {
-		$a = $this->core->analyse($state);
+		$a = $this->pipeline->analyze($state);
 		if ($a->state['result'] !== null) {
 			return [];
 		}
 		$out = [];
-		foreach (Moves::allRecords($a) as $rec) {
-			$out[] = Moves::legalOf($rec);
+		foreach (MoveGenerator::allRecords($a) as $rec) {
+			$out[] = MoveRecord::legalOf($rec);
 		}
 		return $out;
 	}
@@ -203,12 +221,12 @@ final class Engine {
 	 * @return list<string>
 	 */
 	public function legalCodes(array $state): array {
-		$a = $this->core->analyse($state);
+		$a = $this->pipeline->analyze($state);
 		if ($a->state['result'] !== null) {
 			return [];
 		}
 		$out = [];
-		foreach (Moves::allRecords($a) as $rec) {
+		foreach (MoveGenerator::allRecords($a) as $rec) {
 			$out[] = (string)$rec->code;
 		}
 		return $out;
@@ -220,31 +238,31 @@ final class Engine {
 	 * @param array<string, mixed> $state
 	 */
 	public function hasAnyLegalMove(array $state): bool {
-		$a = $this->core->analyse($state);
+		$a = $this->pipeline->analyze($state);
 		if ($a->state['result'] !== null) {
 			return false;
 		}
 		if ($a->trapped !== null) {
 			return $a->trapped['anyLegal'];
 		}
-		return Moves::someRecord($a, static fn (): bool => true);
+		return MoveGenerator::someRecord($a, static fn (): bool => true);
 	}
 
 	/**
-	 * The LegalMove matching a move array, LegalMove or code (lenient parser, ER §4.12), or null (also on a
+	 * The LegalMove matching a move array, LegalMove or code (lenient parser, §4.12), or null (also on a
 	 * piece-letter mismatch). Measure moves match by piece.
 	 *
 	 * @param array<string, mixed> $state
 	 * @param array<string, mixed>|string $move
-	 * @return array<string, mixed>|null
+	 * @return LegalMove|null
 	 */
 	public function findMove(array $state, array|string $move): ?array {
-		$a = $this->core->analyse($state);
+		$a = $this->pipeline->analyze($state);
 		if ($a->state['result'] !== null) {
 			return null;
 		}
-		$r = Moves::resolveMove($a, $move);
-		return $r instanceof MoveRecord ? Moves::legalOf($r) : null;
+		$r = MoveInput::resolveMove($a, $move);
+		return $r instanceof MoveRecord ? MoveRecord::legalOf($r) : null;
 	}
 
 	/**
@@ -258,14 +276,14 @@ final class Engine {
 	}
 
 	/**
-	 * The first failing reason code of ER §4.11 (one of ILLEGAL_REASONS), or null when the move is legal. Never
+	 * The first failing reason code of §4.11 (one of ILLEGAL_REASONS), or null when the move is legal. Never
 	 * throws for a valid state, whatever the move input is. A single move is validated without generating the
 	 * full move list.
 	 *
 	 * @param array<string, mixed> $state
 	 */
 	public function whyIllegal(array $state, mixed $move): ?string {
-		$r = Moves::resolveMove($this->core->analyse($state), $move);
+		$r = MoveInput::resolveMove($this->pipeline->analyze($state), $move);
 		return is_string($r) ? $r : null;
 	}
 
@@ -273,7 +291,7 @@ final class Engine {
 	 * Resolve the input or throw (pipeline step A1).
 	 */
 	private function recordOrThrow(Analysis $a, mixed $move): MoveRecord {
-		$r = Moves::resolveMove($a, $move);
+		$r = MoveInput::resolveMove($a, $move);
 		if (is_string($r)) {
 			throw new IllegalMoveException($r, $move);
 		}
@@ -281,22 +299,22 @@ final class Engine {
 	}
 
 	/**
-	 * All possible results of a move (ER §5.6): one entry per outcome of a rolled move (key order), otherwise one
+	 * All possible results of a move (§5.6): one entry per outcome of a rolled move (key order), otherwise one
 	 * entry with key `certain` or `quantum` and weight T. Entry: `{key, weight, probability, happened, captured,
 	 * state}`.
 	 *
 	 * @param array<string, mixed> $state
 	 * @param array<string, mixed>|string $move
-	 * @return list<array{key: string, weight: int, probability: float, happened: bool, captured: int|null, state: array<string, mixed>}>
+	 * @return list<OutcomeState>
 	 * @throws IllegalMoveException
 	 */
 	public function getOutcomes(array $state, array|string $move): array {
-		$a = $this->core->analyse($state);
+		$a = $this->pipeline->analyze($state);
 		$rec = $this->recordOrThrow($a, $move);
 		$out = [];
 		foreach (Worlds::recordKeys($rec) as $i => $key) {
 			$weight = $rec->resolution === 'rolled' ? $rec->outcomes[$i]['weight'] : Tables::T;
-			$r = $this->core->applyRecord($a, $rec, $key, true);
+			$r = $this->pipeline->applyRecord($a, $rec, $key, true);
 			$out[] = [
 				'key' => $key,
 				'weight' => $weight,
@@ -310,26 +328,26 @@ final class Engine {
 	}
 
 	/**
-	 * Apply a move (ER §5.1). Never mutates its input.
+	 * Apply a move (§5.1). Never mutates its input.
 	 *
 	 * Randomness is consulted only for rolled moves (ignored and not validated otherwise), with the precedence
 	 * `$outcome` (a forced key; the record then has `u: null`) > `$u` (0 ≤ u < 2^24) > `$rng` (returns a float in
 	 * [0, 1); u = floor(r · 2^24)) > `random_int(0, 2^24 − 1)`. Online games pass an explicit `$u` so that it can be
-	 * recorded (ER §9.2).
+	 * recorded (§9.2).
 	 *
 	 * @param array<string, mixed> $state
 	 * @param array<string, mixed>|string $move
 	 * @param callable():(float|int)|null $rng
-	 * @return array{state: array<string, mixed>, move: array<string, mixed>, measurement: array{key: string, u: int|null, captured: int|null, outcomes: list<array{key: string, weight: int}>, fallback: bool}|null}
+	 * @return array{state: EngineState, move: LegalMove, measurement: Measurement|null}
 	 * @throws IllegalMoveException when the move is illegal (the reason is the whyIllegal code)
 	 * @throws \InvalidArgumentException for a bad `$u`, `$outcome` or `$rng` result
 	 */
 	public function applyMove(array $state, array|string $move, ?int $u = null, ?string $outcome = null, ?callable $rng = null): array {
-		$a = $this->core->analyse($state);
+		$a = $this->pipeline->analyze($state);
 		$rec = $this->recordOrThrow($a, $move);
 		if ($rec->resolution !== 'rolled') {
-			$r = $this->core->applyRecord($a, $rec, $rec->resolution, true);
-			return ['state' => $r['state'], 'move' => Moves::legalOf($rec), 'measurement' => null];
+			$r = $this->pipeline->applyRecord($a, $rec, $rec->resolution, true);
+			return ['state' => $r['state'], 'move' => MoveRecord::legalOf($rec), 'measurement' => null];
 		}
 		if ($outcome !== null) {
 			if (!in_array($outcome, array_column($rec->outcomes, 'key'), true)) {
@@ -354,10 +372,10 @@ final class Engine {
 			}
 			$key = self::keyForU($rec->outcomes, $used);
 		}
-		$r = $this->core->applyRecord($a, $rec, $key, true);
+		$r = $this->pipeline->applyRecord($a, $rec, $key, true);
 		return [
 			'state' => $r['state'],
-			'move' => Moves::legalOf($rec),
+			'move' => MoveRecord::legalOf($rec),
 			'measurement' => [
 				'key' => $key,
 				'u' => $used,
@@ -369,9 +387,9 @@ final class Engine {
 	}
 
 	/**
-	 * The outcome key chosen by u (ER §5.2): the first outcome whose cumulative weight exceeds u.
+	 * The outcome key chosen by u (§5.2): the first outcome whose cumulative weight exceeds u.
 	 *
-	 * @param list<array{key: string, weight: int}> $outcomes
+	 * @param list<Outcome> $outcomes
 	 */
 	private static function keyForU(array $outcomes, int $u): string {
 		$acc = 0;
@@ -387,7 +405,7 @@ final class Engine {
 	}
 
 	/**
-	 * Canonical code of a move array (ER §4.1).
+	 * Canonical code of a move array (§4.1).
 	 *
 	 * @param array<string, mixed> $move
 	 * @throws \InvalidArgumentException for a malformed move
@@ -397,7 +415,7 @@ final class Engine {
 	}
 
 	/**
-	 * Lenient parser (ER §4.12): null, `['castle' => 'O-O'|'O-O-O']`, or `['type', 'from', 'to', 'promo'?,
+	 * Lenient parser (§4.12): null, `['castle' => 'O-O'|'O-O-O']`, or `['type', 'from', 'to', 'promo'?,
 	 * 'letter'?]` (split targets and merge sources sorted by index, promo lower case, letter K Q R B N only when
 	 * given).
 	 *
@@ -408,7 +426,7 @@ final class Engine {
 	}
 
 	/**
-	 * Notation of a move played in `$stateBefore` (ER §5.7), e.g. `Bc1xh6 {capture 50%}`, `?Na4 {c4 50%}`,
+	 * Notation of a move played in `$stateBefore` (§5.7), e.g. `Bc1xh6 {capture 50%}`, `?Na4 {c4 50%}`,
 	 * `Qd4|h5xh8 #`, `Ng1-f3|h3`, `O-O`, `e7-e8=Q`. A rolled move needs its measurement record; the win mark is
 	 * derived by replaying the move.
 	 *
@@ -419,51 +437,8 @@ final class Engine {
 	 * @throws \InvalidArgumentException when a rolled move has no matching measurement record
 	 */
 	public function moveNotation(array $stateBefore, array|string $move, ?array $measurement = null): string {
-		$a = $this->core->analyse($stateBefore);
-		$rec = $this->recordOrThrow($a, $move);
-		if ($rec->resolution === 'rolled') {
-			$mk = $measurement['key'] ?? null;
-			if (!is_string($mk) || !in_array($mk, array_column($rec->outcomes, 'key'), true)) {
-				throw new \InvalidArgumentException('a rolled move needs its measurement record');
-			}
-			$key = $mk;
-		} else {
-			$key = $rec->resolution === 'certain' && count($rec->outcomes) === 1 ? $rec->outcomes[0]['key'] : 'move';
-		}
-		$names = Tables::$names;
-		$typeChar = Tables::TYPE_CHARS[$rec->type] ?? 'p';
-		$letter = $typeChar === 'p' ? '' : strtoupper($typeChar);
-		$sep = $key === 'capture' ? 'x' : '-';
-		switch ($rec->kind) {
-			case 'standard':
-				if ($rec->castle !== null) {
-					$head = $rec->t > $rec->f ? 'O-O' : 'O-O-O';
-				} else {
-					$head = $letter . $names[$rec->f] . $sep . $names[$rec->t] . ($rec->promo === null ? '' : '=' . strtoupper($rec->promo));
-				}
-				break;
-			case 'split':
-				$head = $letter . $names[$rec->f] . '-' . $names[$rec->t] . '|' . $names[$rec->t2];
-				break;
-			case 'merge':
-				$head = $letter . $names[$rec->f] . '|' . $names[$rec->f2] . $sep . $names[$rec->t];
-				break;
-			default:
-				$head = '?' . $letter . $names[$rec->f];
-		}
-		$suffix = '';
-		if ($rec->resolution === 'rolled') {
-			foreach ($rec->outcomes as $o) {
-				if ($o['key'] === $key) {
-					$suffix = ' {' . $key . ' ' . Views::pct($o['weight']) . '%}';
-					break;
-				}
-			}
-		}
-		$after = $this->core->applyRecord($a, $rec, $rec->resolution === 'rolled' ? $key : $rec->resolution, true)['state'];
-		$result = $after['result'];
-		$won = is_array($result) && in_array($result['reason'] ?? null, Tables::WIN_REASONS, true);
-		return $head . $suffix . ($won ? ' #' : '');
+		$a = $this->pipeline->analyze($stateBefore);
+		return Notation::of($this->pipeline, $a, $this->recordOrThrow($a, $move), $measurement);
 	}
 
 	// ---------------------------------------------------------------- squares
@@ -487,22 +462,22 @@ final class Engine {
 		return Tables::$index[strlen($name) === 2 ? strtolower($name[0]) . $name[1] : ''] ?? -1;
 	}
 
-	// ---------------------------------------------------------------- views (ER §8)
+	// ---------------------------------------------------------------- views (§8)
 
 	/**
 	 * @param array<string, mixed> $state
 	 */
 	public function worldCount(array $state): int {
-		return $this->core->analyse($state)->n;
+		return $this->pipeline->analyze($state)->n;
 	}
 
 	/**
-	 * B(color), 1..8 (ER §3.3).
+	 * B(color), 1..8 (§3.3).
 	 *
 	 * @param array<string, mixed> $state
 	 */
 	public function budget(array $state, string $color): int {
-		return $this->core->analyse($state)->budget(self::colorIndex($color));
+		return $this->pipeline->analyze($state)->budget(self::colorIndex($color));
 	}
 
 	/**
@@ -512,7 +487,7 @@ final class Engine {
 	 * @return list<array{piece: int, type: string, color: string, weight: int, probability: float}|null>
 	 */
 	public function squareView(array $state): array {
-		return Views::squareView($this->core->analyse($state));
+		return Views::squareView($this->pipeline->analyze($state));
 	}
 
 	/**
@@ -522,11 +497,11 @@ final class Engine {
 	 * @return list<list<array{square: int, weight: int, probability: float}>>
 	 */
 	public function pieceLocations(array $state): array {
-		return Views::pieceLocations($this->core->analyse($state));
+		return Views::pieceLocations($this->pipeline->analyze($state));
 	}
 
 	/**
-	 * What-if view (ER §8) for the piece on `$square`: per square null or `{piece, weight, probability}`. Null
+	 * What-if view (§8) for the piece on `$square`: per square null or `{piece, weight, probability}`. Null
 	 * (instead of a list) when the square is certainly empty, as in the JS engine.
 	 *
 	 * @param array<string, mixed> $state
@@ -537,7 +512,7 @@ final class Engine {
 		if ($square < 0 || $square > 63) {
 			throw new \InvalidArgumentException('square index must be 0..63');
 		}
-		return Views::conditionalView($this->core->analyse($state), $square);
+		return Views::conditionalView($this->pipeline->analyze($state), $square);
 	}
 
 	/**
@@ -547,7 +522,7 @@ final class Engine {
 	 * @return list<array{0: int, 1: int}>
 	 */
 	public function links(array $state): array {
-		return Views::links($this->core->analyse($state));
+		return Views::links($this->pipeline->analyze($state));
 	}
 
 	/**
@@ -561,17 +536,17 @@ final class Engine {
 	}
 
 	/**
-	 * kingDanger (ER §8): the weight 0…T with which the opponent could capture `$color`'s king with its best single
+	 * kingDanger (§8): the weight 0…T with which the opponent could capture `$color`'s king with its best single
 	 * move (T = certain danger).
 	 *
 	 * @param array<string, mixed> $state
 	 */
 	public function kingDanger(array $state, string $color): int {
-		return Core::danger($this->core->analyse($state), self::colorIndex($color));
+		return Danger::kingDanger($this->pipeline->analyze($state), self::colorIndex($color));
 	}
 
 	/**
-	 * moveRisk (ER §8): the probability in [0, 1] that the mover's king can be captured after the move, exactly
+	 * moveRisk (§8): the probability in [0, 1] that the mover's king can be captured after the move, exactly
 	 * `(Σ_o W_o · KD_o) / 2^48`.
 	 *
 	 * @param array<string, mixed> $state
@@ -579,32 +554,32 @@ final class Engine {
 	 * @throws IllegalMoveException
 	 */
 	public function moveRisk(array $state, array|string $move): float {
-		$a = $this->core->analyse($state);
-		return Core::moveRisk($a, $this->recordOrThrow($a, $move));
+		$a = $this->pipeline->analyze($state);
+		return Views::moveRisk($a, $this->recordOrThrow($a, $move));
 	}
 
 	/**
-	 * kingTrapped (ER §6, E1b).
+	 * kingTrapped (§6, E1b).
 	 *
 	 * @param array<string, mixed> $state
 	 */
 	public function kingTrapped(array $state): bool {
-		$a = $this->core->analyse($state);
+		$a = $this->pipeline->analyze($state);
 		if ($a->state['result'] !== null) {
 			return false;
 		}
-		return Core::trappedInfo($a)['trapped'];
+		return Danger::trappedInfo($a)['trapped'];
 	}
 
 	/**
-	 * Display percentage of a weight (ER §8): 0 only for 0, 100 only for T, otherwise 1..99.
+	 * Display percentage of a weight (§8): 0 only for 0, 100 only for T, otherwise 1..99.
 	 */
 	public function pct(int $weight): int {
 		return Views::pct($weight);
 	}
 
 	/**
-	 * The text form of a roll (ER §9.4), e.g. `Moved [0.0000, 0.5000) · Captured [0.5000, 1.0000) · rolled 0.3712
+	 * The text form of a roll (§9.4), e.g. `Moved [0.0000, 0.5000) · Captured [0.5000, 1.0000) · rolled 0.3712
 	 * → Moved`. `$labels` may override `miss`, `move`, `capture`, `rolled` and `forced`.
 	 *
 	 * @param array<string, mixed> $record measurement record
@@ -630,18 +605,18 @@ final class Engine {
 	// ---------------------------------------------------------------- setup, record, fair play, LLM
 
 	/**
-	 * Build a state from `['state' => …]` or `['fen' => …, 'prelude' => [...]]` (ER Appendix A).
+	 * Build a state from `['state' => …]` or `['fen' => …, 'prelude' => [...]]` (Appendix A).
 	 *
 	 * @param array<string, mixed> $spec
-	 * @return array<string, mixed>
+	 * @return EngineState
 	 * @throws SetupException
 	 */
 	public function setupPosition(array $spec): array {
-		return (new Setup($this->core))->setup($spec);
+		return (new Setup($this->pipeline))->setup($spec);
 	}
 
 	/**
-	 * chain_0 (ER §9.4).
+	 * chain_0 (§9.4).
 	 *
 	 * @throws \InvalidArgumentException for negative numbers
 	 */
@@ -653,7 +628,7 @@ final class Engine {
 	}
 
 	/**
-	 * chain_n (ER §9.4). `$ply` is the state ply before the move; `$u`/`$key` are null (written `-`) for moves
+	 * chain_n (§9.4). `$ply` is the state ply before the move; `$u`/`$key` are null (written `-`) for moves
 	 * that were not rolled (`$u` also for forced outcomes).
 	 *
 	 * @throws \InvalidArgumentException for negative numbers
@@ -667,7 +642,7 @@ final class Engine {
 	}
 
 	/**
-	 * Roll-memo identity (ER §9.3): `ply/positionHash/code without =Q|=R|=B|=N`.
+	 * Roll-memo identity (§9.3): `ply/positionHash/code without =Q|=R|=B|=N`.
 	 *
 	 * @param array<string, mixed> $stateBefore
 	 */
@@ -676,12 +651,12 @@ final class Engine {
 	}
 
 	/**
-	 * Fair-play support key (ER App. D): `turn|` + 64 type letters (upper case White) or `.`.
+	 * Fair-play support key (Appendix D): `turn|` + 64 type letters (upper case White) or `.`.
 	 *
 	 * @param array<string, mixed> $state
 	 */
 	public function supportKey(array $state): string {
-		return Views::supportKey($this->core->analyse($state));
+		return Views::supportKey($this->pipeline->analyze($state));
 	}
 
 	/**
@@ -690,7 +665,7 @@ final class Engine {
 	 * @param array<string, mixed> $state
 	 */
 	public function supportKeyMirror(array $state): string {
-		return Views::supportKeyMirror($this->core->analyse($state));
+		return Views::supportKeyMirror($this->pipeline->analyze($state));
 	}
 
 	/**
@@ -699,11 +674,11 @@ final class Engine {
 	 * @param array<string, mixed> $state
 	 */
 	public function certainFen(array $state): string {
-		return Views::certainFen($this->core->analyse($state));
+		return Views::certainFen($this->pipeline->analyze($state));
 	}
 
 	/**
-	 * The POSITION block of an LLM prompt (ER Appendix B) for the model playing `$perspective` ('w' or 'b'):
+	 * The POSITION block of an LLM prompt (Appendix B) for the model playing `$perspective` ('w' or 'b'):
 	 * header, certain FEN, uncertain pieces with percentages, links in words, possibilities, budgets and king
 	 * danger. It does not list legal moves. Plain ASCII English, well under 4 KB.
 	 *
@@ -712,7 +687,7 @@ final class Engine {
 	 */
 	public function describeForLlm(array $state, string $perspective): string {
 		self::colorIndex($perspective);
-		return Describer::describe($this->core->analyse($state), $perspective);
+		return Describer::describe($this->pipeline->analyze($state), $perspective);
 	}
 
 	/**

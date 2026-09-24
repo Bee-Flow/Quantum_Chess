@@ -4,7 +4,7 @@
  */
 
 /**
- * Probability text (GAME-DESIGN §3.4.1, §9.2): every number comes from the engine's `pct()`, so an uncertain event
+ * Probability text: every number comes from the engine's `pct()`, so an uncertain event
  * is never shown as 0 % or 100 %, and is printed with `Intl.NumberFormat` ("50%" in English, "50 %" in Dutch and
  * German). The Fraction format shows exact dyadic fractions (½, ¼, ⅜) when the weight is a multiple of T/64.
  */
@@ -23,7 +23,7 @@ const formatters = new Map()
  *
  * @return {string}
  */
-export function uiLocale() {
+function uiLocale() {
 	try {
 		return getCanonicalLocale() || 'en'
 	} catch {
@@ -58,7 +58,7 @@ function percentFormatter() {
  * @param {boolean} [isWeight] force the weight interpretation
  * @return {number}
  */
-export function toWeight(value, isWeight = false) {
+function toWeight(value, isWeight = false) {
 	if (!Number.isFinite(value) || value <= 0) {
 		return 0
 	}
@@ -92,7 +92,7 @@ function scriptDigits(value, digits) {
  * @param {number} weight weight 0..T
  * @return {string|null}
  */
-export function dyadicFraction(weight) {
+function dyadicFraction(weight) {
 	const unit = T / 64
 	if (!Number.isInteger(weight) || weight % unit !== 0) {
 		return null

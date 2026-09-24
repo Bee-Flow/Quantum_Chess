@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Puzzle P02 (GAME-DESIGN §5.2.2). */
+/** Puzzle P02. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'P02',
@@ -13,7 +13,6 @@ export default {
 	stars: 1,
 	type: 'forced',
 	side: 'w',
-	horizon: 1,
 	setup: { fen: '7k/6pp/8/8/8/3Q4/8/1K6 w - - 0 1', prelude: ['d3-d1|d5'] },
 	accepted: ['d1|d5-d8'],
 	value: null,

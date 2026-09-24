@@ -4,7 +4,9 @@
  */
 
 /**
- * Largest-remainder rescale (ENGINE-RULES §5.3).
+ * Largest-remainder rescale (§5.3).
+ *
+ * PHP twin: `Worlds::rescale()` in lib/Engine/Internal/Worlds.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { T } from './constants.js'

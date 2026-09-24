@@ -13,7 +13,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import OnlineGameHost from '../components/online/OnlineGameHost.vue'
+import OnlineGameHost from '../online/components/OnlineGameHost.vue'
 
 const route = useRoute()
 const gameId = computed(() => Number(route.params.id))

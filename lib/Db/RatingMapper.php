@@ -15,6 +15,8 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
+ * Queries of the `qchess_ratings` table.
+ *
  * @template-extends QBMapper<Rating>
  */
 class RatingMapper extends QBMapper {

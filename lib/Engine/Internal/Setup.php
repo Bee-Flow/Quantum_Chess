@@ -12,16 +12,19 @@ namespace OCA\QuantumChess\Engine\Internal;
 use OCA\QuantumChess\Engine\SetupException;
 
 /**
- * Setup positions (ENGINE-RULES Appendix A): `{state}` or `{fen, prelude?}`. Deterministic, never random.
- * Mirrors src/engine/setup.js.
+ * Setup positions (Appendix A): `{state}` or `{fen, prelude?}`. Deterministic, never random.
+ *
+ * JavaScript twin: src/engine/setup.js. Section numbers (§) and appendices refer to docs/engine-rules.md.
  *
  * @internal
+ *
+ * @psalm-import-type EngineState from \OCA\QuantumChess\Engine\Engine
  */
 final class Setup {
 	private const FEN_PIECES = 'kqrbnp';
 
 	public function __construct(
-		private Core $core,
+		private Pipeline $pipeline,
 	) {
 	}
 
@@ -237,15 +240,17 @@ final class Setup {
 	 * Build a state from a spec (Appendix A).
 	 *
 	 * @param array<string, mixed> $spec
-	 * @return array<string, mixed>
+	 * @return EngineState
 	 */
 	public function setup(array $spec): array {
 		Tables::init();
 		if (array_key_exists('state', $spec)) {
 			$r = StateValidator::validate($spec['state']);
 			if (!$r['ok']) {
+				/** @var array{ok: false, error: string, message: string} $r */
 				throw new SetupException('invalid_state', $r['error'] . ': ' . $r['message']);
 			}
+			/** @var array{ok: true, state: EngineState} $r */
 			return $r['state'];
 		}
 		$fen = self::parseFen($spec['fen'] ?? null);
@@ -294,15 +299,15 @@ final class Setup {
 			}
 			/** @var list<int> $from */
 			$from = $parsed['from'];
-			$X = $this->core->analyse($state)->occ[$from[0]];
+			$X = $this->pipeline->analyze($state)->occ[$from[0]];
 			if ($X < 0) {
 				throw new SetupException('prelude_illegal', 'no_piece');
 			}
 			$state['turn'] = $X < 16 ? 'w' : 'b';
 			$state['ep'] = '-';
 			$state['result'] = null;
-			$a = $this->core->analyse($state);
-			$rec = Moves::resolveMove($a, $code);
+			$a = $this->pipeline->analyze($state);
+			$rec = MoveInput::resolveMove($a, $code);
 			if (is_string($rec)) {
 				throw new SetupException('prelude_illegal', $rec);
 			}
@@ -318,7 +323,7 @@ final class Setup {
 			} elseif ($outcome !== null) {
 				throw new SetupException('prelude_outcome_unused', $code . '@' . $outcome);
 			}
-			$applied = $this->core->applyRecord($a, $rec, $key, false);
+			$applied = $this->pipeline->applyRecord($a, $rec, $key, false);
 			if ($applied['captured'] === 0 || $applied['captured'] === 16) {
 				throw new SetupException('prelude_king_captured', $code);
 			}
@@ -343,8 +348,10 @@ final class Setup {
 		];
 		$v = StateValidator::validate($final);
 		if (!$v['ok']) {
+			/** @var array{ok: false, error: string, message: string} $v */
 			throw new SetupException('invalid_state', $v['error'] . ': ' . $v['message']);
 		}
+		/** @var array{ok: true, state: EngineState} $v */
 		return $v['state'];
 	}
 }

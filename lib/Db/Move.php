@@ -13,7 +13,13 @@ use OCP\AppFramework\Db\Entity;
 use OCP\DB\Types;
 
 /**
- * One move of an online game (docs/SPEC.md §5.2). `ply` is the state ply before the move.
+ * One move of an online game.
+ *
+ * `ply` is the ply of the position before the move. `measurement` is the JSON measurement record of a rolled move,
+ * `chain` the hash-chain value after the move, and `clientId` the client's idempotency key.
+ *
+ * The properties have no defaults on purpose: Entity inserts only the fields whose setter was called with a changed
+ * value, so every column of a new move is written explicitly.
  *
  * @method int getGameId()
  * @method void setGameId(int $v)
@@ -42,7 +48,6 @@ use OCP\DB\Types;
  * @method int getCreatedAt()
  * @method void setCreatedAt(int $v)
  */
-/* Properties have no defaults: Entity only inserts fields whose setter was called with a changed value. */
 class Move extends Entity {
 	protected $gameId;
 	protected $ply;

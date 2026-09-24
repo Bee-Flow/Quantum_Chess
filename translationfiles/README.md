@@ -10,6 +10,7 @@ Quantum Chess uses Nextcloud's translation tooling. The app ships its translatio
 
 ```
 translationfiles/
+├── GLOSSARY.md                  the game terms in every language
 ├── templates/quantumchess.pot   every translatable string (generated, never edited by hand)
 ├── nl/quantumchess.po           Dutch
 ├── de/quantumchess.po           German (du)
@@ -46,7 +47,7 @@ Plural forms follow Nextcloud: Dutch and German `nplurals=2; plural=(n != 1);`, 
 ## Terminology
 
 Every language uses one word per game term. The glossary with all terms, the form of address and typography rules
-is [`l10n/GLOSSARY.md`](../l10n/GLOSSARY.md); `appinfo/info.xml` uses the same terms. Move codes such as `g1-f3|h3`
+is [`GLOSSARY.md`](GLOSSARY.md); `appinfo/info.xml` uses the same terms. Move codes such as `g1-f3|h3`
 are never translated.
 
 ## Transifex

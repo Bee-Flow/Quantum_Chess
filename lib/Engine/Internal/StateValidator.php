@@ -10,17 +10,21 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine\Internal;
 
 /**
- * Strict validation of untrusted states against the invariants I1–I12 (ENGINE-RULES §2.7), in the same order and
- * with the same codes as validateState in src/engine/state.js. Never throws; returns a canonical copy.
+ * Strict validation of untrusted states against the invariants I1–I12 (§2.7), in the same order and with the same
+ * codes as the JavaScript engine. Never throws; returns a canonical copy.
+ *
+ * JavaScript twin: `validateState` in src/engine/state.js. Section numbers (§) refer to docs/engine-rules.md.
  *
  * @internal
+ *
+ * @psalm-import-type EngineState from \OCA\QuantumChess\Engine\Engine
  */
 final class StateValidator {
 	private const STATE_KEYS = ['v', 'types', 'worlds', 'turn', 'castling', 'ep', 'halfmove', 'fullmove', 'ply', 'captured', 'history', 'result'];
 	private const MAX_SAFE_INTEGER = 9007199254740991;
 
 	/**
-	 * @return array{ok: true, state: array<string, mixed>}|array{ok: false, error: string, message: string}
+	 * @return array{ok: true, state: EngineState}|array{ok: false, error: string, message: string}
 	 */
 	public static function validate(mixed $input): array {
 		try {
@@ -58,7 +62,7 @@ final class StateValidator {
 	}
 
 	/**
-	 * @return array{ok: true, state: array<string, mixed>}|array{ok: false, error: string, message: string}
+	 * @return array{ok: true, state: EngineState}|array{ok: false, error: string, message: string}
 	 */
 	private static function run(mixed $input): array {
 		Tables::init();
@@ -136,11 +140,12 @@ final class StateValidator {
 			return self::fail('I11', 'fullmove must be an integer ≥ 1');
 		}
 		// captured: at most 31 ids (30 pieces plus a king in a game won by king_captured, e.g. W16; I4 checks the
-		// kings). The JS engine still caps at 30 and rejects that final state (see .integration-notes/engine-js.md).
+		// kings). Known divergence: the JavaScript validator caps the list at 30 ids and rejects that final state.
 		if (!self::isList($capturedIn) || count($capturedIn) > 31) {
 			return self::fail('I2', 'captured must be an array of at most 31 ids');
 		}
 		$captured = [];
+		/** @var array<int, bool> $isCaptured */
 		$isCaptured = array_fill(0, 32, false);
 		foreach ($capturedIn as $x) {
 			$id = self::intIn($x, 0, 31);

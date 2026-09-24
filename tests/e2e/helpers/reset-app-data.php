@@ -33,7 +33,7 @@ require_once $root . '/lib/base.php';
 $appId = 'quantumchess';
 $summary = [];
 
-// Games, moves, chat and ratings (docs/SPEC.md §5)
+// Games, moves, chat and ratings
 $db = \OCP\Server::get(\OCP\IDBConnection::class);
 foreach (['qchess_moves', 'qchess_chat', 'qchess_games', 'qchess_ratings'] as $table) {
 	if ($db->tableExists($table)) {
@@ -42,7 +42,7 @@ foreach (['qchess_moves', 'qchess_chat', 'qchess_games', 'qchess_ratings'] as $t
 	}
 }
 
-// Every user's settings of the app (docs/SPEC.md §11.2)
+// Every user's settings of the app
 if (interface_exists(\OCP\Config\IUserConfig::class)) {
 	\OCP\Server::get(\OCP\Config\IUserConfig::class)->deleteApp($appId);
 } else {
@@ -50,7 +50,7 @@ if (interface_exists(\OCP\Config\IUserConfig::class)) {
 }
 $summary[] = 'user settings: cleared';
 
-// Admin settings (docs/SPEC.md §11.1), keeping what Nextcloud manages
+// Admin settings, keeping the keys Nextcloud manages
 if ($resetAdminSettings) {
 	$appConfig = \OCP\Server::get(\OCP\IAppConfig::class);
 	$keep = ['enabled', 'installed_version', 'types', 'groups'];

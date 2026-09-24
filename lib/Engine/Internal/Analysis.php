@@ -10,10 +10,12 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine\Internal;
 
 /**
- * Derived data of one state (ENGINE-RULES §3.1, §3.3): occupancy, marginal weights, locations, projections.
- * Mirrors src/engine/analysis.js. Assumes a valid state (untrusted input goes through the validator first).
+ * Derived data of one state (§3.1, §3.3): occupancy, marginal weights, locations, projections. Assumes a valid
+ * state (untrusted input goes through the validator first).
  *
  * The lazily filled fields are caches for this state only; states are immutable by contract.
+ *
+ * JavaScript twin: src/engine/analysis.js. Section numbers (§) refer to docs/engine-rules.md.
  *
  * @internal
  */
@@ -50,7 +52,7 @@ final class Analysis {
 	public ?array $moves = null;
 	/** @var array<string, MoveRecord>|null records by canonical code */
 	public ?array $recs = null;
-	/** @var array{0: int, 1: int} cached kingDanger per colour index, -1 when unknown */
+	/** @var array<int, int> cached kingDanger per colour index (0 and 1), -1 when unknown */
 	public array $danger = [-1, -1];
 	/** @var array{trapped: bool, anyLegal: bool}|null cached E1b information */
 	public ?array $trapped = null;

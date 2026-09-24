@@ -4,11 +4,14 @@
  */
 
 /**
- * Pure helpers of the lesson and puzzle screens (GAME-DESIGN §5.1.1, §5.2.1): setups, lesson rolls (forced outcome
- * order), mode filters, replies, grading and the punishing roll of a refutation.
+ * Pure helpers of the lesson and puzzle screens: setups, lesson rolls (forced outcome order), mode filters, replies,
+ * grading and the punishing roll of a refutation.
  */
 
-import { applyMove, findMove, getOutcomes, normaliseCode, setupPosition, squareIndex, T } from '../engine/index.js'
+import { applyMove, findMove, getOutcomes, normaliseCode, otherColor, setupPosition, squareIndex, T } from '../engine/index.js'
+
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+/** @typedef {import('../engine/types.js').LegalMove} LegalMove */
 
 const MODE_TYPES = { move: 'standard', split: 'split', merge: 'merge', measure: 'measure' }
 
@@ -16,7 +19,7 @@ const MODE_TYPES = { move: 'standard', split: 'split', merge: 'merge', measure: 
  * The position a step starts from: its own setup, or the current position when it continues.
  *
  * @param {object} step lesson step
- * @param {object|null} current current state
+ * @param {EngineState|null} current current state
  * @return {object|null}
  */
 export function stepState(step, current) {
@@ -41,7 +44,7 @@ export function movesForModes(moves, modes) {
 /**
  * The forced outcome of a lesson roll: the first key of `order` the move can have, else its likeliest outcome.
  *
- * @param {object} move LegalMove
+ * @param {LegalMove} move the move
  * @param {string[]} [order] preferred outcome keys
  * @return {string|null} null for a move that does not roll
  */
@@ -60,7 +63,7 @@ export function lessonOutcome(move, order = []) {
 /**
  * Apply a move with an optional forced outcome.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {string} code move code
  * @param {string|null} outcome outcome key for a rolled move, null for a real roll (or a move that does not roll)
  * @return {{state: object, move: object, measurement: object|null}}
@@ -72,7 +75,7 @@ export function playMove(state, code, outcome = null) {
 /**
  * The other outcome keys of a rolled move.
  *
- * @param {object} move LegalMove
+ * @param {LegalMove} move the move
  * @param {string} key the outcome that happened
  * @return {string[]}
  */
@@ -84,7 +87,7 @@ export function otherOutcomes(move, key) {
  * A scripted reply code when it is legal in the position.
  *
  * @param {object|undefined} reply `{scripted: code}` or `{engine: level}`
- * @param {object} state position
+ * @param {EngineState} state position
  * @return {string|null}
  */
 export function scriptedReply(reply, state) {
@@ -97,7 +100,7 @@ export function scriptedReply(reply, state) {
 /**
  * Whether the side won in this state.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {'w'|'b'} side colour
  * @return {boolean}
  */
@@ -108,7 +111,7 @@ export function wonBy(state, side) {
 /**
  * The probability (0..1) that a move wins at once for the side to move (king capture or "cannot escape").
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {string} code move code
  * @return {number}
  */
@@ -126,7 +129,7 @@ export function winChance(state, code) {
  * Whether a puzzle accepts the move.
  *
  * @param {object} puzzle puzzle data
- * @param {object} move LegalMove
+ * @param {LegalMove} move the move
  * @return {boolean}
  */
 export function isAccepted(puzzle, move) {
@@ -137,7 +140,7 @@ export function isAccepted(puzzle, move) {
  * The trap entry of a wrong move, if the puzzle explains it.
  *
  * @param {object} puzzle puzzle data
- * @param {object} move LegalMove
+ * @param {LegalMove} move the move
  * @return {object|null}
  */
 export function trapFor(puzzle, move) {
@@ -148,7 +151,7 @@ export function trapFor(puzzle, move) {
  * The outcome that punishes a move for `victim`: one where `victim` does not win, or where the other side wins, or
  * where the most material is captured; null for a move that does not roll.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {string} code move code
  * @param {'w'|'b'} victim the puzzle solver's colour
  * @return {string|null}
@@ -159,7 +162,7 @@ export function punishingOutcome(state, code, victim) {
 		return null
 	}
 	const outs = getOutcomes(state, code)
-	const other = victim === 'w' ? 'b' : 'w'
+	const other = otherColor(victim)
 	const score = (o) => (wonBy(o.state, other) ? 3 : 0) + (wonBy(o.state, victim) ? -3 : 0) + (state.turn === victim ? (o.captured === null ? 1 : 0) : (o.captured !== null ? 1 : 0))
 	return outs.reduce((a, b) => (score(b) > score(a) ? b : a)).key
 }
@@ -173,16 +176,4 @@ export function punishingOutcome(state, code, victim) {
  */
 export function arrowsOf(pairs = [], kind = 'best') {
 	return pairs.map(([from, to]) => ({ from: squareIndex(from), to: squareIndex(to), kind }))
-}
-
-/**
- * The from and to squares of a move code, for hints.
- *
- * @param {object} state position
- * @param {string} code move code
- * @return {{from: number[], to: number[]}|null}
- */
-export function squaresOf(state, code) {
-	const m = findMove(state, code)
-	return m ? { from: m.from, to: m.to } : null
 }

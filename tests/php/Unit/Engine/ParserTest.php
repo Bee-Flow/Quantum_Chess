@@ -14,7 +14,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The lenient parser (ER §4.12): parser.json, the table of §4.12, canonical codes (§4.1).
+ * The lenient parser (§4.12): parser.json, the table of §4.12, canonical codes (§4.1).
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 final class ParserTest extends TestCase {
 	private Engine $engine;
@@ -94,7 +96,7 @@ final class ParserTest extends TestCase {
 	}
 
 	public function testEveryWorkedExampleNotationParsesBack(): void {
-		// ER §5.7 examples and the notation strings of §10.
+		// The notation examples of §5.7 and the notation strings of the worked examples (§10).
 		foreach (['Bc1xh6 {capture 50%}', 'd3-e4 {miss 75%}', '?Na4 {c4 50%}', 'Qd4|h5xh8 #', 'Ng1-f3|h3', 'Nf3xe5 {capture 25%} #', 'Ra1-a8 #'] as $text) {
 			$this->assertNotNull($this->engine->parseMoveCode($text), $text);
 		}

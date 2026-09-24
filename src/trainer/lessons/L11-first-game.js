@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 11 (GAME-DESIGN §5.1.2): the graduation game against Wobbles with the Beginner coach. */
+/** Lesson 11: the graduation game against Wobbles with the Beginner coach. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L11',
-	slug: 'first-game',
 	order: 11,
 	group: 'graduation',
 	minutes: 10,

@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 7 (GAME-DESIGN §5.1.2): pawns and kings are solid; promotion is certain when the capture is. */
+/** Lesson 7: pawns and kings are solid; promotion is certain when the capture is. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L07',
-	slug: 'solid',
 	order: 7,
 	group: 'deeper',
 	minutes: 3,

@@ -4,10 +4,12 @@
  */
 
 /**
- * Per-state derived data (ENGINE-RULES §3.1, §3.3), cached in a WeakMap keyed by the state object.
+ * Per-state derived data (§3.1, §3.3), cached in a WeakMap keyed by the state object.
  *
  * States are immutable by contract, so the cache never goes stale. Everything here assumes a valid state
  * (validateState); untrusted input must be validated first.
+ *
+ * PHP twin: lib/Engine/Internal/Analysis.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { InvalidStateError } from './errors.js'
@@ -18,7 +20,7 @@ const CACHE = new WeakMap()
 
 /**
  * @typedef {object} Analysis
- * @property {object} state the analysed state
+ * @property {import('./types.js').EngineState} state the analysed state
  * @property {number} n number of worlds
  * @property {string[]} boards boards in canonical order
  * @property {number[]} weights weights in canonical order
@@ -29,15 +31,22 @@ const CACHE = new WeakMap()
  * @property {Int8Array} typeCodes type code per id
  * @property {number} ci colour index of the side to move (0 White, 1 Black)
  * @property {number} ep en-passant square index or -1
+ * @property {Array<Int8Array|undefined>} pos cache of `positions()` per id
+ * @property {Array<{count: number, cls: Int32Array}|null>} proj cache of `projection()` per colour index
+ * @property {Array<{count: number, cls: Int32Array}|undefined>} rest cache of `restClasses()` per id
+ * @property {import('./moveRecord.js').MoveRecord[]|null} moves every legal record in canonical order, once generated
+ * @property {Map<string, import('./moveRecord.js').MoveRecord>|null} recs legal records by canonical code, as resolved
+ * @property {number[]} danger cached kingDanger per colour index, -1 when unknown
+ * @property {{trapped: boolean, anyLegal: boolean}|null} trapped cached E1b information
  */
 
 /**
  * Get (or build) the analysis of a state.
  *
- * @param {object} state valid engine state
+ * @param {import('./types.js').EngineState} state valid engine state
  * @return {Analysis}
  */
-export function analyse(state) {
+export function analyze(state) {
 	let a = CACHE.get(state)
 	if (a === undefined) {
 		if (state === null || typeof state !== 'object' || !Array.isArray(state.worlds) || state.worlds.length === 0
@@ -53,7 +62,7 @@ export function analyse(state) {
 /**
  * Build the analysis.
  *
- * @param {object} state valid engine state
+ * @param {import('./types.js').EngineState} state valid engine state
  * @return {Analysis}
  */
 function build(state) {
@@ -237,18 +246,18 @@ export function restClasses(a, id) {
 /**
  * B(c) for colour 'w' or 'b' (§3.3).
  *
- * @param {object} state valid engine state
+ * @param {import('./types.js').EngineState} state valid engine state
  * @param {'w'|'b'} color colour
  * @return {number}
  */
 export function budget(state, color) {
-	return projection(analyse(state), color === 'w' ? 0 : 1).count
+	return projection(analyze(state), color === 'w' ? 0 : 1).count
 }
 
 /**
  * Number of worlds (§8).
  *
- * @param {object} state valid engine state
+ * @param {import('./types.js').EngineState} state valid engine state
  * @return {number}
  */
 export function worldCount(state) {

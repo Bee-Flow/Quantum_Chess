@@ -5,7 +5,7 @@
  */
 
 /**
- * Coach answers are untrusted model output: they render Markdown, but no link or image (SPEC §12.3, GD G18).
+ * Coach answers are untrusted model output: they render Markdown, but no link or image.
  */
 
 import { mount } from '@vue/test-utils'

@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 6 (GAME-DESIGN §5.1.2): use the preview; a ghost attacking a ghost has three results. */
+/** Lesson 6: use the preview; a ghost attacking a ghost has three results. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L06',
-	slug: 'odds',
 	order: 6,
 	group: 'deeper',
 	minutes: 3,

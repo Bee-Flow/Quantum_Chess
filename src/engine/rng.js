@@ -4,7 +4,10 @@
  */
 
 /**
- * Random inputs (ENGINE-RULES §5.2, §9.1). The engine never calls Math.random.
+ * Random inputs (§5.2, §9.1). The engine never calls Math.random.
+ *
+ * PHP twin: `Engine::keyForU()` in lib/Engine/Engine.php; the server draws its rolls with `random_int`. The seeded
+ * generator is JavaScript only. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { T } from './constants.js'
@@ -71,7 +74,7 @@ export function keyForU(outcomes, u) {
  * A small seeded PRNG (mulberry32) for tests, fixtures and demos. Never used for real games.
  *
  * @param {number} seed 32-bit seed
- * @return {function(): number} rng returning doubles in [0, 1)
+ * @return {() => number} rng returning doubles in [0, 1)
  */
 export function seededRng(seed) {
 	let s = seed >>> 0

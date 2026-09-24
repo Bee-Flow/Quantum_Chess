@@ -4,8 +4,8 @@
  */
 
 /**
- * Board display data (GAME-DESIGN §3.3–§3.6): ghosts, the what-if view, king rings, square labels, the reveal arrow,
- * the outcome ring and the move animation plan; plus the 1.0 board themes.
+ * Board display data: ghosts, the what-if view, king rings, square labels, the reveal arrow, the outcome ring and the
+ * move animation plan; plus the board themes.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -17,8 +17,8 @@ import {
 	ringSegments,
 	squareLabel,
 	travelPlan,
-} from '../../../src/components/board/boardModel.js'
-import { BOARD_THEMES, resolveBoardTheme } from '../../../src/components/board/themes.js'
+} from '../../../src/board/boardModel.js'
+import { BOARD_THEMES, resolveBoardTheme } from '../../../src/board/boardThemes.js'
 import { E, S, sq, T } from './helpers.js'
 
 const GHOSTS = S('4k3/8/6n1/8/8/8/8/1NBQK2R w - - 0 1', ['b1-a3|c3', 'c1-d2|e3', 'd1-b3|a4', 'g6-f4|h4'])
@@ -29,10 +29,10 @@ describe('pieceItems', () => {
 		const items = pieceItems(GHOSTS, { identity: { [id]: 2 } })
 		const knight = items.filter((p) => p.piece === id)
 		expect(knight.map((p) => p.square).sort()).toEqual([sq('a3'), sq('c3')].sort())
-		expect(knight.every((p) => p.ghost && p.probability === 0.5 && p.idColour === 2)).toBe(true)
+		expect(knight.every((p) => p.ghost && p.probability === 0.5 && p.idColor === 2)).toBe(true)
 		const king = items.find((p) => p.square === sq('e1'))
 		expect(king.ghost).toBe(false)
-		expect(king.idColour).toBe(null)
+		expect(king.idColor).toBe(null)
 		expect(items.length).toBeLessThanOrEqual(64)
 	})
 
@@ -110,7 +110,7 @@ describe('travelPlan', () => {
 })
 
 describe('themes', () => {
-	it('ships three themes and maps SPEC names and aliases onto them', () => {
+	it('ships three themes and maps older names and aliases onto them', () => {
 		expect(BOARD_THEMES).toEqual(['wood', 'slate', 'quantum'])
 		expect(resolveBoardTheme('classic')).toBe('wood')
 		expect(resolveBoardTheme('blue')).toBe('slate')

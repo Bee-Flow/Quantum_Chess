@@ -15,6 +15,8 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
+ * Queries of the `qchess_moves` table.
+ *
  * @template-extends QBMapper<Move>
  */
 class MoveMapper extends QBMapper {
@@ -46,26 +48,7 @@ class MoveMapper extends QBMapper {
 		}
 	}
 
-	public function findLast(int $gameId): ?Move {
-		$qb = $this->db->getQueryBuilder();
-		$qb->select('*')->from(self::TABLE)
-			->where($qb->expr()->eq('game_id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))
-			->orderBy('ply', 'DESC')->setMaxResults(1);
-		$list = $this->findEntities($qb);
-		return $list[0] ?? null;
-	}
-
-	public function countByColor(int $gameId, string $color): int {
-		$qb = $this->db->getQueryBuilder();
-		$qb->select($qb->func()->count('*', 'n'))->from(self::TABLE)
-			->where($qb->expr()->eq('game_id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))
-			->andWhere($qb->expr()->eq('color', $qb->createNamedParameter($color)));
-		$result = $qb->executeQuery();
-		$n = (int)$result->fetchOne();
-		$result->closeCursor();
-		return $n;
-	}
-
+	/** Removes `$uid` from the moves of a game when the account is deleted; the moves themselves stay. */
 	public function clearUser(int $gameId, string $uid): void {
 		$qb = $this->db->getQueryBuilder();
 		$qb->update(self::TABLE)->set('uid', $qb->createNamedParameter(null))

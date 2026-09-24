@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** The curriculum in order (GAME-DESIGN §5.1.2). */
+/** The curriculum in order. */
 
 import L01 from './L01-capture-king.js'
 import L02 from './L02-split.js'

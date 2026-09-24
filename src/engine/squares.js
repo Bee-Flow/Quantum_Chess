@@ -4,7 +4,9 @@
  */
 
 /**
- * Squares, piece ids and letters (ENGINE-RULES §2.1, §2.2).
+ * Squares, piece ids and letters (§2.1, §2.2).
+ *
+ * PHP twin: lib/Engine/Internal/Tables.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 const FILES = 'abcdefgh'

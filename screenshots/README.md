@@ -25,9 +25,9 @@ seeds a demo on a running Nextcloud and captures every screen with Playwright, s
 QC_BASE_URL=http://127.0.0.1:8080 QC_NC_ROOT=/path/to/nextcloud npm run screenshots
 ```
 
-`npm run screenshots` runs `tests/e2e/screenshots.mjs` (set `QC_CHROMIUM` to use an installed Chromium). It plays
-the local games through the board with forced rolls, seeds the online lobby through the API
-(`tests/e2e/seed-demo.mjs`: it ends the pending invitations and running games of the demo users from
+`npm run screenshots` runs `tools/screenshots/screenshots.mjs` (set `QC_CHROMIUM` to use an installed Chromium). It
+plays the local games through the board with forced rolls, seeds the online lobby through the API
+(`tools/screenshots/seed-demo.mjs`: it ends the pending invitations and running games of the demo users from
 `tests/e2e/README.md` and creates a fresh set), lets a local fake OpenAI-compatible server answer as the AI opponent,
 and writes the eight files above into this directory, replacing the old ones. Review the images before committing
 them.

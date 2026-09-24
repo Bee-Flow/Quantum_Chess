@@ -131,9 +131,9 @@
 	<author homepage="https://beeflow.nl">BeeFlow</author>
 	<namespace>QuantumChess</namespace>
 	<documentation>
-		<user>https://github.com/bee-flow/quantum_chess/blob/main/docs/RULES.md</user>
+		<user>https://github.com/bee-flow/quantum_chess/blob/main/docs/rules.md</user>
 		<admin>https://github.com/bee-flow/quantum_chess/blob/main/README.md</admin>
-		<developer>https://github.com/bee-flow/quantum_chess/blob/main/docs/SPEC.md</developer>
+		<developer>https://github.com/bee-flow/quantum_chess/blob/main/docs/development/architecture.md</developer>
 	</documentation>
 	<category>games</category>
 	<website>https://github.com/bee-flow/quantum_chess</website>

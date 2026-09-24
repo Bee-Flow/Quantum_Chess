@@ -104,7 +104,7 @@ export async function resetAppData({ adminSettings = false } = {}) {
  * Set a user setting of the app, e.g. setUserSetting('bob', 'invite_policy', 'nobody').
  *
  * @param {string} who test user key or uid
- * @param {string} key setting key (docs/SPEC.md §11.2)
+ * @param {string} key user setting key of the app, e.g. 'notify_your_turn'
  * @param {string} value value
  * @return {Promise<void>}
  */
@@ -115,7 +115,7 @@ export async function setUserSetting(who, key, value) {
 /**
  * Set an admin setting of the app (app config), e.g. setAppConfig('chat_enabled', 'false', 'boolean').
  *
- * @param {string} key setting key (docs/SPEC.md §11.1)
+ * @param {string} key admin setting key, e.g. 'chat_enabled'
  * @param {string} value value
  * @param {'string'|'integer'|'float'|'boolean'|'array'} [type] value type
  * @return {Promise<void>}

@@ -4,16 +4,19 @@
  */
 
 /**
- * Success predicates of lesson tasks (SPEC §14.8.1, GAME-DESIGN §5.1.1): pure functions of `(before, move, after)`.
- * Steps name them declaratively (`{kingRisk: 0}`, `{moveIs: ['d1-d5']}`, `{all: [...]}`), so a test can check them.
+ * Success predicates of lesson tasks: pure functions of `(before, move, after)`. Steps name them declaratively
+ * (`{kingRisk: 0}`, `{moveIs: ['d1-d5']}`, `{all: [...]}`), so a test can check them.
  */
 
 import { generateMoves, getOutcomes, moveRisk, normaliseCode, pieceLocations, squareIndex, T } from '../engine/index.js'
 
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+/** @typedef {import('../engine/types.js').LegalMove} LegalMove */
+
 /**
  * The opponent's best chance (0..1) to capture piece `id` with one move in `state`, where it is the opponent's turn.
  *
- * @param {object} state engine state (opponent to move)
+ * @param {EngineState} state engine state (opponent to move)
  * @param {number} id piece id
  * @return {number}
  */
@@ -42,7 +45,7 @@ export function captureChance(state, id) {
  * Whether a code list contains the move (codes normalised).
  *
  * @param {string[]} codes codes
- * @param {object} move LegalMove
+ * @param {LegalMove} move the move
  * @return {boolean}
  */
 function codeIn(codes, move) {
@@ -65,9 +68,9 @@ const PREDICATES = {
  * Evaluate a predicate descriptor.
  *
  * @param {object} descriptor e.g. `{moveIs: ['d1-d8']}`; every key must hold
- * @param {object} before state before the move
- * @param {object} move LegalMove
- * @param {object} after state after the move
+ * @param {EngineState} before state before the move
+ * @param {LegalMove} move the move
+ * @param {EngineState} after state after the move
  * @return {boolean}
  */
 export function check(descriptor, before, move, after) {

@@ -11,9 +11,10 @@ namespace OCA\QuantumChess\Dashboard;
 
 use OCA\QuantumChess\AppInfo\Application;
 use OCA\QuantumChess\Db\Game;
-use OCA\QuantumChess\Notification\Notifier;
-use OCA\QuantumChess\Service\GameService;
-use OCA\QuantumChess\Service\SettingsService;
+use OCA\QuantumChess\Service\Game\GameClock;
+use OCA\QuantumChess\Service\Game\GameQueryService;
+use OCA\QuantumChess\Service\Game\TimeControl;
+use OCA\QuantumChess\Service\Settings\AppSettings;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Dashboard\IAPIWidgetV2;
 use OCP\Dashboard\IButtonWidget;
@@ -31,17 +32,19 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 
 /**
- * Dashboard widget: invitations first, then the games waiting for your move (docs/SPEC.md §9.2).
+ * The "Quantum Chess" dashboard widget: invitations first, then the games waiting for the user's move, nearest
+ * deadline first. It is shown to users who may play online.
  */
 class GamesWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget, IOptionWidget, IReloadableWidget, IConditionalWidget {
+
 	public function __construct(
-		private IL10N $l,
-		private IURLGenerator $url,
-		private IUserManager $userManager,
-		private IUserSession $userSession,
-		private GameService $games,
-		private SettingsService $settings,
-		private ITimeFactory $time,
+		private readonly IL10N $l,
+		private readonly IURLGenerator $url,
+		private readonly IUserManager $userManager,
+		private readonly IUserSession $userSession,
+		private readonly GameQueryService $games,
+		private readonly AppSettings $settings,
+		private readonly ITimeFactory $time,
 	) {
 	}
 
@@ -93,6 +96,7 @@ class GamesWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget, IOptionWi
 		];
 	}
 
+	/** The URL of the app page, opened at a route of the web app. */
 	private function appUrl(string $route): string {
 		return $this->url->linkToRouteAbsolute('quantumchess.page.index') . ($route === '' ? '' : '#' . $route);
 	}
@@ -114,7 +118,7 @@ class GamesWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget, IOptionWi
 			$title = $game->getRematchOf() !== null
 				? $this->l->t('%s wants a rematch', [$name])
 				: $this->l->t('%s invited you', [$name]);
-			$subtitle = Notifier::timeControlLabel($this->l, $game->getTimeControl()) . ' · '
+			$subtitle = TimeControl::fromStored($game->getTimeControl())->label($this->l) . ' · '
 				. ($game->getRatedRequested() === 1 ? $this->l->t('Rated') : $this->l->t('Unrated'));
 			return new WidgetItem($title, $subtitle, $link, $avatar, (string)$game->getId());
 		}
@@ -122,9 +126,10 @@ class GamesWidget implements IAPIWidgetV2, IIconWidget, IButtonWidget, IOptionWi
 		$deadline = $game->getDeadlineAt();
 		if ($deadline !== null) {
 			$left = max(0, $deadline - $this->time->getTime());
-			$subtitle .= ' · ' . ($left >= 172800
-				? $this->l->n('%n day left', '%n days left', intdiv($left, 86400))
-				: $this->l->n('%n hour left', '%n hours left', max(1, intdiv($left, 3600))));
+			// Up to two days before the deadline the time left is shown in hours.
+			$subtitle .= ' · ' . ($left >= 2 * GameClock::DAY
+				? $this->l->n('%n day left', '%n days left', intdiv($left, GameClock::DAY))
+				: $this->l->n('%n hour left', '%n hours left', max(1, intdiv($left, GameClock::HOUR))));
 		}
 		$overlay = $this->url->getAbsoluteURL($this->url->imagePath(Application::APP_ID, 'overlay-king-' . ($game->colorOf($uid) === 'b' ? 'b' : 'w') . '.svg'));
 		return new WidgetItem($this->l->t('Your move against %s', [$name]), $subtitle, $link, $avatar, (string)$game->getId(), $overlay);

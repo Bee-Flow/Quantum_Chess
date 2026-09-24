@@ -13,8 +13,8 @@ use OCA\QuantumChess\Engine\Engine;
 use PHPUnit\Framework\TestCase;
 
 /**
- * SPEC §3.4 / GD §9.3: validating and applying one move ≤ 10 ms p95 on a 64-world state. Measured the way a move
- * request runs (SPEC §8.4): a fresh engine, validateState of the stored JSON, findMove, applyMove with a drawn u,
+ * Validating and applying one move takes at most 10 ms (p95) on a 64-world state. Measured the way a move request
+ * runs on the server: a fresh engine, validateState of the stored JSON, findMove, applyMove with a drawn u,
  * moveNotation, serializeState. The CI margin is generous (×3); the typical figure is printed for the report.
  */
 final class PerformanceTest extends TestCase {
@@ -65,7 +65,7 @@ final class PerformanceTest extends TestCase {
 			}
 		}
 		$p95 = self::percentile($times, 0.95);
-		fwrite(STDERR, sprintf("\n[engine-php] move request on a 64-world state: median %.2f ms, p95 %.2f ms (n = %d)\n", self::percentile($times, 0.5), $p95, count($times)));
+		fwrite(STDERR, sprintf("\n[php engine] move request on a 64-world state: median %.2f ms, p95 %.2f ms (n = %d)\n", self::percentile($times, 0.5), $p95, count($times)));
 		$this->assertLessThan(self::BUDGET_MS * self::CI_MARGIN, $p95);
 	}
 
@@ -91,7 +91,7 @@ final class PerformanceTest extends TestCase {
 			$views[] = (hrtime(true) - $t) / 1e6;
 			$this->assertNotEmpty($moves);
 		}
-		fwrite(STDERR, sprintf("[engine-php] generateMoves on a 64-world state: median %.2f ms; views + describeForLlm: median %.2f ms\n", self::percentile($gen, 0.5), self::percentile($views, 0.5)));
+		fwrite(STDERR, sprintf("[php engine] generateMoves on a 64-world state: median %.2f ms; views + describeForLlm: median %.2f ms\n", self::percentile($gen, 0.5), self::percentile($views, 0.5)));
 		$this->assertLessThan(50.0, self::percentile($gen, 0.95));
 		$this->assertLessThan(50.0, self::percentile($views, 0.95));
 	}

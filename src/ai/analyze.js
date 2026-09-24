@@ -4,7 +4,7 @@
  */
 
 /**
- * Analysis for the coach and the post-game review (GAME-DESIGN §5.3, §5.4; SPEC §4.3):
+ * Analysis for the coach and the post-game review:
  *
  * - `analyze(state)`: White's expected score E, the best moves (multiPV) with principal variations, the values of
  *   extra moves (`include`), the **fog band** (min–max of E across the outcomes of the first roll on the principal
@@ -14,6 +14,8 @@
  *   the roll, so bad luck never makes a move a mistake.
  *
  * Every E in the results is **White's** expected score in [0, 1]; a won or lost game is exactly 1 or 0.
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import {
@@ -27,48 +29,25 @@ import {
 	whyIllegal,
 } from '../engine/index.js'
 import { ENGINE_VERSION } from './levels.js'
-import { cleanValue, Searcher } from './search.js'
+import { Searcher } from './search.js'
+import { cleanValue } from './searchValues.js'
 import { solve } from './solver.js'
+import { NO_SLICE, runSearcher, runSync } from './tasks.js'
+
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+
+/** @typedef {import('./tasks.js').SliceContext} SliceContext */
 
 /** "♚ in N" is looked for up to this many moves of the winner. */
-export const MATE_MAX_MOVES = 2
+const MATE_MAX_MOVES = 2
 
 /** Root margin for the review: moves within this of the best get exact values (brilliancy and only-move rules). */
 const REVIEW_MARGIN = 0.16
 
 /**
- * Run a searcher to the end, yielding between slices.
- *
- * @param {Searcher} searcher searcher
- * @param {{slice: function(): number}} ctx slicing context
- * @yields {void}
- * @return {object} the search result
- */
-export function* runSearcher(searcher, ctx) {
-	while (!searcher.step(ctx.slice())) {
-		yield
-	}
-	return searcher.result()
-}
-
-/**
- * Run a task generator synchronously.
- *
- * @param {Generator} task task
- * @return {unknown}
- */
-export function runSync(task) {
-	let r = task.next()
-	while (!r.done) {
-		r = task.next()
-	}
-	return r.value
-}
-
-/**
  * Canonical LegalMove for a code, or throw IllegalMoveError.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {string|object} code move input
  * @return {object}
  */
@@ -83,7 +62,7 @@ function legalOrThrow(state, code) {
 /**
  * White's expected score of a finished game.
  *
- * @param {object} state state with a result
+ * @param {EngineState} state state with a result
  * @return {number}
  */
 function resultE(state) {
@@ -92,8 +71,9 @@ function resultE(state) {
 }
 
 /**
- * The fog band (GD §5.3.1): min–max of White's E across the outcomes of the first roll on the principal line within
- * `fogPlies` plies, widened to contain E itself; `null` when the line has no roll.
+ * The fog band: min–max of White's E across the outcomes of the first roll on the principal line within `fogPlies`
+ * plies, widened to contain E itself; `null` when the line has no roll. It shows how much the position depends on
+ * luck.
  *
  * @param {Searcher} searcher finished searcher
  * @param {number} E White's E of the position
@@ -138,7 +118,7 @@ function fogBand(searcher, E, fogPlies) {
 /**
  * "♚ in N": when the search says the game is decided, ask the exact solver for a certain win within N moves.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {number} E White's E
  * @return {{winner: 'w'|'b', moves: number}|null}
  */
@@ -164,13 +144,13 @@ function mateOf(state, E) {
  * nodeBudget?, onProgress?, now?}`. `onProgress({depth, E, code, nodes})` after each iteration ("deepening while the
  * player thinks").
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object} [options] options
- * @param {{slice: function(): number}} [ctx] slicing context
+ * @param {SliceContext} [ctx] slicing context
  * @yields {void}
  * @return {object} Analysis
  */
-export function* analyzeTask(state, options = {}, ctx = { slice: () => Infinity }) {
+export function* analyzeTask(state, options = {}, ctx = NO_SLICE) {
 	const started = (options.now || (() => performance.now()))()
 	if (state.result !== null) {
 		return { E: resultE(state), fog: null, mate: null, best: [], included: [], depth: 0, nodes: 0, timeMs: 0 }
@@ -220,7 +200,7 @@ export function* analyzeTask(state, options = {}, ctx = { slice: () => Infinity 
 /**
  * Analyse a position synchronously. See `analyzeTask`.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object} [options] options
  * @return {object} Analysis
  */
@@ -233,14 +213,14 @@ export function analyze(state, options = {}) {
  * playing it; one outcome entry (`certain` or `quantum`) for a move that is not rolled. Options: `{timeMs = 400,
  * level = 5, nodeBudget?, now?}`. Throws IllegalMoveError for an illegal move.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {string|object} code move
  * @param {object} [options] options
- * @param {{slice: function(): number}} [ctx] slicing context
+ * @param {SliceContext} [ctx] slicing context
  * @yields {void}
  * @return {object} MoveEval
  */
-export function* evaluateMoveTask(state, code, options = {}, ctx = { slice: () => Infinity }) {
+export function* evaluateMoveTask(state, code, options = {}, ctx = NO_SLICE) {
 	const m = legalOrThrow(state, code)
 	const searcher = new Searcher(state, {
 		level: options.level ?? 5,
@@ -264,7 +244,7 @@ export function* evaluateMoveTask(state, code, options = {}, ctx = { slice: () =
 /**
  * Evaluate one move synchronously. See `evaluateMoveTask`.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {string|object} code move
  * @param {object} [options] options
  * @return {object} MoveEval
@@ -278,18 +258,18 @@ export function evaluateMove(state, code, options = {}) {
  * outcome?}]}` is replayed with the recorded rolls. Options: `{msPerPly = 400, level = 4, nodeBudget?, onProgress?,
  * now?}`; `onProgress(plyAnalysis)` receives each ply as it is ready.
  *
- * PlyAnalysis (SPEC §4.3): `{ply, color, code, forced, EBefore, bestCode, bestE, secondBestE, bestClassicalE,
- * playedE, outcomes, realisedE, allowsKingShot}` — `realisedE` is the value of the outcome that happened (the played
- * value for a move that is not rolled); `allowsKingShot` is true when the move leaves the king capturable with at
- * least 25 % more than the safest legal move would (ENGINE-RULES §8 "free king shot").
+ * PlyAnalysis: `{ply, color, code, forced, EBefore, bestCode, bestE, secondBestE, bestClassicalE, playedE, outcomes,
+ * realisedE, allowsKingShot}` — `realisedE` is the value of the outcome that happened (the played value for a move that
+ * is not rolled); `allowsKingShot` is true when the move leaves the king capturable with at least 25 % more than the
+ * safest legal move would (a "free king shot", measured with `moveRisk`, §8).
  *
  * @param {{startState: object|null, moves: Array<{code: string, u?: number|null, outcome?: string|null}>}} record game
  * @param {object} [options] options
- * @param {{slice: function(): number}} [ctx] slicing context
+ * @param {SliceContext} [ctx] slicing context
  * @yields {object} each PlyAnalysis
  * @return {{engineVersion: string, plies: object[]}}
  */
-export function* analyzeGameTask(record, options = {}, ctx = { slice: () => Infinity }) {
+export function* analyzeGameTask(record, options = {}, ctx = NO_SLICE) {
 	let state = record.startState ?? initialState()
 	const msPerPly = options.msPerPly ?? 400
 	const level = options.level ?? 4

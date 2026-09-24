@@ -4,19 +4,26 @@
  */
 
 /**
- * Derived views (ENGINE-RULES §8). They are defined identically in both engines; the UI, the coach, the AI and
+ * Derived views (§8). They are defined identically in both engines; the UI, the coach, the computer player and
  * describeForLlm use them.
+ *
+ * PHP twin: lib/Engine/Internal/Views.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
-import { analyse, positions, superposedIds } from './analysis.js'
+import { analyze, positions, superposedIds } from './analysis.js'
 import { LINK_THRESHOLD, T } from './constants.js'
 import { dangerA, dangerOf } from './danger.js'
 import { IllegalMoveError } from './errors.js'
 import { DIR_OF, TYPE_CHAR, TYPE_K } from './geometry.js'
-import { resolveMove } from './moves.js'
+import { resolveMove } from './moveInput.js'
 import { canonicalWorlds, outcomeCaptures, recordKeys, recordOutcomeBoards } from './outcomes.js'
 import { rescaleWeights } from './rescale.js'
 import { colorOf, letterCodeOf } from './squares.js'
+
+/** @typedef {import('./types.js').Analysis} Analysis */
+/** @typedef {import('./types.js').EngineState} EngineState */
+/** @typedef {import('./types.js').MoveInput} MoveInput */
+/** @typedef {import('./moveRecord.js').MoveRecord} MoveRecord */
 
 /**
  * Display percentage of a weight (§8): 0 only for W = 0, 100 only for W = T, otherwise 1..99 (round half up).
@@ -38,11 +45,11 @@ export function pct(W) {
 /**
  * For each square: null if no world has a piece there, otherwise `{piece, type, color, weight, probability}`.
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {Array<null|{piece: number, type: string, color: string, weight: number, probability: number}>}
  */
 export function squareView(state) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const out = new Array(64)
 	for (let s = 0; s < 64; s++) {
 		const id = a.occ[s]
@@ -60,11 +67,11 @@ export function squareView(state) {
  * For each id 0..31: its locations `[{square, weight, probability}]` in ascending square order (empty for captured
  * ids).
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {Array<Array<{square: number, weight: number, probability: number}>>}
  */
 export function pieceLocations(state) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const out = new Array(32)
 	for (let id = 0; id < 32; id++) {
 		out[id] = a.locs[id].map((s, j) => ({ square: s, weight: a.locW[id][j], probability: a.locW[id][j] / T }))
@@ -76,12 +83,12 @@ export function pieceLocations(state) {
  * What-if view (§8): given X = occ(sq), for each square the piece standing there in the worlds with X on sq, with
  * its conditional probability. Returns null when sq is empty in every world.
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @param {number} sq square index
  * @return {Array<null|{piece: number, weight: number, probability: number}>|null}
  */
 export function conditionalView(state, sq) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const X = a.occ[sq]
 	if (X < 0) {
 		return null
@@ -113,11 +120,11 @@ export function conditionalView(state, sq) {
  * Linked pieces (§8): pairs [X, Y] (X < Y) of live superposed pieces whose joint location distribution differs from
  * independence by at least 2^-12 somewhere: |T·W(X@a ∧ Y@b) − W(X@a)·W(Y@b)| ≥ 2^36.
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {Array<[number, number]>}
  */
 export function links(state) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const ids = superposedIds(a, 0).concat(superposedIds(a, 1))
 	const out = []
 	const joint = new Float64Array(4096)
@@ -142,7 +149,7 @@ export function links(state) {
 /**
  * The link test for one pair.
  *
- * @param {object} a analysis
+ * @param {Analysis} a analysis
  * @param {number} X first id
  * @param {number} Y second id
  * @param {Float64Array} joint joint weights indexed [a * 64 + b]
@@ -166,7 +173,7 @@ function linked(a, X, Y, joint) {
 /**
  * Connected components of links(): arrays of ids (ascending), ordered by their smallest id.
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {number[][]}
  */
 export function linkGroups(state) {
@@ -203,12 +210,12 @@ export function linkGroups(state) {
  * moveRisk(s, m) (§8): Σ over the outcomes of P(o) · (0 if o captures the enemy king, else kingDanger(state_o,
  * mover) / T). A probability in [0, 1]; the numerator is exact (Σ W_o · D_o ≤ 2^48).
  *
- * @param {object} state valid engine state
- * @param {object|string} move move input
+ * @param {EngineState} state valid engine state
+ * @param {MoveInput} move move input
  * @return {number}
  */
 export function moveRisk(state, move) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const r = resolveMove(a, move)
 	if (r.reason !== undefined) {
 		throw new IllegalMoveError(r.reason, move)
@@ -253,8 +260,8 @@ export function moveRisk(state, move) {
  * nothing, does not move the king and touches no square on a line through the mover's king: every world keeps its
  * attack status (knight, pawn and king attacks have no lanes, and no attacker disappears).
  *
- * @param {object} a analysis
- * @param {object} rec record
+ * @param {Analysis} a analysis
+ * @param {MoveRecord} rec record
  * @return {boolean}
  */
 function unaffectedDanger(a, rec) {

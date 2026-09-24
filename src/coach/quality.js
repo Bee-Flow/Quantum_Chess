@@ -4,11 +4,13 @@
  */
 
 /**
- * Move-quality labels (GAME-DESIGN §5.3.4). ΔE is the drop in the mover's expected score against the best move,
- * computed before the roll, so bad luck never makes a move a blunder. Rolls get Lucky / Unlucky tags.
+ * Move-quality labels. ΔE is the drop in the mover's expected score against the best move, computed before the roll, so
+ * bad luck never makes a move a blunder. Rolls get Lucky / Unlucky tags.
  */
 
 import { t } from '@nextcloud/l10n'
+
+/** @typedef {import('../engine/types.js').LegalMove} LegalMove */
 
 /** Label order from best to worst (the special labels rank with `best`). */
 export const LABELS = Object.freeze(['brilliant', 'only', 'best', 'excellent', 'good', 'inaccuracy', 'mistake', 'blunder'])
@@ -29,7 +31,7 @@ export const forMover = (E, color) => (color === 'w' ? E : 1 - E)
  * Whether a move is a quantum move for the brilliancy rule: a split, merge (incl. converging capture), Measure or a
  * pawn probe (a rolled pawn capture).
  *
- * @param {object} move LegalMove
+ * @param {LegalMove} move the move
  * @param {string} [pieceType] type letter of the moving piece
  * @return {boolean}
  */
@@ -85,7 +87,7 @@ export function qualityOf(p) {
 }
 
 /**
- * The quality of a PlyAnalysis (SPEC §4.3).
+ * The quality of a PlyAnalysis.
  *
  * @param {object} ply PlyAnalysis
  * @param {boolean} quantum whether the played move is a quantum move

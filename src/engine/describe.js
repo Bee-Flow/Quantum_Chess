@@ -4,12 +4,25 @@
  */
 
 /**
- * Plain-text position description for LLM prompts (ENGINE-RULES Appendix B, non-normative). English only: it is
- * model input, not UI copy.
+ * Plain-text position description for LLM prompts (Appendix B, non-normative). English only: it is model input,
+ * not UI copy.
+ *
+ * PHP counterpart: lib/Engine/Internal/Describer.php. It implements the same appendix, but the two are **not** a
+ * parity pair and are never compared by the fixtures. The header, certain-FEN, uncertain-piece, possibilities and
+ * game-over lines are byte-identical; the differences are:
+ *
+ * - The link line: this helper names the most likely joint placement of each linked pair. The PHP describer names the
+ *   most strongly correlated pair of squares ("exactly when", "whenever", or the conditional percentage against the
+ *   overall one), writes at most 12 links and counts the rest.
+ * - This helper appends the legal moves and the split targets. The PHP block stops after the game-over line, because
+ *   the server's prompt builder lists the candidate moves itself.
+ * - The PHP block is capped at 4096 bytes (link texts are dropped until it fits); this one has no cap.
+ * - The model's colour is optional here (it defaults to the side to move) and required in PHP.
+ *
+ * Appendix letters refer to docs/engine-rules.md.
  */
 
-import { analyse, positions } from './analysis.js'
-import { budget } from './analysis.js'
+import { analyze, budget, positions } from './analysis.js'
 import { BUDGET, T } from './constants.js'
 import { kingDanger } from './danger.js'
 import { TYPE_CHAR } from './geometry.js'
@@ -18,26 +31,29 @@ import { certainFen } from './setup.js'
 import { SQUARE_NAMES } from './squares.js'
 import { links, pct } from './views.js'
 
+/** @typedef {import('./types.js').EngineState} EngineState */
+/** @typedef {import('./types.js').LegalMove} LegalMove */
+
 const TYPE_NAMES = { k: 'king', q: 'queen', r: 'rook', b: 'bishop', n: 'knight', p: 'pawn' }
 
 /**
  * Piece name, e.g. "White rook".
  *
- * @param {object} state engine state
+ * @param {EngineState} state engine state
  * @param {number} id piece id
  * @param {boolean} [lower] lower-case colour word
  * @return {string}
  */
 function pieceName(state, id, lower = false) {
-	const colour = id < 16 ? 'White' : 'Black'
-	return (lower ? colour.toLowerCase() : colour) + ' ' + TYPE_NAMES[state.types[id]]
+	const color = id < 16 ? 'White' : 'Black'
+	return (lower ? color.toLowerCase() : color) + ' ' + TYPE_NAMES[state.types[id]]
 }
 
 /**
  * Short description of one legal move.
  *
- * @param {object} state engine state
- * @param {object} m LegalMove
+ * @param {EngineState} state engine state
+ * @param {LegalMove} m LegalMove
  * @return {string}
  */
 function describeMove(state, m) {
@@ -58,12 +74,12 @@ function describeMove(state, m) {
 /**
  * Describe a position for a language model (Appendix B).
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @param {{color?: 'w'|'b'}} [options] the model's colour (defaults to the side to move)
  * @return {string}
  */
 export function describeForLlm(state, options = {}) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const me = options.color ?? state.turn
 	const lines = []
 	const side = (c) => (c === 'w' ? 'White' : 'Black')

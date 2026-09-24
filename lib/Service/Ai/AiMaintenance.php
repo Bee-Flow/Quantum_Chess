@@ -9,21 +9,27 @@ declare(strict_types=1);
 
 namespace OCA\QuantumChess\Service\Ai;
 
+use OCA\QuantumChess\Service\Ai\Provider\NextcloudAiProvider;
+
 /**
- * Cleanup of AI tasks and usage counters (docs/SPEC.md §6.5), called by GameMaintenanceJob.
+ * The periodic cleanup of the LLM integration, run by the background job.
  */
 class AiMaintenance {
+	/** Finished tasks older than this many seconds are deleted (one hour). */
+	private const TASK_RETENTION = 3600;
+
 	public function __construct(
-		private NextcloudAiProvider $nextcloudAi,
-		private AiUsageService $usage,
+		private readonly NextcloudAiProvider $nextcloudAi,
+		private readonly AiUsageService $usage,
 	) {
 	}
 
 	/**
-	 * Deletes the app's finished TaskProcessing tasks older than an hour and usage counters older than 30 days.
+	 * Deletes the app's finished Nextcloud Assistant tasks older than an hour and the usage counters older than
+	 * 30 days.
 	 */
 	public function cleanup(int $now): void {
-		$this->nextcloudAi->cleanup($now - 3600);
+		$this->nextcloudAi->cleanup($now - self::TASK_RETENTION);
 		$this->usage->cleanup($now);
 	}
 }

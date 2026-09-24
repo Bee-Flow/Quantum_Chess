@@ -12,7 +12,7 @@ namespace OCA\QuantumChess\Tests\Unit\Engine;
 use OCA\QuantumChess\Engine\Engine;
 
 /**
- * Loads the parity fixtures of tests/fixtures/engine (SPEC §3.5) and offers the comparisons the replay needs.
+ * Loads the parity fixtures of tests/fixtures/engine and offers the comparisons the replay needs.
  */
 final class FixtureLoader {
 	public const DIR = __DIR__ . '/../../../fixtures/engine';

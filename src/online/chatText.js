@@ -4,11 +4,13 @@
  */
 
 /**
- * Chat keys (SPEC §7.2 ChatDTO, GAME-DESIGN §7.11): quick phrases and system lines are stored as keys and shown in
- * each reader's language. Text messages are always rendered as plain text by the chat component.
+ * Chat keys: quick phrases and system lines are stored as keys and shown in each reader's language. Text messages are
+ * always rendered as plain text by the chat component.
  */
 
 import { t } from '@nextcloud/l10n'
+
+/** @typedef {import('../services/api.js').ChatDTO} ChatDTO */
 
 export const PHRASE_KEYS = ['good_luck', 'nice_split', 'well_played', 'oops', 'thanks', 'good_game']
 
@@ -33,7 +35,7 @@ export function phraseText(key) {
 /**
  * The words of a system line.
  *
- * @param {object} message ChatDTO of kind system
+ * @param {ChatDTO} message the message of kind system
  * @param {{w: string, b: string}} names display names by colour
  * @return {string}
  */

@@ -4,11 +4,11 @@
  */
 
 /**
- * The move and roll timeline (SPEC §14.4.2, GAME-DESIGN §3.6.1).
+ * The move and roll timeline.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createAnimator, DURATIONS } from '../../../src/components/board/animator.js'
+import { createAnimator, DURATIONS } from '../../../src/board/animator.js'
 import { E, S } from './helpers.js'
 
 const ROLL = S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6'])

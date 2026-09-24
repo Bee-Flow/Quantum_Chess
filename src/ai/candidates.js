@@ -4,9 +4,9 @@
  */
 
 /**
- * Engine candidates for the AI opponent (GAME-DESIGN §6.4 step 1, SPEC §4.3): the best moves at the chosen
- * strength, each with its expected score **for the side to move**, machine tags that the server's prompt builder turns
- * into English, and `ok` (✓): within the persona's tolerance of the best.
+ * Candidate moves for an LLM opponent: the best moves at the chosen strength, each with its expected score **for the
+ * side to move**, machine tags that the server's prompt builder turns into English, and `ok` (✓): within the
+ * persona's tolerance of the best. The language model then picks one of them.
  *
  * Tag grammar: `king-capture:<pct>`, `certain-capture`, `converging`, `traps-king`, `capture:<pct>:<type>`,
  * `threatens-king:<pct>`, `probe`, `split`, `merge`, `measure`, `defends-king`, `saves:<type>`, `hangs:<type>`,
@@ -23,10 +23,16 @@ import {
 	pct,
 	T,
 } from '../engine/index.js'
-import { runSearcher, runSync } from './analyze.js'
-import { features, pieceThreats, staticE } from './evaluate.js'
+import { staticE } from './evaluate.js'
+import { features, pieceThreats } from './features.js'
 import { STRENGTHS } from './levels.js'
-import { captureWeight, cleanValue, outcomeList, Searcher, victimOf } from './search.js'
+import { Searcher } from './search.js'
+import { captureWeight, cleanValue, outcomeList, victimOf } from './searchValues.js'
+import { NO_SLICE, runSearcher, runSync } from './tasks.js'
+
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+
+/** @typedef {import('./tasks.js').SliceContext} SliceContext */
 
 /** Threat thresholds for `saves:` / `hangs:` (centipawns of expected loss). */
 const THREAT_CP = 60
@@ -51,10 +57,10 @@ function fraction(tolerance) {
 /**
  * The most valuable piece (id) whose threat changed as asked, or −1.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {Float64Array} before expected losses before
  * @param {Float64Array} after expected losses after
- * @param {function(number, number): boolean} test (before, after) → matches
+ * @param {(before: number, after: number) => boolean} test (before, after) → matches
  * @return {number}
  */
 function mostValuable(state, before, after, test) {
@@ -99,9 +105,9 @@ function isTrap(searcher, entry) {
 		return false
 	}
 	// The natural reply: best after one ply by the static evaluation (captures first when many).
-	const f = features(child)
+	const feat = features(child)
 	const ordered = replies
-		.map((m) => ({ m, w: captureWeight(m) * (victimOf(f, m) >= 0 ? 1 : 0) }))
+		.map((m) => ({ m, w: captureWeight(m) * (victimOf(feat, m) >= 0 ? 1 : 0) }))
 		.sort((a, b) => b.w - a.w)
 		.slice(0, NATURAL_REPLIES)
 	let natural = null
@@ -142,23 +148,23 @@ function isTrap(searcher, entry) {
 }
 
 /**
- * The tags of one candidate (SPEC §4.3 grammar).
+ * The tags of one candidate (see the tag grammar in the file header).
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object} entry root entry (searched with exact outcomes)
  * @param {Searcher} searcher finished searcher
  * @param {Float64Array} threatsBefore expected losses of the mover's pieces before the move
  * @return {string[]}
  */
-export function tagsFor(state, entry, searcher, threatsBefore) {
+function tagsFor(state, entry, searcher, threatsBefore) {
 	const m = entry.move
-	const f = features(state)
+	const feat = features(state)
 	const mover = state.turn
 	const enemy = mover === 'w' ? 'b' : 'w'
 	const enemyKing = mover === 'w' ? 16 : 0
 	const tags = []
 	const cw = captureWeight(m)
-	const vid = victimOf(f, m)
+	const vid = victimOf(feat, m)
 	const outcomes = getOutcomes(state, m)
 	if (vid === enemyKing && cw > 0) {
 		tags.push('king-capture:' + pct(cw))
@@ -233,13 +239,13 @@ export function tagsFor(state, entry, searcher, threatsBefore) {
  * Candidates task (generator). Options: `{strength = 'balanced', tolerance = 0.05, multiPv = 6, timeMs?,
  * nodeBudget?, now?}`. Result: `Candidate[]` best first: `{code, E (side to move), tags, ok}`.
  *
- * @param {object} state position (game not over)
+ * @param {EngineState} state position (game not over)
  * @param {object} [options] options
- * @param {{slice: function(): number}} [ctx] slicing context
+ * @param {SliceContext} [ctx] slicing context
  * @yields {void}
  * @return {Array<{code: string, E: number, tags: string[], ok: boolean}>}
  */
-export function* candidatesTask(state, options = {}, ctx = { slice: () => Infinity }) {
+export function* candidatesTask(state, options = {}, ctx = NO_SLICE) {
 	const strength = STRENGTHS[options.strength ?? 'balanced']
 	if (strength === undefined) {
 		throw new TypeError('unknown strength: ' + String(options.strength))
@@ -278,7 +284,7 @@ export function* candidatesTask(state, options = {}, ctx = { slice: () => Infini
 /**
  * Candidates synchronously. See `candidatesTask`.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object} [options] options
  * @return {Array<{code: string, E: number, tags: string[], ok: boolean}>}
  */

@@ -14,7 +14,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The parity gate (SPEC §3.5, ER §12): every step of every game fixture and scripted example replays
+ * The parity gate (docs/engine-rules.md §12): every step of every game fixture and scripted example replays
  * byte-identically — legal code order, state bytes, measurement record, notation, hash and the per-step views.
  */
 final class GameFixturesTest extends TestCase {

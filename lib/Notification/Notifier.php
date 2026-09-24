@@ -12,6 +12,7 @@ namespace OCA\QuantumChess\Notification;
 use OCA\QuantumChess\AppInfo\Application;
 use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\GameMapper;
+use OCA\QuantumChess\Service\Game\TimeControl;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
@@ -25,18 +26,22 @@ use OCP\Notification\NotificationPreloadReason;
 use OCP\Notification\UnknownNotificationException;
 
 /**
- * Renders the app's notifications in the recipient's language (docs/SPEC.md §9.1, GAME-DESIGN.md §7.12).
+ * Renders the app's notifications in the recipient's language, with Accept, Decline and Rematch actions that call the
+ * OCS routes.
+ *
+ * Notifications are rendered from their stored subject and parameters. A notification whose game has moved on (an
+ * answered invitation, an older move) is reported as processed, so Nextcloud removes it.
  */
 class Notifier implements INotifier, IPreloadableNotifier {
-	/** @var array<int, ?Game> */
+	/** @var array<int, ?Game> the games of the notifications being rendered, by id */
 	private array $games = [];
 
 	public function __construct(
-		private IFactory $l10nFactory,
-		private IURLGenerator $url,
-		private IUserManager $userManager,
-		private GameMapper $gameMapper,
-		private MoveDescriber $describer,
+		private readonly IFactory $l10nFactory,
+		private readonly IURLGenerator $url,
+		private readonly IUserManager $userManager,
+		private readonly GameMapper $gameMapper,
+		private readonly MoveDescriber $describer,
 	) {
 	}
 
@@ -63,15 +68,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		return $this->games[$id];
 	}
 
-	public static function timeControlLabel(IL10N $l, string $timeControl): string {
-		return match ($timeControl) {
-			'corr:1d' => $l->t('1 day per move'),
-			'corr:7d' => $l->t('7 days per move'),
-			'corr:none' => $l->t('No time limit'),
-			default => $l->t('3 days per move'),
-		};
-	}
-
+	/** The name of the reason a game ended, for example "King captured". */
 	public static function reasonLabel(IL10N $l, ?string $reason): string {
 		return match ($reason) {
 			'king_captured' => $l->t('King captured'),
@@ -92,6 +89,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		};
 	}
 
+	/** The text of a predefined chat phrase. */
 	public static function phraseLabel(IL10N $l, string $key): string {
 		return match ($key) {
 			'good_luck' => $l->t('Good luck!'),
@@ -120,7 +118,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		$obsolete = match ($subject) {
 			'invite', 'rematch' => $status !== Game::STATUS_PENDING,
 			'draw_offer' => $status !== Game::STATUS_ACTIVE || $game->getDrawOffer() === null,
-			'your_turn', 'reminder' => $status !== Game::STATUS_ACTIVE || $game->getPly() !== ($params['ply'] ?? $game->getPly()),
+			'your_turn' => $status !== Game::STATUS_ACTIVE || $game->getPly() !== ($params['ply'] ?? $game->getPly()),
 			default => false,
 		};
 		if ($obsolete) {
@@ -130,7 +128,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		$actor = is_string($params['actor'] ?? null) ? $params['actor'] : null;
 		$actorName = $actor === null ? null : $this->userManager->getDisplayName($actor);
 		if ($actor !== null && $actorName === null) {
-			// the account was deleted: its chat is gone, and neither its id nor its name is shown (SPEC §8.12)
+			// The account was deleted: its chat is gone, and neither its id nor its name is shown.
 			if ($subject === 'chat') {
 				throw new AlreadyProcessedException();
 			}
@@ -146,7 +144,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 			case 'invite':
 			case 'rematch':
 				$text = $subject === 'invite' ? $l->t('{user} invited you to a game of Quantum Chess') : $l->t('{user} wants a rematch');
-				$parts = [self::timeControlLabel($l, (string)($params['timeControl'] ?? 'corr:3d'))];
+				$parts = [TimeControl::fromStored((string)($params['timeControl'] ?? TimeControl::DEFAULT->value))->label($l)];
 				$parts[] = !empty($params['rated']) ? $l->t('Rated') : $l->t('Unrated');
 				$parts[] = match ($params['color'] ?? 'r') {
 					'w' => $l->t('You play White'),
@@ -169,7 +167,6 @@ class Notifier implements INotifier, IPreloadableNotifier {
 				$text = $l->t('{user} declined your invitation');
 				break;
 			case 'your_turn':
-			case 'reminder':
 				$text = $l->t('Your move against {user}');
 				$message = is_array($params['lastMove'] ?? null) ? $this->describer->describe($l, $params['lastMove']) : '';
 				break;

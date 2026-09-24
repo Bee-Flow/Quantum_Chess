@@ -4,22 +4,28 @@
  */
 
 /**
- * Fair-play support keys (ENGINE-RULES Appendix D, SPEC §8.8). They ignore weights, ids, links, castling, `ep` and
- * history, so re-weighting a world or swapping ids does not change them.
+ * Fair-play support keys (Appendix D). They ignore weights, ids, links, castling, `ep` and history, so re-weighting a
+ * world or swapping ids does not change them. Every stored move of an online game records the support key of the
+ * position it produced.
+ *
+ * PHP twin: lib/Engine/Internal/Views.php (`supportKey`, `supportKeyMirror`).
+ * Section numbers (§) and appendices refer to docs/engine-rules.md.
  */
 
-import { analyse } from './analysis.js'
+import { analyze } from './analysis.js'
 import { TYPE_CHAR } from './geometry.js'
+
+/** @typedef {import('./types.js').EngineState} EngineState */
 
 /**
  * The 64 support characters of a state, in square order: the type letter of occ(s), upper case for White, lower
  * case for Black, `.` when the square is certainly empty.
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {string[]}
  */
 function supportSquares(state) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const out = new Array(64)
 	for (let s = 0; s < 64; s++) {
 		const id = a.occ[s]
@@ -36,7 +42,7 @@ function supportSquares(state) {
 /**
  * Support key: `turn + '|' + 64 characters` (Appendix D).
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {string}
  */
 export function supportKey(state) {
@@ -46,7 +52,7 @@ export function supportKey(state) {
 /**
  * Colour mirror of the support key: ranks flipped (r ↔ 7 − r), colours swapped (letter case) and turn swapped.
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {string}
  */
 export function supportKeyMirror(state) {

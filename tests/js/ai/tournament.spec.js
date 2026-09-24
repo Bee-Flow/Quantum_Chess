@@ -4,7 +4,7 @@
  */
 
 /**
- * Self-play: level n + 1 must beat level n more often than not (IMPLEMENTATION-PLAN §5.3). Slow (several minutes per
+ * Self-play: level n + 1 must beat level n more often than not. Slow (several minutes per
  * pair), so it runs only with `QC_SLOW=1`:
  *
  *     QC_SLOW=1 npx vitest run tests/js/ai/tournament.spec.js
@@ -14,7 +14,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { bestMove } from '../../../src/ai/bestmove.js'
+import { bestMove } from '../../../src/ai/bestMove.js'
 import { evaluate, toE } from '../../../src/ai/evaluate.js'
 import { E } from './helpers.js'
 

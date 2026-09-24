@@ -9,46 +9,42 @@ declare(strict_types=1);
 
 namespace OCA\QuantumChess\Controller;
 
-use OCA\QuantumChess\AppInfo\Application;
 use OCA\QuantumChess\Exception\ApiException;
-use OCA\QuantumChess\Service\PreferencesService;
-use OCP\AppFramework\Controller;
+use OCA\QuantumChess\Service\Player\PreferencesService;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 /**
- * In-app preferences (docs/SPEC.md §7.4.6, §11.3).
+ * The in-app preferences of the user.
  */
 #[OpenAPI(scope: OpenAPI::SCOPE_IGNORE)]
-class PreferencesController extends Controller {
+final class PreferencesController extends ApiController {
 	public function __construct(
 		IRequest $request,
-		private PreferencesService $preferences,
-		private LoggerInterface $logger,
-		private ?string $userId,
+		IL10N $l,
+		LoggerInterface $logger,
+		?string $userId,
+		private readonly PreferencesService $preferences,
 	) {
-		parent::__construct(Application::APP_ID, $request);
+		parent::__construct($request, $l, $logger, $userId);
 	}
 
+	/**
+	 * Replaces the preferences with the given object.
+	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 120, period: 600)]
 	public function update(mixed $preferences = null): JSONResponse {
-		try {
-			if ($this->userId === null) {
-				throw new ApiException('not_found', 'Not logged in', 404);
-			}
+		return $this->respond(function (string $uid) use ($preferences): array {
 			if (!is_array($preferences)) {
-				throw new ApiException('invalid_argument', 'Invalid preferences', 400, ['field' => 'preferences']);
+				throw ApiException::invalidArgument('preferences', 'Invalid preferences');
 			}
-			return new JSONResponse(['preferences' => (object)$this->preferences->set($this->userId, $preferences)]);
-		} catch (ApiException $e) {
-			return $e->toResponse();
-		} catch (\Throwable $e) {
-			return ApiException::internal($e, $this->logger);
-		}
+			return ['preferences' => (object)$this->preferences->set($uid, $preferences)];
+		});
 	}
 }

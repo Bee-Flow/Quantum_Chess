@@ -4,52 +4,36 @@
  */
 
 /**
- * Iterative-deepening expectimax in E-space (GAME-DESIGN §6.1, SPEC §4.1).
+ * The computer player's search: iterative-deepening expectimax in E-space.
  *
  * Values are expected scores **for the side to move** in [0, 1] (win 1, draw ½, loss 0); results convert them to
  * White's expected score. Decision nodes are negamax with alpha-beta; a rolled move is a chance node over its
  * outcomes (`applyForSearch`, at most 3 children, 8 for a Measure) with Star1 bounds and, when enabled, Star2 probing.
  *
- * - Transposition table keyed by `positionHash` (the last `history` entry), killer and history heuristics.
- * - Move ordering: certain king captures, king shots, captures by P(capture) × MVV-LVA, checks, merges, standard
- *   moves, Measures, splits.
+ * - Transposition table keyed by `positionHash` (the last `history` entry, `transposition.js`); killer and history
+ *   heuristics and split pruning (`moveOrdering.js`). The root keeps the level's full split set. Moves whose
+ *   resulting positions hash equal are searched once.
  * - Quiescence on captures (≥ 25 % or ≥ 50 % by level) and on every king shot; stand pat on `staticE`.
- * - Split pruning: inside the tree only splits whose two targets are among the piece's best standard targets; the
- *   root keeps the level's full split set. Moves whose resulting positions hash equal are searched once.
- * - E1b is skipped inside the search (`applyForSearch`, ENGINE-RULES App. C); `staticE` detects a trapped mover at the
- *   leaves, and the search finds the forced capture one ply later anyway. Every move actually played goes through the
- *   normal `applyMove`.
+ * - Futility pruning of quiet moves at depth 1 and late-move reductions (levels 4 and 5).
+ * - E1b is skipped inside the search (`applyForSearch`, docs/engine-rules.md Appendix C); `staticE` detects a trapped
+ *   mover at the leaves, and the search finds the forced capture one ply later anyway. Every move actually played
+ *   goes through the normal `applyMove`.
  *
  * The searcher is **resumable**: `step(sliceDeadline)` runs until the slice deadline, and a later `step()` continues
  * (a restarted iteration finds its finished subtrees in the transposition table). The worker runs one long slice; the
  * main-thread fallback runs short ones between frames.
  */
 
-import {
-	applyForSearch,
-	BUDGET,
-	budget,
-	findMove,
-	generateMoves,
-	kingDanger,
-	squareName,
-	T,
-} from '../engine/index.js'
-import { CHEAP, features, staticE, toCp, toE } from './evaluate.js'
-import { between, KING as KING_T, KNIGHT as KNIGHT_T, RAYS as RAYS_T, reaches } from './geometry.js'
+import { applyForSearch, findMove, generateMoves, kingDanger, T } from '../engine/index.js'
+import { staticE, toCp, toE } from './evaluate.js'
+import { features } from './features.js'
 import { levelOf, PIECE_VALUES } from './levels.js'
+import { MoveOrderer } from './moveOrdering.js'
+import { captureWeight, cleanValue, outcomeList, PLY_DISCOUNT, terminalValue, victimOf } from './searchValues.js'
+import { EXACT, LOWER, storeEntry, UPPER } from './transposition.js'
 
-const EXACT = 0
-const LOWER = 1
-const UPPER = 2
-
-/** Values closer than this to 0 or 1 are reported as exactly 0 or 1 (a won or lost game). */
-export const WIN_EPSILON = 1e-4
-
-/** Per-ply discount of won/lost values, so that faster wins (and slower losses) are preferred. */
-const PLY_DISCOUNT = 1e-6
-
-const TT_MAX = 200000
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+/** @typedef {import('../engine/types.js').LegalMove} LegalMove */
 
 /** Decision nodes stop once they are within this of beta: improvements this small never change a choice. */
 const CUT_EPSILON = 2e-4
@@ -59,6 +43,72 @@ const DELTA_MARGIN = 150
 
 /** At most this many captures (besides king shots) per quiescence node. */
 const Q_MAX_MOVES = 6
+
+/** A deepening iteration whose best move lost more than this against the previous iteration may get extra time. */
+const INSTABILITY_MARGIN = 0.05
+
+/** Futility pruning: quiet moves at depth 1 are skipped when the static value plus this cannot reach alpha. */
+const FUTILITY_MARGIN = 0.12
+
+/** Late-move reductions start at this remaining depth … */
+const LMR_MIN_DEPTH = 3
+
+/** … for quiet moves from this index of the ordered move list on. */
+const LMR_MIN_INDEX = 4
+
+/** Splits from this index on are reduced by two plies instead of one … */
+const LMR_SPLIT_INDEX = 10
+
+/** … at this remaining depth or more. */
+const LMR_SPLIT_DEPTH = 4
+
+/** Width of the null window of a reduced search: it only asks whether the move beats alpha. */
+const NULL_WINDOW = 1e-9
+
+/**
+ * One root move of a search result.
+ *
+ * @typedef {object} SearchedMove
+ * @property {string} code canonical move code
+ * @property {string} type move type (`standard`, `split`, `merge`, `measure`)
+ * @property {string} resolution `certain`, `quantum` or `rolled`
+ * @property {number|null} value value for the side to move (null: not searched)
+ * @property {number|null} E White's expected score
+ * @property {boolean} exact the value is exact (otherwise an upper bound)
+ * @property {number} depth depth of the iteration that produced the value
+ * @property {Array<{key: string|null, weight: number, value: number|null, E: number|null}>|null} outcomes the value of
+ *   every outcome of a rolled move, or null
+ */
+
+/**
+ * The result of a search.
+ *
+ * @typedef {object} SearchResult
+ * @property {string|null} code the best move
+ * @property {number|null} value its value for the side to move
+ * @property {number|null} E White's expected score of the best move
+ * @property {string[]} pv principal variation, following the most probable outcome of every roll
+ * @property {number} depth last completed iteration
+ * @property {number} nodes nodes searched
+ * @property {number} timeMs time spent
+ * @property {number} nps nodes per second
+ * @property {SearchedMove[]} moves every root move, best first
+ */
+
+/**
+ * Search parameters derived from the options and the level.
+ *
+ * @typedef {object} SearchParams
+ * @property {object} level the level object
+ * @property {number} maxDepth deepest iteration
+ * @property {number} qMax quiescence depth limit
+ * @property {number} qThreshold smallest capture probability searched in quiescence
+ * @property {number} splitTargets best standard targets per piece that splits may use inside the tree
+ * @property {Set<string>} splitTypes piece types that may split
+ * @property {boolean} lmr late-move reductions
+ * @property {boolean} star2 Star2 probing at chance nodes
+ * @property {boolean} futility futility pruning at depth 1
+ */
 
 /** Thrown inside the recursion to unwind a search that must stop (never escapes the Searcher). */
 class Stop {
@@ -71,136 +121,10 @@ class Stop {
 }
 
 /**
- * The value of a finished game for the side to move in it.
- *
- * @param {object} state state with a result
- * @param {number} ply distance from the root (for the win discount)
- * @return {number}
- */
-function terminalValue(state, ply) {
-	const r = state.result.result
-	if (r === '1/2-1/2') {
-		return 0.5
-	}
-	const whiteWon = r === '1-0'
-	const moverWon = (state.turn === 'w') === whiteWon
-	return moverWon ? 1 - ply * PLY_DISCOUNT : ply * PLY_DISCOUNT
-}
-
-/**
- * Round a value to exactly 0 or 1 when it means a decided game.
- *
- * @param {number} v value
- * @return {number}
- */
-export function cleanValue(v) {
-	if (v >= 1 - WIN_EPSILON) {
-		return 1
-	}
-	if (v <= WIN_EPSILON) {
-		return 0
-	}
-	return v
-}
-
-/**
- * The capture weight of a LegalMove (0 when it cannot capture).
- *
- * @param {object} m LegalMove
- * @return {number}
- */
-export function captureWeight(m) {
-	if (!m.capture) {
-		return 0
-	}
-	if (m.resolution !== 'rolled') {
-		return T
-	}
-	for (let i = 0; i < m.outcomes.length; i++) {
-		if (m.outcomes[i].key === 'capture') {
-			return m.outcomes[i].weight
-		}
-	}
-	return 0
-}
-
-/**
- * The piece a capturing LegalMove would take (id), or −1.
- *
- * @param {object} f features of the state before the move
- * @param {object} m LegalMove
- * @return {number}
- */
-export function victimOf(f, m) {
-	if (!m.capture || m.type === 'measure' || m.type === 'split') {
-		return -1
-	}
-	const t = m.to[0]
-	const id = f.occ[t]
-	if (id >= 0 && (id < 16) !== (m.piece < 16)) {
-		return id
-	}
-	// En passant: the pawn behind the target square.
-	const behind = m.piece < 16 ? t - 8 : t + 8
-	const ep = f.occ[behind]
-	return ep >= 0 ? ep : -1
-}
-
-/**
- * The outcome keys of a LegalMove, as `applyForSearch` expects them: `[{key, weight}]` (one entry with key null
- * for a move that is not rolled).
- *
- * @param {object} m LegalMove
- * @return {Array<{key: string|null, weight: number}>}
- */
-export function outcomeList(m) {
-	if (m.resolution !== 'rolled') {
-		return [{ key: null, weight: T }]
-	}
-	return m.outcomes
-}
-
-/**
- * Does the piece of a standard move or merge attack the enemy king square from its target (on the lines of certain
- * pieces only)? A cheap ordering hint for "moves that may leave the enemy king unable to escape".
- *
- * @param {object} f features
- * @param {object} m LegalMove
- * @param {number} king enemy king square
- * @return {boolean}
- */
-function givesCheck(f, m, king) {
-	if (king < 0 || m.type === 'split' || m.type === 'measure') {
-		return false
-	}
-	const type = f.types[m.piece]
-	const t = m.to[0]
-	if (type === 'p') {
-		const df = Math.abs((t & 7) - (king & 7))
-		const dr = (king >> 3) - (t >> 3)
-		return df === 1 && dr === (m.piece < 16 ? 1 : -1)
-	}
-	if (!reaches(type, t, king)) {
-		return false
-	}
-	if (type === 'n' || type === 'k') {
-		return true
-	}
-	const lane = between(t, king)
-	for (let j = 0; j < lane.length; j++) {
-		const o = f.occ[lane[j]]
-		if (o >= 0 && o !== m.piece && f.p[lane[j]] > 0.5) {
-			return false
-		}
-	}
-	return true
-}
-
-/**
  * Search options → normalised parameters.
  *
  * @param {object} options search options
- * @return {object}
+ * @return {SearchParams}
  */
 function paramsOf(options) {
 	const level = levelOf(options.level ?? 4)
@@ -243,7 +167,7 @@ export class Searcher {
 	 * - `now`: clock (ms), default `performance.now`.
 	 * - `tt`: a Map to share a transposition table between searches of the same game.
 	 *
-	 * @param {object} state engine state (result null)
+	 * @param {EngineState} state engine state (result null)
 	 * @param {object} [options] options
 	 */
 	constructor(state, options = {}) {
@@ -261,9 +185,8 @@ export class Searcher {
 		this.sliceDeadline = Infinity
 		this.nodes = 0
 		this.tt = options.tt || new Map()
-		this.killers = []
-		this.history = new Map()
 		this.ignoreKing = options.ignoreKing === 'w' ? 0 : options.ignoreKing === 'b' ? 1 : -1
+		this.orderer = new MoveOrderer(this.p, this.ignoreKing)
 		this.multiPv = Math.max(1, options.multiPv ?? 1)
 		this.margin = options.margin ?? 0
 		this.rootEpsilon = options.rootEpsilon ?? 0
@@ -290,14 +213,14 @@ export class Searcher {
 			const wanted = new Set(this.options.rootMoves)
 			moves = moves.filter((m) => wanted.has(m.code))
 		}
-		const f = features(state)
+		const feat = features(state)
 		if (this.options.rootSplits === 'pruned') {
-			moves = this.pruneSplits(f, moves, this.p.splitTargets)
+			moves = this.orderer.pruneSplits(feat, moves, this.p.splitTargets)
 		}
 		if (this.options.splitTop) {
-			moves = this.topSplits(f, moves, this.options.splitTop)
+			moves = this.orderer.topSplits(feat, moves, this.options.splitTop)
 		}
-		const scored = this.score(f, moves, 0, null)
+		const scored = this.orderer.score(feat, moves, 0, null)
 		return scored.map(({ m }, i) => ({
 			move: m,
 			code: m.code,
@@ -345,7 +268,7 @@ export class Searcher {
 			return false
 		}
 		const first = this.root[0]
-		return first.depth === this.iter.depth && first.prevValue !== undefined && first.value < first.prevValue - 0.05
+		return first.depth === this.iter.depth && first.prevValue !== undefined && first.value < first.prevValue - INSTABILITY_MARGIN
 	}
 
 	/**
@@ -587,8 +510,8 @@ export class Searcher {
 	 * Chance node over a rolled move's outcomes with Star1 bounds (and Star2 probing when enabled). Returns the
 	 * mover's value: exact inside (alpha, beta), otherwise a bound.
 	 *
-	 * @param {object} state position before the move
-	 * @param {object} move LegalMove
+	 * @param {EngineState} state position before the move
+	 * @param {LegalMove} move LegalMove
 	 * @param {Array<{key: string, weight: number, state: object|null}>|null} kids pre-built outcome entries or null
 	 * @param {number} depth remaining depth of this node (children get depth − 1)
 	 * @param {number} alpha lower bound
@@ -660,7 +583,7 @@ export class Searcher {
 	/**
 	 * Star2 probe: the replier's value of its first (best-ordered) move only — a lower bound of its node value.
 	 *
-	 * @param {object} state position (result null)
+	 * @param {EngineState} state position (result null)
 	 * @param {number} depth remaining depth
 	 * @param {number} ply ply
 	 * @return {number}
@@ -671,7 +594,7 @@ export class Searcher {
 		if (e !== undefined && e.depth >= depth && e.flag !== UPPER) {
 			return e.value
 		}
-		const moves = this.orderedMoves(state, ply, e !== undefined ? e.move : null, depth)
+		const moves = this.orderer.orderedMoves(state, ply, e !== undefined ? e.move : null, depth)
 		if (moves.length === 0) {
 			return 0
 		}
@@ -685,7 +608,7 @@ export class Searcher {
 	/**
 	 * Decision node (negamax): the side to move's value.
 	 *
-	 * @param {object} state position (result null)
+	 * @param {EngineState} state position (result null)
 	 * @param {number} depth remaining depth
 	 * @param {number} alpha lower bound
 	 * @param {number} beta upper bound
@@ -723,9 +646,9 @@ export class Searcher {
 		const ownDanger = kingDanger(state, state.turn)
 		let quietCut = false
 		if (this.p.futility && depth === 1 && ownDanger === 0) {
-			quietCut = staticE(state, this.ignoreKing) + 0.12 <= alpha
+			quietCut = staticE(state, this.ignoreKing) + FUTILITY_MARGIN <= alpha
 		}
-		const moves = this.orderedMoves(state, ply, ttMove, depth)
+		const moves = this.orderer.orderedMoves(state, ply, ttMove, depth)
 		let best = -1
 		let bestCode = null
 		const seen = new Set()
@@ -743,11 +666,11 @@ export class Searcher {
 				}
 				seen.add(h)
 				let reduce = 0
-				if (this.p.lmr && depth >= 3 && i >= 4 && !tactical && ownDanger === 0) {
-					reduce = m.type === 'split' && depth >= 4 && i >= 10 ? 2 : 1
+				if (this.p.lmr && depth >= LMR_MIN_DEPTH && i >= LMR_MIN_INDEX && !tactical && ownDanger === 0) {
+					reduce = m.type === 'split' && depth >= LMR_SPLIT_DEPTH && i >= LMR_SPLIT_INDEX ? 2 : 1
 				}
 				if (reduce > 0) {
-					v = this.childValue(child, depth - 1 - reduce, alpha, alpha + 1e-9, ply + 1)
+					v = this.childValue(child, depth - 1 - reduce, alpha, alpha + NULL_WINDOW, ply + 1)
 					if (v > alpha) {
 						v = this.childValue(child, depth - 1, alpha, beta, ply + 1)
 					}
@@ -766,8 +689,7 @@ export class Searcher {
 			}
 			if (alpha >= beta - CUT_EPSILON) {
 				if (!tactical) {
-					this.addKiller(ply, m.code)
-					this.history.set(m.code, (this.history.get(m.code) || 0) + depth * depth)
+					this.orderer.recordCutoff(ply, m.code, depth)
 				}
 				break
 			}
@@ -777,57 +699,14 @@ export class Searcher {
 			best = staticE(state, this.ignoreKing)
 		}
 		const flag = best <= alpha0 ? UPPER : best >= beta ? LOWER : EXACT
-		this.store(hash, depth, best, flag, bestCode)
+		storeEntry(this.tt, hash, depth, best, flag, bestCode)
 		return best
-	}
-
-	/**
-	 * Store a transposition-table entry (keeps the deeper entry; trims the oldest quarter when full).
-	 *
-	 * @param {string} hash position hash
-	 * @param {number} depth depth
-	 * @param {number} value value
-	 * @param {number} flag EXACT, LOWER or UPPER
-	 * @param {string|null} move best move code
-	 */
-	store(hash, depth, value, flag, move) {
-		const old = this.tt.get(hash)
-		if (old !== undefined && old.depth > depth) {
-			return
-		}
-		if (old === undefined && this.tt.size >= TT_MAX) {
-			let n = TT_MAX >> 2
-			for (const k of this.tt.keys()) {
-				this.tt.delete(k)
-				if (--n <= 0) {
-					break
-				}
-			}
-		}
-		this.tt.set(hash, { depth, value, flag, move: move ?? (old ? old.move : null) })
-	}
-
-	/**
-	 * Remember a quiet move that caused a cutoff at this ply.
-	 *
-	 * @param {number} ply ply
-	 * @param {string} code move code
-	 */
-	addKiller(ply, code) {
-		let k = this.killers[ply]
-		if (k === undefined) {
-			k = this.killers[ply] = []
-		}
-		if (k[0] !== code) {
-			k[1] = k[0]
-			k[0] = code
-		}
 	}
 
 	/**
 	 * Quiescence: stand pat on the static value, then captures (and king shots) with their chance nodes.
 	 *
-	 * @param {object} state position (result null)
+	 * @param {EngineState} state position (result null)
 	 * @param {number} alpha lower bound
 	 * @param {number} beta upper bound
 	 * @param {number} ply distance from the root
@@ -861,8 +740,8 @@ export class Searcher {
 		if (stand > alpha) {
 			alpha = stand
 		}
-		const caps = this.captures(state)
-		const f = features(state)
+		const caps = this.orderer.captures(state)
+		const feat = features(state)
 		const standCp = toCp(stand)
 		let tried = 0
 		for (let i = 0; i < caps.length; i++) {
@@ -885,8 +764,8 @@ export class Searcher {
 					break
 				}
 				// Delta pruning: even the optimistic gain cannot lift this node above alpha.
-				const vid = victimOf(f, m)
-				const gain = (w / T) * (vid >= 0 ? PIECE_VALUES[f.types[vid]] : 0) + (m.promo === 'q' ? 800 : 0)
+				const vid = victimOf(feat, m)
+				const gain = (w / T) * (vid >= 0 ? PIECE_VALUES[feat.types[vid]] : 0) + (m.promo === 'q' ? 800 : 0)
 				if (toE(standCp + gain + DELTA_MARGIN) <= alpha) {
 					continue
 				}
@@ -907,7 +786,7 @@ export class Searcher {
 				break
 			}
 		}
-		this.store(hash, qDepth, best, best <= alpha0 ? UPPER : best >= beta ? LOWER : EXACT, null)
+		storeEntry(this.tt, hash, qDepth, best, best <= alpha0 ? UPPER : best >= beta ? LOWER : EXACT, null)
 		return best
 	}
 
@@ -926,344 +805,6 @@ export class Searcher {
 			return 1 - terminalValue(child, ply)
 		}
 		return 1 - this.qsearch(child, 1 - beta, 1 - alpha, ply, qd)
-	}
-
-	/**
-	 * Candidate captures of the side to move, generated from the attack map without the full move list: standard
-	 * captures, converging captures (merges), en passant and queen promotions. Legality is checked by `findMove`.
-	 * Sorted king shots first, then by estimated gain.
-	 *
-	 * @param {object} state position
-	 * @return {Array<{code: string, king: boolean, score: number}>}
-	 */
-	captures(state) {
-		const f = features(state)
-		const mover = state.turn === 'w' ? 0 : 1
-		const base = mover * 16
-		const out = []
-		const seen = new Set()
-		const parts = new Map()
-		const add = (id, from, to, pa, promo) => {
-			const vid = f.occ[to]
-			const king = vid === (mover === 0 ? 16 : 0)
-			if (king && this.ignoreKing === 1 - mover) {
-				return
-			}
-			const code = squareName(from) + '-' + squareName(to) + (promo ? '=Q' : '')
-			if (seen.has(code)) {
-				return
-			}
-			seen.add(code)
-			const victim = vid >= 0 ? PIECE_VALUES[f.types[vid]] : promo ? 800 : 100
-			out.push({ code, king, score: (king ? 1e6 : 0) + pa * (vid >= 0 ? f.p[to] : 1) * victim * 10 - PIECE_VALUES[f.types[id]] / 10 })
-			if (!promo && vid >= 0) {
-				let list = parts.get(id)
-				if (list === undefined) {
-					list = []
-					parts.set(id, list)
-				}
-				list.push({ from, to })
-			}
-		}
-		const enemy = (s) => {
-			const o = f.occ[s]
-			return o >= 0 && (o < 16 ? 0 : 1) !== mover
-		}
-		const epSq = state.ep === '-' ? -1 : (state.ep.charCodeAt(1) - 49) * 8 + (state.ep.charCodeAt(0) - 97)
-		for (let from = 0; from < 64; from++) {
-			const id = f.occ[from]
-			if (id < base || id >= base + 16) {
-				continue
-			}
-			const type = f.types[id]
-			const pf = f.p[from]
-			if (type === 'p') {
-				const dir = mover === 0 ? 8 : -8
-				const last = mover === 0 ? 7 : 0
-				const file = from & 7
-				for (const df of [-1, 1]) {
-					if (file + df < 0 || file + df > 7) {
-						continue
-					}
-					const to = from + dir + df
-					if (enemy(to) || to === epSq) {
-						add(id, from, to, pf, to >> 3 === last)
-					}
-				}
-				const push = from + dir
-				if (push >> 3 === last && f.occ[push] < 0) {
-					add(id, from, push, pf, true)
-				}
-				continue
-			}
-			if (type === 'n' || type === 'k') {
-				const list = f.types[id] === 'n' ? KNIGHT_T[from] : KING_T[from]
-				for (let j = 0; j < list.length; j++) {
-					if (enemy(list[j])) {
-						add(id, from, list[j], pf, false)
-					}
-				}
-				continue
-			}
-			const d0 = type === 'b' ? 4 : 0
-			const d1 = type === 'r' ? 4 : 8
-			for (let d = d0; d < d1; d++) {
-				const ray = RAYS_T[from * 8 + d]
-				let clear = 1
-				for (let j = 0; j < ray.length; j++) {
-					const s = ray[j]
-					const o = f.occ[s]
-					if (o < 0 || o === id) {
-						continue
-					}
-					if (enemy(s)) {
-						add(id, from, s, pf * clear, false)
-					}
-					clear *= 1 - f.p[s]
-					if (clear < 0.05) {
-						break
-					}
-				}
-			}
-		}
-		// Converging captures: two parts of one piece attacking the same enemy square.
-		for (const [id, list] of parts) {
-			if (f.partsCount[id] < 2 || f.types[id] === 'p' || f.types[id] === 'k') {
-				continue
-			}
-			for (let a = 0; a < list.length; a++) {
-				for (let b = a + 1; b < list.length; b++) {
-					if (list[a].to !== list[b].to || list[a].from === list[b].from) {
-						continue
-					}
-					const f1 = Math.min(list[a].from, list[b].from)
-					const f2 = Math.max(list[a].from, list[b].from)
-					const to = list[a].to
-					const vid = f.occ[to]
-					const code = squareName(f1) + '|' + squareName(f2) + '-' + squareName(to)
-					if (!seen.has(code)) {
-						seen.add(code)
-						const king = vid === (mover === 0 ? 16 : 0)
-						out.push({ code, king, score: (king ? 2e6 : 0) + f.p[to] * PIECE_VALUES[f.types[vid]] * 12 })
-					}
-				}
-			}
-		}
-		out.sort((x, y) => y.score - x.score)
-		return out
-	}
-
-	/**
-	 * Keep only splits whose targets are both among the piece's best `k` standard targets (ENGINE-RULES App. C).
-	 *
-	 * @param {object} f features
-	 * @param {object[]} moves LegalMoves
-	 * @param {number} k targets kept per piece
-	 * @return {object[]}
-	 */
-	pruneSplits(f, moves, k) {
-		const targets = new Map()
-		for (const m of moves) {
-			if (m.type === 'standard' && !m.capture && f.occ[m.to[0]] < 0 && f.partsCount[m.piece] >= 1) {
-				const type = f.types[m.piece]
-				if (type === 'p' || type === 'k') {
-					continue
-				}
-				let list = targets.get(m.piece)
-				if (list === undefined) {
-					list = []
-					targets.set(m.piece, list)
-				}
-				list.push({ sq: m.to[0], score: this.targetScore(f, m.piece, m.from[0], m.to[0]) })
-			}
-		}
-		const keep = new Map()
-		for (const [id, list] of targets) {
-			list.sort((a, b) => b.score - a.score)
-			keep.set(id, new Set(list.slice(0, k).map((x) => x.sq)))
-		}
-		return moves.filter((m) => {
-			if (m.type !== 'split') {
-				return true
-			}
-			if (!this.p.splitTypes.has(f.types[m.piece])) {
-				return false
-			}
-			const set = keep.get(m.piece)
-			return set !== undefined && set.has(m.to[0]) && set.has(m.to[1])
-		})
-	}
-
-	/**
-	 * Keep only the best `n` root splits of the given piece types (level 3: the top 6 splits for R and Q).
-	 *
-	 * @param {object} f features
-	 * @param {object[]} moves LegalMoves
-	 * @param {object} top `{type: n}`
-	 * @return {object[]}
-	 */
-	topSplits(f, moves, top) {
-		const byType = new Map()
-		for (const m of moves) {
-			if (m.type === 'split' && top[f.types[m.piece]] !== undefined) {
-				const s = this.targetScore(f, m.piece, m.from[0], m.to[0]) + this.targetScore(f, m.piece, m.from[0], m.to[1])
-				const t = f.types[m.piece]
-				if (!byType.has(t)) {
-					byType.set(t, [])
-				}
-				byType.get(t).push({ m, s })
-			}
-		}
-		const allowed = new Set()
-		for (const [t, list] of byType) {
-			list.sort((a, b) => b.s - a.s)
-			for (const x of list.slice(0, top[t])) {
-				allowed.add(x.m.code)
-			}
-		}
-		return moves.filter((m) => m.type !== 'split' || top[f.types[m.piece]] === undefined || allowed.has(m.code))
-	}
-
-	/**
-	 * Heuristic score of a piece moving from `from` to the empty square `to`: centralisation, safety from cheaper
-	 * attackers, and pressure on enemy pieces.
-	 *
-	 * @param {object} f features
-	 * @param {number} id piece id
-	 * @param {number} from square
-	 * @param {number} to square
-	 * @return {number}
-	 */
-	targetScore(f, id, from, to) {
-		const c = id < 16 ? 0 : 1
-		const type = f.types[id]
-		const val = PIECE_VALUES[type]
-		const centre = (x) => 7 - (Math.abs(3.5 - (x & 7)) + Math.abs(3.5 - (x >> 3)))
-		let s = (centre(to) - centre(from)) * 4
-		const e = 1 - c
-		const threat = f.att[e * 64 + to]
-		if (threat > 0) {
-			s -= f.att[CHEAP + e * 64 + to] < val ? val * threat : f.att[c * 64 + to] >= 0.5 ? 0 : val * threat * 0.5
-		}
-		// Attacking the enemy king zone or undefended pieces from the new square.
-		const k = f.kingSq[e]
-		if (k >= 0 && reaches(type, to, k)) {
-			s += 40
-		}
-		return s
-	}
-
-	/**
-	 * The ordered move list of a node, with the level's pruning applied.
-	 *
-	 * @param {object} state position
-	 * @param {number} ply ply
-	 * @param {string|null} ttMove TT move code
-	 * @param {number} depth remaining depth
-	 * @return {Array<{m: object, tactical: boolean, score: number}>}
-	 */
-	orderedMoves(state, ply, ttMove, depth) {
-		const f = features(state)
-		let moves = generateMoves(state)
-		moves = this.pruneSplits(f, moves, depth >= 3 ? this.p.splitTargets : Math.max(2, this.p.splitTargets - 1))
-		const mover = state.turn === 'w' ? 0 : 1
-		// Measures only when the budget is full or a part is attacking something (a certain capture may follow).
-		const full = budget(state, state.turn) >= BUDGET
-		moves = moves.filter((m) => m.type !== 'measure' || full || this.usefulMeasure(f, m, mover))
-		if (this.ignoreKing === 1 - mover) {
-			const k = f.kingSq[this.ignoreKing]
-			moves = moves.filter((m) => m.to.length === 0 || m.to[0] !== k)
-		}
-		return this.score(f, moves, ply, ttMove)
-	}
-
-	/**
-	 * Is a Measure worth searching when the budget is not full? Only if the piece has a part attacking an enemy piece
-	 * (the Measure may make a capture certain).
-	 *
-	 * @param {object} f features
-	 * @param {object} m measure LegalMove
-	 * @param {number} mover colour index
-	 * @return {boolean}
-	 */
-	usefulMeasure(f, m, mover) {
-		const id = m.piece
-		const type = f.types[id]
-		for (let s = 0; s < 64; s++) {
-			if (f.occ[s] !== id) {
-				continue
-			}
-			for (let t = 0; t < 64; t++) {
-				const o = f.occ[t]
-				if (o >= 0 && (o < 16 ? 0 : 1) !== mover && reaches(type, s, t)) {
-					return true
-				}
-			}
-		}
-		return false
-	}
-
-	/**
-	 * Score and sort moves (GD §6.1 ordering).
-	 *
-	 * @param {object} f features
-	 * @param {object[]} moves LegalMoves
-	 * @param {number} ply ply
-	 * @param {string|null} ttMove TT move code
-	 * @return {Array<{m: object, tactical: boolean, score: number}>}
-	 */
-	score(f, moves, ply, ttMove) {
-		const killers = this.killers[ply] || []
-		const out = new Array(moves.length)
-		for (let i = 0; i < moves.length; i++) {
-			const m = moves[i]
-			const mover = m.piece < 16 ? 0 : 1
-			const enemyKing = f.kingSq[1 - mover]
-			let score = 0
-			let tactical = false
-			const cw = captureWeight(m)
-			if (m.code === ttMove) {
-				score = 1e10
-				tactical = true
-			}
-			if (cw > 0) {
-				const vid = victimOf(f, m)
-				const pc = cw / T
-				tactical = true
-				if (vid === 0 || vid === 16) {
-					score += 1e9 + pc * 1e8
-				} else {
-					const vv = vid >= 0 ? PIECE_VALUES[f.types[vid]] : 100
-					score += (pc >= 0.25 ? 3e6 : 5e5) + pc * (vv * 10 - PIECE_VALUES[f.types[m.piece]] / 10)
-				}
-			} else if (m.promo === 'q') {
-				score += 2.5e6
-				tactical = true
-			} else if (m.type === 'merge') {
-				score += 6e5
-			} else if (m.type === 'standard') {
-				score += (this.history.get(m.code) || 0) + 1e3
-				if (killers[0] === m.code) {
-					score += 9e5
-				} else if (killers[1] === m.code) {
-					score += 8e5
-				}
-			} else if (m.type === 'measure') {
-				score += 500
-			} else {
-				score += (this.history.get(m.code) || 0) / 4
-			}
-			if (m.type !== 'split' && m.type !== 'measure' && givesCheck(f, m, enemyKing)) {
-				score += 2e6
-				tactical = true
-			}
-			if (m.type === 'standard' && !m.capture) {
-				score += this.targetScore(f, m.piece, m.from[0], m.to[0])
-			}
-			out[i] = { m, tactical, score }
-		}
-		out.sort((a, b) => b.score - a.score)
-		return out
 	}
 
 	/**
@@ -1309,7 +850,7 @@ export class Searcher {
 	 * A full-window value of a position for its side to move at a given depth (used after the main search for fog
 	 * bands and replies; shares the transposition table). Returns null when a limit stops it.
 	 *
-	 * @param {object} state position
+	 * @param {EngineState} state position
 	 * @param {number} depth depth
 	 * @param {number} [extraNodes] node allowance on top of the current count
 	 * @return {number|null}
@@ -1335,9 +876,9 @@ export class Searcher {
 	}
 
 	/**
-	 * The search result (SPEC §4.1 `search()`): best move, White's E, per-move values.
+	 * The search result: best move, White's E, per-move values.
 	 *
-	 * @return {object}
+	 * @return {SearchResult}
 	 */
 	result() {
 		const elapsed = this.now() - this.start
@@ -1369,14 +910,13 @@ export class Searcher {
 }
 
 /**
- * Search a position synchronously (SPEC §4.1). See `Searcher` for the options.
+ * Search a position synchronously. See `Searcher` for the options.
  *
- * Result: `{code, value, E, pv, depth, nodes, timeMs, nps, moves: [{code, type, resolution, value, E, exact, depth,
- * outcomes}]}` — `value` for the side to move, `E` White's expected score; `moves` best first.
+ * `value` is for the side to move, `E` is White's expected score; `moves` come best first.
  *
- * @param {object} state engine state (game not over)
+ * @param {EngineState} state engine state (game not over)
  * @param {object} [options] search options
- * @return {object}
+ * @return {SearchResult}
  */
 export function search(state, options = {}) {
 	const s = new Searcher(state, options)

@@ -4,8 +4,8 @@
  */
 
 /**
- * Performance smoke tests (SPEC §3.1, GAME-DESIGN §9.3). Budgets are for Chrome on a mid-range laptop; the
- * assertions here are loose (×10) so CI noise never fails them. The measured timings are printed.
+ * Performance smoke tests. Budgets are for Chrome on a mid-range laptop; the assertions here are loose (×10) so CI
+ * noise never fails them. Set `QC_PERF_REPORT=1` to print the measured timings.
  */
 
 import { afterAll, describe, expect, it } from 'vitest'
@@ -17,7 +17,7 @@ const rows = []
  * Average milliseconds per call.
  *
  * @param {string} name label
- * @param {function(number): void} fn body (receives the iteration index)
+ * @param {(i: number) => void} fn body (receives the iteration index)
  * @param {number} n iterations
  * @param {number} budget budget in ms (reported)
  * @return {number}
@@ -36,6 +36,9 @@ function time(name, fn, n, budget) {
 }
 
 afterAll(() => {
+	if (process.env.QC_PERF_REPORT !== '1') {
+		return
+	}
 	const lines = rows.map((r) => r.name.padEnd(44) + String(r.ms).padStart(9) + ' ms' + (r.budget === null ? '' : '   (budget ' + r.budget + ' ms)'))
 	console.log('Engine timings (Node ' + process.version + '):\n' + lines.join('\n'))
 })

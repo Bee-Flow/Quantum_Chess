@@ -5,9 +5,11 @@
 
 /**
  * State construction, canonical serialisation (§2.5, §2.6) and strict validation (§2.7).
+ *
+ * PHP twin: the state methods of lib/Engine/Engine.php and lib/Engine/Internal/StateValidator.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
-import { analyse, projection } from './analysis.js'
+import { analyze, projection } from './analysis.js'
 import {
 	BUDGET,
 	CASTLING,
@@ -23,6 +25,10 @@ import {
 } from './constants.js'
 import { hashParts } from './hash.js'
 import { idOfCode, letterCodeOf } from './squares.js'
+
+/** @typedef {import('./types.js').EngineState} EngineState */
+/** @typedef {import('./types.js').GameResult} GameResult */
+/** @typedef {import('./types.js').ValidationResult} ValidationResult */
 
 const STATE_KEYS = ['v', 'types', 'worlds', 'turn', 'castling', 'ep', 'halfmove', 'fullmove', 'ply', 'captured', 'history', 'result']
 const HEX16 = /^[0-9a-f]{16}$/
@@ -43,8 +49,8 @@ const SQUARE_RE = /^[a-h][1-8]$/
  * @param {number} p.ply ply count
  * @param {number[]} p.captured captured ids
  * @param {string[]} p.history position hashes
- * @param {object|null} p.result result or null
- * @return {object}
+ * @param {GameResult|null} p.result result or null
+ * @return {EngineState}
  */
 export function makeState({ types, worlds, turn, castling, ep, halfmove, fullmove, ply, captured, history, result }) {
 	return { v: V, types, worlds, turn, castling, ep, halfmove, fullmove, ply, captured, history, result }
@@ -53,7 +59,7 @@ export function makeState({ types, worlds, turn, castling, ep, halfmove, fullmov
 /**
  * The start position (§2.5), a fresh object.
  *
- * @return {object}
+ * @return {EngineState}
  */
 export function initialState() {
 	return JSON.parse(START_JSON)
@@ -62,7 +68,7 @@ export function initialState() {
 /**
  * Canonical JSON (§2.6). Rebuilds the key order, so it is safe for states that went through other code.
  *
- * @param {object} state engine state
+ * @param {EngineState} state engine state
  * @return {string}
  */
 export function serializeState(state) {
@@ -72,8 +78,8 @@ export function serializeState(state) {
 /**
  * A deep copy of a state with canonical key order.
  *
- * @param {object} state engine state
- * @return {object}
+ * @param {EngineState} state engine state
+ * @return {EngineState}
  */
 export function canonicalCopy(state) {
 	return makeState({
@@ -95,7 +101,7 @@ export function canonicalCopy(state) {
  * Parse canonical JSON (or any JSON) into a state and validate it.
  *
  * @param {string} json JSON text
- * @return {{ok: true, state: object}|{ok: false, error: string, message: string}}
+ * @return {ValidationResult}
  */
 export function parseState(json) {
 	return validateState(json)
@@ -104,8 +110,8 @@ export function parseState(json) {
 /**
  * Game result of a state (§6), or null.
  *
- * @param {object} state engine state
- * @return {{result: string, reason: string}|null}
+ * @param {EngineState} state engine state
+ * @return {GameResult|null}
  */
 export function gameResult(state) {
 	return state.result === null ? null : { result: state.result.result, reason: state.result.reason }
@@ -142,7 +148,7 @@ function isInt(x, min, max) {
  * Error codes: `shape` (wrong type, missing or unknown keys), `I1` … `I12`.
  *
  * @param {unknown} input state object or JSON string
- * @return {{ok: true, state: object}|{ok: false, error: string, message: string}}
+ * @return {ValidationResult}
  */
 export function validateState(input) {
 	try {
@@ -156,7 +162,7 @@ export function validateState(input) {
  * The validation body (may throw on hostile objects; wrapped by validateState).
  *
  * @param {unknown} input state object or JSON string
- * @return {{ok: true, state: object}|{ok: false, error: string, message: string}}
+ * @return {ValidationResult}
  */
 function validateUnsafe(input) {
 	let obj = input
@@ -435,7 +441,7 @@ function validateUnsafe(input) {
 	}
 	const state = { v: V, types, worlds, turn, castling, ep, halfmove, fullmove, ply, captured, history, result }
 	// I7: budget
-	const a = analyse(state)
+	const a = analyze(state)
 	if (projection(a, 0).count > BUDGET || projection(a, 1).count > BUDGET) {
 		return fail('I7', 'budget exceeds 8')
 	}

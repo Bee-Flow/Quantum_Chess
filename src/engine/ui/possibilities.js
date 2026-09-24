@@ -4,22 +4,21 @@
  */
 
 /**
- * Possibilities (GAME-DESIGN §3.4.4): the complete chessboards a state could be, most likely first, for the
- * possibilities panel and "View one possibility". Also the forced king capture that the board draws when a king
- * cannot escape (GAME-DESIGN §3.9). JS-only display helpers.
+ * Possibilities: the complete chessboards a state could be, most likely first, for the possibilities panel. Also the
+ * forced king capture that the board draws when a king cannot escape. Display helpers only.
  */
 
 import { generateMoves, idOfCode, kingDanger, positionHash, T, validateState } from '../index.js'
 import { colorOfId } from './pieces.js'
 
 /**
- * A board string (ER §2.3) as a list of solid pieces.
+ * A board string (one world, docs/engine-rules.md §2.3) as a list of solid pieces.
  *
  * @param {object} state engine state (for the types)
  * @param {string} board 64-character board
  * @return {Array<null|{piece: number, type: string, color: 'w'|'b', weight: number, probability: number}>}
  */
-export function boardView(state, board) {
+function boardView(state, board) {
 	const out = new Array(64).fill(null)
 	for (let s = 0; s < 64; s++) {
 		const c = board.charCodeAt(s)

@@ -4,9 +4,10 @@
  */
 
 /**
- * Translated texts for the settings pages: upstream codes (SPEC §10.8), source availability reasons (§7.4.7) and
- * the list of data sent to an AI provider (GAME-DESIGN §8.5).
+ * Translated texts of the settings pages: the errors of an LLM provider, why a source is not available, and the list of
+ * data that is sent to a provider.
  */
+
 import { t } from '@nextcloud/l10n'
 
 /**

@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 10 (GAME-DESIGN §5.1.2): a defensive split when every classical escape is covered. */
+/** Lesson 10: a defensive split when every classical escape is covered. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L10',
-	slug: 'split-survive',
 	order: 10,
 	group: 'deeper',
 	minutes: 2,

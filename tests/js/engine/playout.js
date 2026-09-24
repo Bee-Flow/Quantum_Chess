@@ -35,7 +35,7 @@ export function check(cond, message) {
  * Choose a move by a policy.
  *
  * @param {object[]} moves legal moves
- * @param {function(): number} rng seeded rng
+ * @param {() => number} rng seeded rng
  * @param {string} policy policy name
  * @return {object}
  */

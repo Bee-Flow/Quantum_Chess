@@ -4,9 +4,9 @@
  */
 
 /**
- * Every lesson goal and puzzle solution checked with the real engine (replaces the deferred validator script,
- * docs/LEAN-1.0.md): setups are legal, accepted moves pass their predicates, lesson rolls name real outcomes, and each
- * puzzle's accepted set equals the set the engine computes for its goal.
+ * Every lesson goal and puzzle solution checked with the real rules engine: setups are legal, accepted moves pass their
+ * predicates, lesson rolls name real outcomes, and each puzzle's accepted set equals the set the engine computes for
+ * its goal.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -188,7 +188,7 @@ describe('lessons', () => {
 })
 
 describe('puzzles', () => {
-	it('has the eleven 1.0 puzzles', () => {
+	it('has the eleven puzzles', () => {
 		expect(PUZZLES.map((p) => p.id)).toEqual(['P01', 'P02', 'P03', 'P04', 'P05', 'P06', 'P07', 'P08', 'P09', 'P10', 'P11'])
 	})
 

@@ -9,23 +9,24 @@ declare(strict_types=1);
 
 namespace OCA\QuantumChess\Listener;
 
-use OCA\QuantumChess\Service\GameService;
-use OCA\QuantumChess\Service\RatingService;
+use OCA\QuantumChess\Service\Game\GameMaintenanceService;
+use OCA\QuantumChess\Service\Player\RatingService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\User\Events\UserDeletedEvent;
 use Psr\Log\LoggerInterface;
 
 /**
- * Account deletion (docs/SPEC.md §8.12): running games end as `player_deleted`, the user's traces are removed.
+ * Removes a deleted account from the app: its running games end as `player_deleted`, its invitations, chat lines and
+ * rating are deleted, and its id is removed from the remaining games.
  *
  * @template-implements IEventListener<Event>
  */
 class UserDeletedListener implements IEventListener {
 	public function __construct(
-		private GameService $games,
-		private RatingService $ratings,
-		private LoggerInterface $logger,
+		private readonly GameMaintenanceService $games,
+		private readonly RatingService $ratings,
+		private readonly LoggerInterface $logger,
 	) {
 	}
 
@@ -38,7 +39,7 @@ class UserDeletedListener implements IEventListener {
 			$this->games->removeUser($uid, true);
 			$this->ratings->deleteUser($uid);
 		} catch (\Throwable $e) {
-			$this->logger->error('Quantum Chess: could not remove the data of a deleted user', ['exception' => $e]);
+			$this->logger->error('Could not remove the data of a deleted user.', ['exception' => $e]);
 		}
 	}
 }

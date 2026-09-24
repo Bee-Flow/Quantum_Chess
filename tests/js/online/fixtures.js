@@ -4,8 +4,8 @@
  */
 
 /**
- * Server-shaped online games for the frontend-online tests: GameFull with MoveDTOs, chains and states computed the
- * way GameService does (SPEC §8.4), so the client checks run against real engine data.
+ * Server-shaped online games for the online tests: GameFull with MoveDTOs, chains and states computed the way the
+ * server does, so the client checks run against real engine data.
  */
 
 import { applyMove, chainNext, chainStart, initialState, moveNotation, positionHash, serializeState } from '../../../src/engine/index.js'

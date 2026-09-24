@@ -4,18 +4,18 @@
  */
 
 /**
- * The Rules page content (SPEC §14.10): translatable structured data that follows docs/RULES.md section by section
- * (60-second summary, sections 1–10, FAQ, glossary). Wording changes to RULES.md must be mirrored here; a unit test
- * checks that the section list matches the headings of RULES.md.
+ * The Rules page content: translatable structured data that follows docs/rules.md section by section (60-second
+ * summary, sections 1–10, FAQ, glossary). Wording changes to docs/rules.md must be mirrored here; a unit test checks
+ * that the section list matches the headings of docs/rules.md.
  *
- * Blocks: `{type: 'p', text}`, `{type: 'list', items}`, `{type: 'table', head, rows}` (all thunks returning
- * translated strings) and `{type: 'board', setup, caption, play?}` where `play: {code}` shows the position before
- * and after one move, with a toggle for each possible result.
+ * Blocks: `{type: 'p', text}`, `{type: 'list', items}`, `{type: 'table', head, rows}` (all thunks returning translated
+ * strings) and `{type: 'board', setup, caption, play?}` where `play: {code}` shows the position before and after one
+ * move, with a toggle for each possible result.
  */
 
 import { t } from '@nextcloud/l10n'
 
-// TRANSLATORS: the words "ghost", "link", "roll" and "possibility" are game terms, see the glossary in RULES.md.
+// TRANSLATORS: the words "ghost", "link", "roll" and "possibility" are game terms: see the glossary.
 
 export const RULES_SECTIONS = [
 	{

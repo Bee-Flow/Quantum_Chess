@@ -11,8 +11,7 @@
 
 **Chess in which a piece can stand on two squares at once, until something asks where it really is.**
 Quantum Chess lives inside your Nextcloud: challenge colleagues and family with the notifications, avatars and
-dashboard you already use, play the built-in engine or an AI opponent, or learn the game in ten minutes with the
-trainer.
+dashboard you already use, play the computer or an AI opponent, or learn the game in ten minutes with the trainer.
 
 ![A game in progress: a knight split over two squares, with its odds, a queen linked to it and a king in danger](screenshots/01-game-ghosts.png)
 
@@ -27,7 +26,8 @@ trainer.
 
 - 👥 **Online** correspondence games with anyone on your Nextcloud: invitations and open challenges, 1, 3 or 7 days
   per move, draw offers, rematches, chat with quick phrases, Elo ratings and an opt-in leaderboard
-- 🤖 **Computer**: the built-in engine with five levels, from *Wobbles* to *The Observer*, running in your browser
+- 🤖 **Computer**: the built-in computer player with five levels, from *Wobbles* to *The Observer*, running in your
+  browser
 - ✨ **AI opponents** with a personality, powered by Nextcloud Assistant, your organisation's provider or your own
   API key (OpenAI-compatible services such as OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama or LocalAI, and
   Anthropic)
@@ -82,7 +82,7 @@ The screenshots are produced from a seeded demo on a real Nextcloud with `npm ru
 6. **Kings and pawns are always solid.** **Measure** spends your turn to find out where one of your ghosts really is.
 7. Each side has a **budget of 8** possible arrangements, so at most three 50/50 ghosts at a time.
 
-The complete rules, with examples and a glossary: [`docs/RULES.md`](docs/RULES.md). The in-app *Rules* page shows the
+The complete rules, with examples and a glossary: [`docs/rules.md`](docs/rules.md). The in-app *Rules* page shows the
 same rules with live mini-boards, and the trainer teaches them hands-on.
 
 ## Installation
@@ -146,13 +146,14 @@ chat and cleans up AI bookkeeping.
 - A **distributed cache** (`memcache.distributed`, for example Redis or APCu locally) is recommended: with it, AI
   requests are limited to one at a time per user, provider model lists are cached for an hour and unsupported
   parameters are remembered. Without a cache these optimisations are silently off.
-- The game engine and the computer opponent run in the browser (a web worker); the server only validates and applies
-  online moves.
+- The computer player runs in the browser (in a web worker), and so do the rules of local games; the server only
+  validates and applies online moves.
 
 ## AI opponents and the AI coach
 
 The AI opponent and the AI coach need a text-generation service. There are three sources; users choose among those
-the administrator made available, and the built-in engine takes over whenever an AI does not answer in time.
+the administrator made available, and the built-in computer player takes over whenever an AI does not answer in
+time.
 
 ### 1. Nextcloud AI (Assistant / TaskProcessing)
 
@@ -215,7 +216,7 @@ id), and an optional text you can append to the first-use notice (for example a 
 
 - **Correspondence play**: 1, 3 or 7 days per move (default 3), or no deadline for unrated games. When time runs out,
   the late player loses; it is a draw if the opponent has only a king left, and the game is aborted if the late player
-  had not moved yet. Live clocks are not part of 1.0.
+  had not moved yet. There are no live clocks.
 - **Finding opponents**: invite anyone you can find in Nextcloud's user search (Nextcloud's sharing restrictions to
   groups apply), or post an open challenge. Failed invitations never reveal whether a user exists.
 - **Notifications** for invitations, your turn, draw offers, results and chat, with *Accept*, *Decline* and *Rematch*
@@ -236,8 +237,8 @@ id), and an optional text you can append to the first-use notice (for example a 
 Quantum Chess makes **no requests to external services** except the AI provider an administrator or user
 configured: no CDNs, no external fonts, no telemetry, no per-user tracking.
 
-**Sent to an AI provider**: the position as text, the move history as move codes, the legal moves, the engine's
-candidate moves, the chosen persona, the question the user typed and the language of the interface.
+**Sent to an AI provider**: the position as text, the move history as move codes, the legal moves, the computer
+player's candidate moves, the chosen persona, the question the user typed and the language of the interface.
 **Never sent**: user ids, display names, e-mail addresses, the opponent's identity, chat messages or the address of
 your Nextcloud. Online games appear as "White" and "Black". Before the first request to a source, users see a notice
 naming the provider, with your optional addition.
@@ -272,14 +273,15 @@ self-service *Export my games* and *Delete my Quantum Chess data* are [planned](
   timeouts of at most 90 seconds and no redirects. Upstream error messages never reach the browser.
 - **Rate limits** protect game creation, moves, chat, polling, AI requests and connection tests.
 - **Authorisation**: every game endpoint checks that you take part in the game and answers *not found* otherwise,
-  so game ids cannot be probed. Moves are validated only by the server's engine; client states are never trusted.
+  so game ids cannot be probed. Moves are validated only by the server's rules engine; client states are never
+  trusted.
 - Saving an admin secret requires password confirmation.
 
 Please report vulnerabilities privately, as described in the [security policy](.github/SECURITY.md).
 
 ## Planned
 
-Designed, but not part of 1.0 (see [`docs/LEAN-1.0.md`](docs/LEAN-1.0.md)):
+These features are designed but not built yet:
 
 - **Online**: move reminders and quiet hours, a personal invite policy and block list, *Export my games* and
   *Delete my Quantum Chess data*, history filters, an admin badge, a limit on rated games between the same two
@@ -292,50 +294,19 @@ Designed, but not part of 1.0 (see [`docs/LEAN-1.0.md`](docs/LEAN-1.0.md)):
 
 ## Development
 
-**Prerequisites**: Node.js 22 with npm 10, PHP 8.1+ with Composer, GNU make, and a development Nextcloud (32–35).
-
-```sh
-# inside your Nextcloud's apps directory (or symlink the clone there)
-git clone https://github.com/bee-flow/quantum_chess.git quantumchess
-cd quantumchess
-npm ci                      # JavaScript dependencies
-composer install            # PHP development tools (PHPUnit, Psalm, php-cs-fixer, OCP stubs)
-make build                  # or: npm run dev / npm run watch
-php ../../occ app:enable quantumchess
-```
-
-| Command | What it does |
-|---|---|
-| `make build` | Production build of the Vue app into `js/` (`npm ci` runs only when the lock file changed) |
-| `make test` | Vitest (`npm test`) and PHPUnit (`composer test:unit`) |
-| `make lint` | ESLint, `php -l`, php-cs-fixer, Psalm, `info.xml` against the App Store schema, SPDX headers |
-| `make e2e` | Playwright end-to-end tests against a running Nextcloud (see below) |
-| `make appstore` | The App Store package `build/artifacts/quantumchess.tar.gz` (runtime files only) |
-| `npm run l10n:extract`, `npm run l10n:check` | Extract every translatable string; check that Dutch, German and French are complete ([`translationfiles/README.md`](translationfiles/README.md)) |
-| `npm run screenshots` | Regenerate the App Store screenshots from a running Nextcloud ([`screenshots/README.md`](screenshots/README.md)) |
-| `make help` | Every target |
-
-**End-to-end tests** run against a real Nextcloud with the app enabled. Point them at it with environment
-variables, for example:
-
-```sh
-QC_BASE_URL=http://localhost:8080 QC_NC_ROOT=/path/to/nextcloud make e2e
-```
-
-The global setup creates the test users `admin`, `bob` and `carol` with `occ` and logs them in once; details and all
-variables are in [`tests/e2e/README.md`](tests/e2e/README.md).
+You need Node.js 22 with npm 10, PHP 8.1 or later with Composer, and a development Nextcloud (32–35). Clone the
+repository into the server's `apps/` directory as `quantumchess`, run `npm ci`, `composer install` and `make build`,
+and enable the app with `occ app:enable quantumchess`. `make test` and `make lint` run the unit tests and every
+linter. [`CONTRIBUTING.md`](CONTRIBUTING.md) describes the whole workflow: the tests, end-to-end tests, translations,
+the rules-engine fixtures and the conventions.
 
 **Documentation for contributors**
 
-- [`docs/RULES.md`](docs/RULES.md): the rules for players
-- [`docs/ENGINE-RULES.md`](docs/ENGINE-RULES.md): the normative rules for the JavaScript and PHP engines
-- [`docs/GAME-DESIGN.md`](docs/GAME-DESIGN.md): product and interaction design
-- [`docs/SPEC.md`](docs/SPEC.md): architecture, API contract and quality gates
+- [`docs/rules.md`](docs/rules.md): the rules for players
+- [`docs/engine-rules.md`](docs/engine-rules.md): the normative rules for the JavaScript and PHP rules engines
+- [`docs/development/architecture.md`](docs/development/architecture.md): how the app is built, and its conventions
+- [`docs/development/api.md`](docs/development/api.md): the HTTP API and the database schema
 - [`RELEASING.md`](RELEASING.md): how a release is signed and published
-
-**Conventions**: an SPDX header in every file, tabs for indentation, every user-visible string through
-`t('quantumchess', …)` / `n(…)` in JavaScript and `IL10N` in PHP, Nextcloud components and CSS variables, no new
-dependencies without a SPEC change. The JavaScript and PHP engines must stay identical on the shared fixtures.
 
 ## Credits
 

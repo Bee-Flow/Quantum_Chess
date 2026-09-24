@@ -16,7 +16,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * vectors.json (SPEC §3.5): start, rescale, r → u, pct, move order, whyIllegal, setup and setup errors.
+ * vectors.json: start, rescale, r → u, pct, move order, whyIllegal, setup and setup errors.
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 final class VectorsTest extends TestCase {
 	private Engine $engine;
@@ -46,7 +48,7 @@ final class VectorsTest extends TestCase {
 			$this->assertSame($c['expect'], Worlds::rescale($c['weights']));
 			$this->assertSame(Engine::T, array_sum($c['expect']));
 		}
-		$this->assertSame([11184811, 5592405], Worlds::rescale([8388608, 4194304]), 'ER §5.3 vector');
+		$this->assertSame([11184811, 5592405], Worlds::rescale([8388608, 4194304]), '§5.3 vector');
 	}
 
 	public function testRandomToU(): void {
@@ -71,7 +73,7 @@ final class VectorsTest extends TestCase {
 		$this->assertSame(
 			['e1-d1', 'e1-f1', 'e1-d2', 'e1-e2', 'e1-f2', 'g1-e2', 'g1-f3', 'g1-h3', 'g1-e2|f3', 'g1-e2|h3', 'g1-f3|h3'],
 			$v['legal'],
-			'ER §4.10 example',
+			'§4.10 example',
 		);
 	}
 

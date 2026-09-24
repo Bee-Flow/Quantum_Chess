@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-// Design tokens of GAME-DESIGN §3.2. Scoped to the app root (`.qc-app`, added by main.js) and to every board
-// component root (`.qc-scope`), so boards rendered outside the app shell (settings pages, the dev harness) get them
-// too. Non-board UI uses Nextcloud's variables directly.
+// The app's design tokens (`--qc-*`): board markers, outcomes, king rings, the what-if view and motion. They are
+// scoped to the app root (`.qc-app`, set in App.vue) and to the root of every board (`.qc-scope`), so a board that is
+// rendered outside the app container, for example in a dialog, gets them too. Other UI uses Nextcloud's variables.
 
 :where(.qc-app, .qc-scope) {
 	// Accent and selection
@@ -15,8 +15,8 @@
 
 	// Quantum UI outside the board (chips, log, split pipe)
 	--qc-quantum: #6b3fd4;
-	// Rings, threads and outlines on the board: board colours do not follow the theme. A deeper violet than the
-	// GAME-DESIGN draft (#5b2fd0) so that every marker keeps 3:1 against both square colours (GD §9.1).
+	// Rings, threads and outlines on the board: board colours do not follow the theme. The violet is deep enough to keep
+	// a contrast of 3:1 against both square colours of every theme (tests/js/board/contrast.spec.js checks it).
 	--qc-quantum-board: #3f1ca0;
 	--qc-quantum-halo: rgb(255 255 255 / 0.75);
 
@@ -55,7 +55,45 @@
 	// AI
 	--qc-ai: var(--color-element-assistant, var(--color-primary-element));
 
-	// Motion (GD §3.2): durations are multiplied by --qc-speed (Slow 1.5, Normal 1, Fast 0.5, Off 0)
+	// Text on Nextcloud's status backgrounds (older Nextcloud versions lack the text variables)
+	--qc-on-success: var(--color-success-text, #fff);
+	--qc-on-warning: var(--color-warning-text, #000);
+	--qc-on-error: var(--color-error-text, #fff);
+
+	// Player colours: the colour swatch of a player card
+	--qc-swatch-white: #fff;
+	--qc-swatch-black: #222;
+
+	// Evaluation bar: White's share is light and Black's dark in every theme; the fog is the uncertain part
+	--qc-eval-white: #f4f4f4;
+	--qc-eval-black: #3a3a3a;
+	--qc-eval-white-text: #333;
+	--qc-eval-black-text: #eee;
+	--qc-eval-fog: rgb(128 128 128 / 0.55);
+	--qc-eval-fog-light: rgb(128 128 128 / 0.2);
+
+	// Evaluation graph of the review
+	--qc-graph-white: #eee;
+	--qc-graph-black: #3b3b3b;
+	--qc-graph-midline: #888;
+	--qc-graph-roll: #8a8a8a;
+	--qc-graph-roll-good: #2e7d32;
+	--qc-graph-dot-rim: #222;
+	--qc-graph-inaccuracy: #f9c80e;
+	--qc-graph-mistake: #ef6c00;
+	--qc-graph-blunder: #d32f2f;
+	--qc-graph-brilliant: #00897b;
+
+	// Move quality badges without a Nextcloud status colour
+	--qc-quality-brilliant: #00796b;
+	--qc-quality-mistake: #e65100;
+	--qc-on-quality: #fff;
+
+	// Trainer stars and the coach's quality toast
+	--qc-star: #f5a623;
+	--qc-toast-shadow: rgb(0 0 0 / 0.35);
+
+	// Motion: durations are multiplied by --qc-speed (Slow 1.5, Normal 1, Fast 0.5, Off 0)
 	--qc-speed: 1;
 	--qc-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 	--qc-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
@@ -80,17 +118,4 @@
 body[data-theme-dark] :where(.qc-app, .qc-scope),
 body[data-theme-dark-highcontrast] :where(.qc-app, .qc-scope) {
 	@include qc-dark-tokens;
-}
-
-// Visually hidden text for screen readers
-.qc-sr-only {
-	position: absolute !important;
-	width: 1px !important;
-	height: 1px !important;
-	padding: 0 !important;
-	margin: -1px !important;
-	overflow: hidden !important;
-	clip: rect(0 0 0 0) !important;
-	white-space: nowrap !important;
-	border: 0 !important;
 }

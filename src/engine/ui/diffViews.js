@@ -4,8 +4,8 @@
  */
 
 /**
- * diffViews (GAME-DESIGN §3.6.1 "Collapse"): what changed on every square and for every piece between two states,
- * so the board can animate appear / vanish / solidify / fade / move. JS-only and display-only.
+ * diffViews: what changed on every square and for every piece between two states, so the board can animate the
+ * collapse after a move (appear / vanish / solidify / fade / move). Display only.
  */
 
 import { T } from '../constants.js'

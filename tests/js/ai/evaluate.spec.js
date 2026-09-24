@@ -3,8 +3,13 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * The static evaluation: scale conversions, material and positional terms, colour symmetry, and the side-to-move view.
+ */
+
 import { describe, expect, it } from 'vitest'
-import { evaluate, features, materialOf, pieceThreats, staticE, toCp, toE } from '../../../src/ai/evaluate.js'
+import { evaluate, materialOf, staticE, toCp, toE } from '../../../src/ai/evaluate.js'
+import { features, pieceThreats } from '../../../src/ai/features.js'
 import { E, POS, S } from './helpers.js'
 
 /**

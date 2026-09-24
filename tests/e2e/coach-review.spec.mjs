@@ -4,59 +4,13 @@
  */
 
 /**
- * The coach and the review (IMPLEMENTATION-PLAN §5.11 acceptance, lean scope): a computer game with the Beginner
- * coach shows the eval bar, quality badges, hints and the coach chat; the review of the finished game shows the
- * evaluation graph and key moments and steps through the moves.
+ * The coach and the review: a computer game with the Beginner coach shows the eval bar, quality badges, hints and
+ * the coach chat; the review of the finished game shows the evaluation graph and key moments and steps through the
+ * moves.
  */
-import { expect, openApp, test } from './helpers/index.mjs'
+import { clickSquare, expect, openApp, test, byTestId as tid, waitForTurn } from './helpers/index.mjs'
 
 test.use({ user: 'carol' })
-
-const FILES = 'abcdefgh'
-const SHOTS = process.env.QC_SHOTS ?? null
-
-/**
- * An element by its data-test attribute.
- *
- * @param {import('@playwright/test').Page} page the page
- * @param {string} id data-test value
- * @return {import('@playwright/test').Locator}
- */
-const tid = (page, id) => page.locator(`[data-test="${id}"]`)
-
-/**
- * Click a square of a white-oriented board.
- *
- * @param {import('@playwright/test').Page} page the page
- * @param {string} square e.g. 'e2'
- */
-async function clickSquare(page, square) {
-	await page.locator('.qc-board').first().scrollIntoViewIfNeeded()
-	const box = await page.locator('.qc-board').first().boundingBox()
-	const s = box.width / 8
-	await page.mouse.click(box.x + (FILES.indexOf(square[0]) + 0.5) * s, box.y + (7 - (Number(square[1]) - 1) + 0.5) * s)
-}
-
-/**
- * Wait until the board accepts input.
- *
- * @param {import('@playwright/test').Page} page the page
- */
-async function waitForTurn(page) {
-	await page.locator('.qc-board--interactive:not(.qc-board--busy)').waitFor({ timeout: 30_000 })
-}
-
-/**
- * Save a screenshot when QC_SHOTS is set.
- *
- * @param {import('@playwright/test').Page} page the page
- * @param {string} name file name
- */
-async function shot(page, name) {
-	if (SHOTS) {
-		await page.screenshot({ path: `${SHOTS}/${name}.png` })
-	}
-}
 
 /**
  * Start a level-1 computer game with the Beginner coach.
@@ -98,11 +52,9 @@ test('the coach during a computer game, then the review @phone', async ({ page }
 	await expect(tid(page, 'coach-hint')).toBeVisible()
 	await tid(page, 'coach-hint-button').click()
 	await expect(tid(page, 'coach-hint')).toContainText('Idea')
-	await shot(page, phone ? 'phone-coach-game' : 'coach-game-hint')
 
 	await page.getByRole('button', { name: 'What is my opponent threatening?' }).click()
 	await expect(page.locator('.qc-coach-chat__message--coach')).toBeVisible({ timeout: 60_000 })
-	await shot(page, phone ? 'phone-coach-chat' : 'coach-chat')
 
 	// finish the game and open its review
 	const id = await page.evaluate(() => window.location.hash.split('/').pop())
@@ -123,5 +75,4 @@ test('the coach during a computer game, then the review @phone', async ({ page }
 	await tid(page, 'review-prev').click()
 	await tid(page, 'review-prev').click()
 	await expect(page.locator('.qc-review__ply')).toContainText('Move 2 of 4')
-	await shot(page, phone ? 'phone-review' : 'review')
 })

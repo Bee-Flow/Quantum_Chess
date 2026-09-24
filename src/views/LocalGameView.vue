@@ -4,8 +4,8 @@
 -->
 
 <!--
-  Local games: computer, AI opponent, pass & play (route /play/:mode/:id?). Without an id a game is created from the
-  last New game options of that mode and the URL is replaced (SPEC §14.1).
+  Local games (route /play/:mode/:id?): against the computer player, against an LLM opponent, and pass & play. Without
+  an id, a game is created from the last New game options of that mode and the URL is replaced.
 -->
 <template>
 	<div class="qc-local-view">
@@ -24,9 +24,10 @@
 import { t } from '@nextcloud/l10n'
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import LocalGameHost from '../components/game/LocalGameHost.vue'
-import { useAiSources } from '../composables/useAiSources.js'
-import { createLocalGame } from '../services/localGames.js'
+import LocalGameHost from '../game/components/LocalGameHost.vue'
+import { otherColor } from '../engine/index.js'
+import { createLocalGame } from '../game/localGames.js'
+import { useAiSources } from '../llm/composables/useAiSources.js'
 import { preferences } from '../services/preferences.js'
 
 const route = useRoute()
@@ -34,31 +35,23 @@ const router = useRouter()
 const gameId = computed(() => (typeof route.params.id === 'string' && route.params.id !== '' ? route.params.id : null))
 
 /**
- * The opposite colour.
- *
- * @param {'w'|'b'} c colour
- * @return {'w'|'b'}
- */
-const other = (c) => (c === 'w' ? 'b' : 'w')
-
-/**
  * Create a game like an existing one, optionally with changes, and open it.
  *
  * @param {object} rec record to copy
- * @param {object} [changes] {swap: boolean, level: number}
- * @param changes.swap
- * @param changes.level
+ * @param {object} [changes] what to change
+ * @param {boolean} [changes.swap] swap the colours
+ * @param {number|null} [changes.level] another computer level
  */
 function createLike(rec, { swap = false, level = null } = {}) {
 	let players = { ...rec.players }
 	let humanColor = rec.humanColor
 	if (level !== null && rec.mode === 'computer') {
-		const engineColor = other(rec.humanColor)
+		const engineColor = otherColor(rec.humanColor)
 		players = { ...players, [engineColor]: { ...players[engineColor], level } }
 	}
 	if (swap && rec.mode !== 'local') {
 		players = { w: players.b, b: players.w }
-		humanColor = other(humanColor)
+		humanColor = otherColor(humanColor)
 	}
 	const record = createLocalGame({ mode: rec.mode, players, humanColor, options: { ...rec.options } })
 	router.push(`/play/${rec.mode}/${record.id}`)
@@ -79,7 +72,7 @@ function rematch(rec) {
  * @param {object} rec record
  */
 function nextLevel(rec) {
-	const engine = rec.players[other(rec.humanColor)]
+	const engine = rec.players[otherColor(rec.humanColor)]
 	createLike(rec, { level: Math.min(5, (engine.level ?? 1) + 1) })
 }
 

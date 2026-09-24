@@ -13,7 +13,7 @@ use OCA\QuantumChess\Engine\Engine;
 use PHPUnit\Framework\TestCase;
 
 /**
- * describeForLlm (ER Appendix B, SPEC §3.4, §10.4): golden texts for W2, W4 and W6, links in words, the size limit.
+ * describeForLlm (docs/engine-rules.md Appendix B): golden texts for W2, W4 and W6, links in words, the size limit.
  */
 final class DescribeForLlmTest extends TestCase {
 	private Engine $e;

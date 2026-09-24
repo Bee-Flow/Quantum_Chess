@@ -4,12 +4,16 @@
  */
 
 /**
- * Global bookkeeping after a move (ENGINE-RULES §5.4, pipeline step A7).
+ * Global bookkeeping after a move (§5.4, pipeline step A7).
+ *
+ * PHP twin: lib/Engine/Internal/Worlds.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { CASTLING, CASTLING_FLAGS } from './constants.js'
 import { TYPE_P } from './geometry.js'
 import { idOfCode, letterCodeOf, SQUARE_NAMES } from './squares.js'
+
+/** @typedef {import('./moveRecord.js').MoveRecord} MoveRecord */
 
 /**
  * State-based castling (§5.4): keep a present flag only while its king and rook are on their home squares in
@@ -47,7 +51,7 @@ export function castlingAfter(castling, worlds) {
  * The en-passant field after a move (§5.4): the skipped square iff a pawn double push actually moved and an enemy
  * pawn stands beside its target (same rank, adjacent file; never t ± 1 by index).
  *
- * @param {object} rec record
+ * @param {MoveRecord} rec record
  * @param {string} key realised key
  * @param {Array<[string, number]>} worlds worlds after the move
  * @param {string} types types after the move
@@ -78,7 +82,7 @@ export function epAfter(rec, key, worlds, types) {
  * The types string after a move: a pawn that moved or captured onto its last rank takes its promotion type.
  *
  * @param {string} types types before
- * @param {object} rec record
+ * @param {MoveRecord} rec record
  * @param {string} key realised key
  * @return {string}
  */
@@ -93,7 +97,7 @@ export function typesAfter(types, rec, key) {
  * The halfmove clock after a move: 0 on a capture or an actual pawn move, otherwise +1.
  *
  * @param {number} halfmove before
- * @param {object} rec record
+ * @param {MoveRecord} rec record
  * @param {string} key realised key
  * @return {number}
  */

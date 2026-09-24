@@ -13,10 +13,11 @@
 
 ## Checklist
 
-- [ ] `make lint` and `make test` pass locally (`npm run build` too for frontend changes)
-- [ ] Rules behaviour follows `docs/ENGINE-RULES.md`; engine changes keep the JS and PHP engines identical on the fixtures
+- [ ] `make lint` and `make test` pass locally (`npm run build` too for frontend changes), see `CONTRIBUTING.md`
+- [ ] Rules behaviour follows `docs/engine-rules.md`; engine changes keep the JS and PHP engines identical on the fixtures
+  (`npm run fixtures` leaves no diff)
 - [ ] New or changed user-visible text uses `t('quantumchess', …)` / `n(…)` (JS) or `IL10N` (PHP), in sentence case
 - [ ] Keyboard, screen reader and reduced motion still work for the changed UI
-- [ ] New files carry an SPDX header; no new dependencies (docs/SPEC.md §2.2)
+- [ ] New files carry an SPDX header; new dependencies were discussed in an issue first
 - [ ] `CHANGELOG.md` has an entry under *Unreleased* for user-facing changes
 - [ ] Tests added or updated

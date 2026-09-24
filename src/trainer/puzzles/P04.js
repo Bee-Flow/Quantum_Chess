@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Puzzle P04 (GAME-DESIGN §5.2.2). */
+/** Puzzle P04. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'P04',
@@ -13,7 +13,6 @@ export default {
 	stars: 2,
 	type: 'forced',
 	side: 'w',
-	horizon: 1,
 	setup: { fen: 'R6k/6pp/3N4/8/8/8/8/2K5 w - - 0 1', prelude: ['d6-f7|e8'] },
 	accepted: ['e8-c7', 'e8-d6', 'e8-f6', 'e8-d6|c7', 'e8-f6|c7', 'e8-d6|f6', 'f7|e8-d6'],
 	value: null,

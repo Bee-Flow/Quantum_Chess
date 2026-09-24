@@ -4,21 +4,24 @@
  */
 
 /**
- * Hints (GAME-DESIGN §5.3.2), tiers 1–2 in 1.0: Nudge (highlight the piece plus a theme sentence) and Idea (the move
- * type and area plus the gain, with an arrow). Tiers 3–4 are deferred (docs/LEAN-1.0.md).
+ * Hints in two tiers: Nudge (highlight the piece, plus a sentence about the theme) and Idea (the move type and the
+ * area, the gain, and an arrow).
  */
 
 import { t } from '@nextcloud/l10n'
 import { findMove, squareName } from '../engine/index.js'
+import { themeOf, themeText } from './hintThemes.js'
 import { forMover } from './quality.js'
-import { themeOf, themeText } from './themes.js'
+
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
+/** @typedef {import('../engine/types.js').LegalMove} LegalMove */
 
 export const MAX_TIER = 2
 
 /**
  * The move kind in words.
  *
- * @param {object} move LegalMove
+ * @param {LegalMove} move the move
  * @return {string}
  */
 function kindText(move) {
@@ -33,7 +36,7 @@ function kindText(move) {
 /**
  * The hint of a tier for the best move of an analysis.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object|null} analysis Analysis of the position
  * @param {number} tier 1 or 2
  * @return {{text: string, highlights: object[], arrows: object[]}|null}

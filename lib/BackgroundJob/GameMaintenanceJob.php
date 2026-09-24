@@ -10,25 +10,25 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\BackgroundJob;
 
 use OCA\QuantumChess\Service\Ai\AiMaintenance;
-use OCA\QuantumChess\Service\GameService;
+use OCA\QuantumChess\Service\Game\GameMaintenanceService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJob;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
 
 /**
- * Every 15 minutes: expire invitations, time out and abandon games, purge old chat (docs/SPEC.md §8.11), then the
- * AI cleanup.
+ * Every 15 minutes: expires invitations, times out and abandons games, purges old chat and finished games, then
+ * cleans up the LLM integration.
  */
 class GameMaintenanceJob extends TimedJob {
 	public function __construct(
 		ITimeFactory $time,
-		private GameService $games,
-		private AiMaintenance $ai,
-		private LoggerInterface $logger,
+		private readonly GameMaintenanceService $games,
+		private readonly AiMaintenance $ai,
+		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct($time);
-		$this->setInterval(900);
+		$this->setInterval(15 * 60);
 		$this->setTimeSensitivity(IJob::TIME_SENSITIVE);
 		$this->setAllowParallelRuns(false);
 	}
@@ -40,7 +40,7 @@ class GameMaintenanceJob extends TimedJob {
 		$now = $this->time->getTime();
 		$stats = $this->games->runMaintenance($now);
 		if (array_sum($stats) > 0) {
-			$this->logger->info('Quantum Chess maintenance', ['app' => 'quantumchess'] + $stats);
+			$this->logger->info('Game maintenance', $stats);
 		}
 		$this->ai->cleanup($now);
 	}

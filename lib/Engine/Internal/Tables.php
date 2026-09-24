@@ -10,7 +10,9 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine\Internal;
 
 /**
- * Constants, board alphabet and precomputed geometry (ENGINE-RULES §1–§3.2, §4.2). Built once per process.
+ * Constants, board alphabet and precomputed geometry (§1–§3.2, §4.2). Built once per process.
+ *
+ * JavaScript twin: src/engine/constants.js, geometry.js and squares.js. Section numbers (§) refer to docs/engine-rules.md.
  *
  * @internal Only for lib/Engine. Other code uses {@see \OCA\QuantumChess\Engine\Engine}.
  */
@@ -108,7 +110,7 @@ final class Tables {
 	public static array $dirOf = [];
 	/** @var array<int, true> GEO[type * 4096 + f * 64 + t] is set when G(type, f, t) holds */
 	public static array $geo = [];
-	/** @var list<list<list<int>>> TARGETS[type][s]: geometric targets of non-pawn types, ascending */
+	/** @var array<int, array<int, list<int>>> TARGETS[type][s]: geometric targets of non-pawn types, ascending */
 	public static array $targets = [];
 	/** @var array<int, list<int>> */
 	public static array $knight = [];

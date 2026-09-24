@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Puzzle P10 (GAME-DESIGN §5.2.2). */
+/** Puzzle P10. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'P10',
@@ -13,7 +13,6 @@ export default {
 	stars: 2,
 	type: 'material',
 	side: 'w',
-	horizon: 1,
 	setup: { fen: 'r6N/7p/8/8/2b5/k7/8/3K4 w - - 0 1' },
 	accepted: ['h8-g6|f7'],
 	value: 50,

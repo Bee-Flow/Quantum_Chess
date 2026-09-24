@@ -3,6 +3,11 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * The computer player's analysis: the coach's position analysis, the evaluation of a single move, and the whole-game
+ * review with its cache key.
+ */
+
 import { describe, expect, it } from 'vitest'
 import { analyze, analyzeGame, analyzeGameTask, evaluateMove } from '../../../src/ai/analyze.js'
 import { ENGINE_VERSION } from '../../../src/ai/levels.js'
@@ -10,7 +15,7 @@ import { E, POS, S } from './helpers.js'
 
 const QUICK = { timeMs: Infinity, nodeBudget: 6000 }
 
-describe('analyze (coach, GD §5.3.1)', () => {
+describe('analyze (coach)', () => {
 	it('returns White\'s E, multiPV lines, depth and nodes', () => {
 		const a = analyze(POS.middlegame(), { ...QUICK, multiPv: 3 })
 		expect(a.E).toBeGreaterThan(0)
@@ -84,7 +89,7 @@ describe('evaluateMove', () => {
 	})
 })
 
-describe('analyzeGame (review, GD §5.4)', () => {
+describe('analyzeGame (review)', () => {
 	// A short game with rolls: W2's position, the bishop hits the knight (a roll), then a few more moves.
 	const record = () => {
 		const start = POS.w2()

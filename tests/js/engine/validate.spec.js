@@ -4,7 +4,9 @@
  */
 
 /**
- * ENGINE-RULES §2.7: validateState rejects every broken invariant and malicious input, and never throws.
+ * validateState (§2.7) rejects every broken invariant and malicious input, and never throws.
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { describe, expect, it } from 'vitest'

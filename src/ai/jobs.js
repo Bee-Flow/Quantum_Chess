@@ -4,7 +4,7 @@
  */
 
 /**
- * Job dispatch shared by the Web Worker and the main-thread fallback (SPEC §4.4). A job is a generator task: the
+ * Job dispatch shared by the Web Worker and the main-thread fallback. A job is a generator task: the
  * worker runs it in one go, the fallback in short time slices between frames.
  *
  * Payloads: `{state, options}`; `evaluateMove`: `{state, code, options}`; `analyzeGame`: `{record, options}`;
@@ -14,9 +14,12 @@
 import { InvalidStateError, validateState } from '../engine/index.js'
 import { analyzeGameTask, analyzeTask, evaluateMoveTask } from './analyze.js'
 import { benchmarkTask } from './benchmark.js'
-import { bestMoveTask } from './bestmove.js'
+import { bestMoveTask } from './bestMove.js'
 import { candidatesTask } from './candidates.js'
 import { solve } from './solver.js'
+import { syncTask } from './tasks.js'
+
+/** @typedef {import('./tasks.js').SliceContext} SliceContext */
 
 /** Job types of the worker protocol (besides `cancel`). */
 export const JOB_TYPES = Object.freeze(['bestMove', 'analyze', 'evaluateMove', 'candidates', 'solve', 'analyzeGame', 'benchmark'])
@@ -36,21 +39,11 @@ function stateOf(input) {
 }
 
 /**
- * A task that runs a synchronous function (it never pauses).
- *
- * @param {function(): object} fn function
- * @return {{next: function(): {done: boolean, value: object}}}
- */
-function syncTask(fn) {
-	return { next: () => ({ done: true, value: fn() }) }
-}
-
-/**
  * Create the task of a job.
  *
  * @param {string} type job type
  * @param {object} payload payload
- * @param {{slice: function(): number, progress?: function(object): void}} ctx context
+ * @param {SliceContext} ctx context
  * @return {Generator}
  */
 export function createTask(type, payload, ctx) {

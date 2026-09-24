@@ -4,8 +4,8 @@
  */
 
 /**
- * Identifiers from `crypto.getRandomValues` (SPEC §14.3.2). `crypto.randomUUID` is not used: it is missing on
- * plain-HTTP instances.
+ * Random identifiers from `crypto.getRandomValues`. `crypto.randomUUID` is not used: browsers offer it only in secure
+ * contexts, and some Nextcloud instances are served over plain HTTP.
  */
 
 /**

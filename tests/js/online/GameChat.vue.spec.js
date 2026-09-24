@@ -5,14 +5,14 @@
  */
 
 /**
- * GameChat (GAME-DESIGN §7.11): text is rendered as text (an HTML payload stays text), phrases and system lines are
- * translated keys, the opponent's messages collapse while muted, and quick phrases send their key.
+ * GameChat: text is rendered as text (an HTML payload stays text), phrases and system lines are translated keys, the
+ * opponent's messages collapse while muted, and quick phrases send their key.
  */
 
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { computed, ref, shallowRef } from 'vue'
-import GameChat from '../../../src/components/online/GameChat.vue'
+import GameChat from '../../../src/online/components/GameChat.vue'
 
 /**
  * A minimal online controller for the chat.

@@ -4,8 +4,8 @@
 -->
 
 <!--
-  The Rules page (SPEC §14.10): RULES.md as translatable content with live mini-boards. A "play" board shows the
-  position before and after one move, with a toggle per possible result.
+  The Rules page: the player rules (docs/rules.md) as translatable content with live mini-boards. A "play" board shows
+  the position before and after one move, with a toggle per possible result.
 -->
 <template>
 	<div class="qc-rules">
@@ -73,7 +73,7 @@
 <script setup>
 import { t } from '@nextcloud/l10n'
 import { useRoute } from 'vue-router'
-import RulesBoard from '../components/app/RulesBoard.vue'
+import RulesBoard from '../rules/components/RulesBoard.vue'
 import { RULES_SECTIONS } from '../rules/sections.js'
 
 const route = useRoute()

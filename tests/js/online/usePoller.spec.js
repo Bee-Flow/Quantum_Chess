@@ -4,12 +4,12 @@
  */
 
 /**
- * usePoller (SPEC §14.4.5, GAME-DESIGN §7.10): intervals from the caller, one request at a time, backoff ×2 with
- * jitter and a cap, Retry-After, the connection states, and an immediate poll when the tab becomes visible.
+ * usePoller: intervals from the caller, one request at a time, backoff ×2 with jitter and a cap, Retry-After, the
+ * connection states, and an immediate poll when the tab becomes visible.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { BACKOFF_CAP_MS, usePoller } from '../../../src/online/usePoller.js'
+import { BACKOFF_CAP_MS, usePoller } from '../../../src/online/composables/usePoller.js'
 
 /**
  * A fake document/window pair with visibility and online events.

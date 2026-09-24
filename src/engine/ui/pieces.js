@@ -4,7 +4,7 @@
  */
 
 /**
- * Piece names and figurines for copy (GAME-DESIGN §3.6.2, §9.1). JS-only display helpers.
+ * Piece names, colour names and figurines for UI copy and spoken text. Display helpers only.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -16,7 +16,7 @@ export const TEXT = Object.freeze({ escape: false, sanitize: false })
 const VS15 = '︎'
 
 /** Unicode figurines by colour and type. */
-export const FIGURINES = Object.freeze({
+const FIGURINES = Object.freeze({
 	w: Object.freeze({ k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' }),
 	b: Object.freeze({ k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' }),
 })
@@ -89,7 +89,7 @@ export function colorName(color) {
 }
 
 /**
- * Colour of a piece id (ER §2.2).
+ * Colour of a piece id: ids 0–15 are White, 16–31 Black (docs/engine-rules.md §2.2).
  *
  * @param {number} id piece id 0..31
  * @return {'w'|'b'}
@@ -99,23 +99,12 @@ export function colorOfId(id) {
 }
 
 /**
- * Type of a piece id in a state.
- *
- * @param {object} state engine state
- * @param {number} id piece id 0..31
- * @return {string}
- */
-export function typeOfId(state, id) {
-	return state.types[id]
-}
-
-/**
  * Upper-case the first letter (sentence case for names that start a sentence).
  *
  * @param {string} text text
  * @return {string}
  */
-export function capitalise(text) {
+export function capitalize(text) {
 	return text === '' ? text : text.charAt(0).toLocaleUpperCase() + text.slice(1)
 }
 

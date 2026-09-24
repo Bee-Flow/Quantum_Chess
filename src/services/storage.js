@@ -4,12 +4,12 @@
  */
 
 /**
- * `localStorage` wrappers that never throw (SPEC §14.3.2): quota errors, privacy modes and disabled storage are
- * swallowed, and a broken value reads as the fallback.
+ * `localStorage` wrappers that never throw: quota errors, privacy modes and disabled storage are swallowed, and a
+ * broken value reads as the fallback. A failed write must never break a game.
  *
- * Every key belongs to the logged-in user: `quantumchess.trainer.v1` is stored as `quantumchess/<uid>/trainer.v1`
- * (a user id never contains `/`). The browser storage outlives a session that simply expires, so without the user
- * id the next account on the same browser would see, and sync, the previous account's data.
+ * Every key belongs to the logged-in user: `quantumchess.trainer.v1` is stored as `quantumchess/<uid>/trainer.v1` (a
+ * user id never contains `/`). The browser storage outlives a session that simply expires, so without the user id the
+ * next account on the same browser would see, and sync, the previous account's data.
  */
 
 const PREFIX = 'quantumchess.'
@@ -58,9 +58,10 @@ function store() {
 /**
  * Read a JSON value.
  *
- * @param {string} key storage key
- * @param {any} fallback value when missing or unreadable
- * @return {any}
+ * @template T
+ * @param {string} key logical storage key
+ * @param {T} fallback value when missing or unreadable
+ * @return {T}
  */
 export function readJson(key, fallback) {
 	try {
@@ -74,8 +75,8 @@ export function readJson(key, fallback) {
 /**
  * Write a JSON value.
  *
- * @param {string} key storage key
- * @param {any} value JSON-serialisable value
+ * @param {string} key logical storage key
+ * @param {unknown} value JSON-serialisable value
  * @return {boolean} whether it was stored
  */
 export function writeJson(key, value) {
@@ -94,7 +95,7 @@ export function writeJson(key, value) {
 /**
  * Remove a key.
  *
- * @param {string} key storage key
+ * @param {string} key logical storage key
  */
 export function removeKey(key) {
 	try {

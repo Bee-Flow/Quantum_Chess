@@ -6,6 +6,8 @@
 /**
  * Synchronous pure-JS SHA-256 (FIPS 180-4) over the UTF-8 bytes of a string. Works in browsers, Web Workers and
  * Node without Web Crypto (whose digest is asynchronous).
+ *
+ * PHP twin: PHP's built-in `hash('sha256', …)`. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 const K = new Uint32Array([
@@ -81,7 +83,7 @@ const K = new Uint32Array([
  * @param {string} s text
  * @return {Uint8Array}
  */
-export function utf8Bytes(s) {
+function utf8Bytes(s) {
 	const out = []
 	for (let i = 0; i < s.length; i++) {
 		let c = s.charCodeAt(i)
@@ -115,7 +117,7 @@ export function utf8Bytes(s) {
  * @param {Uint8Array} bytes message
  * @return {string}
  */
-export function sha256Bytes(bytes) {
+function sha256Bytes(bytes) {
 	const len = bytes.length
 	const total = ((len + 9 + 63) >> 6) << 6
 	const buf = new Uint8Array(total)

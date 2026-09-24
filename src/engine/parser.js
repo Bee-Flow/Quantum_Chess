@@ -5,6 +5,8 @@
 
 /**
  * Canonical move codes (§4.1) and the lenient parser (§4.12).
+ *
+ * PHP twin: lib/Engine/Internal/Parser.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 import { SQUARE_NAMES } from './squares.js'

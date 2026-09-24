@@ -4,14 +4,15 @@
  */
 
 /**
- * splitTargets (GAME-DESIGN G5, §3.5.2, §3.5.3): every geometric split target of a piece with its `whyIllegal`
- * code, so the board can draw enabled and disabled split markers with the same codes the rules use.
+ * splitTargets: every geometric split target of a piece with its `whyIllegal` code, so the board can draw enabled
+ * and disabled split markers with the same codes the rules use.
  */
 
-import { analyse } from '../analysis.js'
+import { analyze } from '../analysis.js'
 import { ILLEGAL_REASON_CHECK } from '../constants.js'
 import { TARGETS, TYPE_B, TYPE_N, TYPE_Q, TYPE_R } from '../geometry.js'
-import { legalOf, resolveMove } from '../moves.js'
+import { resolveMove } from '../moveInput.js'
+import { legalOf } from '../moveRecord.js'
 import { SQUARE_NAMES } from '../squares.js'
 
 /**
@@ -23,7 +24,7 @@ import { SQUARE_NAMES } from '../squares.js'
  * - `targets`: every square the piece reaches geometrically from `from`, ascending:
  *   `{square, legal, reason, partners}`. `partners` are the squares that make a legal split together with it. For
  *   a target without partners, `reason` is `split_target_occupied` when the square itself may hold a piece, and
- *   otherwise the most frequent reason of its pairs (ties: the later check of §4.11).
+ *   otherwise the most frequent reason of its pairs (ties: the later check of docs/engine-rules.md §4.11).
  * - `pairs`: every geometric pair `{to: [t1, t2], code, reason, move}` (move is the LegalMove when legal).
  *
  * @param {object} state valid engine state
@@ -31,7 +32,7 @@ import { SQUARE_NAMES } from '../squares.js'
  * @return {{from: number, piece: number|null, reason: string|null, targets: object[], pairs: object[]}}
  */
 export function splitTargets(state, from) {
-	const a = analyse(state)
+	const a = analyze(state)
 	const X = a.occ[from]
 	const out = { from, piece: X >= 0 ? X : null, reason: null, targets: [], pairs: [] }
 	if (state.result !== null) {

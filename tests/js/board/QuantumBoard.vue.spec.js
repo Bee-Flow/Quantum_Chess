@@ -5,15 +5,15 @@
  */
 
 /**
- * QuantumBoard (SPEC §14.6.1): the accessible grid and its labels, markers per resolution, badges, the DOM budget,
- * keyboard flows with the roving focus, the move event and the Animator at speed Off.
+ * QuantumBoard: the accessible grid and its labels, markers per resolution, badges, the DOM budget, keyboard flows with
+ * the roving focus, the move event and the Animator at speed Off.
  */
 
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
-import QuantumBoard from '../../../src/components/board/QuantumBoard.vue'
-import { clearBoardPreferenceOverrides, overrideBoardPreferences } from '../../../src/components/board/boardPreferences.js'
+import QuantumBoard from '../../../src/board/components/QuantumBoard.vue'
+import { clearBoardPreferenceOverrides, overrideBoardPreferences } from '../../../src/board/boardPreferences.js'
 import { E, S } from './helpers.js'
 
 /**

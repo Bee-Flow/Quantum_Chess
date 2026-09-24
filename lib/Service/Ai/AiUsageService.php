@@ -10,8 +10,10 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Service\Ai;
 
 use OCA\QuantumChess\AppInfo\Application;
+use OCA\QuantumChess\Exception\ApiError;
 use OCA\QuantumChess\Exception\ApiException;
-use OCA\QuantumChess\Service\SettingsService;
+use OCA\QuantumChess\Service\Game\GameClock;
+use OCA\QuantumChess\Service\Settings\AppSettings;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -22,33 +24,38 @@ use OCP\Security\RateLimiting\ILimiter;
 use OCP\Security\RateLimiting\IRateLimitExceededException;
 
 /**
- * AI limits and aggregated counters (docs/SPEC.md §10.6): `ai_requests_per_hour` per user across sources, one
- * concurrent request per user, the organisation provider's daily cap, per-day counters kept 30 days, and the
- * Nextcloud AI latencies for the admin status card. No per-user logs are kept.
+ * The limits and counters of LLM requests.
+ *
+ * A user may send `ai_requests_per_hour` requests per hour across all sources, and one at a time. The organisation
+ * provider has a daily cap across all users. Requests are counted per source and day, and the counters are kept for
+ * 30 days; the last Nextcloud Assistant latencies feed the admin status. No per-user records are kept.
  */
 class AiUsageService {
+	/** Seconds a rate-limited user is asked to wait. */
 	public const RETRY_AFTER = 300;
+	/** Seconds after which a request that never ended no longer blocks the user's next one. */
 	public const BUSY_TTL = 120;
+	/** Days the daily counters are kept. */
 	public const KEEP_DAYS = 30;
 
 	private ICache $cache;
 
 	public function __construct(
-		private IAppConfig $appConfig,
-		private ILimiter $limiter,
+		private readonly IAppConfig $appConfig,
+		private readonly ILimiter $limiter,
 		ICacheFactory $cacheFactory,
-		private IUserManager $userManager,
-		private ITimeFactory $time,
-		private SettingsService $settings,
-		private IL10N $l,
+		private readonly IUserManager $userManager,
+		private readonly ITimeFactory $time,
+		private readonly AppSettings $settings,
+		private readonly IL10N $l,
 	) {
 		$this->cache = $cacheFactory->createDistributed(Application::APP_ID . '-ai');
 	}
 
 	/**
-	 * Register a request of the user: hourly limit and the one-at-a-time rule. Call end() afterwards.
+	 * Registers a request of the user under the hourly limit and the one-at-a-time rule. Call end() afterwards.
 	 *
-	 * @throws ApiException 429 ai_rate_limited / ai_busy
+	 * @throws ApiException ai_rate_limited or ai_busy
 	 */
 	public function begin(string $uid): void {
 		$user = $this->userManager->get($uid);
@@ -56,20 +63,22 @@ class AiUsageService {
 			try {
 				$this->limiter->registerUserRequest('quantumchess-ai', $this->settings->aiRequestsPerHour(), 3600, $user);
 			} catch (IRateLimitExceededException) {
-				throw new ApiException('ai_rate_limited', $this->l->t('You have reached the hourly limit for AI requests. Please try again later.'), 429, [], self::RETRY_AFTER);
+				throw new ApiException(ApiError::AiRateLimited, $this->l->t('You have reached the hourly limit for AI requests. Please try again later.'), [], self::RETRY_AFTER);
 			}
 		}
+		// The one-at-a-time rule needs an atomic add, which only a memory cache offers.
 		if ($this->cache instanceof \OCP\IMemcache && !$this->cache->add('busy:' . $uid, 1, self::BUSY_TTL)) {
-			throw new ApiException('ai_busy', $this->l->t('Please wait for the previous AI answer.'), 429, [], 5);
+			throw new ApiException(ApiError::AiBusy, $this->l->t('Please wait for the previous AI answer.'), [], 5);
 		}
 	}
 
+	/** Ends the request that begin() registered. */
 	public function end(string $uid): void {
 		$this->cache->remove('busy:' . $uid);
 	}
 
 	/**
-	 * Count one request of a source for today.
+	 * Counts one request of a source for today.
 	 */
 	public function count(string $source): void {
 		$key = 'usage_' . date('Ymd', $this->time->getTime());
@@ -78,7 +87,11 @@ class AiUsageService {
 		$this->appConfig->setValueArray(Application::APP_ID, $key, $counts, true);
 	}
 
-	/** @return array{nextcloud: int, shared: int, personal: int} */
+	/**
+	 * Today's requests per source.
+	 *
+	 * @return array{nextcloud: int, shared: int, personal: int}
+	 */
 	public function today(): array {
 		$counts = $this->appConfig->getValueArray(Application::APP_ID, 'usage_' . date('Ymd', $this->time->getTime()), [], true);
 		return [
@@ -88,17 +101,20 @@ class AiUsageService {
 		];
 	}
 
+	/** Whether the organisation provider's daily cap is used up. */
 	public function sharedCapReached(): bool {
 		$cap = $this->settings->sharedDailyCap();
 		return $cap > 0 && $this->today()['shared'] >= $cap;
 	}
 
+	/** Records how long a Nextcloud Assistant task took; the last ten are kept. */
 	public function recordLatency(int $ms): void {
 		$list = $this->latencies();
 		$list[] = max(0, $ms);
 		$this->appConfig->setValueArray(Application::APP_ID, 'nc_ai_latencies', array_slice($list, -10), true);
 	}
 
+	/** The median of the recorded Nextcloud Assistant latencies in milliseconds, or null. */
 	public function medianLatency(): ?int {
 		$list = $this->latencies();
 		if ($list === []) {
@@ -116,10 +132,10 @@ class AiUsageService {
 	}
 
 	/**
-	 * Delete usage counters older than 30 days.
+	 * Deletes the counters older than KEEP_DAYS.
 	 */
 	public function cleanup(int $now): void {
-		$cutoff = date('Ymd', $now - self::KEEP_DAYS * 86400);
+		$cutoff = date('Ymd', $now - self::KEEP_DAYS * GameClock::DAY);
 		foreach ($this->appConfig->getKeys(Application::APP_ID) as $key) {
 			if (preg_match('/^usage_(\d{8})$/', $key, $m) === 1 && $m[1] < $cutoff) {
 				$this->appConfig->deleteKey(Application::APP_ID, $key);

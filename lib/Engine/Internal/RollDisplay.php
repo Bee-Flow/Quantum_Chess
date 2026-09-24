@@ -10,8 +10,10 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine\Internal;
 
 /**
- * Roll display (ENGINE-RULES §9.4): the half-open interval of every outcome and the roll, printed by truncation in
- * integer arithmetic. Mirrors src/engine/roll.js.
+ * Roll display (§9.4): the half-open interval of every outcome and the roll, printed by truncation in integer
+ * arithmetic.
+ *
+ * JavaScript twin: src/engine/roll.js. Section numbers (§) refer to docs/engine-rules.md.
  *
  * @internal
  */

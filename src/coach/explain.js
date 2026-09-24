@@ -4,19 +4,21 @@
  */
 
 /**
- * The engine's own answer when the AI coach is unavailable (GAME-DESIGN §5.5 "On failure"): the evaluation, the best
- * moves and the templated theme explanation, as Markdown with move codes in backticks.
+ * The coach's answer without an LLM: the evaluation, the best moves and the explanation of the theme from templates, as
+ * Markdown with move codes in backticks.
  */
 
 import { t } from '@nextcloud/l10n'
 import { findMove } from '../engine/index.js'
+import { themeOf, themeText } from './hintThemes.js'
 import { forMover } from './quality.js'
-import { themeOf, themeText } from './themes.js'
+
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
 
 const RAW = { escape: false }
 
 /**
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object|null} analysis Analysis of the position
  * @param {'w'|'b'} color the player's colour
  * @return {string} Markdown

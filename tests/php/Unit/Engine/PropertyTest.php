@@ -14,10 +14,12 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * ER §12 property tests over seeded random playouts, checked after every applied move: I1–I12 and canonical bytes,
+ * Property tests (§12) over seeded random playouts, checked after every applied move: I1–I12 and canonical bytes,
  * Σ weights = T, both budgets ≤ 8, B(¬mover) never grows, ≤ 64 worlds, the notation round trip and the win mark,
  * measurement records, getOutcomes = applyMove, determinism across instances, and cross-checks of kingDanger,
  * kingTrapped and moveRisk against naive transcriptions of their definitions.
+ *
+ * Section numbers (§) refer to docs/engine-rules.md.
  */
 final class PropertyTest extends TestCase {
 	private const STARTS = [
@@ -108,7 +110,7 @@ final class PropertyTest extends TestCase {
 	}
 
 	/**
-	 * Naive kingTrapped (ER §6): every outcome of every legal move keeps the game running with the mover's king
+	 * Naive kingTrapped (§6): every outcome of every legal move keeps the game running with the mover's king
 	 * certainly capturable. (getOutcomes runs E1b in the outcome states, which cannot change this answer.)
 	 *
 	 * @param array<string, mixed> $state
@@ -129,7 +131,7 @@ final class PropertyTest extends TestCase {
 	}
 
 	/**
-	 * Naive moveRisk (ER §8) from getOutcomes.
+	 * Naive moveRisk (§8) from getOutcomes.
 	 *
 	 * @param array<string, mixed> $state
 	 */

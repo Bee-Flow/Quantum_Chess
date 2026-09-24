@@ -3,7 +3,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: How to play Quantum Chess
-    url: https://github.com/bee-flow/quantum_chess/blob/main/docs/RULES.md
+    url: https://github.com/bee-flow/quantum_chess/blob/main/docs/rules.md
     about: The complete rules, with a one-minute summary, examples and a glossary.
   - name: Report a security vulnerability
     url: https://github.com/bee-flow/quantum_chess/security/advisories/new

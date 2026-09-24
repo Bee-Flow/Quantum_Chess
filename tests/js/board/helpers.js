@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * Shared helpers of the board tests: the rules engine, setup positions, playing moves, and square indexes by name.
+ */
+
 import * as E from '../../../src/engine/index.js'
 
 export { E }
@@ -10,7 +14,7 @@ export { E }
 export const T = E.T
 
 /**
- * Setup shortcut (ENGINE-RULES Appendix A).
+ * Setup shortcut (docs/engine-rules.md Appendix A).
  *
  * @param {string} fen FEN
  * @param {string[]} [prelude] prelude codes

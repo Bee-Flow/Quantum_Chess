@@ -4,9 +4,8 @@
 -->
 
 <!--
-  One puzzle (GAME-DESIGN §5.2): real rolls, grading against the verified accepted set, the refutation and the trap
-  text after a wrong move, "Try again", hints (Nudge, Idea), stars and "Replay the other result"
-  (route /trainer/puzzle/:id).
+  One puzzle (route /trainer/puzzle/:id): the board, the goal, the result message, hints, stars and the actions. The
+  puzzle logic lives in `usePuzzleRunner`.
 -->
 <template>
 	<NcEmptyContent
@@ -36,7 +35,7 @@
 
 		<div class="qc-puzzle__body">
 			<div class="qc-puzzle__board">
-				<TrainerBoard
+				<StandaloneBoard
 					v-if="playback.state.value"
 					ref="board"
 					:state="playback.state.value"
@@ -49,7 +48,7 @@
 					:preview="preview"
 					:names="playback.names"
 					@move="onMove"
-					@previewClose="otherIndex = -1" />
+					@previewClose="closeOther" />
 			</div>
 
 			<section class="qc-puzzle__card" aria-live="polite" data-test="puzzle-card">
@@ -111,147 +110,43 @@
 <script setup>
 import { mdiArrowLeft, mdiLightbulbOnOutline } from '@mdi/js'
 import { t } from '@nextcloud/l10n'
-import { computed, ref, shallowRef, toRaw, watch } from 'vue'
+import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
 import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
-import StarRating from '../components/trainer/StarRating.vue'
-import TrainerBoard from '../components/trainer/TrainerBoard.vue'
-import { findMove, generateMoves, squareName } from '../engine/index.js'
-import { outcomeLabel, resultSentence } from '../engine/ui/index.js'
-import { progress, puzzleStars, recordPuzzle } from '../trainer/progress.js'
-import { puzzleById, PUZZLES } from '../trainer/puzzles/index.js'
-import { isAccepted, otherOutcomes, playMove, punishingOutcome, stepState, trapFor, wonBy } from '../trainer/runner.js'
-import { usePlayback } from '../trainer/usePlayback.js'
+import StandaloneBoard from '../board/components/StandaloneBoard.vue'
+import StarRating from '../trainer/components/StarRating.vue'
+import { usePlayback } from '../trainer/composables/usePlayback.js'
+import { usePuzzleRunner } from '../trainer/composables/usePuzzleRunner.js'
 
 const route = useRoute()
 const board = ref(null)
 const playback = usePlayback(board)
 
-const puzzle = computed(() => puzzleById(String(route.params.id ?? '').toUpperCase()))
-const number = computed(() => PUZZLES.indexOf(puzzle.value) + 1)
-const next = computed(() => PUZZLES[number.value] ?? null)
-const phase = ref('ready') // ready | busy | solved | failed
-const message = ref(null)
-const tries = ref(0)
-const hints = ref(0)
-const hintTier = ref(0)
-const earned = ref(0)
-const played = ref(null)
-const otherIndex = ref(-1)
-const start = shallowRef(null)
-
-const goalText = computed(() => {
-	switch (puzzle.value?.type) {
-		case 'forced': return t('quantumchess', 'Win with certainty.')
-		case 'max': return t('quantumchess', 'Find the best chance to capture the king.')
-		case 'survive': return puzzle.value.side === 'b' ? t('quantumchess', 'Don\'t lose by force.') : t('quantumchess', 'Keep your king.')
-		default: return t('quantumchess', 'Save as much as you can.')
-	}
-})
-
-const legalMoves = computed(() => (phase.value === 'ready' && playback.state.value ? generateMoves(toRaw(playback.state.value)) : []))
-
-/** Set up the puzzle (again). */
-function reset() {
-	start.value = stepState(puzzle.value, null)
-	playback.set(start.value)
-	phase.value = 'ready'
-	message.value = null
-	played.value = null
-	otherIndex.value = -1
-}
-
-watch(() => route.params.id, () => {
-	if (!puzzle.value) {
-		return
-	}
-	tries.value = 0
-	hints.value = 0
-	hintTier.value = 0
-	reset()
-}, { immediate: true })
-
-// --- Hints: Nudge (highlight + sentence) and Idea (arrow) ---
-const solution = computed(() => (start.value && puzzle.value ? findMove(start.value, puzzle.value.accepted[0]) : null))
-const hintTexts = computed(() => {
-	const out = []
-	if (hintTier.value >= 1) {
-		out.push(puzzle.value.nudge())
-	}
-	if (hintTier.value >= 2 && solution.value) {
-		out.push(t('quantumchess', 'Look at the move to {square}.', { square: solution.value.to.map(squareName).join(' / ') }))
-	}
-	return out
-})
-const highlights = computed(() => (hintTier.value >= 1 && phase.value === 'ready' && solution.value ? solution.value.from.map((square) => ({ square, kind: 'hint' })) : []))
-const arrows = computed(() => (hintTier.value >= 2 && phase.value === 'ready' && solution.value ? [{ from: solution.value.from[0], to: solution.value.to[0], kind: 'best' }] : []))
-
-/** Reveal the next hint tier. */
-function nextHint() {
-	hintTier.value++
-	hints.value++
-}
-
-// --- Replay the other result ---
-const otherKeys = computed(() => (played.value ? otherOutcomes(played.value.move, played.value.key) : []))
-const preview = computed(() => {
-	if (otherIndex.value < 0 || !played.value) {
-		return null
-	}
-	const key = otherKeys.value[otherIndex.value]
-	return {
-		state: playMove(played.value.before, played.value.move.code, key).state,
-		kind: 'history',
-		label: t('quantumchess', 'The other result: {result}', { result: outcomeLabel(key) }),
-	}
-})
-
-/** Cycle through the other results and back. */
-function toggleOther() {
-	otherIndex.value = otherIndex.value + 1 < otherKeys.value.length ? otherIndex.value + 1 : -1
-}
-
-/**
- * The player moved.
- *
- * @param {object} move LegalMove
- */
-async function onMove(move) {
-	if (phase.value !== 'ready') {
-		return
-	}
-	const p = puzzle.value
-	phase.value = 'busy'
-	tries.value++
-	const accepted = isAccepted(p, move)
-	const before = toRaw(playback.state.value)
-	// Rolls are real for a right move; a wrong move gets the roll that punishes it (GAME-DESIGN §5.2.1).
-	const res = await playback.play(move.code, { outcome: accepted ? null : punishingOutcome(before, move.code, p.side) })
-	const sentence = res.measurement ? resultSentence({ before, move: res.move, measurement: res.measurement })?.text : null
-	if (accepted) {
-		played.value = res.measurement ? { before, move: res.move, key: res.measurement.key } : null
-		earned.value = puzzleStars(tries.value, hints.value)
-		recordPuzzle(p.id, { solved: true, stars: earned.value, tries: tries.value, hints: hints.value })
-		message.value = { type: 'success', text: t('quantumchess', 'Solved!') + ' ' + p.idea(), detail: sentence }
-		phase.value = 'solved'
-		return
-	}
-	recordPuzzle(p.id, { solved: Boolean(progress.puzzles?.[p.id]?.solved), tries: tries.value, hints: hints.value })
-	if (!wonBy(res.after, p.side)) {
-		await new Promise((resolve) => setTimeout(resolve, 350))
-		await playback.engineReply(4, (s, code) => punishingOutcome(s, code, p.side))
-	}
-	const trap = trapFor(p, move)
-	message.value = {
-		type: 'error',
-		text: trap ? trap.text() : (wonBy(res.after, p.side) ? t('quantumchess', 'That worked this time, but it was a gamble. There is a better move.') : t('quantumchess', 'Not the best move.')),
-		detail: t('quantumchess', 'Try again.'),
-	}
-	phase.value = 'failed'
-}
+const {
+	puzzle,
+	number,
+	next,
+	phase,
+	message,
+	earned,
+	hintTier,
+	hintTexts,
+	highlights,
+	arrows,
+	legalMoves,
+	goalText,
+	otherKeys,
+	otherIndex,
+	preview,
+	nextHint,
+	toggleOther,
+	closeOther,
+	reset,
+	onMove,
+} = usePuzzleRunner({ puzzleId: () => route.params.id, playback })
 </script>
 
 <style lang="scss" scoped>

@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Lesson 4 (GAME-DESIGN §5.1.2): landing on a square that might hold a piece rolls; the three results. */
+/** Lesson 4: landing on a square that might hold a piece rolls; the three results. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'L04',
-	slug: 'land-roll',
 	order: 4,
 	group: 'essentials',
 	minutes: 2,

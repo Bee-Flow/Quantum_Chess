@@ -4,8 +4,8 @@
  */
 
 /**
- * Board palette contrast (GAME-DESIGN §9.1): rings, threads and marker rims keep 3:1 against both square colours of
- * every theme; badge text keeps 7:1 on the badge.
+ * Board palette contrast: rings, threads and marker rims keep 3:1 against both square colours of every theme; badge
+ * text keeps 7:1 on the badge.
  */
 
 import { readFileSync } from 'node:fs'

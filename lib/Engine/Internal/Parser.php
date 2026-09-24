@@ -10,9 +10,10 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine\Internal;
 
 /**
- * The lenient move parser of ENGINE-RULES §4.12 (for LLM output and typed input) and canonical codes (§4.1).
- * Mirrors src/engine/parser.js; works on bytes, so any non-ASCII character makes the input unparsable, exactly
- * like the JS version.
+ * The lenient move parser of §4.12 (for LLM output and typed input) and canonical codes (§4.1). Works on bytes, so
+ * any non-ASCII character makes the input unparsable, exactly like the JavaScript version.
+ *
+ * JavaScript twin: src/engine/parser.js. Section numbers (§) refer to docs/engine-rules.md.
  *
  * @internal
  */
@@ -31,7 +32,7 @@ final class Parser {
 	 * Normalisation pipeline of §4.12 (steps 1–3): cut at the first `{`, trim whitespace (space, tab, CR, LF),
 	 * strip trailing `+ # ! ?` and whitespace.
 	 */
-	public static function normalise(string $code): string {
+	public static function normalize(string $code): string {
 		$brace = strpos($code, '{');
 		if ($brace !== false) {
 			$code = substr($code, 0, $brace);
@@ -47,7 +48,7 @@ final class Parser {
 	 * @return array<string, mixed>|null
 	 */
 	public static function parse(string $code): ?array {
-		$s = self::normalise($code);
+		$s = self::normalize($code);
 		if ($s === '') {
 			return null;
 		}

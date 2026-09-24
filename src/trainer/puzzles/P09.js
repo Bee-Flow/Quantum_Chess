@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-/** Puzzle P09 (GAME-DESIGN §5.2.2). */
+/** Puzzle P09. */
 
-import { t } from '../i18n.js'
+import { t } from '@nextcloud/l10n'
 
 export default {
 	id: 'P09',
@@ -13,7 +13,6 @@ export default {
 	stars: 2,
 	type: 'survive',
 	side: 'w',
-	horizon: 1,
 	setup: { fen: '3r3k/6pp/8/6B1/4q3/8/8/4K3 w - - 0 1', prelude: ['e4-b4|h4'] },
 	accepted: ['e1-e2', 'e1-f1'],
 	value: 0,

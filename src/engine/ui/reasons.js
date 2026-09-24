@@ -4,8 +4,8 @@
  */
 
 /**
- * Tooltip texts for the engine's `whyIllegal` codes (ER §4.11, GAME-DESIGN §3.5.3) and resolution labels for icons
- * and copy (GAME-DESIGN §3.5.2, §3.5.5).
+ * Tooltip texts for the engine's `whyIllegal` codes (docs/engine-rules.md §4.11), shown on disabled move markers,
+ * and the resolution labels (certain, quantum, roll) for move icons and copy.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -16,7 +16,7 @@ import { t } from '@nextcloud/l10n'
  * The optional context refines two codes: a pawn push that is blocked by a piece on its target square ("Pawns can't
  * capture straight ahead"), and a pawn that has nothing to capture diagonally.
  *
- * @param {string} code a ReasonCode of ER §4.11
+ * @param {string} code a `whyIllegal` reason code
  * @param {object} [context] optional context
  * @param {boolean} [context.pawn] the moving piece is a pawn
  * @param {boolean} [context.pawnPush] the move is a straight pawn push onto an occupied square
@@ -41,7 +41,7 @@ export function reasonText(code, context = {}) {
 		case 'cannot_merge':
 			return t('quantumchess', 'Kings and pawns can\'t merge.')
 		case 'not_superposed':
-		// TRANSLATORS: "ghost" is a piece that stands on several squares at once (RULES.md glossary)
+		// TRANSLATORS: "ghost" is a piece that stands on several squares at once (see the glossary)
 			return t('quantumchess', 'This piece is not a ghost, so there is nothing to measure.')
 		case 'castle_no_right':
 			return t('quantumchess', 'Castling on this side is no longer allowed.')
@@ -98,7 +98,7 @@ export function resolutionLabel(legalMove) {
  *
  * @param {'certain'|'quantum'|'roll'|'roll-budget'} label resolution label
  * @param {object} [options] options
- * @param {boolean} [options.physics] use the physics names (GAME-DESIGN §0.2)
+ * @param {boolean} [options.physics] use the physics vocabulary ("Measurement" instead of "Roll")
  * @return {string}
  */
 export function resolutionText(label, { physics = false } = {}) {
@@ -110,12 +110,12 @@ export function resolutionText(label, { physics = false } = {}) {
 		case 'roll-budget':
 			return physics
 				? t('quantumchess', 'Measurement (budget full)')
-			// TRANSLATORS: "Roll" is the random decision of a move (RULES.md glossary)
+			// TRANSLATORS: "Roll" is the random decision of a move (see the glossary)
 				: t('quantumchess', 'Roll (budget full)')
 		default:
 			return physics
 				? t('quantumchess', 'Measurement')
-			// TRANSLATORS: "Roll" is the random decision of a move (RULES.md glossary)
+			// TRANSLATORS: "Roll" is the random decision of a move (see the glossary)
 				: t('quantumchess', 'Roll')
 	}
 }
@@ -129,13 +129,13 @@ export function resolutionText(label, { physics = false } = {}) {
 export function outcomeLabel(key) {
 	switch (key) {
 		case 'miss':
-		// TRANSLATORS: result of a roll: the move did not happen (RULES.md glossary "Captured / Moved / Missed")
+		// TRANSLATORS: result of a roll: the move did not happen (glossary: "Captured / Moved / Missed")
 			return t('quantumchess', 'Missed')
 		case 'move':
-		// TRANSLATORS: result of a roll: the piece moved without capturing (RULES.md glossary)
+		// TRANSLATORS: result of a roll: the piece moved without capturing (see the glossary)
 			return t('quantumchess', 'Moved')
 		case 'capture':
-		// TRANSLATORS: result of a roll: the piece captured (RULES.md glossary)
+		// TRANSLATORS: result of a roll: the piece captured (see the glossary)
 			return t('quantumchess', 'Captured')
 		default:
 			return key

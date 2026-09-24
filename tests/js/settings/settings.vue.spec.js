@@ -5,14 +5,14 @@
  */
 
 /**
- * The settings apps (GAME-DESIGN §8.2–8.3): the provider form emits the right payload and tests a connection
- * without keys coming back; the personal page shows only available sources and saves switches.
+ * The settings apps: the provider form emits the right payload and tests a connection without keys coming back; the
+ * personal page shows only available sources and saves switches.
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import PersonalSettings from '../../../src/settings/PersonalSettings.vue'
-import ProviderForm from '../../../src/settings/ProviderForm.vue'
+import PersonalSettings from '../../../src/settings/components/PersonalSettings.vue'
+import ProviderForm from '../../../src/settings/components/ProviderForm.vue'
 import * as api from '../../../src/services/api.js'
 
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showSuccess: vi.fn() }))

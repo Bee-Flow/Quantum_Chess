@@ -13,7 +13,11 @@ use OCP\AppFramework\Db\Entity;
 use OCP\DB\Types;
 
 /**
- * A chat line of an online game (docs/SPEC.md §5.3).
+ * A line of the chat of an online game.
+ *
+ * `kind` is one of the KIND_* constants. A text line holds what the player typed, a phrase line the key of a
+ * predefined phrase, and a system line (without `uid`) the key of an event such as `draw_offered`, with its JSON
+ * parameters in `params`.
  *
  * @method int getGameId()
  * @method void setGameId(int $v)

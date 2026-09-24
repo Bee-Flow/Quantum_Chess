@@ -21,7 +21,7 @@ The first release: chess with superposition, measurement and entanglement, insid
 - **Rules version 1**: split, merge, Measure and ordinary moves; "land = roll, pass = link"; kings and pawns always
   solid; a budget of 8 arrangements per side; capture the king to win, including the "king cannot escape" rule;
   draws by agreement, bare kings, threefold repetition, the 50-move rule, no legal move and the move limit.
-  Identical JavaScript and PHP engines, checked against shared test fixtures.
+  Identical JavaScript and PHP rules engines, checked against shared test fixtures.
 - **Game screen**: ghosts with exact percentages, part threads and link glyphs, the what-if view, the king-danger
   ring and the king safety net, budget pips and the possibilities count, a move preview with the odds of every
   result, the roll animation with a plain-language explanation, a move list and roll log; click, drag and keyboard
@@ -31,12 +31,13 @@ The first release: chess with superposition, measurement and entanglement, insid
   opt-in leaderboard, recent games on the home page.
 - **Fair online play**: rolls drawn by the server when a move is applied and recorded in a hash chain, a check in
   every client with a warning when history was altered, and the coach switched off in your own running online games.
-- **Computer opponent** with five levels, from Wobbles to The Observer, running in the browser.
+- **Computer player** with five levels, from Wobbles to The Observer, running in the browser.
 - **AI opponents** with four personalities (Professor Qubit, Captain Collapse, Madame Superposa, Q-7) through
   Nextcloud AI (TaskProcessing), an organisation provider or a personal API key (OpenAI-compatible services and
-  Anthropic), with the built-in engine as a fallback.
+  Anthropic), with the built-in computer player as a fallback.
 - **Pass & play** on one device, with player names and optional automatic board flipping.
-- **Trainer**: eleven interactive lessons and eleven puzzles, all verified against the real engine by the test suite.
+- **Trainer**: eleven interactive lessons and eleven puzzles, all verified against the real rules engine by the test
+  suite.
 - **Coach and review**: evaluation bar, hints, threat warnings and move-quality badges; an AI coach for questions
   about the position; a post-game review with an evaluation graph and key moments.
 - **Nextcloud integration**: notifications with Accept, Decline and Rematch actions for the web, mobile and desktop
@@ -47,17 +48,6 @@ The first release: chess with superposition, measurement and entanglement, insid
 - **Privacy and security**: encrypted API keys that never reach the browser, protection against requests to internal
   addresses, rate limits, a first-use notice before any AI request, and clean-up when an account is deleted.
 - **Languages**: English, Dutch, German and French.
-
-### Planned
-
-Designed but not part of 1.0; see the README:
-
-- Online: reminders and quiet hours, personal invite policy and block list, *Export my games* (`.qcg.json`) and
-  *Delete my Quantum Chess data*, history filters, the admin badge, the rated-pair limit, server-side refusal of AI
-  help for rated games in progress, cached polling and shared updates between tabs.
-- Board: *Show the other result*, viewing one possibility, typed moves, the Letters piece set, haptics, tabletop mode,
-  heat maps and three more board themes.
-- Trainer and coach: the Lab, achievements, hint tiers 3–4, accuracy, the luck ledger and *Verify*.
 
 [Unreleased]: https://github.com/bee-flow/quantum_chess/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/bee-flow/quantum_chess/releases/tag/v1.0.0

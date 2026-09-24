@@ -4,8 +4,8 @@
  */
 
 /**
- * Replays tests/fixtures/engine/*.json with the JS engine exactly as the PHP twin does (SPEC §3.5). This guards the
- * committed fixtures against drift and documents the replay procedure.
+ * Replays tests/fixtures/engine/*.json with the JavaScript engine exactly as the PHP twin does. This guards the
+ * committed parity fixtures against drift and documents the replay procedure.
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -14,8 +14,22 @@ import { describe, expect, it } from 'vitest'
 import { E } from './helpers.js'
 
 const DIR = join(import.meta.dirname, '../../fixtures/engine')
-const load = (name) => JSON.parse(readFileSync(join(DIR, name), 'utf8'))
-const present = existsSync(join(DIR, 'vectors.json'))
+const REQUIRED = ['vectors.json', 'parser.json', 'views.json', 'records.json', 'games-001.json']
+const MISSING = ' is missing: run `npm run fixtures` to generate the parity fixtures'
+
+/**
+ * Read one fixture file. A missing file fails the test; it is never skipped.
+ *
+ * @param {string} name file name in tests/fixtures/engine
+ * @return {unknown}
+ */
+function load(name) {
+	const path = join(DIR, name)
+	if (!existsSync(path)) {
+		throw new Error(path + MISSING)
+	}
+	return JSON.parse(readFileSync(path, 'utf8'))
+}
 
 /**
  * Replay one game fixture; returns the number of steps.
@@ -69,10 +83,13 @@ function replay(game) {
 	return game.steps.length
 }
 
-describe.runIf(present)('fixture replay (SPEC §3.5)', () => {
+describe('fixture replay', () => {
 	it('files and sizes', () => {
+		for (const f of REQUIRED) {
+			expect(existsSync(join(DIR, f)), f + MISSING).toBe(true)
+		}
 		const files = readdirSync(DIR).filter((f) => f.endsWith('.json'))
-		expect(files).toEqual(expect.arrayContaining(['vectors.json', 'parser.json', 'views.json', 'records.json', 'games-001.json']))
+		expect(files).toEqual(expect.arrayContaining(REQUIRED))
 		let total = 0
 		for (const f of files) {
 			const size = readFileSync(join(DIR, f)).length

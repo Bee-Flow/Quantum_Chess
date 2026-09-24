@@ -15,7 +15,7 @@ use OCP\Settings\ISettings;
 use OCP\Util;
 
 /**
- * Administration settings → Quantum Chess (docs/GAME-DESIGN.md §8.3). The Vue app loads its data from
+ * The page "Administration settings → Quantum Chess". The web app on it loads its data from
  * `GET /api/settings/admin`.
  */
 class AdminSettings implements ISettings {

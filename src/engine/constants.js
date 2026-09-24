@@ -4,7 +4,9 @@
  */
 
 /**
- * Rules constants (ENGINE-RULES §1). Changing any of them requires a new rules version.
+ * Rules constants (§1). Changing any of them requires a new rules version.
+ *
+ * PHP twin: lib/Engine/Internal/Tables.php and the constants of lib/Engine/Engine.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
 /** Rules version, stored as `v` in every state. */

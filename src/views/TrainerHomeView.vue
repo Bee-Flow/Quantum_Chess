@@ -4,8 +4,8 @@
 -->
 
 <!--
-  The trainer home (GAME-DESIGN §5.6): the continue card, the lesson path with stars and the puzzle grid. Progress
-  comes from the synced progress document (route /trainer).
+  The trainer home (route /trainer): the continue card, the lesson path with stars and the puzzle grid. The progress
+  comes from the synced progress document.
 -->
 <template>
 	<div class="qc-trainer">
@@ -99,8 +99,8 @@ import { computed, onMounted } from 'vue'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import NcProgressBar from '@nextcloud/vue/components/NcProgressBar'
-import MiniBoard from '../components/board/MiniBoard.vue'
-import StarRating from '../components/trainer/StarRating.vue'
+import MiniBoard from '../board/components/MiniBoard.vue'
+import StarRating from '../trainer/components/StarRating.vue'
 import { setupPosition } from '../engine/index.js'
 import { LESSONS } from '../trainer/lessons/index.js'
 import { nextLesson, progress, refreshProgress } from '../trainer/progress.js'
@@ -247,7 +247,7 @@ onMounted(() => {
 
 	.qc-trainer__lesson--done & {
 		background: var(--color-success);
-		color: var(--color-success-text, #fff);
+		color: var(--qc-on-success);
 	}
 
 	.qc-trainer__lesson--next & {

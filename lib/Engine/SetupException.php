@@ -10,8 +10,9 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine;
 
 /**
- * A setup position that cannot be built (ENGINE-RULES Appendix A). The reason is one of Engine::SETUP_ERRORS; the
- * detail is the `whyIllegal` code for `prelude_illegal`, otherwise a short description or null.
+ * A setup position that cannot be built (docs/engine-rules.md Appendix A). The reason is one of Engine::SETUP_ERRORS;
+ * the detail is the `whyIllegal` code for `prelude_illegal`, otherwise a short description or null. JavaScript twin:
+ * `SetupError` in src/engine/errors.js.
  */
 class SetupException extends \RuntimeException {
 	public function __construct(

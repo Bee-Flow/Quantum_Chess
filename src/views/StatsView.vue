@@ -4,9 +4,8 @@
 -->
 
 <!--
-  Statistics (route /stats, SPEC §14.6.4, GAME-DESIGN §7.7): the online record and rating graph, the one-time
-  leaderboard question, the leaderboard with its group filter, and the results against the computer, AI opponents
-  and pass & play games.
+  Statistics (route /stats): the online record and rating graph, the one-time leaderboard question, the leaderboard with
+  its group filter, and the results against the computer, AI opponents and pass & play games.
 -->
 <template>
 	<div class="qc-stats">
@@ -132,10 +131,10 @@ import NcButton from '@nextcloud/vue/components/NcButton'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
-import LeaderboardTable from '../components/stats/LeaderboardTable.vue'
-import RatingGraph from '../components/stats/RatingGraph.vue'
+import LeaderboardTable from '../stats/components/LeaderboardTable.vue'
+import RatingGraph from '../stats/components/RatingGraph.vue'
 import { LEVELS } from '../ai/levels.js'
-import { personaById } from '../personas/index.js'
+import { personaById } from '../llm/personas.js'
 import { getLeaderboard, getStats, saveMultiplayerSettings } from '../services/api.js'
 import { formatRating } from '../services/format.js'
 import { features } from '../services/initialState.js'

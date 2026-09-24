@@ -5,12 +5,12 @@
  */
 
 /**
- * NotationText (GAME-DESIGN §3.7): figurines, the quantum pipe and the result tag of rolled moves.
+ * NotationText: figurines, the quantum pipe and the result tag of rolled moves.
  */
 
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import NotationText from '../../../src/components/board/NotationText.vue'
+import NotationText from '../../../src/board/components/NotationText.vue'
 import { E, S } from './helpers.js'
 
 describe('NotationText', () => {
@@ -19,7 +19,7 @@ describe('NotationText', () => {
 		expect(w.findAll('.qc-piece-icon')).toHaveLength(1)
 		expect(w.find('.qc-notation__pipe').exists()).toBe(true)
 		expect(w.find('.qc-notation__head').text()).toBe('g1–f3|h3')
-		expect(w.find('.qc-sr-only').text()).toBe('Ng1-f3|h3')
+		expect(w.find('.hidden-visually').text()).toBe('Ng1-f3|h3')
 	})
 
 	it('tags rolled results', () => {
@@ -36,7 +36,7 @@ describe('NotationText', () => {
 		const s = S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6'])
 		const r = E.applyMove(s, 'c1-h6', { outcome: 'move' })
 		const w = mount(NotationText, { props: { move: r.move, stateBefore: s, measurement: r.measurement } })
-		expect(w.find('.qc-sr-only').text()).toBe('Bc1-h6 {move 50%}')
+		expect(w.find('.hidden-visually').text()).toBe('Bc1-h6 {move 50%}')
 		expect(w.find('.qc-notation__result').text()).toBe('○ Moved 50%')
 	})
 })

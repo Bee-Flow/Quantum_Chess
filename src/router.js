@@ -4,48 +4,32 @@
  */
 
 /**
- * Client-side routes (SPEC §14.1, hash history). Views of other packages are registered only when their file is
- * bundled (`import.meta.glob`), so a missing package never leaves a dead link; the Lab is deferred to 1.1
- * (docs/LEAN-1.0.md). `/dev/board` exists in development builds only.
+ * Client-side routes. The app uses hash history (`/apps/quantumchess/#/game/42`), so the server serves one page for
+ * every route. Home is part of the main bundle; every other view is loaded lazily in its own chunk.
  */
 
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from './views/HomeView.vue'
-import { viewLoader } from './composables/modules.js'
-
-const optional = [
-	{ path: '/game/:id(\\d+)', name: 'online-game', view: 'OnlineGameView' },
-	{ path: '/review/:source(local|online)/:id', name: 'review', view: 'ReviewView' },
-	{ path: '/trainer', name: 'trainer', view: 'TrainerHomeView' },
-	{ path: '/trainer/lesson/:id', name: 'lesson', view: 'LessonView' },
-	{ path: '/trainer/puzzle/:id', name: 'puzzle', view: 'PuzzleView' },
-	{ path: '/stats', name: 'stats', view: 'StatsView' },
-	{ path: '/history', name: 'history', view: 'HistoryView' },
-]
 
 /**
- * The route table.
+ * The route table. `new-game` renders Home with the New game dialog on top (see `App.vue`); unknown paths go home.
  *
- * @return {object[]}
+ * @return {import('vue-router').RouteRecordRaw[]}
  */
 export function buildRoutes() {
-	const routes = [
+	return [
 		{ path: '/', name: 'home', component: HomeView },
 		{ path: '/new', name: 'new-game', component: HomeView },
 		{ path: '/play/:mode(computer|ai|local)/:id?', name: 'local-game', component: () => import('./views/LocalGameView.vue') },
 		{ path: '/rules', name: 'rules', component: () => import('./views/RulesView.vue') },
+		{ path: '/game/:id(\\d+)', name: 'online-game', component: () => import('./views/OnlineGameView.vue') },
+		{ path: '/review/:source(local|online)/:id', name: 'review', component: () => import('./views/ReviewView.vue') },
+		{ path: '/trainer', name: 'trainer', component: () => import('./views/TrainerHomeView.vue') },
+		{ path: '/trainer/lesson/:id', name: 'lesson', component: () => import('./views/LessonView.vue') },
+		{ path: '/trainer/puzzle/:id', name: 'puzzle', component: () => import('./views/PuzzleView.vue') },
+		{ path: '/stats', name: 'stats', component: () => import('./views/StatsView.vue') },
+		{ path: '/:pathMatch(.*)*', redirect: '/' },
 	]
-	for (const r of optional) {
-		const loader = viewLoader(r.view)
-		if (loader) {
-			routes.push({ path: r.path, name: r.name, component: loader })
-		}
-	}
-	if (import.meta.env.MODE === 'development') {
-		routes.push({ path: '/dev/board', name: 'dev-board', component: () => import('./components/board/dev/BoardPlayground.vue') })
-	}
-	routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
-	return routes
 }
 
 /**

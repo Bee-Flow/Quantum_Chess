@@ -15,18 +15,23 @@ use OCP\IAppConfig;
 use OCP\Security\ICrypto;
 
 /**
- * API keys (docs/SPEC.md §10.7): encrypted with ICrypto and stored as sensitive, lazy values. Keys are never returned
- * by any API, never logged and never sent to the browser; callers only get `{hasKey, keyHint, keyUnreadable}`.
+ * The API keys of the organisation provider and of the users' own providers.
+ *
+ * Keys are encrypted with ICrypto and stored as sensitive, lazy config values. They are never returned by any API,
+ * never logged and never sent to the browser: callers outside the LLM integration only get
+ * `{hasKey, keyHint, keyUnreadable}`, where the hint is the last four characters of a key of at least eight.
  */
 class KeyStore {
+	/** The app config key of the organisation provider's key. */
 	public const SHARED_KEY = 'shared_api_key';
+	/** The user config key of a user's own key. */
 	public const PERSONAL_KEY = 'ai_api_key';
 	public const MAX_LENGTH = 1024;
 
 	public function __construct(
-		private IAppConfig $appConfig,
-		private IUserConfig $userConfig,
-		private ICrypto $crypto,
+		private readonly IAppConfig $appConfig,
+		private readonly IUserConfig $userConfig,
+		private readonly ICrypto $crypto,
 	) {
 	}
 
@@ -43,7 +48,7 @@ class KeyStore {
 	}
 
 	/**
-	 * Store ('' or null deletes) the organisation key.
+	 * Stores the organisation key; '' or null deletes it.
 	 */
 	public function setShared(?string $value): void {
 		if ($value === null || $value === '') {
@@ -53,6 +58,9 @@ class KeyStore {
 		$this->appConfig->setValueString(Application::APP_ID, self::SHARED_KEY, $this->crypto->encrypt($value), true, true);
 	}
 
+	/**
+	 * The user's own key in clear text, or null when none is stored or it cannot be decrypted.
+	 */
 	public function getPersonal(string $uid): ?string {
 		return $this->decrypt($this->userConfig->getValueString($uid, Application::APP_ID, self::PERSONAL_KEY, '', true));
 	}
@@ -62,6 +70,9 @@ class KeyStore {
 		return $this->info($this->userConfig->getValueString($uid, Application::APP_ID, self::PERSONAL_KEY, '', true));
 	}
 
+	/**
+	 * Stores the user's own key; '' or null deletes it.
+	 */
 	public function setPersonal(string $uid, ?string $value): void {
 		if ($value === null || $value === '') {
 			$this->userConfig->deleteUserConfig($uid, Application::APP_ID, self::PERSONAL_KEY);

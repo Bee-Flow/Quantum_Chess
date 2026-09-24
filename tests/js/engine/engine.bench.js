@@ -4,7 +4,7 @@
  */
 
 /**
- * Engine benchmarks for SPEC §3.6 (`npm run bench`): generateMoves on a 64-world midgame < 5 ms, applyMove and
+ * Rules-engine benchmarks (`npm run bench`). The budgets: generateMoves on a 64-world midgame < 5 ms, applyMove and
  * getOutcomes < 2 ms, kingDanger + moveRisk for the whole legal list < 8 ms.
  */
 

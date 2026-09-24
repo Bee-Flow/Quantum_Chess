@@ -18,6 +18,12 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\User\Events\UserDeletedEvent;
 
+/**
+ * The app's bootstrap: registers the notifier, the dashboard widget and the listener for deleted accounts.
+ *
+ * Services, controllers, the settings pages and the background job need no registration: the DI container autowires
+ * them, and info.xml names the settings pages and the job.
+ */
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'quantumchess';
 

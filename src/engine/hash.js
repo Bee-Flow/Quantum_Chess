@@ -4,10 +4,14 @@
  */
 
 /**
- * FNV-1a-64 position hash (ENGINE-RULES §5.4), computed with two 32-bit halves (no BigInt, no string building).
+ * FNV-1a-64 position hash (§5.4), computed with two 32-bit halves (no BigInt, no string building).
  *
  * The hashed text is `turn|castling|ep|types|board_0:weight_0,board_1:weight_1,…` over the worlds in canonical order.
+ *
+ * PHP twin: `Worlds::hash()` in lib/Engine/Internal/Worlds.php. Section numbers (§) refer to docs/engine-rules.md.
  */
+
+/** @typedef {import('./types.js').EngineState} EngineState */
 
 const HEX = '0123456789abcdef'
 
@@ -116,7 +120,7 @@ export function hashParts(turn, castling, ep, types, worlds) {
 /**
  * Position hash of a state (§5.4): FNV-1a-64 over `turn|castling|ep|types|board:weight,…`.
  *
- * @param {object} state engine state
+ * @param {EngineState} state engine state
  * @return {string} 16 lowercase hex digits
  */
 export function positionHash(state) {
@@ -126,7 +130,7 @@ export function positionHash(state) {
 /**
  * The exact text that `positionHash` hashes (for debugging and documentation).
  *
- * @param {object} state engine state
+ * @param {EngineState} state engine state
  * @return {string}
  */
 export function positionHashInput(state) {

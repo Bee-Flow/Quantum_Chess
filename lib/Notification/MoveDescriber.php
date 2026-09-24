@@ -13,15 +13,19 @@ use OCA\QuantumChess\Engine\Engine;
 use OCP\IL10N;
 
 /**
- * "The last move in words" for the `your_turn` notification (docs/GAME-DESIGN.md §7.12), from the stored move
- * parameters `{code, notation, color, key, weight, capturedType}`.
+ * Describes the opponent's last move in words for the `your_turn` notification, for example "They captured your
+ * knight on f6 (50 % chance)".
+ *
+ * It works from the move parameters stored with the notification: `{code, notation, color, key, weight,
+ * capturedType}`. A move it cannot describe is shown in its notation.
  */
 class MoveDescriber {
 	public function __construct(
-		private Engine $engine,
+		private readonly Engine $engine,
 	) {
 	}
 
+	/** The name of a piece type (`k`, `q`, `r`, `b`, `n` or `p`, in either case). */
 	public static function pieceName(IL10N $l, string $type): string {
 		return match (strtolower($type)) {
 			'k' => $l->t('king'),
@@ -38,7 +42,8 @@ class MoveDescriber {
 	 */
 	public function describe(IL10N $l, array $move): string {
 		$notation = is_string($move['notation'] ?? null) ? $move['notation'] : '';
-		$head = trim((string)preg_replace('/\s*(\{[^}]*\}|#)\s*/', ' ', $notation));
+		$stripped = preg_replace('/\s*(\{[^}]*\}|#)\s*/', ' ', $notation);
+		$head = trim(is_string($stripped) ? $stripped : '');
 		$key = is_string($move['key'] ?? null) ? $move['key'] : null;
 		$weight = is_int($move['weight'] ?? null) ? $move['weight'] : null;
 		$pct = $weight === null ? null : $this->engine->pct($weight);

@@ -3,20 +3,23 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * The coach's interpretation of the computer player's numbers: move quality, move chips in answers, threats, hint
+ * themes and the answer without an LLM.
+ */
+
 import { describe, expect, it } from 'vitest'
 import { moveChips, truncateAnswer } from '../../../src/coach/chips.js'
 import { engineAnswer } from '../../../src/coach/explain.js'
 import { hintFor } from '../../../src/coach/hints.js'
-import { keyMoments } from '../../../src/coach/keyMoments.js'
+import { themeOf } from '../../../src/coach/hintThemes.js'
 import { qualityOf, qualityOfPly } from '../../../src/coach/quality.js'
-import { reviewGame } from '../../../src/coach/reviewGame.js'
-import { themeOf } from '../../../src/coach/themes.js'
 import { kingShot, threatsAgainst, visibleThreats } from '../../../src/coach/threats.js'
-import { applyMove, initialState, setupPosition } from '../../../src/engine/index.js'
+import { initialState, setupPosition } from '../../../src/engine/index.js'
 
 const q = (bestE, playedE, extra = {}) => qualityOf({ color: 'w', bestE, playedE, ...extra })
 
-describe('quality labels (GAME-DESIGN §5.3.4)', () => {
+describe('quality labels', () => {
 	it('grades by ΔE in percentage points before the roll', () => {
 		expect(q(0.6, 0.6).label).toBe('best')
 		expect(q(0.6, 0.596).label).toBe('best')
@@ -58,19 +61,6 @@ describe('quality labels (GAME-DESIGN §5.3.4)', () => {
 	it('grades a PlyAnalysis', () => {
 		const ply = { ply: 3, color: 'b', code: 'e7-e5', forced: false, EBefore: 0.5, bestCode: 'd7-d5', bestE: 0.5, secondBestE: 0.52, bestClassicalE: 0.5, playedE: 0.66, outcomes: null, realisedE: 0.66, allowsKingShot: false }
 		expect(qualityOfPly(ply).label).toBe('mistake')
-	})
-})
-
-describe('key moments', () => {
-	it('picks the largest errors per player and the largest luck swings', () => {
-		const plies = [
-			{ ply: 0, color: 'w', code: 'a', bestCode: 'b', EBefore: 0.5, bestE: 0.5, playedE: 0.3, realisedE: 0.3, outcomes: null },
-			{ ply: 1, color: 'b', code: 'c', bestCode: 'c', EBefore: 0.3, bestE: 0.3, playedE: 0.3, realisedE: 0.6, outcomes: [{}] },
-			{ ply: 2, color: 'w', code: 'd', bestCode: 'd', EBefore: 0.6, bestE: 0.6, playedE: 0.59, realisedE: 0.59, outcomes: null },
-		]
-		const m = keyMoments(plies)
-		expect(m.map((x) => [x.ply, x.kind])).toEqual([[0, 'error'], [1, 'luck']])
-		expect(m[1].luckPp).toBeCloseTo(-30)
 	})
 })
 
@@ -118,28 +108,5 @@ describe('threats and themes', () => {
 		expect(h2.arrows).toEqual([{ from: 3, to: 59, kind: 'best' }])
 		expect(h2.text).toContain('d8')
 		expect(engineAnswer(s, analysis, 'w')).toContain('`d1-d8`')
-	})
-})
-
-describe('review replay', () => {
-	it('replays a local record with its recorded rolls', () => {
-		const s0 = initialState()
-		const a = applyMove(s0, 'g1-f3|h3')
-		const b = applyMove(a.state, 'e7-e5')
-		const rec = {
-			mode: 'computer',
-			humanColor: 'w',
-			players: { w: { kind: 'human' }, b: { kind: 'engine', level: 2 } },
-			startState: null,
-			moves: [{ code: 'g1-f3|h3', u: null }, { code: 'e7-e5', u: null }, { code: 'f3-e5', u: 5 }],
-			result: null,
-		}
-		const g = reviewGame({ source: 'local', id: 'x', local: rec })
-		expect(g.states).toHaveLength(4)
-		expect(g.states[2]).toEqual(b.state)
-		expect(g.steps[2].measurement.u).toBe(5)
-		expect(g.moves[2]).toEqual({ code: 'f3-e5', u: 5 })
-		expect(g.viewer).toBe('w')
-		expect(reviewGame({ source: 'local', id: 'y', local: { ...rec, mode: 'local', humanColor: null } }).viewer, 'pass & play has no single viewer').toBeNull()
 	})
 })

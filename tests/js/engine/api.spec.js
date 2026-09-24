@@ -4,12 +4,15 @@
  */
 
 /**
- * SPEC §3.2 contract: every exported name exists, support keys (ER App. D), and purity of src/engine (no
- * Math.random, clock, DOM, network or console; ER §9.1).
+ * The public API contract: every exported name exists, the support keys (Appendix D), and the purity and layering of
+ * src/engine: no randomness, clock, DOM, network or console in the rules (§9.1), imports only inside the engine, and
+ * the presentation helpers of `ui/` kept apart.
+ *
+ * Section numbers (§) and appendices refer to docs/engine-rules.md.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { E, play, S } from './helpers.js'
 
@@ -19,7 +22,7 @@ const CONTRACT = {
 	functions: ['initialState', 'validateState', 'parseState', 'serializeState', 'canonicalCopy', 'positionHash', 'gameResult', 'generateMoves', 'hasAnyLegalMove', 'findMove', 'isLegal', 'whyIllegal', 'getOutcomes', 'applyMove', 'moveCode', 'parseMoveCode', 'moveNotation', 'squareName', 'squareIndex', 'worldCount', 'budget', 'squareView', 'pieceLocations', 'conditionalView', 'links', 'linkGroups', 'kingDanger', 'moveRisk', 'kingTrapped', 'pct', 'rollDisplay', 'rollIntervals', 'setupPosition', 'rollIdentity', 'sha256hex', 'chainStart', 'chainNext', 'supportKey', 'supportKeyMirror', 'applyForSearch', 'outcomesForSearch'],
 }
 
-describe('SPEC §3.2 names', () => {
+describe('public API names', () => {
 	it('every contract name is exported', () => {
 		for (const name of [...CONTRACT.constants, ...CONTRACT.errors, ...CONTRACT.functions]) {
 			expect(E[name], name).toBeDefined()
@@ -50,7 +53,7 @@ describe('SPEC §3.2 names', () => {
 	})
 })
 
-describe('support keys (ER App. D)', () => {
+describe('support keys', () => {
 	it('start vector', () => {
 		const s = E.initialState()
 		expect(E.supportKey(s)).toBe('w|RNBQKBNRPPPPPPPP................................pppppppprnbqkbnr')
@@ -69,7 +72,10 @@ describe('support keys (ER App. D)', () => {
 	})
 })
 
-describe('purity of src/engine (ER §9.1)', () => {
+describe('purity and layering of src/engine', () => {
+	const root = join(import.meta.dirname, '../../../src/engine')
+	const ui = join(root, 'ui')
+
 	/**
 	 * All .js files under a directory.
 	 *
@@ -83,8 +89,63 @@ describe('purity of src/engine (ER §9.1)', () => {
 		})
 	}
 
+	/**
+	 * The module specifiers a file imports or re-exports (static and dynamic).
+	 *
+	 * @param {string} text source text
+	 * @return {string[]}
+	 */
+	function specifiers(text) {
+		const out = []
+		for (const m of text.matchAll(/^\s*(?:import|export)\b[^'"]*?\bfrom\s+['"]([^'"]+)['"]/gm)) {
+			out.push(m[1])
+		}
+		for (const m of text.matchAll(/^\s*import\s+['"]([^'"]+)['"]/gm)) {
+			out.push(m[1])
+		}
+		for (const m of text.matchAll(/\bimport\(\s*['"]([^'"]+)['"]\s*\)/g)) {
+			out.push(m[1])
+		}
+		return out
+	}
+
+	it('rule modules import only other rule modules', () => {
+		const list = files(root).filter((f) => !f.startsWith(ui + '/'))
+		expect(list.length).toBeGreaterThan(20)
+		for (const f of list) {
+			for (const spec of specifiers(readFileSync(f, 'utf8'))) {
+				expect(spec.startsWith('.'), f + ' imports ' + spec).toBe(true)
+				const target = resolve(dirname(f), spec)
+				expect(relative(root, target).startsWith('..'), f + ' imports ' + spec + ' outside src/engine').toBe(false)
+				expect(target.startsWith(ui + '/'), f + ' imports the presentation helper ' + spec).toBe(false)
+			}
+		}
+	})
+
+	it('presentation helpers import only the engine and @nextcloud/l10n', () => {
+		const list = files(ui)
+		expect(list.length).toBeGreaterThan(5)
+		for (const f of list) {
+			for (const spec of specifiers(readFileSync(f, 'utf8'))) {
+				if (spec === '@nextcloud/l10n') {
+					continue
+				}
+				expect(spec.startsWith('.'), f + ' imports ' + spec).toBe(true)
+				expect(relative(root, resolve(dirname(f), spec)).startsWith('..'), f + ' imports ' + spec + ' outside src/engine').toBe(false)
+			}
+			const code = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+			for (const re of [/Math\.random/, /\bDate\b/, /\bwindow\b/, /\bdocument\b/, /\bfetch\(/, /localStorage/]) {
+				expect(re.test(code), f + ' uses ' + re).toBe(false)
+			}
+		}
+	})
+
+	it('the engine index does not re-export the presentation helpers', () => {
+		const text = readFileSync(join(root, 'index.js'), 'utf8')
+		expect(specifiers(text).some((s) => s.startsWith('./ui/'))).toBe(false)
+	})
+
 	it('no randomness, clock, DOM, network or console in the rules engine', () => {
-		const root = join(import.meta.dirname, '../../../src/engine')
 		const banned = [
 			/Math\.random/,
 			/\bDate\b/,
@@ -99,8 +160,8 @@ describe('purity of src/engine (ER §9.1)', () => {
 			/Intl\./,
 			/setTimeout|setInterval/,
 		]
-		const list = files(root).filter((f) => !f.includes('/ui/'))
-		expect(list.length).toBeGreaterThan(15)
+		const list = files(root).filter((f) => !f.startsWith(ui + '/'))
+		expect(list.length).toBeGreaterThan(20)
 		for (const f of list) {
 			const text = readFileSync(f, 'utf8')
 			const code = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')

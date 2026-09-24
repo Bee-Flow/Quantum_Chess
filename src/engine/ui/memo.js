@@ -4,8 +4,8 @@
  */
 
 /**
- * memoByHash (SPEC §3.3): memoise a display computation per position hash (ER §5.4), so that equal positions reached
- * through different state objects (a poll result, a replay, a history preview) share one result.
+ * memoByHash: memoise a display computation per position hash (docs/engine-rules.md §5.4), so that equal positions
+ * reached through different state objects (a poll result, a replay, a history preview) share one result.
  */
 
 import { positionHash } from '../index.js'
@@ -13,7 +13,7 @@ import { positionHash } from '../index.js'
 /**
  * A stable text key of the extra arguments.
  *
- * @param {Array} args arguments after the state
+ * @param {unknown[]} args arguments after the state
  * @return {string}
  */
 function argsKey(args) {
@@ -35,10 +35,10 @@ function argsKey(args) {
  * worlds, but not the ply or the result; do not use it for functions that depend on those.
  *
  * @template R
- * @param {(state: object, ...args: any[]) => R} fn the function to memoise
+ * @param {(state: object, ...args: unknown[]) => R} fn the function to memoise
  * @param {object} [options] options
  * @param {number} [options.size] maximum number of cached results (default 64)
- * @return {((state: object, ...args: any[]) => R) & {clear: () => void, size: () => number}}
+ * @return {((state: object, ...args: unknown[]) => R) & {clear: () => void, size: () => number}}
  */
 export function memoByHash(fn, { size = 64 } = {}) {
 	const cache = new Map()

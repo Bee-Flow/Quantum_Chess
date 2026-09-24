@@ -4,14 +4,14 @@
  */
 
 /**
- * useBoardInput (SPEC §14.6.1, GAME-DESIGN §3.5): modes and tooltips, click / split / merge / Measure / promotion
- * flows, type-a-move parsing, the king safety net thresholds and the confirmation modes.
+ * useBoardInput: modes and tooltips, click / split / merge / Measure / promotion flows, the king safety net thresholds
+ * and the confirmation modes.
  */
 
 import { afterEach, describe, expect, it } from 'vitest'
 import { nextTick, ref } from 'vue'
-import { clearBoardPreferenceOverrides, overrideBoardPreferences } from '../../../src/components/board/boardPreferences.js'
-import { markerKind, useBoardInput } from '../../../src/components/board/useBoardInput.js'
+import { clearBoardPreferenceOverrides, overrideBoardPreferences } from '../../../src/board/boardPreferences.js'
+import { markerKind, useBoardInput } from '../../../src/board/composables/useBoardInput.js'
 import { E, play, S, sq } from './helpers.js'
 
 /**
@@ -104,7 +104,7 @@ describe('click flow', () => {
 		expect(b.feedback.text).toBe('Pawns can\'t capture straight ahead.')
 	})
 
-	it('marker kinds follow the resolution (GAME-DESIGN §3.5.2)', () => {
+	it('marker kinds follow the resolution', () => {
 		// W2: a solid bishop attacks a ghost knight
 		const w2 = S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6'])
 		const { input } = setup(w2)
@@ -217,38 +217,6 @@ describe('promotion', () => {
 	})
 })
 
-describe('type a move', () => {
-	it('uses the lenient parser', () => {
-		const { input, committed } = setup(E.initialState())
-		expect(input.typeMove('e2e4')).toMatchObject({ ok: true, result: 'committed' })
-		expect(committed).toEqual(['e2-e4'])
-	})
-
-	it('accepts splits, castling and Measure on any part; rejects with the whyIllegal text', () => {
-		const { input, committed } = setup(E.initialState())
-		expect(input.typeMove('Ng1-f3|h3').ok).toBe(true)
-		const c = setup(S('r3k3/8/8/8/8/8/8/4K2R w Kq - 0 1'))
-		expect(c.input.typeMove('O-O').ok).toBe(true)
-		expect(c.committed).toEqual(['e1-g1'])
-		const w4 = play(S('4k3/8/1n6/8/8/8/8/R3K3 b - - 0 1'), 'b6-a4|c4', 'a1-a8')
-		const m = setup(w4)
-		// the safety net asks first: measuring may reveal the rook on a8
-		expect(m.input.typeMove('?c4')).toMatchObject({ ok: true, result: 'safety' })
-		m.input.resolveSafetyNet('play')
-		expect(m.committed).toEqual(['?a4'])
-		expect(input.typeMove('e2e5')).toMatchObject({ ok: false, reason: 'unreachable', text: 'This piece can\'t move there.' })
-		expect(input.typeMove('')).toMatchObject({ ok: false, reason: 'malformed' })
-		expect(input.typeMove('hello')).toMatchObject({ ok: false, reason: 'malformed' })
-		expect(committed).toEqual(['g1-f3|h3'])
-	})
-
-	it('a promotion typed without the piece asks for it', () => {
-		const { input } = setup(S('4k3/1P6/8/8/8/8/8/4K3 w - - 0 1'))
-		expect(input.typeMove('b7b8')).toMatchObject({ ok: false, reason: 'promotion_required' })
-		expect(input.typeMove('b7b8=Q').ok).toBe(true)
-	})
-})
-
 describe('king safety net', () => {
 	// The black rook is 50 % a1 / 50 % a3: on the first rank the white king is 50 % capturable.
 	const risky = () => S('4k3/8/8/8/8/8/r7/4K3 w - - 0 1', ['a2-a1|a3'])
@@ -332,7 +300,7 @@ describe('confirm moves', () => {
 	})
 })
 
-describe('what-if and possibilities', () => {
+describe('what-if view', () => {
 	it('opens only on ghost parts, cycles parts with Tab, Esc closes', () => {
 		const s = play(E.initialState(), 'g1-f3|h3')
 		const { input } = setup(s)
@@ -342,17 +310,6 @@ describe('what-if and possibilities', () => {
 		expect(input.cycleWhatIf()).toBe(sq('f3'))
 		expect(input.cancel()).toBe('whatIf')
 		expect(input.whatIf).toBe(null)
-	})
-
-	it('viewing one possibility blocks input until it is closed', () => {
-		const s = play(E.initialState(), 'g1-f3|h3', 'e7-e5')
-		const { input } = setup(s)
-		input.viewPossibility(1)
-		expect(input.possibility).toBe(1)
-		expect(input.canInteract).toBe(false)
-		expect(input.activate(sq('e2'))).toBe('none')
-		expect(input.cancel()).toBe('possibility')
-		expect(input.canInteract).toBe(true)
 	})
 
 	it('a new position resets every flow', async () => {

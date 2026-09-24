@@ -4,8 +4,9 @@
  */
 
 /**
- * Calls to the app's HTTP API as a test user (basic auth plus `OCS-APIRequest: true`, which also satisfies the
- * CSRF check of web routes, docs/SPEC.md §7.1). Useful to set up games before a browser test.
+ * Calls to the app's HTTP API as a test user: basic auth plus `OCS-APIRequest: true`, which also satisfies the CSRF
+ * check of web routes (docs/development/api.md). The API specs use them, and the browser tests use them to set up
+ * games.
  */
 import { appUrl, env, getUser } from './env.mjs'
 
@@ -26,6 +27,21 @@ export class ApiError extends Error {
 }
 
 /**
+ * The headers that authenticate a request as a test user.
+ *
+ * @param {string|import('./env.mjs').TestUser} who test user key, uid or object
+ * @return {Record<string, string>}
+ */
+export function authHeaders(who) {
+	const user = getUser(who)
+	return {
+		Authorization: 'Basic ' + Buffer.from(`${user.uid}:${user.password}`).toString('base64'),
+		'OCS-APIRequest': 'true',
+		Accept: 'application/json',
+	}
+}
+
+/**
  * Call a route of the app.
  *
  * @param {string|import('./env.mjs').TestUser} who test user key, uid or object
@@ -35,13 +51,10 @@ export class ApiError extends Error {
  * @return {Promise<any>} parsed JSON (or text, or null for 204/304)
  */
 export async function api(who, method, path, body) {
-	const user = getUser(who)
 	const response = await fetch(appUrl(path), {
 		method,
 		headers: {
-			Authorization: 'Basic ' + Buffer.from(`${user.uid}:${user.password}`).toString('base64'),
-			'OCS-APIRequest': 'true',
-			Accept: 'application/json',
+			...authHeaders(who),
 			...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
 		},
 		body: body === undefined ? undefined : JSON.stringify(body),
@@ -69,13 +82,10 @@ export async function api(who, method, path, body) {
  * @return {Promise<any>}
  */
 export async function ocs(who, method, path, body) {
-	const user = getUser(who)
 	const response = await fetch(`${env.baseURL}/ocs/v2.php/apps/quantumchess/${path.replace(/^\//, '')}?format=json`, {
 		method,
 		headers: {
-			Authorization: 'Basic ' + Buffer.from(`${user.uid}:${user.password}`).toString('base64'),
-			'OCS-APIRequest': 'true',
-			Accept: 'application/json',
+			...authHeaders(who),
 			...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
 		},
 		body: body === undefined ? undefined : JSON.stringify(body),

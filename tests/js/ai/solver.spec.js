@@ -3,11 +3,15 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * The solver: every trainer puzzle is proven with its accepted moves; goals, horizons and limits.
+ */
+
 import { describe, expect, it } from 'vitest'
 import { pliesFor, solve } from '../../../src/ai/solver.js'
 import { S } from './helpers.js'
 
-/** The 1.0 puzzle set (GAME-DESIGN §5.2.2) and lesson step L1.3: setup, goal and the verified accepted set. */
+/** The trainer's puzzles and lesson step L1.3: setup, goal and the verified accepted set. */
 const PUZZLES = [
 	['P01', 'forced', '7k/5p1p/6p1/8/8/8/1B3PPP/3q2K1 w - - 0 1', [], ['b2-h8'], 1],
 	['P02', 'forced', '7k/6pp/8/8/8/3Q4/8/1K6 w - - 0 1', ['d3-d1|d5'], ['d1|d5-d8'], 1],
@@ -23,7 +27,7 @@ const PUZZLES = [
 	['L1.3', 'forced', '6k1/5ppp/8/8/8/8/8/R3K3 w - - 0 1', [], ['a1-a8'], 1],
 ]
 
-describe('solve: the GD §5.2.2 puzzle set', () => {
+describe('solve: the trainer puzzles', () => {
 	for (const [id, goal, fen, prelude, accepted, value] of PUZZLES) {
 		it(`${id} (${goal}): accepted set and value`, () => {
 			const r = solve(S(fen, prelude), { goal })
@@ -79,11 +83,11 @@ describe('solve: goals, horizons and limits', () => {
 		expect(r.accepted).toEqual([]) // accepted moves only for the side to move
 	})
 
-	it('supports a ply override (the 3-ply material grading of lesson L9)', () => {
+	it('supports a ply override (the 3-ply material grading of the gamble lesson)', () => {
 		const s = S('6k1/5ppp/8/2q5/4PN2/7P/5PP1/6K1 w - - 0 1', ['c5-d5|h5'])
 		const r = solve(s, { goal: 'material', plies: 3 })
 		const v = Object.fromEntries(r.moves.map((m) => [m.code, m.value]))
-		// GD §5.1.2 L9: e4-d5 and f4-d5 gain 4.5 pawns, f4-h5 gains 3.0 (losses are negative gains).
+		// The gamble lesson (L09): e4-d5 and f4-d5 gain 4.5 pawns, f4-h5 gains 3.0 (losses are negative gains).
 		expect(v['e4-d5']).toBeCloseTo(-4.5, 9)
 		expect(v['f4-d5']).toBeCloseTo(-4.5, 9)
 		expect(v['f4-h5']).toBeCloseTo(-3.0, 9)

@@ -4,16 +4,22 @@
  */
 
 /**
- * Move notation (ENGINE-RULES §5.7): head + suffix + mark.
+ * Move notation (§5.7): head + suffix + mark.
+ *
+ * PHP twin: lib/Engine/Internal/Notation.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
-import { analyse } from './analysis.js'
+import { analyze } from './analysis.js'
 import { applyRecord } from './apply.js'
 import { EngineArgumentError, IllegalMoveError } from './errors.js'
 import { TYPE_CHAR } from './geometry.js'
-import { resolveMove } from './moves.js'
+import { resolveMove } from './moveInput.js'
 import { SQUARE_NAMES } from './squares.js'
 import { pct } from './views.js'
+
+/** @typedef {import('./types.js').EngineState} EngineState */
+/** @typedef {import('./types.js').Measurement} Measurement */
+/** @typedef {import('./types.js').MoveInput} MoveInput */
 
 /**
  * Notation of a move played in `stateBefore` (§5.7), e.g. `Bc1xh6 {capture 50%}`, `?Na4 {c4 50%}`,
@@ -22,14 +28,14 @@ import { pct } from './views.js'
  * A rolled move needs its measurement record. The win mark ` #` is taken from `stateAfter.result` when given,
  * otherwise the move is replayed with the recorded outcome.
  *
- * @param {object} stateBefore state before the move
- * @param {object|string} move move input
- * @param {object|null} [measurement] measurement record (required for rolled moves)
- * @param {object} [stateAfter] state after the move (optional, saves a replay)
+ * @param {EngineState} stateBefore state before the move
+ * @param {MoveInput} move move input
+ * @param {Measurement|null} [measurement] measurement record (required for rolled moves)
+ * @param {EngineState} [stateAfter] state after the move (optional, saves a replay)
  * @return {string}
  */
 export function moveNotation(stateBefore, move, measurement = null, stateAfter = undefined) {
-	const a = analyse(stateBefore)
+	const a = analyze(stateBefore)
 	const r = resolveMove(a, move)
 	if (r.reason !== undefined) {
 		throw new IllegalMoveError(r.reason, move)

@@ -3,10 +3,14 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+/**
+ * The level table: five frozen levels with their names and strengths, piece values and ENGINE_VERSION.
+ */
+
 import { describe, expect, it } from 'vitest'
 import { ENGINE_VERSION, LEAF_K, levelOf, LEVELS, PIECE_VALUES, STRENGTHS } from '../../../src/ai/levels.js'
 
-describe('LEVELS (GAME-DESIGN §6.1, SPEC §4.2)', () => {
+describe('level table', () => {
 	it('has five frozen levels in order with names, labels and canned lines', () => {
 		expect(LEVELS).toHaveLength(5)
 		expect(Object.isFrozen(LEVELS)).toBe(true)
@@ -20,7 +24,7 @@ describe('LEVELS (GAME-DESIGN §6.1, SPEC §4.2)', () => {
 		}
 	})
 
-	it('matches the level 1 object of SPEC §4.2 exactly', () => {
+	it('defines level 1 exactly', () => {
 		expect(LEVELS[0]).toMatchObject({
 			level: 1,
 			id: 'wobbles',
@@ -46,7 +50,7 @@ describe('LEVELS (GAME-DESIGN §6.1, SPEC §4.2)', () => {
 		})
 	})
 
-	it('implements the behaviour table of GD §6.1', () => {
+	it('scales depth, time, noise and policies from level 1 to 5', () => {
 		const [l1, l2, l3, l4, l5] = LEVELS
 		expect([l1.depth, l2.depth, l3.depth]).toEqual([1, 2, 3])
 		expect(l4.depth).toBe(5) // "depth 4–5"

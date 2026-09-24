@@ -10,13 +10,14 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine\Internal;
 
 /**
- * Per-world move functions and world bookkeeping (ENGINE-RULES §4.3, §4.6–§4.9, §5.1 A2–A8, §5.3, §5.4).
- * Mirrors src/engine/outcomes.js, rescale.js, bookkeeping.js and hash.js.
+ * Per-world move functions and world bookkeeping (§4.3, §4.6–§4.9, §5.1 A2–A8, §5.3, §5.4).
+ *
+ * JavaScript twin: src/engine/outcomes.js, rescale.js, bookkeeping.js and hash.js. Section numbers (§) refer to docs/engine-rules.md.
  *
  * @internal
  */
 final class Worlds {
-	private const KEY_CODE = ['miss' => Moves::MISS, 'move' => Moves::MOVE, 'capture' => Moves::CAPTURE];
+	private const KEY_CODE = ['miss' => MoveRecord::MISS, 'move' => MoveRecord::MOVE, 'capture' => MoveRecord::CAPTURE];
 
 	/**
 	 * The outcome keys of a record as getOutcomes lists them: the outcome keys of a rolled move, otherwise the
@@ -71,11 +72,11 @@ final class Worlds {
 			case 'standard':
 				$epSquare = $rec->ep ? ($rec->ci === 0 ? $rec->t - 8 : $rec->t + 8) : -1;
 				foreach ($a->boards as $i => $b) {
-					$k = Moves::standardKeyIn($rec, $b);
+					$k = MoveRules::standardKeyIn($rec, $b);
 					if ($filter >= 0 && $k !== $filter) {
 						continue;
 					}
-					if ($k !== Moves::MISS) {
+					if ($k !== MoveRecord::MISS) {
 						$b[$rec->f] = '.';
 						$b[$rec->t] = $ch;
 						if ($epSquare >= 0) {
@@ -90,10 +91,10 @@ final class Worlds {
 				break;
 			case 'merge':
 				foreach ($a->boards as $i => $b) {
-					$src = Moves::mergeSourceIn($rec, $b);
-					$k = Moves::MISS;
+					$src = MoveRules::mergeSourceIn($rec, $b);
+					$k = MoveRecord::MISS;
 					if ($src !== 0) {
-						$k = $b[$rec->t] === '.' ? Moves::MOVE : Moves::CAPTURE;
+						$k = $b[$rec->t] === '.' ? MoveRecord::MOVE : MoveRecord::CAPTURE;
 					}
 					if ($filter >= 0 && $k !== $filter) {
 						continue;
@@ -188,8 +189,8 @@ final class Worlds {
 	 * Largest-remainder rescale (§5.3) of positive integer weights whose sum S is below T: the result sums to T.
 	 * Ties of the remainder go to the lower index.
 	 *
-	 * @param list<int> $weights
-	 * @return list<int>
+	 * @param array<int, int> $weights
+	 * @return array<int, int> the new weights, with the keys of `$weights`
 	 */
 	public static function rescale(array $weights): array {
 		$S = array_sum($weights);

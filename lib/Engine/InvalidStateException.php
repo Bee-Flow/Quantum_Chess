@@ -10,7 +10,8 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine;
 
 /**
- * A state that fails validation (ENGINE-RULES §2.7): the invariant is `shape` or `I1` … `I12`.
+ * A state that fails validation (docs/engine-rules.md §2.7): the invariant is `shape` or `I1` … `I12`. JavaScript
+ * twin: `InvalidStateError` in src/engine/errors.js.
  */
 class InvalidStateException extends \RuntimeException {
 	public function __construct(

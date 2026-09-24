@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-// The board themes of 1.0 (docs/LEAN-1.0.md): Classic (`wood`), Blue (`slate`) and Quantum, plus `contrast`, which is
-// chosen automatically under Nextcloud's high-contrast themes. Attribute `data-board-theme` on every board root.
+// The board themes: Classic (`wood`), Blue (`slate`) and Quantum, plus `contrast`, which is chosen automatically under
+// Nextcloud's high-contrast themes. Every board root carries the attribute `data-board-theme`.
 // Board colours never follow the Nextcloud light/dark theme; in the dark theme only the squares are dimmed.
 // tests/js/board/contrast.spec.js reads the colours of this file and checks the markers against both square colours.
 

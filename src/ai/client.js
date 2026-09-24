@@ -4,10 +4,14 @@
  */
 
 /**
- * Promise API of the built-in engine for the UI (SPEC §4.3).
+ * Promise API of the computer player for the UI. This module and `levels.js` are the only ones the rest of the web
+ * app imports from src/ai.
+ *
+ * Vocabulary: the **rules engine** (src/engine) knows the rules; the **computer player** (src/ai) searches with it for
+ * the built-in opponent, the coach, the review and the puzzles; an **LLM opponent** picks from its `candidates`.
  *
  * - One Web Worker per page, created lazily (`new Worker(new URL('./worker.js', import.meta.url), {type: 'module'})`).
- * - Jobs are queued and run one at a time; the computer's move and the AI-opponent candidates go before coach
+ * - Jobs are queued and run one at a time; the computer's move and the LLM opponent's candidates go before coach
  *   analyses, and the post-game review goes last.
  * - Every function accepts `{signal}` and rejects with `DOMException('AbortError')` when it fires. A queued job is
  *   dropped; a running one is stopped at once by terminating the worker (a fresh one is created for the next job).
@@ -21,9 +25,12 @@
 import { readCachedBenchmark, writeCachedBenchmark } from './benchmark.js'
 import { createTask } from './jobs.js'
 import { ENGINE_VERSION } from './levels.js'
+import { freshSeed } from './tasks.js'
+
+/** @typedef {import('../engine/types.js').EngineState} EngineState */
 
 /** Main-thread fallback: length of one computing slice in ms (then the browser gets a frame). */
-export const SLICE_MS = 40
+const SLICE_MS = 40
 
 const PRIORITY = { bestMove: 0, candidates: 0, solve: 0, benchmark: 0, evaluateMove: 1, analyze: 1, analyzeGame: 2 }
 
@@ -48,7 +55,7 @@ let benchmarkPromise = null
 /**
  * Replace the worker factory (tests), or pass `null` to force the main-thread fallback. Resets the client.
  *
- * @param {(function(): Worker)|null} fn factory
+ * @param {(() => Worker)|null} fn factory
  */
 export function setWorkerFactory(fn) {
 	cancelAll()
@@ -71,7 +78,7 @@ export function engineMode() {
 }
 
 /**
- * The AbortError of the SPEC.
+ * The error every cancelled job rejects with, the same as `fetch` uses for an aborted request.
  *
  * @return {DOMException}
  */
@@ -325,7 +332,7 @@ function submit(type, payload, opts = {}) {
 					try {
 						onProgress(p)
 					} catch {
-						// A failing progress callback must not break the engine.
+						// A failing progress callback must not break the job.
 					}
 				}
 			},
@@ -366,8 +373,7 @@ function seedOf(options) {
 	if (typeof options.rng === 'function') {
 		return Math.floor(options.rng() * 4294967296) >>> 0
 	}
-	const c = globalThis.crypto
-	return c && typeof c.getRandomValues === 'function' ? c.getRandomValues(new Uint32Array(1))[0] : (Date.now() >>> 0)
+	return freshSeed()
 }
 
 /**
@@ -375,7 +381,7 @@ function seedOf(options) {
  * wait `displayMs` before playing it (0 when `fast`). `onProgress({depth, code, E, nodes, timeMs})` after every
  * search iteration ("Thinking… depth n").
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object} options `{level, rng?, seed?, fast?, signal?, onProgress?, timeMs?, nodeBudget?, deterministic?}`
  * @return {Promise<object>}
  */
@@ -391,7 +397,7 @@ export function bestMove(state, options = {}) {
  * Position analysis for the coach: `{E, fog, mate, best, included, depth, nodes, timeMs}`. A newer `analyze` on the
  * same `channel` (default `'coach'`; `null` for none) cancels this one.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object} [options] `{timeMs = 600, multiPv = 3, include = [], fogPlies = 2, level?, signal?, onProgress?, channel?}`
  * @return {Promise<object>}
  */
@@ -404,7 +410,7 @@ export function analyze(state, options = {}) {
 /**
  * Value of one move: `{code, E, outcomes: [{key, weight, E}]}`.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {string} code move
  * @param {object} [options] `{timeMs = 400, signal?}`
  * @return {Promise<object>}
@@ -415,9 +421,9 @@ export function evaluateMove(state, code, options = {}) {
 }
 
 /**
- * Candidates for the AI opponent: `[{code, E (side to move), tags, ok}]`.
+ * Candidates for an LLM opponent: `[{code, E (side to move), tags, ok}]`.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object} options `{strength, tolerance, signal?}`
  * @return {Promise<object[]>}
  */
@@ -429,7 +435,7 @@ export function candidates(state, options = {}) {
 /**
  * Exact solver: `{value, moves: [{code, value}], accepted, exact}`.
  *
- * @param {object} state position
+ * @param {EngineState} state position
  * @param {object} options `{goal, horizon, side, nodeLimit?, plies?, signal?}`
  * @return {Promise<object>}
  */

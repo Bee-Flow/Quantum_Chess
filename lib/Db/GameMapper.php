@@ -15,6 +15,8 @@ use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
 
 /**
+ * Queries of the `qchess_games` table.
+ *
  * @template-extends QBMapper<Game>
  */
 class GameMapper extends QBMapper {
@@ -80,7 +82,11 @@ class GameMapper extends QBMapper {
 		return $this->findEntities($qb);
 	}
 
-	/** @return list<Game> */
+	/**
+	 * The open challenges, newest first.
+	 *
+	 * @return list<Game>
+	 */
 	public function findOpen(int $limit = 100): array {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')->from(self::TABLE)
@@ -115,7 +121,8 @@ class GameMapper extends QBMapper {
 	}
 
 	/**
-	 * Games in `$status` whose `$column` (deadline_at, expires_at or finished_at) is at or before `$time`.
+	 * Games with one of `$statuses` whose `$column` (deadline_at, expires_at or finished_at) is at or before `$time`,
+	 * the earliest first.
 	 *
 	 * @param list<string> $statuses
 	 * @return list<Game>
@@ -144,7 +151,7 @@ class GameMapper extends QBMapper {
 	}
 
 	/**
-	 * Active games without a deadline whose last activity is at or before `$cutoff`.
+	 * Active games without a time limit (`corr:none`) whose last activity is at or before `$cutoff`.
 	 *
 	 * @return list<Game>
 	 */
@@ -177,6 +184,7 @@ class GameMapper extends QBMapper {
 		return $this->findEntities($qb);
 	}
 
+	/** The number of games with `$status` that `$uid` created. */
 	public function countCreated(string $uid, string $status): int {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('*', 'n'))->from(self::TABLE)
@@ -185,6 +193,7 @@ class GameMapper extends QBMapper {
 		return $this->fetchCount($qb);
 	}
 
+	/** The number of pending invitations from `$from` to `$to`. */
 	public function countPendingPair(string $from, string $to): int {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('*', 'n'))->from(self::TABLE)
@@ -194,6 +203,7 @@ class GameMapper extends QBMapper {
 		return $this->fetchCount($qb);
 	}
 
+	/** The number of active games in which `$uid` plays. */
 	public function countActive(string $uid): int {
 		$qb = $this->db->getQueryBuilder();
 		$param = $qb->createNamedParameter($uid);
@@ -248,8 +258,9 @@ class GameMapper extends QBMapper {
 		];
 	}
 
+	/** Deletes a game with its moves and chat lines. */
 	public function deleteWithChildren(int $gameId): void {
-		foreach (['qchess_moves', 'qchess_chat'] as $table) {
+		foreach ([MoveMapper::TABLE, ChatMapper::TABLE] as $table) {
 			$qb = $this->db->getQueryBuilder();
 			$qb->delete($table)->where($qb->expr()->eq('game_id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))->executeStatement();
 		}
@@ -257,9 +268,11 @@ class GameMapper extends QBMapper {
 		$qb->delete(self::TABLE)->where($qb->expr()->eq('id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))->executeStatement();
 	}
 
-	/** Sets `$column` to NULL where it equals `$uid` (account deletion). */
+	/**
+	 * Removes `$uid` from a game when the account is deleted: every player column that holds `$uid` becomes NULL, and
+	 * so does the invitation message when `$uid` wrote it (it is the creator's own words).
+	 */
 	public function clearUser(int $gameId, string $uid): void {
-		// the invitation text is the creator's own words
 		$qb = $this->db->getQueryBuilder();
 		$qb->update(self::TABLE)->set('invite_message', $qb->createNamedParameter(null))
 			->where($qb->expr()->eq('id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))
@@ -274,8 +287,12 @@ class GameMapper extends QBMapper {
 		}
 	}
 
-	/** @return array{active: int, finishedToday: int} */
-	public function diagnostics(int $now): array {
+	/**
+	 * The number of active games and of games finished since `$finishedSince` (Unix seconds).
+	 *
+	 * @return array{active: int, finishedToday: int}
+	 */
+	public function diagnostics(int $finishedSince): array {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('*', 'n'))->from(self::TABLE)
 			->where($qb->expr()->eq('status', $qb->createNamedParameter(Game::STATUS_ACTIVE)));
@@ -283,7 +300,7 @@ class GameMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('*', 'n'))->from(self::TABLE)
 			->where($qb->expr()->eq('status', $qb->createNamedParameter(Game::STATUS_FINISHED)))
-			->andWhere($qb->expr()->gte('finished_at', $qb->createNamedParameter($now - 86400, IQueryBuilder::PARAM_INT)));
+			->andWhere($qb->expr()->gte('finished_at', $qb->createNamedParameter($finishedSince, IQueryBuilder::PARAM_INT)));
 		return ['active' => $active, 'finishedToday' => $this->fetchCount($qb)];
 	}
 
@@ -294,7 +311,11 @@ class GameMapper extends QBMapper {
 		return $n;
 	}
 
-	/** @return list<int> */
+	/**
+	 * The count, revision sum and latest update of a fingerprint query.
+	 *
+	 * @return list<int>
+	 */
 	private function fetchRow(IQueryBuilder $qb): array {
 		$result = $qb->executeQuery();
 		$row = $result->fetch();

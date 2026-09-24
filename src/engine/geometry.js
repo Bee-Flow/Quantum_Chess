@@ -4,10 +4,10 @@
  */
 
 /**
- * Precomputed geometry and lane tables (ENGINE-RULES §3.2, §4.2). Everything here is built once at module load.
+ * Precomputed geometry and lane tables (§3.2, §4.2). Everything here is built once at module load.
+ *
+ * PHP twin: lib/Engine/Internal/Tables.php. Section numbers (§) refer to docs/engine-rules.md.
  */
-
-const EMPTY = Object.freeze([])
 
 /** Type codes used internally: index into 'kqrbnp'. */
 export const TYPE_K = 0
@@ -154,7 +154,8 @@ function build() {
 				if (r === startRank) {
 					PAWN_DOUBLE[ci][s] = s + 2 * dir
 				}
-				// White: f + 7 needs file ≥ 1, f + 9 needs file ≤ 6. Black mirrors: f − 9 needs file ≥ 1, f − 7 needs file ≤ 6.
+				// White: f + 7 needs file ≥ 1, f + 9 needs file ≤ 6. Black mirrors: f − 9 needs file ≥ 1, f − 7 needs
+				// file ≤ 6.
 				if (f >= 1) {
 					caps.push(t - 1)
 				}
@@ -172,18 +173,6 @@ function build() {
 }
 
 build()
-
-/**
- * G(type, f, t) for a non-pawn type code (§3.2).
- *
- * @param {number} type type code
- * @param {number} f from square
- * @param {number} t to square
- * @return {boolean}
- */
-export function geo(type, f, t) {
-	return GEO[type * 4096 + f * 64 + t] === 1
-}
 
 /**
  * Pawn move kind for colour index ci: 'push', 'double', 'diagonal' or null (§4.2).
@@ -207,23 +196,4 @@ export function pawnKind(ci, f, t) {
 		}
 	}
 	return null
-}
-
-/**
- * The lane of a move (§3.2): the squares strictly between f and t for sliders, the skipped square of a double push,
- * empty otherwise.
- *
- * @param {number} type type code
- * @param {number} f from square
- * @param {number} t to square
- * @return {number[]}
- */
-export function laneOf(type, f, t) {
-	if (type === TYPE_Q || type === TYPE_R || type === TYPE_B) {
-		return LANE[f * 64 + t]
-	}
-	if (type === TYPE_P && Math.abs(t - f) === 16) {
-		return [(f + t) >> 1]
-	}
-	return EMPTY
 }

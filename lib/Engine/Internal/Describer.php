@@ -10,13 +10,21 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Engine\Internal;
 
 /**
- * The POSITION block of an LLM prompt (ENGINE-RULES Appendix B, SPEC §3.4, §10.4): header, certain FEN, uncertain
- * pieces with percentages, links in words, possibilities, budgets and king danger. English only: it is model
- * input, not UI copy. Legal moves are listed by the prompt builder, not here.
+ * The POSITION block of an LLM prompt (Appendix B): header, certain FEN, uncertain pieces with percentages, links in
+ * words, possibilities, budgets and king danger. English only: it is model input, not UI copy. Legal moves are
+ * listed by the prompt builder, not here.
  *
- * The header, FEN, uncertain-piece, possibilities and game-over lines are byte-identical to `describeForLlm` of the
- * JS engine; the link line names the most strongly correlated squares (the JS helper names the most likely joint
- * placement, which can be as likely as without the link and then says nothing about it).
+ * JavaScript counterpart: src/engine/describe.js. It implements the same appendix, but the two are not a parity
+ * pair. The header, FEN, uncertain-piece, possibilities and game-over lines are byte-identical; the differences are:
+ *
+ * - The link line names the most strongly correlated squares (the JavaScript helper names the most likely joint
+ *   placement, which can be as likely as without the link and then says nothing about it). At most 12 links are
+ *   written out; the rest is counted.
+ * - The block is capped at 4096 bytes: link texts are dropped until it fits.
+ * - The JavaScript helper also lists the legal moves and split targets; this block does not.
+ * - The model's colour is required here and optional in JavaScript (the side to move).
+ *
+ * Appendix letters refer to docs/engine-rules.md.
  *
  * @internal
  */
@@ -26,12 +34,12 @@ final class Describer {
 	/** At most this many links are written out; the rest is counted. */
 	private const MAX_LINKS = 12;
 
-	/** Size limit of the block (SPEC §3.4). */
+	/** Size limit of the block: it must stay well within an LLM prompt. */
 	private const MAX_BYTES = 4096;
 
 	private static function pieceName(string $types, int $id, bool $lower = false): string {
-		$colour = $id < 16 ? 'White' : 'Black';
-		return ($lower ? strtolower($colour) : $colour) . ' ' . self::TYPE_NAMES[$types[$id]];
+		$color = $id < 16 ? 'White' : 'Black';
+		return ($lower ? strtolower($color) : $color) . ' ' . self::TYPE_NAMES[$types[$id]];
 	}
 
 	private static function side(string $c): string {
@@ -68,8 +76,8 @@ final class Describer {
 		}
 		$tail = [];
 		$tail[] = 'Possibilities: ' . $a->n . '. Budget: White ' . $a->budget(0) . '/' . Tables::BUDGET . ', Black '
-			. $a->budget(1) . '/' . Tables::BUDGET . '. King danger: White ' . Views::pct(Core::danger($a, 0)) . '%, Black '
-			. Views::pct(Core::danger($a, 1)) . '%.';
+			. $a->budget(1) . '/' . Tables::BUDGET . '. King danger: White ' . Views::pct(Danger::kingDanger($a, 0)) . '%, Black '
+			. Views::pct(Danger::kingDanger($a, 1)) . '%.';
 		if ($state['result'] !== null) {
 			/** @var array{result: string, reason: string} $result */
 			$result = $state['result'];

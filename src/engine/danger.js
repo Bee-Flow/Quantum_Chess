@@ -4,15 +4,21 @@
  */
 
 /**
- * King danger (ENGINE-RULES §8) and the trapped-king test (§6, E1b). Both are normative: the end checks use them.
+ * King danger (§8) and the trapped-king test (§6, E1b). Both are normative: the end checks use them.
+ *
+ * PHP twin: lib/Engine/Internal/Danger.php. Section numbers (§) refer to docs/engine-rules.md.
  */
 
-import { analyse } from './analysis.js'
+import { analyze } from './analysis.js'
 import { MAX_PLY, T } from './constants.js'
 import { KING, KNIGHT, PAWN_ATTACKERS, RAYS, TYPE_B, TYPE_K, TYPE_N, TYPE_P, TYPE_Q, TYPE_R } from './geometry.js'
-import { someRecord } from './moves.js'
+import { someRecord } from './moveGenerator.js'
 import { outcomeCaptures, recordKeys, recordOutcomeBoards } from './outcomes.js'
 import { idOfCode } from './squares.js'
+
+/** @typedef {import('./types.js').Analysis} Analysis */
+/** @typedef {import('./types.js').EngineState} EngineState */
+/** @typedef {import('./moveRecord.js').MoveRecord} MoveRecord */
 
 const ACC = new Float64Array(64)
 const WHO = new Int8Array(64)
@@ -139,18 +145,18 @@ export function dangerOf(boards, weights, n, typeCodes, ci) {
  * kingDanger(s, c) (§8): the weight (0..T) with which the opponent could capture c's king with its best single
  * move (standard or converging capture), if it were the opponent's turn. `kingDanger = T` is "certain danger".
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @param {'w'|'b'} color the king's colour
  * @return {number} integer weight
  */
 export function kingDanger(state, color) {
-	return dangerA(analyse(state), color === 'w' ? 0 : 1)
+	return dangerA(analyze(state), color === 'w' ? 0 : 1)
 }
 
 /**
  * kingDanger on an analysis, cached.
  *
- * @param {object} a analysis
+ * @param {Analysis} a analysis
  * @param {number} ci colour index of the king
  * @return {number}
  */
@@ -167,8 +173,8 @@ export function dangerA(a, ci) {
  * Does the (legal) record, in any of its outcomes, avoid leaving the mover's king certainly capturable
  * (or end the game at once by capturing the enemy king)? Used by E1b.
  *
- * @param {object} a analysis of the position to move in
- * @param {object} rec legal record
+ * @param {Analysis} a analysis of the position to move in
+ * @param {MoveRecord} rec legal record
  * @return {boolean}
  */
 function escapes(a, rec) {
@@ -197,7 +203,7 @@ function escapes(a, rec) {
  * reply captured the enemy king) or E5 (ply limit) could end the game. The test below is therefore exactly:
  * no reply reaches the ply limit, captures the enemy king, or leaves kingDanger below T.
  *
- * @param {object} a analysis
+ * @param {Analysis} a analysis
  * @return {{trapped: boolean, anyLegal: boolean}}
  */
 export function trappedInfo(a) {
@@ -226,11 +232,11 @@ export function trappedInfo(a) {
  * kingTrapped(s) (§6, E1b): the side to move has at least one legal move, and every outcome of every legal move
  * leaves the game running with its own king certainly capturable.
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @return {boolean}
  */
 export function kingTrapped(state) {
-	const a = analyse(state)
+	const a = analyze(state)
 	if (state.result !== null) {
 		return false
 	}
@@ -240,7 +246,7 @@ export function kingTrapped(state) {
 /**
  * Is T the king danger of colour ci in these worlds? (Helper for tests and views.)
  *
- * @param {object} state valid engine state
+ * @param {EngineState} state valid engine state
  * @param {'w'|'b'} color the king's colour
  * @return {boolean}
  */
