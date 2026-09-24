@@ -23,8 +23,20 @@ final class AnswerParserTest extends TestCase {
 	public static function answers(): array {
 		return [
 			'plain JSON' => ['{"move":"e7-e5","comment":"Hello!","mood":"happy"}', 'e7-e5', null, 'Hello!', 'happy'],
-			'fenced' => ["```json\n{\"move\": \"b8-a6|c6\", \"comment\": \"Split!\", \"mood\": \"playful\"}\n```", 'b8-a6|c6', null, 'Split!', 'playful'],
-			'trailing text' => ['Sure! {"move":"g8-f6","comment":"A {brace} in \"text\"","mood":"worried"} Good luck.', 'g8-f6', null, 'A {brace} in "text"', 'worried'],
+			'fenced' => [
+				"```json\n{\"move\": \"b8-a6|c6\", \"comment\": \"Split!\", \"mood\": \"playful\"}\n```",
+				'b8-a6|c6',
+				null,
+				'Split!',
+				'playful',
+			],
+			'trailing text' => [
+				'Sure! {"move":"g8-f6","comment":"A {brace} in \"text\"","mood":"worried"} Good luck.',
+				'g8-f6',
+				null,
+				'A {brace} in "text"',
+				'worried',
+			],
 			'pick' => ['{"pick": 2, "comment": "Two.", "mood": "confident"}', null, 2, 'Two.', 'confident'],
 			'pick as string' => ['{"pick": "3"}', null, 3, '', 'thinking'],
 			'bad mood' => ['{"move":"e7-e5","comment":"x","mood":"furious"}', 'e7-e5', null, 'x', 'thinking'],
@@ -32,7 +44,13 @@ final class AnswerParserTest extends TestCase {
 			'castling fallback' => ['Let us castle: O-O', 'O-O', null, '', 'thinking'],
 			'measure fallback' => ['I measure ?a3 now', '?a3', null, '', 'thinking'],
 			'nothing' => ['I resign, this is too hard.', null, null, '', 'thinking'],
-			'comment cleaned' => ['{"move":"e7-e5","comment":"line1\nline2\t\u0007end' . str_repeat('x', 300) . '"}', 'e7-e5', null, '', 'thinking'],
+			'comment cleaned' => [
+				'{"move":"e7-e5","comment":"line1\nline2\t\u0007end' . str_repeat('x', 300) . '"}',
+				'e7-e5',
+				null,
+				'',
+				'thinking',
+			],
 		];
 	}
 

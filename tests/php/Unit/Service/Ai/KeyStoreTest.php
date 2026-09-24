@@ -25,7 +25,10 @@ final class KeyStoreTest extends TestCase {
 		$keys = $this->keys();
 		$keys->setPersonal('bob', 'sk-abcdefgh1234');
 		$this->assertStringStartsWith('enc:', $this->user['bob']['ai_api_key']);
-		$this->assertSame(['hasKey' => true, 'keyHint' => '1234', 'keyUnreadable' => false], $keys->personalInfo('bob'));
+		$this->assertSame(
+			['hasKey' => true, 'keyHint' => '1234', 'keyUnreadable' => false],
+			$keys->personalInfo('bob'),
+		);
 		$this->assertSame('sk-abcdefgh1234', $keys->getPersonal('bob'));
 		$this->user['bob']['ai_api_key'] = 'garbage';
 		$this->assertSame(['hasKey' => true, 'keyHint' => null, 'keyUnreadable' => true], $keys->personalInfo('bob'));
@@ -39,7 +42,11 @@ final class KeyStoreTest extends TestCase {
 		$keys->setShared('sk-short');
 		$this->assertSame(['hasKey' => true, 'keyHint' => 'hort', 'keyUnreadable' => false], $keys->sharedInfo());
 		$keys->setShared('short');
-		$this->assertSame(['hasKey' => true, 'keyHint' => null, 'keyUnreadable' => false], $keys->sharedInfo(), 'no hint for keys under 8 characters');
+		$this->assertSame(
+			['hasKey' => true, 'keyHint' => null, 'keyUnreadable' => false],
+			$keys->sharedInfo(),
+			'no hint for keys under 8 characters',
+		);
 		$keys->setShared(null);
 		$this->assertArrayNotHasKey(KeyStore::SHARED_KEY, $this->app);
 		$this->assertTrue(KeyStore::isValidKey('sk-' . str_repeat('x', 1021)));

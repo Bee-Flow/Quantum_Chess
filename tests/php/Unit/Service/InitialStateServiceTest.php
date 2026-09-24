@@ -45,9 +45,11 @@ final class InitialStateServiceTest extends TestCase {
 	private function provide(): array {
 		$provided = [];
 		$initialState = $this->createMock(IInitialState::class);
-		$initialState->method('provideInitialState')->willReturnCallback(function (string $key, mixed $data) use (&$provided): void {
-			$provided[$key] = json_encode($data);
-		});
+		$initialState->method('provideInitialState')->willReturnCallback(
+			function (string $key, mixed $data) use (&$provided): void {
+				$provided[$key] = json_encode($data);
+			},
+		);
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('bob');
 		$user->method('getDisplayName')->willReturn('Bob B.');
@@ -59,7 +61,9 @@ final class InitialStateServiceTest extends TestCase {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('getAppVersion')->willReturn('1.0.0');
 		$userConfig = $this->createMock(IUserConfig::class);
-		$userConfig->method('getValueArray')->willReturnCallback(fn (string $uid, string $app, string $key) => $key === 'ai_notice_ack' ? $this->acks : []);
+		$userConfig->method('getValueArray')->willReturnCallback(
+			fn (string $uid, string $app, string $key) => $key === 'ai_notice_ack' ? $this->acks : [],
+		);
 		$settings = $this->createMock(AppSettings::class);
 		$settings->method('openChallengesEnabled')->willReturn(true);
 		$settings->method('ratedEnabled')->willReturn(false);
@@ -68,22 +72,45 @@ final class InitialStateServiceTest extends TestCase {
 		$policy = $this->createMock(InvitePolicy::class);
 		$policy->method('isMultiplayerUser')->willReturnCallback(fn () => $this->multiplayer);
 		$games = $this->createMock(GameQueryService::class);
-		$games->method('getLobby')->willReturnCallback(fn () => $this->lobbyFails ? throw new \RuntimeException('database down') : []);
+		$games->method('getLobby')->willReturnCallback(
+			fn () => $this->lobbyFails ? throw new \RuntimeException('database down') : [],
+		);
 		$games->method('lobbyToken')->willReturn('u1.o2');
 		$serializer = $this->createMock(GameSerializer::class);
-		$serializer->method('lobby')->willReturnCallback(fn (array $groups, string $viewer, string $token) => ['rev' => $token, 'viewer' => $viewer]);
+		$serializer->method('lobby')->willReturnCallback(
+			fn (array $groups, string $viewer, string $token) => ['rev' => $token, 'viewer' => $viewer],
+		);
 		$preferences = $this->createMock(PreferencesService::class);
 		$preferences->method('get')->willReturn([]);
 		$progress = $this->createMock(TrainerProgressService::class);
 		$progress->method('get')->willReturn(['xp' => 40]);
 		$sources = $this->createMock(AiSourceService::class);
-		$sources->method('summary')->willReturn(['nextcloud' => true, 'shared' => false, 'personal' => false, 'any' => true, 'default' => 'nextcloud']);
+		$sources->method('summary')->willReturn([
+			'nextcloud' => true,
+			'shared' => false,
+			'personal' => false,
+			'any' => true,
+			'default' => 'nextcloud',
+		]);
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->method('error')->willReturnCallback(function (string $message): void {
 			$this->logged[] = $message;
 		});
-		$service = new InitialStateService($initialState, $groups, $l10n, $apps, $userConfig, $settings, $policy, $sources, $preferences, $progress,
-			$games, $serializer, $logger);
+		$service = new InitialStateService(
+			$initialState,
+			$groups,
+			$l10n,
+			$apps,
+			$userConfig,
+			$settings,
+			$policy,
+			$sources,
+			$preferences,
+			$progress,
+			$games,
+			$serializer,
+			$logger,
+		);
 		$service->provide($user);
 		return $provided;
 	}
@@ -91,7 +118,8 @@ final class InitialStateServiceTest extends TestCase {
 	public function testInitialState(): void {
 		$this->assertSame([
 			'user' => '{"uid":"bob","displayName":"Bob B.","isAdmin":true,"language":"nl","locale":"nl_NL"}',
-			'features' => '{"multiplayer":true,"openChallenges":true,"rated":false,"chat":true,"leaderboardMode":"opt-out",'
+			'features'
+				=> '{"multiplayer":true,"openChallenges":true,"rated":false,"chat":true,"leaderboardMode":"opt-out",'
 				. '"ai":{"nextcloud":true,"shared":false,"personal":false,"any":true,"default":"nextcloud","noticeAcked":["shared","unknown"]},'
 				. '"distributedCache":false,"notifyPush":false}',
 			'preferences' => '{}',

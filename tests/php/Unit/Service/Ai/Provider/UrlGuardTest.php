@@ -23,7 +23,11 @@ use PHPUnit\Framework\TestCase;
 final class UrlGuardTest extends TestCase {
 	use SettingsFixture;
 
-	/** @return array<string, array{string, string, bool, list<string>, ?bool}> url, scope, sharedAllowLocal, allowlist → allowLocal (null = refused) */
+	/**
+	 * url, scope, sharedAllowLocal, allowlist → allowLocal (null = refused)
+	 *
+	 * @return array<string, array{string, string, bool, list<string>, ?bool}>
+	 */
 	public static function urls(): array {
 		return [
 			'public https' => ['https://api.openai.com/v1/', 'personal', false, [], false],
@@ -32,8 +36,20 @@ final class UrlGuardTest extends TestCase {
 			'query' => ['https://api.openai.com/v1?x=1', 'personal', false, [], null],
 			'ftp' => ['ftp://api.openai.com/v1', 'personal', false, [], null],
 			'localhost refused' => ['http://localhost:11434/v1', 'personal', false, [], null],
-			'localhost allow-listed' => ['http://LOCALHOST:11434/v1/', 'personal', false, ['http://localhost:11434/v1'], true],
-			'allow-list is exact' => ['http://localhost:11434/v2', 'personal', false, ['http://localhost:11434/v1'], null],
+			'localhost allow-listed' => [
+				'http://LOCALHOST:11434/v1/',
+				'personal',
+				false,
+				['http://localhost:11434/v1'],
+				true,
+			],
+			'allow-list is exact' => [
+				'http://localhost:11434/v2',
+				'personal',
+				false,
+				['http://localhost:11434/v1'],
+				null,
+			],
 			'loopback ip' => ['http://127.0.0.1:8080/v1', 'personal', false, [], null],
 			'private ip' => ['https://192.168.1.10/v1', 'personal', false, [], null],
 			'cgnat ip' => ['https://100.64.0.1/v1', 'personal', false, [], null],
@@ -51,7 +67,13 @@ final class UrlGuardTest extends TestCase {
 	}
 
 	#[DataProvider('urls')]
-	public function testUrlGuard(string $url, string $scope, bool $sharedAllowLocal, array $allowlist, ?bool $allowLocal): void {
+	public function testUrlGuard(
+		string $url,
+		string $scope,
+		bool $sharedAllowLocal,
+		array $allowlist,
+		?bool $allowLocal,
+	): void {
 		try {
 			$result = $this->guard()->check($url, $scope, $sharedAllowLocal, $allowlist);
 			$this->assertSame($allowLocal, $result['allowLocal']);

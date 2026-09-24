@@ -44,13 +44,28 @@ final class GameClockTest extends TestCase {
 	public function testTimeoutOutcomes(): void {
 		$tc = $this->clock();
 		$state = (new Engine())->initialState();
-		$this->assertSame('aborted_timeout', $tc->resolveTimeout($this->game(0, 'w'), $state)['reason'], 'White never moved');
-		$this->assertSame(Game::STATUS_ABORTED, $tc->resolveTimeout($this->game(1, 'b'), $state)['status'], 'Black never moved');
-		$this->assertSame(['status' => 'finished', 'result' => '0-1', 'reason' => 'timeout'], $tc->resolveTimeout($this->game(2, 'w'), $state));
+		$this->assertSame(
+			'aborted_timeout',
+			$tc->resolveTimeout($this->game(0, 'w'), $state)['reason'],
+			'White never moved',
+		);
+		$this->assertSame(
+			Game::STATUS_ABORTED,
+			$tc->resolveTimeout($this->game(1, 'b'), $state)['status'],
+			'Black never moved',
+		);
+		$this->assertSame(
+			['status' => 'finished', 'result' => '0-1', 'reason' => 'timeout'],
+			$tc->resolveTimeout($this->game(2, 'w'), $state),
+		);
 		$this->assertSame('1-0', $tc->resolveTimeout($this->game(5, 'b'), $state)['result']);
 		$bare = $state;
 		$bare['captured'] = range(1, 15);
-		$this->assertSame(['status' => 'finished', 'result' => '1/2-1/2', 'reason' => 'timeout_draw'], $tc->resolveTimeout($this->game(8, 'b'), $bare), 'the waiting side has only its king');
+		$this->assertSame(
+			['status' => 'finished', 'result' => '1/2-1/2', 'reason' => 'timeout_draw'],
+			$tc->resolveTimeout($this->game(8, 'b'), $bare),
+			'the waiting side has only its king',
+		);
 		$this->assertSame('abandoned', $tc->resolveTimeout($this->game(8, 'w', null), $state)['reason']);
 	}
 
@@ -66,7 +81,10 @@ final class GameClockTest extends TestCase {
 	}
 
 	public function testTimeControls(): void {
-		$this->assertSame([86400, 259200, 604800, null], array_map(fn (TimeControl $tc) => $tc->period(), TimeControl::cases()));
+		$this->assertSame(
+			[86400, 259200, 604800, null],
+			array_map(fn (TimeControl $tc) => $tc->period(), TimeControl::cases()),
+		);
 		$this->assertSame(TimeControl::ThreeDays, TimeControl::DEFAULT);
 		$this->assertSame(TimeControl::ThreeDays, TimeControl::fromStored('corr:unknown'));
 		$this->assertSame(TimeControl::SevenDays, TimeControl::fromStored('corr:7d'));
