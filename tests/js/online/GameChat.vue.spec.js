@@ -11,8 +11,14 @@
 
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { computed, ref, shallowRef } from 'vue'
+import { computed, defineComponent, h, ref, shallowRef } from 'vue'
 import GameChat from '../../../src/online/components/GameChat.vue'
+
+// The emoji picker is loaded lazily; a stub keeps that import from finishing after the test environment is torn down.
+vi.mock('@nextcloud/vue/components/NcEmojiPicker', () => ({
+	__esModule: true,
+	default: defineComponent({ name: 'NcEmojiPicker', setup: (props, { slots }) => () => h('div', slots.default?.()) }),
+}))
 
 /**
  * A minimal online controller for the chat.
