@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 BeeFlow
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Feature request
+description: Suggest an idea or an improvement for Quantum Chess
+labels: ['enhancement', 'needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping to make Quantum Chess better. Ideas that change the rules are welcome too; they are
+        weighed against the pillars of the game design: chess first, odds before and an explanation after every
+        roll, preparation beats dice, honest and fair.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe the situation or the problem, not only the solution. Who is it for?
+      placeholder: When I play online with my colleagues, I would like to …
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Your idea
+      description: How could it work? Sketches and screenshots are welcome.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Rules and game play
+        - Board and animations
+        - Online play and notifications
+        - Computer and AI opponents
+        - Trainer, coach and review
+        - Accessibility
+        - Translations
+        - Administration and privacy
+        - Other
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered

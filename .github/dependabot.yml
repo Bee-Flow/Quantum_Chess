@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2026 BeeFlow
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Dependency updates. Minor and patch updates arrive grouped, one pull request per ecosystem and week;
+# major updates come one by one because they may need code changes (and a SPEC change, docs/SPEC.md §2.2).
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '05:00'
+      timezone: Europe/Amsterdam
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: 'build(deps)'
+      prefix-development: 'build(deps-dev)'
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '05:00'
+      timezone: Europe/Amsterdam
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    labels:
+      - dependencies
+      - php
+    commit-message:
+      prefix: 'build(deps-dev)'
+    ignore:
+      # nextcloud/ocp follows the oldest supported Nextcloud (min-version in appinfo/info.xml); it is
+      # moved by hand when the supported range changes.
+      - dependency-name: nextcloud/ocp
+    groups:
+      composer-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+      time: '05:00'
+      timezone: Europe/Amsterdam
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: 'ci(deps)'
+    groups:
+      github-actions:
+        patterns:
+          - '*'

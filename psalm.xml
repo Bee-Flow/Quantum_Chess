@@ -4,10 +4,12 @@
   - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <psalm
-	errorLevel="4"
+	errorLevel="3"
 	resolveFromConfigFile="true"
 	findUnusedBaselineEntry="false"
 	findUnusedCode="false"
+	findUnusedIssueHandlerSuppression="false"
+	ensureOverrideAttribute="false"
 	phpVersion="8.1"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="https://getpsalm.org/schema/config"
@@ -23,15 +25,10 @@
 		<directory name="vendor/nextcloud/ocp" />
 	</extraFiles>
 	<issueHandlers>
-		<UndefinedClass>
-			<errorLevel type="suppress">
-				<referencedClass name="OC\*" />
-				<referencedClass name="OC" />
-			</errorLevel>
-		</UndefinedClass>
 		<UndefinedDocblockClass>
 			<errorLevel type="suppress">
 				<referencedClass name="OC\*" />
+				<referencedClass name="Doctrine\DBAL\*" />
 			</errorLevel>
 		</UndefinedDocblockClass>
 		<DeprecatedMethod errorLevel="info" />

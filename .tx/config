@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 BeeFlow
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Transifex resource for Nextcloud's translation sync (see translationfiles/README.md).
+[main]
+host = https://www.transifex.com
+lang_map = hu_HU: hu, nb_NO: nb, sk_SK: sk, th_TH: th, ja_JP: ja, bg_BG: bg, cs_CZ: cs, fi_FI: fi
+
+[o:nextcloud:p:nextcloud:r:quantumchess]
+file_filter = translationfiles/<lang>/quantumchess.po
+source_file = translationfiles/templates/quantumchess.pot
+source_lang = en
+type = PO

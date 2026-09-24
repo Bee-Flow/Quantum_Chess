@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText: 2026 BeeFlow
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Normalise line endings to LF in the repository
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.phar binary
+
+# Generated files: collapsed in diffs and left out of GitHub's language statistics
+package-lock.json linguist-generated=true
+composer.lock linguist-generated=true
+l10n/*.js linguist-generated=true
+l10n/*.json linguist-generated=true
+translationfiles/templates/*.pot linguist-generated=true
+tests/fixtures/engine/** linguist-generated=true
+docs/** linguist-documentation=true
+
+# Left out of `git archive` source tarballs (the App Store package is built with `make appstore`)
+/.github export-ignore
+/.tx export-ignore
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.nextcloudignore export-ignore
+/.l10nignore export-ignore
+/screenshots export-ignore

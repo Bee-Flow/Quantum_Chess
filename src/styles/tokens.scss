@@ -1,0 +1,121 @@
+/**
+ * SPDX-FileCopyrightText: 2026 BeeFlow
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+// The app's design tokens (`--qc-*`): board markers, outcomes, king rings, the what-if view and motion. They are
+// scoped to the app root (`.qc-app`, set in App.vue) and to the root of every board (`.qc-scope`), so a board that is
+// rendered outside the app container, for example in a dialog, gets them too. Other UI uses Nextcloud's variables.
+
+:where(.qc-app, .qc-scope) {
+	// Accent and selection
+	--qc-accent: var(--color-primary-element);
+	--qc-accent-soft: var(--color-primary-element-light);
+	--qc-select: color-mix(in srgb, var(--color-primary-element) 50%, transparent);
+
+	// Quantum UI outside the board (chips, log, split pipe)
+	--qc-quantum: #6b3fd4;
+	// Rings, threads and outlines on the board: board colours do not follow the theme. The violet is deep enough to keep
+	// a contrast of 3:1 against both square colours of every theme (tests/js/board/contrast.spec.js checks it).
+	--qc-quantum-board: #3f1ca0;
+	--qc-quantum-halo: rgb(255 255 255 / 0.75);
+
+	// Target markers: a translucent fill with a crisp rim
+	--qc-target: rgb(11 22 34 / 0.3);
+	--qc-target-capture: rgb(11 22 34 / 0.38);
+	--qc-target-rim: rgb(11 22 34 / 0.82);
+	--qc-last-move: rgb(247 203 77 / 0.42);
+
+	// Outcomes: Captured uses success; Moved and Missed are neutral and never red
+	// Nextcloud 32+ uses --color-success etc. for pale backgrounds; the strong colours are --color-element-*.
+	--qc-success: var(--color-element-success, #099f05);
+	--qc-success-strong: color-mix(in srgb, var(--qc-success) 78%, #000);
+	--qc-neutral-outcome: var(--color-text-maxcontrast);
+	--qc-outcome-move: #8a94a3;
+	--qc-outcome-miss: #c3cad4;
+
+	// King ring
+	--qc-warning: var(--color-element-warning, #bf7900);
+	--qc-danger: var(--color-element-error, #c90000);
+	--qc-ring-warning: #e09a00;
+	--qc-ring-danger: #d0263a;
+
+	// What-if view (Okabe-Ito)
+	--qc-corr-up: #0072b2;
+	--qc-corr-down: #d55e00;
+
+	// Identity dots for ghosts (colour-blind safe)
+	--qc-id-1: #e69f00;
+	--qc-id-2: #56b4e9;
+	--qc-id-3: #009e73;
+	--qc-id-4: #f0e442;
+	--qc-id-5: #cc79a7;
+	--qc-id-6: #0072b2;
+
+	// AI
+	--qc-ai: var(--color-element-assistant, var(--color-primary-element));
+
+	// Text on Nextcloud's status backgrounds (older Nextcloud versions lack the text variables)
+	--qc-on-success: var(--color-success-text, #fff);
+	--qc-on-warning: var(--color-warning-text, #000);
+	--qc-on-error: var(--color-error-text, #fff);
+
+	// Player colours: the colour swatch of a player card
+	--qc-swatch-white: #fff;
+	--qc-swatch-black: #222;
+
+	// Evaluation bar: White's share is light and Black's dark in every theme; the fog is the uncertain part
+	--qc-eval-white: #f4f4f4;
+	--qc-eval-black: #3a3a3a;
+	--qc-eval-white-text: #333;
+	--qc-eval-black-text: #eee;
+	--qc-eval-fog: rgb(128 128 128 / 0.55);
+	--qc-eval-fog-light: rgb(128 128 128 / 0.2);
+
+	// Evaluation graph of the review
+	--qc-graph-white: #eee;
+	--qc-graph-black: #3b3b3b;
+	--qc-graph-midline: #888;
+	--qc-graph-roll: #8a8a8a;
+	--qc-graph-roll-good: #2e7d32;
+	--qc-graph-dot-rim: #222;
+	--qc-graph-inaccuracy: #f9c80e;
+	--qc-graph-mistake: #ef6c00;
+	--qc-graph-blunder: #d32f2f;
+	--qc-graph-brilliant: #00897b;
+
+	// Move quality badges without a Nextcloud status colour
+	--qc-quality-brilliant: #00796b;
+	--qc-quality-mistake: #e65100;
+	--qc-on-quality: #fff;
+
+	// Trainer stars and the coach's quality toast
+	--qc-star: #f5a623;
+	--qc-toast-shadow: rgb(0 0 0 / 0.35);
+
+	// Motion: durations are multiplied by --qc-speed (Slow 1.5, Normal 1, Fast 0.5, Off 0)
+	--qc-speed: 1;
+	--qc-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--qc-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+	--qc-ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// Dark Nextcloud theme ("default" follows the system; "dark" is explicit). UI colours follow the theme, board colours
+// do not.
+@mixin qc-dark-tokens {
+	--qc-quantum: #b39bff;
+	--qc-last-move: rgb(247 203 77 / 0.34);
+	--qc-corr-up: #56b4e9;
+	--qc-corr-down: #e69f00;
+}
+
+@media (prefers-color-scheme: dark) {
+	body[data-theme-default] :where(.qc-app, .qc-scope) {
+		@include qc-dark-tokens;
+	}
+}
+
+body[data-theme-dark] :where(.qc-app, .qc-scope),
+body[data-theme-dark-highcontrast] :where(.qc-app, .qc-scope) {
+	@include qc-dark-tokens;
+}

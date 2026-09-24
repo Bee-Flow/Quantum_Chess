@@ -1,0 +1,18 @@
+/**
+ * SPDX-FileCopyrightText: 2026 BeeFlow
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+// App-wide styles of the shell. Component styles are scoped; the design tokens live in tokens.scss.
+
+.qc-app {
+	--qc-panel-gap: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.qc-app *,
+	.qc-app *::before,
+	.qc-app *::after {
+		scroll-behavior: auto !important;
+	}
+}

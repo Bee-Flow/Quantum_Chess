@@ -2,15 +2,12 @@
 /vendor/
 /build/
 /js/
-/css/*.css
-/css/*.map
+/assets/
 /.php-cs-fixer.cache
-/.phpunit.cache/
-/tests/php/.phpunit.result.cache
-/coverage/
 /test-results/
 /playwright-report/
 .DS_Store
 *.key
 *.crt
 *.csr
+/tests/php/.phpunit.cache/

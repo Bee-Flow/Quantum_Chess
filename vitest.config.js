@@ -8,9 +8,18 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
 	plugins: [vue()],
 	test: {
-		include: ['tests/js/**/*.spec.js', 'src/**/*.spec.js'],
+		include: ['tests/js/**/*.spec.js'],
+		// DOM tests declare `// @vitest-environment happy-dom` in their header
 		environment: 'node',
-		environmentMatchGlobs: [['**/*.vue.spec.js', 'happy-dom']],
 		testTimeout: 30000,
+		// @nextcloud/vue ships CSS imports: let Vite transform it for component tests
+		server: {
+			deps: {
+				inline: [/@nextcloud\/vue/],
+			},
+		},
+		benchmark: {
+			include: ['tests/js/**/*.bench.js'],
+		},
 	},
 })

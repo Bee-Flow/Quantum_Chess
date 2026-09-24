@@ -7,54 +7,151 @@
 	xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>quantumchess</id>
 	<name>Quantum Chess</name>
-	<summary>Chess with superposition, entanglement and measurement — play friends, the computer or an AI</summary>
-	<description><![CDATA[**Quantum Chess** brings quantum mechanics to the chessboard, right inside your Nextcloud.
+	<name lang="nl">Quantum Chess</name>
+	<name lang="de">Quantum Chess</name>
+	<name lang="fr">Quantum Chess</name>
+	<summary>Chess with superposition, measurement and entanglement: play colleagues, the computer or an AI</summary>
+	<summary lang="nl">Schaken met superpositie, meting en verstrengeling: speel tegen collega's, de computer of een AI</summary>
+	<summary lang="de">Schach mit Superposition, Messung und Verschränkung: spiele gegen Kollegen, den Computer oder eine KI</summary>
+	<summary lang="fr">Les échecs avec superposition, mesure et intrication : jouez contre vos collègues, l'ordinateur ou une IA</summary>
+	<description><![CDATA[**Quantum Chess** is chess in which a piece can stand on two squares at once, until something asks where it really is. It lives inside your Nextcloud: challenge colleagues and family with the notifications, avatars and dashboard you already use.
 
-Pieces can be in two places at once. A knight can **split** into a superposition, a bishop can **merge** back together, sliding pieces become **entangled** with the pieces that may or may not block their way, and every capture is a **measurement** that collapses the board into one reality. You win by capturing the enemy king — there is no check, only probability.
+### How it plays
+- Pieces move as in chess. There is no check: capture the enemy king to win, or leave it no escape.
+- **Split** a knight, bishop, rook or queen onto two empty squares and it becomes a ghost with exact odds. **Merge** the parts back together; merging onto an enemy piece captures it, for certain when every part surely arrives.
+- **Land = roll, pass = link.** Landing on a square that might hold a piece, every pawn move and every king step is settled by a fair roll: Captured, Moved or Missed. Sliding past a maybe-occupied square rolls nothing, but links the pieces.
+- **Measure** one of your own ghosts to find out where it really is.
+- Kings and pawns are always solid. Every roll shows its odds before you move and explains itself afterwards.
 
-### Game modes
-- 👥 **Online multiplayer** against other users of your Nextcloud, with invitations, notifications, in-game chat, draw offers, rematches and an Elo leaderboard
-- 🤖 **Play the computer** – a built-in quantum-aware engine with five difficulty levels that runs in your browser
-- ✨ **Play an AI (LLM)** – challenge a large language model with its own personality. Use **Nextcloud Assistant** (the AI provider configured by your administrator), or bring your own key for any OpenAI-compatible API (OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama, LocalAI…) or Anthropic Claude
+### Play
+- 👥 **Online** correspondence games with anyone on your Nextcloud: invitations and open challenges, 1, 3 or 7 days per move, draw offers, rematches, chat with quick phrases, Elo ratings and an opt-in leaderboard
+- 🤖 **Computer**: the built-in engine with five levels, from Wobbles to The Observer, running in your browser
+- ✨ **AI opponents** with a personality, powered by Nextcloud Assistant, your organisation's provider or your own API key (OpenAI-compatible services such as OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama or LocalAI, and Anthropic)
 - 🪑 **Pass & play** on one device
 
-### AI trainer
-- Interactive lessons that teach superposition, splitting, merging, entanglement and measurement step by step
-- Puzzles with instant feedback
-- A coach with an evaluation bar, hints, threat warnings, move-quality feedback and an AI coach you can ask questions about the position
-- Post-game review with an evaluation graph
+### Learn
+- Eleven short interactive lessons: the essentials in about ten minutes
+- Eleven machine-verified puzzles
+- A coach with an evaluation bar, hints, threat warnings and move-quality badges, plus an AI coach you can ask about the position
+- Post-game review with an evaluation graph and the key moments of the game
 
-### Polished and native
-- Built with Nextcloud's own design components; follows your theme, dark mode and language
-- Probability badges, heat maps and entanglement highlighting to visualise the quantum state
-- Smooth animations and optional sound effects
-- Keyboard accessible, responsive on phone, tablet and desktop
-- Dashboard widget showing the games where it is your turn
+### Native and fair
+- Built with Nextcloud's own components: light, dark and high-contrast themes, keyboard and screen-reader support, phone, tablet and desktop layouts
+- Notifications with actions in the web, mobile and desktop clients, and a dashboard widget
+- Online rolls are drawn by the server at the moment a move is applied and chained together, so later changes to moves you have seen show up; the coach stays off in your running online games
+- API keys are stored encrypted on your server and never reach the browser. Nothing is sent anywhere except to the AI provider you choose.
+- In English, Dutch, German and French
+]]></description>
+	<description lang="nl"><![CDATA[**Quantum Chess** is schaken waarin een stuk op twee velden tegelijk kan staan, totdat iets vraagt waar het echt is. Het draait in je eigen Nextcloud: daag collega's en familie uit met de meldingen, avatars en het dashboard die je al gebruikt.
 
-API keys you enter are stored encrypted on your Nextcloud server and are never sent to your browser.
+### Zo speel je
+- Stukken bewegen zoals bij schaken. Er is geen schaak: sla de vijandelijke koning om te winnen, of laat hem geen uitweg.
+- **Splits** een paard, loper, toren of dame over twee lege velden en het wordt een spookstuk met exacte kansen. **Voeg** de delen weer **samen**; samenvoegen op een vijandelijk stuk slaat het, met zekerheid als elk deel zeker aankomt.
+- **Landen = gooien, passeren = koppelen.** Landen op een veld waar misschien een stuk staat, elke pionzet en elke koningszet wordt beslist met een eerlijke worp: Geslagen, Verzet of Gemist. Langs een misschien bezet veld glijden gooit niets, maar koppelt de stukken.
+- **Meet** een van je eigen spookstukken om te zien waar het echt staat.
+- Koningen en pionnen staan altijd vast. Elke worp toont vooraf de kansen en legt achteraf uit wat er gebeurde.
+
+### Spelen
+- 👥 **Online** correspondentiepartijen met iedereen op je Nextcloud: uitnodigingen en open uitdagingen, 1, 3 of 7 dagen per zet, remiseaanbod, revanche, chat met snelle zinnen, Elo-rating en een ranglijst waar je zelf voor kiest
+- 🤖 **Computer**: de ingebouwde engine met vijf niveaus, van Wobbles tot The Observer, draait in je browser
+- ✨ **AI-tegenstanders** met een eigen karakter, via Nextcloud Assistant, de AI-dienst van je organisatie of je eigen API-sleutel (OpenAI-compatibele diensten zoals OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama of LocalAI, en Anthropic)
+- 🪑 **Samen spelen** op één apparaat
+
+### Leren
+- Elf korte interactieve lessen: de basis in ongeveer tien minuten
+- Elf door de computer gecontroleerde puzzels
+- Een coach met evaluatiebalk, hints, dreigingswaarschuwingen en zetbeoordelingen, plus een AI-coach aan wie je vragen over de stelling kunt stellen
+- Partijanalyse met een evaluatiegrafiek en de sleutelmomenten van de partij
+
+### Vertrouwd en eerlijk
+- Gebouwd met de eigen componenten van Nextcloud: lichte, donkere en hoogcontrastthema's, bediening met toetsenbord en schermlezer, voor telefoon, tablet en desktop
+- Meldingen met acties in de web-, mobiele en desktopapps, en een dashboardwidget
+- Online worpen trekt de server op het moment dat een zet wordt uitgevoerd, en ze worden aan elkaar gekoppeld, zodat latere wijzigingen aan zetten die je al zag opvallen; in je lopende online partijen staat de coach uit
+- API-sleutels worden versleuteld op je server bewaard en komen nooit in de browser. Er wordt niets verstuurd, behalve naar de AI-dienst die je zelf kiest.
+- In het Engels, Nederlands, Duits en Frans
+]]></description>
+	<description lang="de"><![CDATA[**Quantum Chess** ist Schach, in dem eine Figur auf zwei Feldern zugleich stehen kann, bis etwas fragt, wo sie wirklich ist. Es läuft direkt in deiner Nextcloud: Fordere Kolleginnen, Kollegen und Familie heraus, mit den Benachrichtigungen, Avataren und dem Dashboard, die du schon kennst.
+
+### So wird gespielt
+- Die Figuren ziehen wie im Schach. Es gibt kein Schach: Schlage den gegnerischen König, um zu gewinnen, oder lass ihm keinen Ausweg.
+- **Teile** einen Springer, Läufer, Turm oder eine Dame auf zwei leere Felder, und die Figur wird zum Geist mit genauen Wahrscheinlichkeiten. **Vereine** die Teile wieder; eine Vereinigung auf einer gegnerischen Figur schlägt sie, und zwar sicher, wenn jeder Teil sicher ankommt.
+- **Landen = würfeln, vorbeiziehen = verknüpfen.** Landen auf einem Feld, auf dem vielleicht eine Figur steht, jeder Bauernzug und jeder Königszug wird fair ausgewürfelt: Geschlagen, Gezogen oder Verfehlt. Wer an einem vielleicht besetzten Feld vorbeizieht, würfelt nicht, verknüpft aber die Figuren.
+- **Miss** einen deiner eigenen Geister, um zu erfahren, wo er wirklich steht.
+- Könige und Bauern stehen immer fest. Jeder Wurf zeigt vorher seine Chancen und erklärt hinterher, was passiert ist.
+
+### Spielen
+- 👥 **Online**-Fernpartien mit allen in deiner Nextcloud: Einladungen und offene Herausforderungen, 1, 3 oder 7 Tage pro Zug, Remisangebote, Revanchen, Chat mit schnellen Sätzen, Elo-Wertung und eine Bestenliste, der du selbst zustimmst
+- 🤖 **Computer**: die eingebaute Engine mit fünf Stufen, von Wobbles bis The Observer, läuft in deinem Browser
+- ✨ **KI-Gegner** mit Persönlichkeit, über den Nextcloud Assistant, den KI-Anbieter deiner Organisation oder deinen eigenen API-Schlüssel (OpenAI-kompatible Dienste wie OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama oder LocalAI, sowie Anthropic)
+- 🪑 **Zu zweit** an einem Gerät
+
+### Lernen
+- Elf kurze interaktive Lektionen: die Grundlagen in etwa zehn Minuten
+- Elf maschinell geprüfte Rätsel
+- Ein Coach mit Bewertungsbalken, Tipps, Drohungswarnungen und Zugbewertungen, dazu ein KI-Coach, den du zur Stellung befragen kannst
+- Partieanalyse mit Bewertungsgraph und den Schlüsselmomenten der Partie
+
+### Nativ und fair
+- Gebaut mit den Komponenten von Nextcloud: helle, dunkle und kontrastreiche Designs, Bedienung per Tastatur und Screenreader, für Smartphone, Tablet und Desktop
+- Benachrichtigungen mit Aktionen im Web und in den Mobil- und Desktop-Apps, dazu ein Dashboard-Widget
+- Online-Würfe zieht der Server in dem Moment, in dem ein Zug ausgeführt wird, und verkettet sie, damit spätere Änderungen an bereits gesehenen Zügen auffallen; in deinen laufenden Online-Partien bleibt der Coach aus
+- API-Schlüssel werden verschlüsselt auf deinem Server gespeichert und gelangen nie in den Browser. Nichts wird irgendwohin gesendet außer an den KI-Anbieter deiner Wahl.
+- Auf Englisch, Niederländisch, Deutsch und Französisch
+]]></description>
+	<description lang="fr"><![CDATA[**Quantum Chess**, ce sont les échecs où une pièce peut se trouver sur deux cases à la fois, jusqu'à ce que quelque chose demande où elle est vraiment. L'application vit dans votre Nextcloud : défiez vos collègues et votre famille avec les notifications, les avatars et le tableau de bord que vous utilisez déjà.
+
+### Comment on joue
+- Les pièces se déplacent comme aux échecs. Il n'y a pas d'échec : prenez le roi adverse pour gagner, ou ne lui laissez aucune issue.
+- **Divisez** un cavalier, un fou, une tour ou une dame sur deux cases vides : la pièce devient un fantôme aux probabilités exactes. **Fusionnez** ensuite les parts ; une fusion sur une pièce adverse la prend, à coup sûr quand chaque part arrive à coup sûr.
+- **Atterrir = lancer, passer = lier.** Arriver sur une case qui pourrait contenir une pièce, chaque coup de pion et chaque pas du roi sont réglés par un lancer équitable : Pris, Déplacé ou Raté. Glisser devant une case peut-être occupée ne lance rien, mais lie les pièces.
+- **Mesurez** un de vos propres fantômes pour découvrir où il se trouve vraiment.
+- Les rois et les pions sont toujours solides. Chaque lancer affiche ses chances avant votre coup et s'explique ensuite.
+
+### Jouer
+- 👥 **Parties en ligne** par correspondance avec toute personne de votre Nextcloud : invitations et défis ouverts, 1, 3 ou 7 jours par coup, propositions de nulle, revanches, discussion avec phrases rapides, cote Elo et un classement auquel vous choisissez de participer
+- 🤖 **Ordinateur** : le moteur intégré à cinq niveaux, de Wobbles à The Observer, fonctionne dans votre navigateur
+- ✨ **Adversaires IA** dotés d'une personnalité, grâce à Nextcloud Assistant, au fournisseur de votre organisation ou à votre propre clé d'API (services compatibles OpenAI comme OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama ou LocalAI, et Anthropic)
+- 🪑 **Jeu à deux** sur un seul appareil
+
+### Apprendre
+- Onze courtes leçons interactives : l'essentiel en une dizaine de minutes
+- Onze problèmes vérifiés par la machine
+- Un coach avec barre d'évaluation, indices, alertes de menace et évaluation des coups, ainsi qu'un coach IA à qui vous pouvez poser des questions sur la position
+- Analyse d'après-partie avec un graphique d'évaluation et les moments clés de la partie
+
+### Natif et équitable
+- Conçu avec les composants de Nextcloud : thèmes clair, sombre et à contraste élevé, prise en charge du clavier et des lecteurs d'écran, mises en page pour téléphone, tablette et ordinateur
+- Notifications avec actions dans les clients web, mobiles et de bureau, et un widget pour le tableau de bord
+- En ligne, les lancers sont tirés par le serveur au moment où un coup est appliqué et chaînés entre eux, de sorte que toute modification ultérieure de coups déjà vus est repérée ; le coach reste désactivé dans vos parties en ligne en cours
+- Les clés d'API sont stockées chiffrées sur votre serveur et n'atteignent jamais le navigateur. Rien n'est envoyé ailleurs qu'au fournisseur d'IA que vous choisissez.
+- En anglais, néerlandais, allemand et français
 ]]></description>
 	<version>1.0.0</version>
 	<licence>agpl</licence>
 	<author homepage="https://beeflow.nl">BeeFlow</author>
 	<namespace>QuantumChess</namespace>
 	<documentation>
-		<user>https://github.com/bee-flow/quantum_chess/blob/main/docs/RULES.md</user>
+		<user>https://github.com/bee-flow/quantum_chess/blob/main/docs/rules.md</user>
 		<admin>https://github.com/bee-flow/quantum_chess/blob/main/README.md</admin>
-		<developer>https://github.com/bee-flow/quantum_chess/blob/main/docs/SPEC.md</developer>
+		<developer>https://github.com/bee-flow/quantum_chess/blob/main/docs/development/architecture.md</developer>
 	</documentation>
 	<category>games</category>
 	<website>https://github.com/bee-flow/quantum_chess</website>
 	<bugs>https://github.com/bee-flow/quantum_chess/issues</bugs>
 	<repository type="git">https://github.com/bee-flow/quantum_chess.git</repository>
-	<screenshot small-thumbnail="https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/game-small.png">https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/game.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/lobby.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/trainer.png</screenshot>
+	<screenshot small-thumbnail="https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/01-game-ghosts-small.png">https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/01-game-ghosts.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/02-roll.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/03-lobby-dashboard.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/04-trainer.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/05-ai-opponent.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/06-dark.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/07-phone.png</screenshot>
 	<dependencies>
-		<php min-version="8.1"/>
+		<php min-version="8.1" min-int-size="64"/>
 		<nextcloud min-version="32" max-version="35"/>
 	</dependencies>
 	<background-jobs>
-		<job>OCA\QuantumChess\BackgroundJob\CleanupJob</job>
+		<job>OCA\QuantumChess\BackgroundJob\GameMaintenanceJob</job>
 	</background-jobs>
 	<settings>
 		<admin>OCA\QuantumChess\Settings\AdminSettings</admin>

@@ -1,0 +1,59 @@
+/**
+ * SPDX-FileCopyrightText: 2026 BeeFlow
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+// The board themes: Classic (`wood`), Blue (`slate`) and Quantum, plus `contrast`, which is chosen automatically under
+// Nextcloud's high-contrast themes. Every board root carries the attribute `data-board-theme`.
+// Board colours never follow the Nextcloud light/dark theme; in the dark theme only the squares are dimmed.
+// tests/js/board/contrast.spec.js reads the colours of this file and checks the markers against both square colours.
+
+[data-board-theme] {
+	--qc-sq-light: #dee3e6;
+	--qc-sq-dark: #8ca2ad;
+	--qc-sq-light-text: #6f8796;
+	--qc-sq-dark-text: #f1f4f6;
+	--qc-board-ring: #3f1ca0;
+	--qc-square-border: transparent;
+	--qc-board-frame: rgb(0 0 0 / 0.12);
+}
+
+[data-board-theme='wood'] {
+	--qc-sq-light: #f0d9b5;
+	--qc-sq-dark: #b58863;
+	--qc-sq-light-text: #946f51;
+	--qc-sq-dark-text: #f7ead6;
+	--qc-board-ring: #3f1ca0;
+}
+
+[data-board-theme='slate'] {
+	--qc-sq-light: #dee3e6;
+	--qc-sq-dark: #8ca2ad;
+	--qc-sq-light-text: #6f8796;
+	--qc-sq-dark-text: #f1f4f6;
+	--qc-board-ring: #3f1ca0;
+}
+
+// quantum: lavender squares; rings switch to a near-black violet
+[data-board-theme='quantum'] {
+	--qc-sq-light: #e6e1f8;
+	--qc-sq-dark: #8a79c6;
+	--qc-sq-light-text: #6a5aa6;
+	--qc-sq-dark-text: #f3f0fc;
+	--qc-board-ring: #1f1147;
+}
+
+// contrast: square borders and solid markers
+[data-board-theme='contrast'] {
+	--qc-sq-light: #ffffff;
+	--qc-sq-dark: #8a8a8a;
+	--qc-sq-light-text: #000000;
+	--qc-sq-dark-text: #ffffff;
+	--qc-board-ring: #1f1147;
+	--qc-square-border: rgb(0 0 0 / 0.55);
+	--qc-board-frame: #000000;
+	--qc-target: rgb(11 22 34 / 0.85);
+	--qc-target-capture: rgb(11 22 34 / 0.9);
+	--qc-target-rim: rgb(0 0 0 / 1);
+	--qc-last-move: rgb(247 203 77 / 0.6);
+}
