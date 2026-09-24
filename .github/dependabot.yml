@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # Dependency updates. Minor and patch updates arrive grouped, one pull request per ecosystem and week;
-# major updates come one by one because they may need code changes (and a SPEC change, docs/SPEC.md §2.2).
+# major updates come one by one because they may need code changes.
 version: 2
 
 updates:

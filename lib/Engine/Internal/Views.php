@@ -104,7 +104,11 @@ final class Views {
 		}
 		$out = [];
 		for ($s = 0; $s < 64; $s++) {
-			$out[] = $acc[$s] === 0 ? null : ['piece' => $a->occ[$s], 'weight' => $acc[$s], 'probability' => (float)$acc[$s] / (float)$W0];
+			$out[] = $acc[$s] === 0 ? null : [
+				'piece' => $a->occ[$s],
+				'weight' => $acc[$s],
+				'probability' => (float)$acc[$s] / (float)$W0,
+			];
 		}
 		return $out;
 	}
@@ -217,7 +221,12 @@ final class Views {
 				} else {
 					// Partial danger after a roll: measure it on the exact rescaled state (§5.3).
 					$worlds = Worlds::canonical($boards, $weights);
-					$D = Danger::of(array_column($worlds, 0), Worlds::rescale(array_column($worlds, 1)), $a->typeCodes, $a->ci);
+					$D = Danger::of(
+						array_column($worlds, 0),
+						Worlds::rescale(array_column($worlds, 1)),
+						$a->typeCodes,
+						$a->ci,
+					);
 				}
 			}
 			$num += $W * $D;

@@ -67,7 +67,13 @@ export function useOpponentTurn({ kind, record, color, persona }, deps = {}) {
 				source: player.source,
 				model: player.model ?? null,
 				strength: player.strength ?? 'balanced',
-			}, { candidates: d.candidates, requestAiMove: d.requestAiMove, waitForAiTask: d.waitForAiTask, cancelAiTask: d.cancelAiTask, onError: d.onError })
+			}, {
+				candidates: d.candidates,
+				requestAiMove: d.requestAiMove,
+				waitForAiTask: d.waitForAiTask,
+				cancelAiTask: d.cancelAiTask,
+				onError: d.onError,
+			})
 		: null
 	const thinking = computed(() => engine.thinking || (llm?.thinking.value ?? false))
 	let abortCtrl = null

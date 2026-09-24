@@ -15,7 +15,11 @@ import { useLocalGame } from '../../../src/game/composables/useLocalGame.js'
 import { createLocalGame, loadLocalGame } from '../../../src/game/localGames.js'
 
 vi.mock('../../../src/services/sound.js', () => ({ playSound: vi.fn() }))
-vi.mock('../../../src/services/api.js', () => ({ recordLocalResult: vi.fn(async () => ({})), requestAiMove: vi.fn(), cancelAiTask: vi.fn() }))
+vi.mock('../../../src/services/api.js', () => ({
+	recordLocalResult: vi.fn(async () => ({})),
+	requestAiMove: vi.fn(),
+	cancelAiTask: vi.fn(),
+}))
 
 beforeEach(() => {
 	localStorage.clear()
@@ -32,7 +36,11 @@ async function until(fn) {
 
 describe('useLocalGame', () => {
 	it('plays the computer reply after the animation of the own move', async () => {
-		const rec = createLocalGame({ mode: 'computer', players: { w: { kind: 'human' }, b: { kind: 'engine', level: 2 } }, humanColor: 'w' })
+		const rec = createLocalGame({
+			mode: 'computer',
+			players: { w: { kind: 'human' }, b: { kind: 'engine', level: 2 } },
+			humanColor: 'w',
+		})
 		const bestMove = vi.fn(async (state) => ({ code: generateMoves(state)[0].code, displayMs: 0, depth: 2 }))
 		const g = useLocalGame(rec.id, { bestMove })
 		const events = []
@@ -45,7 +53,10 @@ describe('useLocalGame', () => {
 		expect(g.myColor.value).toBe('w')
 		await g.submitMove(g.legalMoves.value.find((m) => m.code === 'e2-e4'))
 		await until(() => g.moves.value.length === 2)
-		expect(bestMove).toHaveBeenCalledWith(expect.objectContaining({ turn: 'b' }), expect.objectContaining({ level: 2 }))
+		expect(bestMove).toHaveBeenCalledWith(
+			expect.objectContaining({ turn: 'b' }),
+			expect.objectContaining({ level: 2 }),
+		)
 		expect(events).toEqual(['self', 'opponent'])
 		expect(g.moves.value.map((m) => m.by)).toEqual(['human', 'engine'])
 		expect(g.state.value.turn).toBe('w')
@@ -54,7 +65,11 @@ describe('useLocalGame', () => {
 	})
 
 	it('starts with the engine when the human plays Black', async () => {
-		const rec = createLocalGame({ mode: 'computer', players: { w: { kind: 'engine', level: 1 }, b: { kind: 'human' } }, humanColor: 'b' })
+		const rec = createLocalGame({
+			mode: 'computer',
+			players: { w: { kind: 'engine', level: 1 }, b: { kind: 'human' } },
+			humanColor: 'b',
+		})
 		const bestMove = vi.fn(async (state) => ({ code: generateMoves(state)[0].code, displayMs: 0 }))
 		const g = useLocalGame(rec.id, { bestMove })
 		expect(g.interactive.value).toBe(false)
@@ -66,7 +81,11 @@ describe('useLocalGame', () => {
 	})
 
 	it('lets both sides move in pass & play and flips only with auto-flip', async () => {
-		const rec = createLocalGame({ mode: 'local', players: { w: { kind: 'local', name: 'Ann' }, b: { kind: 'local', name: 'Ben' } }, options: { autoFlip: true } })
+		const rec = createLocalGame({
+			mode: 'local',
+			players: { w: { kind: 'local', name: 'Ann' }, b: { kind: 'local', name: 'Ben' } },
+			options: { autoFlip: true },
+		})
 		const g = useLocalGame(rec.id)
 		expect(g.myColor.value).toBeNull()
 		expect(g.names.value).toEqual({ w: 'Ann', b: 'Ben' })
@@ -98,7 +117,12 @@ describe('useLocalGame', () => {
 		const { recordLocalResult } = await import('../../../src/services/api.js')
 		recordLocalResult.mockClear()
 		const kingShot = setupPosition({ fen: '4k3/8/8/8/8/8/8/3QK3 w - - 0 1' })
-		const rec = createLocalGame({ mode: 'computer', players: { w: { kind: 'human' }, b: { kind: 'engine', level: 3 } }, humanColor: 'w', startState: kingShot })
+		const rec = createLocalGame({
+			mode: 'computer',
+			players: { w: { kind: 'human' }, b: { kind: 'engine', level: 3 } },
+			humanColor: 'w',
+			startState: kingShot,
+		})
 		const g = useLocalGame(rec.id, { bestMove: vi.fn() })
 		await g.submitMove(g.legalMoves.value.find((m) => m.code === 'd1-d8'))
 		expect(g.result.value).toBeNull()

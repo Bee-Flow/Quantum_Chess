@@ -116,7 +116,14 @@ function randomInputs(s, rng, n) {
 		} else if (k === 6) {
 			out.push({ type: 'standard', from: [from()], to: [sq()], promo: pick(['q', 'r', 'b', 'n', 'k'], rng) })
 		} else {
-			out.push(pick(['O-O', 'O-O-O', 'measure a1', '?' + E.squareName(from()), 'x', E.squareName(from()) + E.squareName(sq())], rng))
+			out.push(pick([
+				'O-O',
+				'O-O-O',
+				'measure a1',
+				'?' + E.squareName(from()),
+				'x',
+				E.squareName(from()) + E.squareName(sq()),
+			], rng))
 		}
 	}
 	return out
@@ -129,7 +136,9 @@ function randomInputs(s, rng, n) {
  */
 function probeCaps(s) {
 	const locs = E.pieceLocations(s)
-	const mine = s.turn === 'w' ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] : [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+	const mine = s.turn === 'w'
+		? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+		: [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
 	for (const id of mine) {
 		if (locs[id].length === 0 || !'qrbn'.includes(s.types[id])) {
 			continue

@@ -71,7 +71,19 @@ final class VectorsTest extends TestCase {
 		$v = self::vectors()['moveOrder'];
 		$this->assertSame($v['legal'], $this->engine->legalCodes(FixtureLoader::state($v['state'])));
 		$this->assertSame(
-			['e1-d1', 'e1-f1', 'e1-d2', 'e1-e2', 'e1-f2', 'g1-e2', 'g1-f3', 'g1-h3', 'g1-e2|f3', 'g1-e2|h3', 'g1-f3|h3'],
+			[
+				'e1-d1',
+				'e1-f1',
+				'e1-d2',
+				'e1-e2',
+				'e1-f2',
+				'g1-e2',
+				'g1-f3',
+				'g1-h3',
+				'g1-e2|f3',
+				'g1-e2|h3',
+				'g1-f3|h3',
+			],
 			$v['legal'],
 			'§4.10 example',
 		);
@@ -105,7 +117,11 @@ final class VectorsTest extends TestCase {
 
 	public function testSetupVectors(): void {
 		foreach (self::vectors()['setup'] as $c) {
-			$this->assertSame($c['expect'], $this->engine->serializeState($this->engine->setupPosition($c['spec'])), json_encode($c['spec']) ?: '');
+			$this->assertSame(
+				$c['expect'],
+				$this->engine->serializeState($this->engine->setupPosition($c['spec'])),
+				json_encode($c['spec']) ?: '',
+			);
 		}
 	}
 

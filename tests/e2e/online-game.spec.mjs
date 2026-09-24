@@ -134,7 +134,9 @@ test('two users play an online game end to end', async ({ page: alice, openAs },
 
 	// --- rematch: White offers, Black accepts from the banner, both land in the new game
 	await white.locator('[data-test=game-over] [data-test=rematch]').click()
-	await expect(white.locator('[data-test=rematch-pending]')).toContainText('Waiting for an answer', { timeout: 15_000 })
+	await expect(white.locator('[data-test=rematch-pending]')).toContainText('Waiting for an answer', {
+		timeout: 15_000,
+	})
 	await black.locator('[data-test=game-over] button').filter({ hasText: 'Close' }).click()
 	await expect(black.locator('[data-test=rematch-offer]')).toBeVisible({ timeout: 45_000 })
 	await shot(testInfo, black, 'desktop-09-rematch-offer')

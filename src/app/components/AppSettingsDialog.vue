@@ -43,16 +43,25 @@
 				:modelValue="preferences.coordinates"
 				:options="coordinateOptions"
 				@update:modelValue="set('coordinates', $event)" />
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.highlightLastMove" @update:modelValue="set('highlightLastMove', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.highlightLastMove"
+				@update:modelValue="set('highlightLastMove', $event)">
 				{{ t('quantumchess', 'Highlight the last move') }}
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.showLegalMoves" @update:modelValue="set('showLegalMoves', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.showLegalMoves"
+				@update:modelValue="set('showLegalMoves', $event)">
 				{{ t('quantumchess', 'Show legal moves') }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSettingsSection>
 
 		<NcAppSettingsSection id="qc-settings-quantum" :name="t('quantumchess', 'Quantum display')">
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.showPercentages" @update:modelValue="set('showPercentages', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.showPercentages"
+				@update:modelValue="set('showPercentages', $event)">
 				{{ t('quantumchess', 'Show percentages on ghosts') }}
 			</NcCheckboxRadioSwitch>
 			<RadioRow
@@ -70,13 +79,22 @@
 				:modelValue="preferences.linkThreads"
 				:options="linkOptions"
 				@update:modelValue="set('linkThreads', $event)" />
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.kingDangerBoth" @update:modelValue="set('kingDangerBoth', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.kingDangerBoth"
+				@update:modelValue="set('kingDangerBoth', $event)">
 				{{ t('quantumchess', 'Show king danger for both sides') }}
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.showPossibilities" @update:modelValue="set('showPossibilities', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.showPossibilities"
+				@update:modelValue="set('showPossibilities', $event)">
 				{{ t('quantumchess', 'Show the possibilities count') }}
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.physicsNames" @update:modelValue="set('physicsNames', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.physicsNames"
+				@update:modelValue="set('physicsNames', $event)">
 				{{ t('quantumchess', 'Physics names (superposition, measurement, entanglement)') }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSettingsSection>
@@ -92,13 +110,22 @@
 				:modelValue="preferences.confirmMoves ?? 'auto'"
 				:options="confirmOptions"
 				@update:modelValue="set('confirmMoves', $event === 'auto' ? null : $event)" />
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.safetyNet" @update:modelValue="set('safetyNet', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.safetyNet"
+				@update:modelValue="set('safetyNet', $event)">
 				{{ t('quantumchess', 'Warn before risking my king') }}
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.autoQueen" @update:modelValue="set('autoQueen', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.autoQueen"
+				@update:modelValue="set('autoQueen', $event)">
 				{{ t('quantumchess', 'Always promote to a queen') }}
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.confirmResign" @update:modelValue="set('confirmResign', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.confirmResign"
+				@update:modelValue="set('confirmResign', $event)">
 				{{ t('quantumchess', 'Ask before resigning') }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSettingsSection>
@@ -110,9 +137,15 @@
 				:options="speedOptions"
 				@update:modelValue="set('animationSpeed', $event === 'auto' ? null : $event)" />
 			<p v-if="reducedMotion" class="qc-settings__note">
-				{{ t('quantumchess', 'Your system asks for reduced motion, so animations are off unless you choose a speed.') }}
+				{{ t(
+					'quantumchess',
+					'Your system asks for reduced motion, so animations are off unless you choose a speed.',
+				) }}
 			</p>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.sound" @update:modelValue="set('sound', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.sound"
+				@update:modelValue="set('sound', $event)">
 				{{ t('quantumchess', 'Sound') }}
 			</NcCheckboxRadioSwitch>
 			<label class="qc-settings__volume">
@@ -127,7 +160,10 @@
 					@change="onVolume($event.target.value)">
 				<span class="qc-settings__value">{{ preferences.volume }}</span>
 			</label>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.moveChime" @update:modelValue="set('moveChime', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.moveChime"
+				@update:modelValue="set('moveChime', $event)">
 				{{ t('quantumchess', 'Your-move chime') }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSettingsSection>
@@ -138,16 +174,28 @@
 				:modelValue="preferences.coachLevel ?? 'auto'"
 				:options="coachOptions"
 				@update:modelValue="set('coachLevel', $event === 'auto' ? null : $event)" />
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.evalBar" @update:modelValue="set('evalBar', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.evalBar"
+				@update:modelValue="set('evalBar', $event)">
 				{{ t('quantumchess', 'Evaluation bar') }}
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.hints" @update:modelValue="set('hints', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.hints"
+				@update:modelValue="set('hints', $event)">
 				{{ t('quantumchess', 'Hints') }}
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.engineLines" @update:modelValue="set('engineLines', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.engineLines"
+				@update:modelValue="set('engineLines', $event)">
 				{{ t('quantumchess', 'Let the computer talk') }}
 			</NcCheckboxRadioSwitch>
-			<NcCheckboxRadioSwitch type="switch" :modelValue="preferences.fastEngine" @update:modelValue="set('fastEngine', $event)">
+			<NcCheckboxRadioSwitch
+				type="switch"
+				:modelValue="preferences.fastEngine"
+				@update:modelValue="set('fastEngine', $event)">
 				{{ t('quantumchess', 'Fast computer (no thinking delay)') }}
 			</NcCheckboxRadioSwitch>
 		</NcAppSettingsSection>
@@ -156,7 +204,9 @@
 			<NcHotkeyList :label="t('quantumchess', 'Board')">
 				<NcHotkey :label="t('quantumchess', 'Move, Split, Merge, Measure')" hotkey="1 2 3 4" />
 				<NcHotkey :label="t('quantumchess', 'Select a square')" hotkey="Enter" />
-				<NcHotkey :label="t('quantumchess', 'Move the focus')" hotkey="ArrowUp ArrowDown ArrowLeft ArrowRight" />
+				<NcHotkey
+					:label="t('quantumchess', 'Move the focus')"
+					hotkey="ArrowUp ArrowDown ArrowLeft ArrowRight" />
 				<NcHotkey :label="t('quantumchess', 'What-if view of the focused part')" hotkey="E" />
 				<NcHotkey :label="t('quantumchess', 'Possibilities panel')" hotkey="W" />
 				<NcHotkey :label="t('quantumchess', 'Describe the position')" hotkey="D" />

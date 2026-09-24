@@ -39,7 +39,10 @@ final class AiUsageServiceTest extends TestCase {
 			$usage->begin('bob');
 			$this->fail('rate limited');
 		} catch (ApiException $e) {
-			$this->assertSame([429, 'ai_rate_limited', AiUsageService::RETRY_AFTER], [$e->getStatus(), $e->getErrorCode(), $e->getRetryAfter()]);
+			$this->assertSame(
+				[429, 'ai_rate_limited', AiUsageService::RETRY_AFTER],
+				[$e->getStatus(), $e->getErrorCode(), $e->getRetryAfter()],
+			);
 		}
 		$usage->count('personal');
 		$usage->count('personal');

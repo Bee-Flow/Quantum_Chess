@@ -14,7 +14,17 @@ import { createLobby } from '../../../src/online/composables/useLobby.js'
 
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn() }))
 
-const SEED = { rev: 'u1.o1', now: 1, yourTurn: [{ id: 1 }], waiting: [], invitations: [{ id: 2 }], outgoing: [], open: [], recent: [], counts: { yourTurn: 1, invitations: 1 } }
+const SEED = {
+	rev: 'u1.o1',
+	now: 1,
+	yourTurn: [{ id: 1 }],
+	waiting: [],
+	invitations: [{ id: 2 }],
+	outgoing: [],
+	open: [],
+	recent: [],
+	counts: { yourTurn: 1, invitations: 1 },
+}
 
 /**
  * @return {object} fake API
@@ -52,7 +62,11 @@ describe('lobby store', () => {
 		await vi.advanceTimersByTimeAsync(30000)
 		expect(api.getSummary).toHaveBeenCalledWith('"u1.o1"')
 		expect(api.getLobby).not.toHaveBeenCalled()
-		api.getSummary.mockResolvedValueOnce({ status: 200, data: { rev: 'u2.o1', yourTurn: 0, invitations: 1 }, etag: '"u2.o1"' })
+		api.getSummary.mockResolvedValueOnce({
+			status: 200,
+			data: { rev: 'u2.o1', yourTurn: 0, invitations: 1 },
+			etag: '"u2.o1"',
+		})
 		await vi.advanceTimersByTimeAsync(30000)
 		expect(api.getLobby).toHaveBeenCalledTimes(1)
 		expect(lobby.counts.value.total).toBe(1)

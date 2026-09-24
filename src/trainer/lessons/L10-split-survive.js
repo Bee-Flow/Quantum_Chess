@@ -18,14 +18,27 @@ export default {
 		{
 			type: 'task',
 			setup: { fen: '7k/K7/8/8/p3b3/8/8/N6r w - - 0 1' },
-			prompt: () => t('quantumchess', 'The rook attacks your knight and both escape squares are covered. Save it as often as you can.'),
+			prompt: () => t(
+				'quantumchess',
+				'The rook attacks your knight and both escape squares are covered. Save it as often as you can.',
+			),
 			success: { moveIs: ['a1-c2|b3'] },
 			accepted: ['a1-c2|b3'],
-			hints: [() => t('quantumchess', 'Black can capture only one square per move.'), { highlight: 'a1' }, { arrow: ['a1', 'c2'] }],
+			hints: [
+				() => t('quantumchess', 'Black can capture only one square per move.'),
+				{ highlight: 'a1' },
+				{ arrow: ['a1', 'c2'] },
+			],
 			reply: { engine: 4 },
 			failReply: { engine: 4 },
-			done: () => t('quantumchess', 'Black can hit only one part, so its best capture chance is 50 %, against 100 % for every other move.'),
-			fail: () => t('quantumchess', 'The knight was lost for certain. Split it so that Black can hit only one part.'),
+			done: () => t(
+				'quantumchess',
+				'Black can hit only one part, so its best capture chance is 50 %, against 100 % for every other move.',
+			),
+			fail: () => t(
+				'quantumchess',
+				'The knight was lost for certain. Split it so that Black can hit only one part.',
+			),
 		},
 		{
 			type: 'explain',

@@ -13,7 +13,10 @@ export default {
 	group: 'essentials',
 	minutes: 2,
 	title: () => t('quantumchess', 'Pass = link'),
-	goal: () => t('quantumchess', 'Sliding past a maybe-occupied square rolls nothing and links the pieces. One roll can settle two.'),
+	goal: () => t(
+		'quantumchess',
+		'Sliding past a maybe-occupied square rolls nothing and links the pieces. One roll can settle two.',
+	),
 	steps: [
 		{
 			type: 'task',
@@ -21,7 +24,11 @@ export default {
 			prompt: () => t('quantumchess', 'Move the rook to a8.'),
 			success: { moveIs: ['a1-a8'] },
 			accepted: ['a1-a8'],
-			hints: [() => t('quantumchess', 'The rook slides up the a-file, past the knight\'s ghost.'), { highlight: 'a1' }, { arrow: ['a1', 'a8'] }],
+			hints: [
+				() => t('quantumchess', 'The rook slides up the a-file, past the knight\'s ghost.'),
+				{ highlight: 'a1' },
+				{ arrow: ['a1', 'a8'] },
+			],
 			done: () => t('quantumchess', 'No roll: the rook is 50 % on a1 and 50 % on a8, linked to the knight. Hover or focus the rook on a8: in that possibility the knight is on c4.'),
 			fail: () => t('quantumchess', 'Move the rook from a1 to a8.'),
 		},
@@ -31,8 +38,14 @@ export default {
 			roll: ['a4', 'c4'],
 			narration: () => t('quantumchess', 'Black measures its knight.'),
 			branches: {
-				a4: () => t('quantumchess', 'The knight is on a4, so it blocked the rook: the rook is certainly on a1.'),
-				c4: () => t('quantumchess', 'The knight is on c4, so the path was clear: the rook is certainly on a8. One roll, two pieces settled.'),
+				a4: () => t(
+					'quantumchess',
+					'The knight is on a4, so it blocked the rook: the rook is certainly on a1.',
+				),
+				c4: () => t(
+					'quantumchess',
+					'The knight is on c4, so the path was clear: the rook is certainly on a8. One roll, two pieces settled.',
+				),
 			},
 		},
 		{

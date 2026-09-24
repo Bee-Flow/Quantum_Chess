@@ -12,7 +12,8 @@ namespace OCA\QuantumChess\Engine\Internal;
 /**
  * Constants, board alphabet and precomputed geometry (§1–§3.2, §4.2). Built once per process.
  *
- * JavaScript twin: src/engine/constants.js, geometry.js and squares.js. Section numbers (§) refer to docs/engine-rules.md.
+ * JavaScript twin: src/engine/constants.js, geometry.js and squares.js. Section numbers (§) refer to
+ * docs/engine-rules.md.
  *
  * @internal Only for lib/Engine. Other code uses {@see \OCA\QuantumChess\Engine\Engine}.
  */
@@ -62,13 +63,33 @@ final class Tables {
 	 * Castling table (§4.6): flag → king id, king from/to, rook id, rook from/to, squares that must be empty.
 	 */
 	public const CASTLING = [
-		'K' => ['flag' => 'K', 'king' => 0, 'from' => 4, 'to' => 6, 'rook' => 3, 'rookFrom' => 7, 'rookTo' => 5, 'empty' => [5, 6]],
-		'Q' => ['flag' => 'Q', 'king' => 0, 'from' => 4, 'to' => 2, 'rook' => 2, 'rookFrom' => 0, 'rookTo' => 3, 'empty' => [1, 2, 3]],
-		'k' => ['flag' => 'k', 'king' => 16, 'from' => 60, 'to' => 62, 'rook' => 19, 'rookFrom' => 63, 'rookTo' => 61, 'empty' => [61, 62]],
-		'q' => ['flag' => 'q', 'king' => 16, 'from' => 60, 'to' => 58, 'rook' => 18, 'rookFrom' => 56, 'rookTo' => 59, 'empty' => [57, 58, 59]],
+		'K' => [
+			'flag' => 'K', 'king' => 0, 'from' => 4, 'to' => 6,
+			'rook' => 3, 'rookFrom' => 7, 'rookTo' => 5, 'empty' => [5, 6],
+		],
+		'Q' => [
+			'flag' => 'Q', 'king' => 0, 'from' => 4, 'to' => 2,
+			'rook' => 2, 'rookFrom' => 0, 'rookTo' => 3, 'empty' => [1, 2, 3],
+		],
+		'k' => [
+			'flag' => 'k', 'king' => 16, 'from' => 60, 'to' => 62,
+			'rook' => 19, 'rookFrom' => 63, 'rookTo' => 61, 'empty' => [61, 62],
+		],
+		'q' => [
+			'flag' => 'q', 'king' => 16, 'from' => 60, 'to' => 58,
+			'rook' => 18, 'rookFrom' => 56, 'rookTo' => 59, 'empty' => [57, 58, 59],
+		],
 	];
 
-	public const RESULT_REASONS = ['king_captured', 'king_trapped', 'bare_kings', 'repetition', 'fifty_moves', 'max_ply', 'no_moves'];
+	public const RESULT_REASONS = [
+		'king_captured',
+		'king_trapped',
+		'bare_kings',
+		'repetition',
+		'fifty_moves',
+		'max_ply',
+		'no_moves',
+	];
 
 	public const WIN_REASONS = ['king_captured', 'king_trapped'];
 

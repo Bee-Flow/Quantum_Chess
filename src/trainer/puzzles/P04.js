@@ -17,7 +17,10 @@ export default {
 	accepted: ['e8-c7', 'e8-d6', 'e8-f6', 'e8-d6|c7', 'e8-f6|c7', 'e8-d6|f6', 'f7|e8-d6'],
 	value: null,
 	traps: [
-		{ code: 'a8-h8', value: 50, text: () => t('quantumchess', 'The knight may stand on e8 and block your rook: 50 %.') },
+		{ code: 'a8-h8', value: 50, text: () => t(
+			'quantumchess',
+			'The knight may stand on e8 and block your rook: 50 %.',
+		) },
 		{ code: 'f7-h8', value: 50, text: () => t('quantumchess', 'A 50 % shot.') },
 		{ code: 'a8-e8', value: 50, text: () => t('quantumchess', 'A 50 % shot.') },
 		{ code: 'e8-g7', value: 50, text: () => t('quantumchess', 'A 50 % shot.') },

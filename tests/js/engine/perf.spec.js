@@ -39,7 +39,8 @@ afterAll(() => {
 	if (process.env.QC_PERF_REPORT !== '1') {
 		return
 	}
-	const lines = rows.map((r) => r.name.padEnd(44) + String(r.ms).padStart(9) + ' ms' + (r.budget === null ? '' : '   (budget ' + r.budget + ' ms)'))
+	const lines = rows.map((r) => r.name.padEnd(44) + String(r.ms).padStart(9) + ' ms'
+		+ (r.budget === null ? '' : '   (budget ' + r.budget + ' ms)'))
 	console.log('Engine timings (Node ' + process.version + '):\n' + lines.join('\n'))
 })
 
@@ -77,8 +78,14 @@ describe('performance', () => {
 			const s = JSON.parse(json)
 			E.applyMove(s, moves[(i * 7) % moves.length].code, { u: 12345 })
 		}, 300, 2)).toBeLessThan(20)
-		expect(time('applyMove 64 worlds (warm)', (i) => E.applyMove(MIDGAME, moves[(i * 7) % moves.length], { u: 12345 }), 500, 2)).toBeLessThan(20)
-		expect(time('getOutcomes 64 worlds', (i) => E.getOutcomes(MIDGAME, moves[(i * 11) % moves.length]), 300, 2)).toBeLessThan(20)
+		expect(time(
+			'applyMove 64 worlds (warm)',
+			(i) => E.applyMove(MIDGAME, moves[(i * 7) % moves.length], { u: 12345 }),
+			500,
+			2,
+		)).toBeLessThan(20)
+		expect(time('getOutcomes 64 worlds', (i) => E.getOutcomes(MIDGAME, moves[(i * 11) % moves.length]), 300, 2))
+			.toBeLessThan(20)
 		const open = E.generateMoves(OPEN)
 		expect(time('applyForSearch open board', (i) => {
 			const m = open[(i * 13) % open.length]

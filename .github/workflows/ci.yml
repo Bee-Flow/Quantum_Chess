@@ -1,10 +1,11 @@
 # SPDX-FileCopyrightText: 2026 BeeFlow
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
-# Continuous integration: the quality gates of docs/SPEC.md §15.1 on every pull request and push.
+# Continuous integration: the quality gates of CONTRIBUTING.md on every pull request and push.
 #
 #   lint         info.xml against the App Store schema, SPDX headers, version numbers
-#   node         ESLint, Vitest, production build, complete translations, engine fixture drift
+#   node         ESLint, comment references, line length, Vitest, production build, complete translations,
+#                engine fixture drift
 #   php          php -l, php-cs-fixer, Psalm and PHPUnit on PHP 8.1–8.4
 #   psalm-max    Psalm against the public API (OCP) of the newest supported Nextcloud
 #   package      `make appstore`, checks the tarball holds runtime files only, uploads it
@@ -45,7 +46,9 @@ jobs:
           persist-credentials: false
 
       - name: Download the App Store schema
-        run: curl -fsSL -o info.xsd https://raw.githubusercontent.com/nextcloud/appstore/master/nextcloudappstore/api/v1/release/info.xsd
+        run: |
+          curl -fsSL -o info.xsd \
+            https://raw.githubusercontent.com/nextcloud/appstore/master/nextcloudappstore/api/v1/release/info.xsd
 
       - name: Validate appinfo/info.xml
         uses: ChristophWurst/xmllint-action@36f2a302f84f8c83fceea0b9c59e1eb4a616d3c1 # v1.2
@@ -83,6 +86,12 @@ jobs:
       - name: ESLint
         run: npm run lint
 
+      - name: Comment and documentation references
+        run: npm run lint:refs
+
+      - name: Line length (max_line_length of .editorconfig)
+        run: npm run lint:lines
+
       - name: Unit tests (Vitest)
         run: npm test
 
@@ -97,7 +106,8 @@ jobs:
           if node -e "process.exit(require('./package.json').scripts?.fixtures ? 0 : 1)"; then
             npm run fixtures
             git diff --stat --exit-code -- tests/fixtures/engine
-            test -z "$(git status --porcelain -- tests/fixtures/engine)" || { git status --short -- tests/fixtures/engine; exit 1; }
+            test -z "$(git status --porcelain -- tests/fixtures/engine)" \
+              || { git status --short -- tests/fixtures/engine; exit 1; }
           else
             echo 'No fixtures script yet'
           fi
@@ -120,7 +130,9 @@ jobs:
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: ${{ matrix.php }}
-          extensions: ctype, curl, dom, fileinfo, gd, iconv, intl, json, mbstring, openssl, posix, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
+          extensions: >-
+            ctype, curl, dom, fileinfo, gd, iconv, intl, json, mbstring, openssl, posix, simplexml, xmlreader,
+            xmlwriter, zip, zlib, sqlite, pdo_sqlite
           coverage: none
           ini-file: development
         env:
@@ -162,7 +174,8 @@ jobs:
       - name: Install Composer dependencies with nextcloud/ocp dev-stable35
         run: |
           composer install --no-interaction --prefer-dist
-          composer require --dev --no-interaction 'nextcloud/ocp:dev-stable35' --ignore-platform-reqs --with-dependencies
+          composer require --dev --no-interaction 'nextcloud/ocp:dev-stable35' \
+            --ignore-platform-reqs --with-dependencies
 
       - name: Static analysis (Psalm)
         run: composer run psalm -- --monochrome --no-progress --output-format=github
@@ -199,7 +212,8 @@ jobs:
       - name: Check the package contents
         run: |
           tar -tzf "build/artifacts/${APP_NAME}.tar.gz" > contents.txt
-          for required in appinfo/info.xml appinfo/routes.php lib/AppInfo/Application.php js/quantumchess-main.mjs img/app.svg img/app-dark.svg LICENSE; do
+          for required in appinfo/info.xml appinfo/routes.php lib/AppInfo/Application.php \
+            js/quantumchess-main.mjs img/app.svg img/app-dark.svg LICENSE; do
             grep -qx "${APP_NAME}/${required}" contents.txt || { echo "Missing ${required}"; exit 1; }
           done
           if grep -E "^${APP_NAME}/(src|tests|docs|tools|node_modules|vendor|build|screenshots|translationfiles)/|/\.git|\.(key|crt|csr)$" contents.txt; then
@@ -262,7 +276,9 @@ jobs:
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: ${{ matrix.php }}
-          extensions: bz2, ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix, session, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
+          extensions: >-
+            bz2, ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix,
+            session, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
           coverage: none
           ini-file: development
           ini-values: disable_functions=
@@ -297,7 +313,8 @@ jobs:
       - name: Install Nextcloud
         run: |
           mkdir data
-          ./occ maintenance:install --verbose --database=sqlite --database-name=nextcloud --admin-user=admin --admin-pass="$QC_ADMIN_PASSWORD"
+          ./occ maintenance:install --verbose --database=sqlite --database-name=nextcloud \
+            --admin-user=admin --admin-pass="$QC_ADMIN_PASSWORD"
           ./occ config:system:set trusted_domains 1 --value=127.0.0.1
           ./occ background:cron
           ./occ user:setting admin settings display_name 'Alice Admin'
@@ -317,7 +334,8 @@ jobs:
           ./occ migrations:status "$APP_NAME"
           # "New Migrations" is miscounted by Nextcloud 35 (it compares list indexes with versions), so check
           # that nothing is pending instead.
-          ./occ migrations:status "$APP_NAME" | grep -Eq 'Pending Migrations:\s+None' || { echo 'Migrations were not applied'; exit 1; }
+          ./occ migrations:status "$APP_NAME" | grep -Eq 'Pending Migrations:\s+None' \
+            || { echo 'Migrations were not applied'; exit 1; }
           ./occ config:system:set debug --value=false --type=boolean
 
       - name: Background job is registered
@@ -335,7 +353,8 @@ jobs:
           auth=(-u "admin:$QC_ADMIN_PASSWORD")
           # The app page renders and loads the main bundle
           curl -fsS "${auth[@]}" "$QC_BASE_URL/index.php/apps/$APP_NAME/" -o page.html
-          script=$(grep -oE 'src="[^"]*/js/quantumchess-main\.mjs[^"]*"' page.html | head -n 1 | sed -E 's/^src="([^"]*)"$/\1/; s/&amp;/\&/g')
+          script=$(grep -oE 'src="[^"]*/js/quantumchess-main\.mjs[^"]*"' page.html | head -n 1 \
+            | sed -E 's/^src="([^"]*)"$/\1/; s/&amp;/\&/g')
           test -n "$script" || { echo 'quantumchess-main.mjs is not referenced by the page'; exit 1; }
           curl -fsS -o /dev/null "$QC_BASE_URL$script"
           # One API route (JSON, as a logged-in user)

@@ -78,7 +78,9 @@ export function benchmark() {
  */
 function storage() {
 	try {
-		return typeof globalThis.localStorage === 'object' && globalThis.localStorage !== null ? globalThis.localStorage : null
+		return typeof globalThis.localStorage === 'object' && globalThis.localStorage !== null
+			? globalThis.localStorage
+			: null
 	} catch {
 		return null
 	}
@@ -97,7 +99,8 @@ export function readCachedBenchmark(nowMs = Date.now()) {
 	}
 	try {
 		const data = JSON.parse(s.getItem(BENCH_KEY) || 'null')
-		if (data && data.v === ENGINE_VERSION && Number.isFinite(data.nodesPerSecond) && nowMs - data.at < BENCH_MAX_AGE) {
+		if (data && data.v === ENGINE_VERSION && Number.isFinite(data.nodesPerSecond)
+			&& nowMs - data.at < BENCH_MAX_AGE) {
 			return { nodesPerSecond: data.nodesPerSecond, slow: data.nodesPerSecond < SLOW_NPS }
 		}
 	} catch {

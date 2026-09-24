@@ -13,7 +13,16 @@ import { t } from '@nextcloud/l10n'
 /** @typedef {import('../engine/types.js').LegalMove} LegalMove */
 
 /** Label order from best to worst (the special labels rank with `best`). */
-export const LABELS = Object.freeze(['brilliant', 'only', 'best', 'excellent', 'good', 'inaccuracy', 'mistake', 'blunder'])
+export const LABELS = Object.freeze([
+	'brilliant',
+	'only',
+	'best',
+	'excellent',
+	'good',
+	'inaccuracy',
+	'mistake',
+	'blunder',
+])
 
 /** Labels that are shown as warnings. */
 export const BAD_LABELS = Object.freeze(['inaccuracy', 'mistake', 'blunder'])
@@ -68,7 +77,8 @@ export function qualityOf(p) {
 		label = 'blunder'
 	}
 	if (label === 'best' && !p.forced) {
-		if (p.quantum && typeof p.bestClassicalE === 'number' && best - forMover(p.bestClassicalE, p.color) >= 0.1 && best >= 0.2 && best <= 0.9) {
+		if (p.quantum && typeof p.bestClassicalE === 'number' && best - forMover(p.bestClassicalE, p.color) >= 0.1
+			&& best >= 0.2 && best <= 0.9) {
 			label = 'brilliant'
 		} else if (typeof p.secondBestE === 'number' && best - forMover(p.secondBestE, p.color) >= 0.15) {
 			label = 'only'

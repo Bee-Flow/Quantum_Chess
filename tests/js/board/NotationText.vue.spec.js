@@ -23,12 +23,14 @@ describe('NotationText', () => {
 	})
 
 	it('tags rolled results', () => {
-		expect(mount(NotationText, { props: { notation: 'Bc1xh6 {capture 50%}' } }).find('.qc-notation__result').text()).toBe('✓ 50%')
+		expect(mount(NotationText, { props: { notation: 'Bc1xh6 {capture 50%}' } }).find('.qc-notation__result').text())
+			.toBe('✓ 50%')
 		const miss = mount(NotationText, { props: { notation: 'd3-e4 {miss 75%}' } })
 		expect(miss.find('.qc-notation__result').text()).toBe('○ Missed 75%')
 		expect(miss.classes()).toContain('qc-notation--missed')
 		expect(miss.findAll('.qc-piece-icon')).toHaveLength(0)
-		expect(mount(NotationText, { props: { notation: '?Na4 {c4 50%}' } }).find('.qc-notation__result').text()).toBe('→ c4 50%')
+		expect(mount(NotationText, { props: { notation: '?Na4 {c4 50%}' } }).find('.qc-notation__result').text())
+			.toBe('→ c4 50%')
 		expect(mount(NotationText, { props: { notation: 'Ra1-a8 #' } }).find('.qc-notation__mark').exists()).toBe(true)
 	})
 

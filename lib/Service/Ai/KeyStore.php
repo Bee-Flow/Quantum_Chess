@@ -55,14 +55,22 @@ class KeyStore {
 			$this->appConfig->deleteKey(Application::APP_ID, self::SHARED_KEY);
 			return;
 		}
-		$this->appConfig->setValueString(Application::APP_ID, self::SHARED_KEY, $this->crypto->encrypt($value), true, true);
+		$this->appConfig->setValueString(
+			Application::APP_ID,
+			self::SHARED_KEY,
+			$this->crypto->encrypt($value),
+			true,
+			true,
+		);
 	}
 
 	/**
 	 * The user's own key in clear text, or null when none is stored or it cannot be decrypted.
 	 */
 	public function getPersonal(string $uid): ?string {
-		return $this->decrypt($this->userConfig->getValueString($uid, Application::APP_ID, self::PERSONAL_KEY, '', true));
+		return $this->decrypt(
+			$this->userConfig->getValueString($uid, Application::APP_ID, self::PERSONAL_KEY, '', true),
+		);
 	}
 
 	/** @return array{hasKey: bool, keyHint: ?string, keyUnreadable: bool} */
@@ -78,7 +86,14 @@ class KeyStore {
 			$this->userConfig->deleteUserConfig($uid, Application::APP_ID, self::PERSONAL_KEY);
 			return;
 		}
-		$this->userConfig->setValueString($uid, Application::APP_ID, self::PERSONAL_KEY, $this->crypto->encrypt($value), true, IUserConfig::FLAG_SENSITIVE);
+		$this->userConfig->setValueString(
+			$uid,
+			Application::APP_ID,
+			self::PERSONAL_KEY,
+			$this->crypto->encrypt($value),
+			true,
+			IUserConfig::FLAG_SENSITIVE,
+		);
 	}
 
 	/**
@@ -109,6 +124,10 @@ class KeyStore {
 		if ($plain === null) {
 			return ['hasKey' => true, 'keyHint' => null, 'keyUnreadable' => true];
 		}
-		return ['hasKey' => true, 'keyHint' => strlen($plain) >= 8 ? substr($plain, -4) : null, 'keyUnreadable' => false];
+		return [
+			'hasKey' => true,
+			'keyHint' => strlen($plain) >= 8 ? substr($plain, -4) : null,
+			'keyUnreadable' => false,
+		];
 	}
 }

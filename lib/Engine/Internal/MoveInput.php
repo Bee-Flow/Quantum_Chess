@@ -19,7 +19,13 @@ namespace OCA\QuantumChess\Engine\Internal;
  */
 final class MoveInput {
 	/** Piece letter of a code → type code (a letter only has to match for these pieces). */
-	private const LETTER_TYPE = ['K' => Tables::TYPE_K, 'Q' => Tables::TYPE_Q, 'R' => Tables::TYPE_R, 'B' => Tables::TYPE_B, 'N' => Tables::TYPE_N];
+	private const LETTER_TYPE = [
+		'K' => Tables::TYPE_K,
+		'Q' => Tables::TYPE_Q,
+		'R' => Tables::TYPE_R,
+		'B' => Tables::TYPE_B,
+		'N' => Tables::TYPE_N,
+	];
 
 	/**
 	 * Accept an integer square: an int, or an integral float (JSON `12.0` is the integer 12 in JavaScript).
@@ -68,7 +74,8 @@ final class MoveInput {
 			default:
 				return null;
 		}
-		if (!is_array($from) || !is_array($to) || !array_is_list($from) || !array_is_list($to) || count($from) !== $nf || count($to) !== $nt) {
+		if (!is_array($from) || !is_array($to) || !array_is_list($from) || !array_is_list($to)
+			|| count($from) !== $nf || count($to) !== $nt) {
 			return null;
 		}
 		$f = [];
@@ -124,7 +131,11 @@ final class MoveInput {
 			}
 			if (isset($p['castle'])) {
 				$home = $a->ci === 0 ? 4 : 60;
-				$obj = ['type' => 'standard', 'from' => [$home], 'to' => [$p['castle'] === 'O-O' ? $home + 2 : $home - 2]];
+				$obj = [
+					'type' => 'standard',
+					'from' => [$home],
+					'to' => [$p['castle'] === 'O-O' ? $home + 2 : $home - 2],
+				];
 			} else {
 				$obj = ['type' => $p['type'], 'from' => $p['from'], 'to' => $p['to'], 'promo' => $p['promo'] ?? null];
 				$letter = $p['letter'] ?? null;
@@ -169,7 +180,8 @@ final class MoveInput {
 		$names = Tables::$names;
 		switch ($mv['type']) {
 			case 'standard':
-				return $names[$mv['from'][0]] . '-' . $names[$mv['to'][0]] . ($mv['promo'] === null ? '' : '=' . strtoupper($mv['promo']));
+				return $names[$mv['from'][0]] . '-' . $names[$mv['to'][0]]
+					. ($mv['promo'] === null ? '' : '=' . strtoupper($mv['promo']));
 			case 'split':
 				return $names[$mv['from'][0]] . '-' . $names[$mv['to'][0]] . '|' . $names[$mv['to'][1]];
 			case 'merge':

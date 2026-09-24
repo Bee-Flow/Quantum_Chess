@@ -39,9 +39,20 @@ const CACHE_MAX = 64
  * @param {object} [options.deps] injected `analyze`, `evaluateMove` (tests)
  * @return {object} the coach
  */
-export function useCoach({ state, moves, myColor, enabled = ref(true), stateAt = null, level: fixedLevel = null, deps = {} }) {
+export function useCoach({
+	state,
+	moves,
+	myColor,
+	enabled = ref(true),
+	stateAt = null,
+	level: fixedLevel = null,
+	deps = {},
+}) {
 	const d = { analyze, evaluateMove, ...deps }
-	const level = computed(() => unref(fixedLevel) ?? preferences.effective?.coachLevel ?? preferences.coachLevel ?? 'beginner')
+	const level = computed(() => unref(fixedLevel)
+		?? preferences.effective?.coachLevel
+		?? preferences.coachLevel
+		?? 'beginner')
 	const active = computed(() => Boolean(unref(enabled)) && level.value !== 'off')
 	const analysis = shallowRef(null)
 	const analysisKey = ref(null) // position hash of `analysis` (null: an estimate or a stale one)
@@ -74,7 +85,9 @@ export function useCoach({ state, moves, myColor, enabled = ref(true), stateAt =
 		}
 	}
 
-	/** Analyse the current position (on the player's turn only: on its own turn the computer player needs the worker). */
+	/**
+	 * Analyse the current position (on the player's turn only: on its own turn the computer player needs the worker).
+	 */
 	function schedule() {
 		clearTimeout(timer)
 		ctrl?.abort()
@@ -212,7 +225,11 @@ export function useCoach({ state, moves, myColor, enabled = ref(true), stateAt =
 			return null
 		}
 		const king = s.turn === 'w' ? 16 : 0
-		return { chance, square: likeliestSquare(s, king), mate: analysis.value?.mate?.winner === s.turn ? analysis.value.mate : null }
+		return {
+			chance,
+			square: likeliestSquare(s, king),
+			mate: analysis.value?.mate?.winner === s.turn ? analysis.value.mate : null,
+		}
 	})
 
 	// Board markers carry their explanation (title, screen readers) and the percentage the board shows next to them.
@@ -223,7 +240,11 @@ export function useCoach({ state, moves, myColor, enabled = ref(true), stateAt =
 				square: x.square,
 				kind: 'threat',
 				pct,
-				text: t('quantumchess', 'Your {piece} is {pct} capturable.', { piece: pieceTypeName(x.type), pct: formatPercentNumber(pct) }),
+				text: t(
+					'quantumchess',
+					'Your {piece} is {pct} capturable.',
+					{ piece: pieceTypeName(x.type), pct: formatPercentNumber(pct) },
+				),
 			}
 		})
 		const o = opportunity.value

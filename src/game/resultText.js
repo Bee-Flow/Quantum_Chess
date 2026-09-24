@@ -50,7 +50,11 @@ export function reasonCopy(reason, { winner = null, names = {}, captureProbabili
 			}
 			return t('quantumchess', 'King captured for certain')
 		case 'king_trapped':
-			return t('quantumchess', '{loser}’s king cannot escape: every move would let {winner} capture it', { loser: loserName, winner: winnerName })
+			return t(
+				'quantumchess',
+				'{loser}’s king cannot escape: every move would let {winner} capture it',
+				{ loser: loserName, winner: winnerName },
+			)
 		case 'bare_kings':
 			return t('quantumchess', 'Only the kings are left')
 		case 'repetition':

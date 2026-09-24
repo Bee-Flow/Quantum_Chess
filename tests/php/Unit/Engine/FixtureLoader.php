@@ -83,7 +83,8 @@ final class FixtureLoader {
 		if ($engine->serializeState($engine->validateState($s)) !== $game['start']) {
 			return [$name . ': start is not a canonical valid state'];
 		}
-		if ($game['setup'] !== null && $engine->serializeState($engine->setupPosition($game['setup'])) !== $game['start']) {
+		if ($game['setup'] !== null
+			&& $engine->serializeState($engine->setupPosition($game['setup'])) !== $game['start']) {
 			$fail[] = $name . ': setupPosition does not give start';
 		}
 		foreach ($game['steps'] as $i => $step) {
@@ -98,7 +99,8 @@ final class FixtureLoader {
 				$fail[] = $where . ": state differs\n  php " . $after . "\n  js  " . $step['after'];
 				break;
 			}
-			if (json_encode($r['measurement'], JSON_UNESCAPED_SLASHES) !== json_encode($step['measurement'], JSON_UNESCAPED_SLASHES)) {
+			if (json_encode($r['measurement'], JSON_UNESCAPED_SLASHES)
+				!== json_encode($step['measurement'], JSON_UNESCAPED_SLASHES)) {
 				$fail[] = $where . ': measurement differs ' . json_encode($r['measurement']);
 			}
 			$notation = $engine->moveNotation($s, $step['code'], $r['measurement']);

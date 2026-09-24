@@ -11,7 +11,13 @@
 
 import { T } from './constants.js'
 
-const DEFAULT_LABELS = Object.freeze({ miss: 'Missed', move: 'Moved', capture: 'Captured', rolled: 'rolled', forced: 'forced' })
+const DEFAULT_LABELS = Object.freeze({
+	miss: 'Missed',
+	move: 'Moved',
+	capture: 'Captured',
+	rolled: 'rolled',
+	forced: 'forced',
+})
 
 /**
  * dec_d(x): floor(x · 10^d / 2^24) printed with d decimals (truncation, never rounding).
@@ -43,7 +49,8 @@ function decValue(x, d) {
  * Structured roll display for a measurement record: the decimals, every interval and the roll.
  *
  * @param {{key: string, u: number|null, outcomes: Array<{key: string, weight: number}>}} record measurement record
- * @return {{decimals: number, intervals: Array<{key: string, start: number, end: number, startText: string, endText: string, chosen: boolean}>, u: number|null, uText: string|null, chosen: string}}
+ * @return {{decimals: number, intervals: Array<{key: string, start: number, end: number, startText: string,
+ *   endText: string, chosen: boolean}>, u: number|null, uText: string|null, chosen: string}}
  */
 export function rollIntervals(record) {
 	const outcomes = record.outcomes
@@ -58,7 +65,8 @@ export function rollIntervals(record) {
 			d = 8
 		}
 	}
-	if (record.u !== null && record.u !== undefined && j >= 0 && !(decValue(record.u, 4) < decValue(bounds[j + 1], 4))) {
+	if (record.u !== null && record.u !== undefined && j >= 0
+		&& !(decValue(record.u, 4) < decValue(bounds[j + 1], 4))) {
 		d = 8
 	}
 	return {

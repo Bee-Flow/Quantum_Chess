@@ -65,7 +65,8 @@ function describeMove(state, m) {
 			return m.code + ' (quantum: happens ' + pct(m.happenWeight) + '%, no roll)'
 		default:
 			if (m.type === 'measure') {
-				return m.code + ' (measure: ' + m.outcomes.map((o) => o.key + ' ' + pct(o.weight) + '%').join(', ') + ')'
+				return m.code + ' (measure: '
+					+ m.outcomes.map((o) => o.key + ' ' + pct(o.weight) + '%').join(', ') + ')'
 			}
 			return m.code + ' (' + (m.fallback ? 'roll, budget full' : 'roll') + ': ' + odds + ')'
 	}
@@ -83,7 +84,8 @@ export function describeForLlm(state, options = {}) {
 	const me = options.color ?? state.turn
 	const lines = []
 	const side = (c) => (c === 'w' ? 'White' : 'Black')
-	lines.push('Quantum Chess (rules v1). You are ' + side(me) + '. Move ' + state.fullmove + ', ' + side(state.turn) + ' to move.')
+	lines.push('Quantum Chess (rules v1). You are ' + side(me) + '. Move ' + state.fullmove + ', '
+		+ side(state.turn) + ' to move.')
 	lines.push('Certain pieces (FEN, uncertain pieces removed): ' + certainFen(state))
 	const ghosts = []
 	for (let id = 0; id < 32; id++) {
@@ -116,7 +118,8 @@ export function describeForLlm(state, options = {}) {
 		const wx = a.locW[x][a.locs[x].indexOf(sx)]
 		return pieceName(state, x, true) + ' ' + SQUARE_NAMES[sx] + ' <-> ' + pieceName(state, y, true) + ' '
 			+ SQUARE_NAMES[sy] + ' (' + TYPE_NAMES[state.types[y]] + ' on ' + SQUARE_NAMES[sy] + ' in '
-			+ pct(bestW * T / wx) + '% of the cases where the ' + TYPE_NAMES[state.types[x]] + ' is on ' + SQUARE_NAMES[sx] + ')'
+			+ pct(bestW * T / wx) + '% of the cases where the ' + TYPE_NAMES[state.types[x]] + ' is on '
+			+ SQUARE_NAMES[sx] + ')'
 	})
 	lines.push('Links: ' + (linkLines.length === 0 ? 'none' : linkLines.join('; ')))
 	lines.push('Possibilities: ' + a.n + '. Budget: White ' + budget(state, 'w') + '/' + BUDGET + ', Black '

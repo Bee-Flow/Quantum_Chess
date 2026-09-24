@@ -44,7 +44,12 @@ class GameMaintenanceService {
 	 */
 	public function runMaintenance(int $now, int $batch = 200): array {
 		$stats = ['expired' => 0, 'timedOut' => 0, 'abandoned' => 0, 'chatPurged' => 0, 'gamesPurged' => 0];
-		foreach ($this->games->findDue([Game::STATUS_PENDING, Game::STATUS_OPEN], 'expires_at', $now, $batch) as $game) {
+		foreach ($this->games->findDue(
+			[Game::STATUS_PENDING, Game::STATUS_OPEN],
+			'expires_at',
+			$now,
+			$batch,
+		) as $game) {
 			if ($this->lifecycle->resolveLazy($game)->getStatus() === Game::STATUS_EXPIRED) {
 				$stats['expired']++;
 			}
@@ -74,7 +79,12 @@ class GameMaintenanceService {
 		}
 		$days = $this->settings->purgeFinishedDays();
 		if ($days > 0) {
-			foreach ($this->games->findDue(Game::FINAL_STATUSES, 'finished_at', $now - $days * GameClock::DAY, $batch) as $game) {
+			foreach ($this->games->findDue(
+				Game::FINAL_STATUSES,
+				'finished_at',
+				$now - $days * GameClock::DAY,
+				$batch,
+			) as $game) {
 				$this->transaction->run(fn () => $this->games->deleteWithChildren((int)$game->getId()));
 				$this->notifications->removeForGame((int)$game->getId());
 				$stats['gamesPurged']++;
@@ -130,7 +140,8 @@ class GameMaintenanceService {
 			$this->notifications->removeForGame($id);
 			if ($remaining !== null) {
 				$this->notifications->gameEndedDeleted($game, $remaining);
-			} elseif ($game->getStatus() === Game::STATUS_FINISHED && $game->getResultReason() === 'resignation' && !$accountDeleted) {
+			} elseif ($game->getStatus() === Game::STATUS_FINISHED && $game->getResultReason() === 'resignation'
+				&& !$accountDeleted) {
 				$this->notifications->gameOver($game, $uid);
 			}
 		}

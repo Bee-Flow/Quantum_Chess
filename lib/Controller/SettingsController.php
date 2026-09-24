@@ -80,7 +80,10 @@ final class SettingsController extends ApiController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 600)]
 	public function setMultiplayer(): JSONResponse {
-		return $this->respondWithSizeLimit(fn (string $uid): array => $this->multiplayer->setMultiplayer($uid, $this->requestBody(['listed', 'notifications', 'invitePolicy', 'blocked'])));
+		return $this->respondWithSizeLimit(fn (string $uid): array => $this->multiplayer->setMultiplayer(
+			$uid,
+			$this->requestBody(['listed', 'notifications', 'invitePolicy', 'blocked']),
+		));
 	}
 
 	public function getAdmin(): JSONResponse {

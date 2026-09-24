@@ -91,7 +91,8 @@ class LlmService {
 	/**
 	 * The state of one of the user's Nextcloud Assistant tasks. A finished task is deleted once read.
 	 *
-	 * @return array<string, mixed> `{status: 'pending'}`, `{status: 'done', kind, …}` or `{status: 'error', error, message}`
+	 * @return array<string, mixed> `{status: 'pending'}`, `{status: 'done', kind, …}` or
+	 *                              `{status: 'error', error, message}`
 	 * @throws ApiException not_found
 	 */
 	public function taskStatus(string $uid, int $taskId): array {
@@ -134,7 +135,9 @@ class LlmService {
 	 */
 	public function listModels(string $uid, AiSource $source): array {
 		$connection = $this->sources->resolve($uid, $source);
-		$cacheKey = 'models:' . md5($uid . '|' . $source->value . '|' . ($connection->preset ?? '') . '|' . ($connection->baseUrl ?? ''));
+		$cacheKey = 'models:' . md5(
+			$uid . '|' . $source->value . '|' . ($connection->preset ?? '') . '|' . ($connection->baseUrl ?? ''),
+		);
 		$cached = $this->cache->get($cacheKey);
 		if (is_array($cached) && isset($cached['models'], $cached['chosenByAdmin'])) {
 			/** @var array{models: list<array{id: string, label: string}>, chosenByAdmin: bool} $cached */
@@ -144,8 +147,13 @@ class LlmService {
 			$models = $this->nextcloudAi->forUser($uid)->listModels();
 			$result = ['models' => $models, 'chosenByAdmin' => $models === []];
 		} elseif ($source === AiSource::Shared) {
-			$list = $connection->modelAllowlist !== [] ? $connection->modelAllowlist : array_filter([$connection->model]);
-			$result = ['models' => array_map(static fn (string $id): array => ['id' => $id, 'label' => $id], $list), 'chosenByAdmin' => $connection->modelAllowlist === []];
+			$list = $connection->modelAllowlist !== []
+				? $connection->modelAllowlist
+				: array_filter([$connection->model]);
+			$result = [
+				'models' => array_map(static fn (string $id): array => ['id' => $id, 'label' => $id], $list),
+				'chosenByAdmin' => $connection->modelAllowlist === [],
+			];
 		} else {
 			try {
 				$models = $this->providers->create($uid, $connection)->listModels();
@@ -175,12 +183,14 @@ class LlmService {
 		$model = $connection->model;
 		$requestedModel = $input->model;
 		if ($requestedModel !== null) {
-			if ($kind === ProviderKind::Nextcloud || $connection->source === AiSource::Personal || in_array($requestedModel, $connection->modelAllowlist, true)) {
+			if ($kind === ProviderKind::Nextcloud || $connection->source === AiSource::Personal
+				|| in_array($requestedModel, $connection->modelAllowlist, true)) {
 				$model = $requestedModel;
 			}
 		}
 		$maxTokens = $this->settings->aiMaxOutputTokens();
-		if ($kind === ProviderKind::Anthropic || ($kind === ProviderKind::OpenAi && $model !== null && preg_match('/^(o\d|gpt-5)/', $model) === 1)) {
+		if ($kind === ProviderKind::Anthropic
+			|| ($kind === ProviderKind::OpenAi && $model !== null && preg_match('/^(o\d|gpt-5)/', $model) === 1)) {
 			$maxTokens *= 4;
 		}
 		$options = [
@@ -188,7 +198,9 @@ class LlmService {
 			'maxTokens' => $maxTokens,
 			'temperature' => $kind === ProviderKind::Anthropic ? null : ($purpose === 'move' ? 0.7 : 0.3),
 			'effort' => $kind === ProviderKind::Anthropic ? ($purpose === 'move' ? 'low' : 'medium') : null,
-			'safetyId' => $this->settings->aiSafetyIdentifier() ? substr(hash_hmac('sha256', $uid, $this->settings->appSecret()), 0, 32) : null,
+			'safetyId' => $this->settings->aiSafetyIdentifier()
+				? substr(hash_hmac('sha256', $uid, $this->settings->appSecret()), 0, 32)
+				: null,
 			'purpose' => $purpose,
 		];
 		$messages = [
@@ -214,7 +226,14 @@ class LlmService {
 	}
 
 	private function upstream(ProviderException $e): ApiException {
-		$this->logger->debug('The LLM provider failed with {code}: {message}', ['code' => $e->getUpstream(), 'message' => $e->getMessage()]);
-		return new ApiException(ApiError::Upstream, $e->getError()->message($this->l), ['upstream' => $e->getUpstream()]);
+		$this->logger->debug('The LLM provider failed with {code}: {message}', [
+			'code' => $e->getUpstream(),
+			'message' => $e->getMessage(),
+		]);
+		return new ApiException(
+			ApiError::Upstream,
+			$e->getError()->message($this->l),
+			['upstream' => $e->getUpstream()],
+		);
 	}
 }

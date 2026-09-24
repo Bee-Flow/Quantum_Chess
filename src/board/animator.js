@@ -59,7 +59,13 @@ export const DURATIONS = Object.freeze({
  * @param {(text: string) => void} [hooks.announce] live-region text
  * @return {object} `{state, play, startRoll, finish, dismissChip, dispose}`
  */
-export function createAnimator({ speed, sound = () => {}, suspense = () => () => {}, describe = () => ({ chip: null, reveal: null, speech: '' }), announce = () => {} }) {
+export function createAnimator({
+	speed,
+	sound = () => {},
+	suspense = () => () => {},
+	describe = () => ({ chip: null, reveal: null, speech: '' }),
+	announce = () => {},
+}) {
 	const state = shallowReactive({
 		busy: false,
 		display: null,
@@ -219,7 +225,9 @@ export function createAnimator({ speed, sound = () => {}, suspense = () => () =>
 		state.display = event.after
 		if (event.measurement) {
 			sound(event.move.type === 'measure' ? 'measure' : 'move')
-			sound(event.measurement.key === 'capture' ? 'captured' : (event.measurement.key === 'miss' ? 'missed' : 'moved'))
+			sound(event.measurement.key === 'capture'
+				? 'captured'
+				: (event.measurement.key === 'miss' ? 'missed' : 'moved'))
 		} else {
 			sound(plainSound(event))
 		}
@@ -235,8 +243,8 @@ export function createAnimator({ speed, sound = () => {}, suspense = () => () =>
 	 * @param {EngineState} input.before state before
 	 * @param {LegalMove} input.move the move
 	 * @param {'self'|'opponent'} [input.actor] who moved (the opponent's rolls have no travel)
-	 * @return {{resolve: (result: {after: object, measurement: object, names?: object, lessonRoll?: boolean}) => Promise<void>,
-	 *   fail: () => Promise<void>}}
+	 * @return {{resolve: (result: {after: object, measurement: object, names?: object, lessonRoll?: boolean})
+	 *   => Promise<void>, fail: () => Promise<void>}}
 	 */
 	function startRoll({ before, move, actor = 'self' }) {
 		skipping = false
@@ -251,7 +259,14 @@ export function createAnimator({ speed, sound = () => {}, suspense = () => () =>
 			}
 			if (actor === 'self' && move.type !== 'measure') {
 				state.sourceDim = { piece: move.piece, squares: move.from.slice() }
-				state.travel = { piece: move.piece, type: before.types[move.piece], color: move.piece < 16 ? 'w' : 'b', from: move.from[0], to: move.to[move.to.length - 1], duration: DURATIONS.travel * f }
+				state.travel = {
+					piece: move.piece,
+					type: before.types[move.piece],
+					color: move.piece < 16 ? 'w' : 'b',
+					from: move.from[0],
+					to: move.to[move.to.length - 1],
+					duration: DURATIONS.travel * f,
+				}
 				sound('move')
 				await wait(DURATIONS.travel * f)
 			} else if (move.type === 'measure') {

@@ -83,23 +83,42 @@ function ensureGame() {
 	}
 	const mode = route.params.mode
 	const last = preferences.lastNewGame?.[mode] ?? {}
-	const color = last.color === 'b' ? 'b' : (last.color === 'r' ? ((globalThis.crypto.getRandomValues(new Uint8Array(1))[0] & 1) ? 'b' : 'w') : 'w')
+	const color = last.color === 'b'
+		? 'b'
+		: (last.color === 'r' ? ((globalThis.crypto.getRandomValues(new Uint8Array(1))[0] & 1) ? 'b' : 'w') : 'w')
 	let record
 	if (mode === 'computer') {
 		const engine = { kind: 'engine', level: last.level ?? 1 }
-		record = createLocalGame({ mode, players: color === 'w' ? { w: { kind: 'human' }, b: engine } : { w: engine, b: { kind: 'human' } }, humanColor: color })
+		record = createLocalGame({
+			mode,
+			players: color === 'w' ? { w: { kind: 'human' }, b: engine } : { w: engine, b: { kind: 'human' } },
+			humanColor: color,
+		})
 	} else if (mode === 'ai') {
 		const ai = useAiSources()
 		if (!last.persona || !ai.anyAvailable.value) {
 			router.replace({ name: 'new-game', query: { mode } })
 			return
 		}
-		const bot = { kind: 'ai', persona: last.persona, source: last.source, model: null, strength: last.strength ?? 'balanced' }
-		record = createLocalGame({ mode, players: color === 'w' ? { w: { kind: 'human' }, b: bot } : { w: bot, b: { kind: 'human' } }, humanColor: color })
+		const bot = {
+			kind: 'ai',
+			persona: last.persona,
+			source: last.source,
+			model: null,
+			strength: last.strength ?? 'balanced',
+		}
+		record = createLocalGame({
+			mode,
+			players: color === 'w' ? { w: { kind: 'human' }, b: bot } : { w: bot, b: { kind: 'human' } },
+			humanColor: color,
+		})
 	} else {
 		record = createLocalGame({
 			mode: 'local',
-			players: { w: { kind: 'local', name: last.white || t('quantumchess', 'White') }, b: { kind: 'local', name: last.black || t('quantumchess', 'Black') } },
+			players: {
+				w: { kind: 'local', name: last.white || t('quantumchess', 'White') },
+				b: { kind: 'local', name: last.black || t('quantumchess', 'Black') },
+			},
 			humanColor: null,
 			options: { autoFlip: last.autoFlip ?? preferences.autoFlip },
 		})

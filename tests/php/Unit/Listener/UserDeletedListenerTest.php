@@ -54,8 +54,12 @@ final class UserDeletedListenerTest extends TestCase {
 		$games = $this->createMock(GameMaintenanceService::class);
 		$games->method('removeUser')->willThrowException(new \RuntimeException('database down'));
 		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('error')->with($this->anything(), $this->callback(fn (array $context) => $context['exception'] instanceof \RuntimeException));
+		$logger->expects($this->once())->method('error')->with(
+			$this->anything(),
+			$this->callback(fn (array $context) => $context['exception'] instanceof \RuntimeException),
+		);
 
-		(new UserDeletedListener($games, $this->createMock(RatingService::class), $logger))->handle($this->deleted('carol'));
+		(new UserDeletedListener($games, $this->createMock(RatingService::class), $logger))
+			->handle($this->deleted('carol'));
 	}
 }

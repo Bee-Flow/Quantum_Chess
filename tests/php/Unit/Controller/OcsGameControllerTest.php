@@ -41,12 +41,20 @@ final class OcsGameControllerTest extends TestCase {
 		$this->invitations = $this->createMock(InvitationService::class);
 		$this->gameplay = $this->createMock(GameplayService::class);
 		$this->serializer = $this->createMock(GameSerializer::class);
-		$this->serializer->method('summary')->willReturnCallback(fn (Game $game, string $viewer) => ['id' => $game->getId(), 'viewer' => $viewer]);
+		$this->serializer->method('summary')->willReturnCallback(
+			fn (Game $game, string $viewer) => ['id' => $game->getId(), 'viewer' => $viewer],
+		);
 		$this->game = GameBuilder::pending();
 	}
 
 	private function controller(?string $userId = 'bob'): OcsGameController {
-		return new OcsGameController($this->createMock(IRequest::class), $this->invitations, $this->gameplay, $this->serializer, $userId);
+		return new OcsGameController(
+			$this->createMock(IRequest::class),
+			$this->invitations,
+			$this->gameplay,
+			$this->serializer,
+			$userId,
+		);
 	}
 
 	public function testEachActionCallsItsServiceAndAnswersTheSummary(): void {
@@ -54,10 +62,11 @@ final class OcsGameControllerTest extends TestCase {
 		$this->invitations->expects($this->once())->method('decline')->with(7, 'bob')->willReturn($this->game);
 		$this->invitations->expects($this->once())->method('rematch')->with(7, 'bob')->willReturn($this->game);
 		$draws = [];
-		$this->gameplay->method('draw')->willReturnCallback(function (int $id, string $uid, string $action) use (&$draws): Game {
-			$draws[] = [$id, $uid, $action];
-			return $this->game;
-		});
+		$this->gameplay->method('draw')
+			->willReturnCallback(function (int $id, string $uid, string $action) use (&$draws): Game {
+				$draws[] = [$id, $uid, $action];
+				return $this->game;
+			});
 
 		$controller = $this->controller();
 		foreach (['accept', 'decline', 'drawAccept', 'drawDecline', 'rematch'] as $action) {
@@ -82,7 +91,13 @@ final class OcsGameControllerTest extends TestCase {
 		foreach ($cases as [$error, $expected]) {
 			$invitations = $this->createMock(InvitationService::class);
 			$invitations->method('accept')->willThrowException($error);
-			$controller = new OcsGameController($this->createMock(IRequest::class), $invitations, $this->gameplay, $this->serializer, 'bob');
+			$controller = new OcsGameController(
+				$this->createMock(IRequest::class),
+				$invitations,
+				$this->gameplay,
+				$this->serializer,
+				'bob',
+			);
 			try {
 				$controller->accept(7);
 				$this->fail('expected ' . $expected);

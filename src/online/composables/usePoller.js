@@ -25,7 +25,13 @@ export const BACKOFF_BASE_MS = 2_000
  * @param {Window} [options.win] window (tests)
  * @return {object} {connection, failures, start(), stop(), pollNow(), running}
  */
-export function usePoller(fetchFn, { interval, onWake = () => {}, random = Math.random, doc = globalThis.document, win = globalThis.window } = {}) {
+export function usePoller(fetchFn, {
+	interval,
+	onWake = () => {},
+	random = Math.random,
+	doc = globalThis.document,
+	win = globalThis.window,
+} = {}) {
 	/** @type {import('vue').Ref<'ok'|'retrying'|'offline'|'maintenance'|'expired'>} */
 	const connection = ref('ok')
 	const failures = ref(0)

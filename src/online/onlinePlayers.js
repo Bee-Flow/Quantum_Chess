@@ -28,7 +28,8 @@ import { formatDeadline } from '../services/format.js'
  * @return {boolean}
  */
 export function isParticipant(game, me) {
-	return !!game && !!me && [game.creator?.userId, game.opponent?.userId, game.white?.userId, game.black?.userId].includes(me)
+	return !!game && !!me
+		&& [game.creator?.userId, game.opponent?.userId, game.white?.userId, game.black?.userId].includes(me)
 }
 
 /**
@@ -93,7 +94,9 @@ export function onlinePlayerInfo(game, color, { viewer, names, myColor, now }) {
 		statusText = t('quantumchess', 'Not started yet')
 	} else if (game?.status === 'active' && game.turn === color) {
 		const left = game.deadlineAt ? formatDeadline(game.deadlineAt, now) : ''
-		const who = color === myColor ? t('quantumchess', 'Your move') : t('quantumchess', '{name} to move', { name: names[color] })
+		const who = color === myColor
+			? t('quantumchess', 'Your move')
+			: t('quantumchess', '{name} to move', { name: names[color] })
 		statusText = '● ' + who + (left ? ' · ' + left : '')
 	}
 	return {

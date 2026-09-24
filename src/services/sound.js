@@ -11,7 +11,22 @@
  */
 
 /** The names `playSound()` accepts. */
-export const SOUND_NAMES = Object.freeze(['select', 'move', 'capture', 'split', 'merge', 'measure', 'captured', 'moved', 'missed', 'win', 'loss', 'yourMove', 'kingDanger', 'illegal'])
+export const SOUND_NAMES = Object.freeze([
+	'select',
+	'move',
+	'capture',
+	'split',
+	'merge',
+	'measure',
+	'captured',
+	'moved',
+	'missed',
+	'win',
+	'loss',
+	'yourMove',
+	'kingDanger',
+	'illegal',
+])
 
 const SPEEDS = { slow: 1.5, normal: 1, fast: 0.5, off: 0.5 }
 const ATTACK = 0.005
@@ -284,7 +299,12 @@ export function playSound(name, { speed = 'normal' } = {}) {
 			tone({ freq: 392, dur: s(90), gain: 0.04, type: 'triangle' })
 			break
 		case 'win':
-			[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone({ freq: f, at: s(i * 95), dur: s(i === 3 ? 215 : 150), gain: 0.13 }))
+			[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone({
+				freq: f,
+				at: s(i * 95),
+				dur: s(i === 3 ? 215 : 150),
+				gain: 0.13,
+			}))
 			break
 		case 'loss':
 			tone({ freq: 329.63, dur: s(180), gain: 0.12 })

@@ -66,7 +66,8 @@ const ghostNames = computed(() => {
 	const out = []
 	for (let id = props.color === 'w' ? 0 : 16, end = id + 16; id < end; id++) {
 		if (locs[id].length > 1) {
-			out.push(pieceName(props.state.types[id], props.color) + ' (' + locs[id].map((l) => squareName(l.square)).join(' | ') + ')')
+			out.push(pieceName(props.state.types[id], props.color)
+				+ ' (' + locs[id].map((l) => squareName(l.square)).join(' | ') + ')')
 		}
 	}
 	return out

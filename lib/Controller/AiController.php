@@ -47,7 +47,10 @@ final class AiController extends ApiController {
 	 * @param array<string, mixed> $result
 	 */
 	private static function answer(array $result): JSONResponse {
-		return new JSONResponse($result, ($result['status'] ?? null) === 'pending' ? Http::STATUS_ACCEPTED : Http::STATUS_OK);
+		return new JSONResponse(
+			$result,
+			($result['status'] ?? null) === 'pending' ? Http::STATUS_ACCEPTED : Http::STATUS_OK,
+		);
 	}
 
 	/**
@@ -66,7 +69,9 @@ final class AiController extends ApiController {
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 30, period: 600)]
 	public function models(mixed $source = null): JSONResponse {
-		return $this->respondWithSizeLimit(fn (string $uid): array => $this->llm->listModels($uid, $this->source($source)));
+		return $this->respondWithSizeLimit(
+			fn (string $uid): array => $this->llm->listModels($uid, $this->source($source)),
+		);
 	}
 
 	/**
@@ -76,11 +81,25 @@ final class AiController extends ApiController {
 	#[UserRateLimit(limit: 120, period: 3600)]
 	public function move(
 		mixed $source = null, mixed $model = null, mixed $persona = null, mixed $color = null, mixed $language = null,
-		mixed $state = null, mixed $history = null, mixed $candidates = null, mixed $message = null, mixed $feedback = null,
-		mixed $answerMode = null,
+		mixed $state = null, mixed $history = null, mixed $candidates = null, mixed $message = null,
+		mixed $feedback = null, mixed $answerMode = null,
 	): JSONResponse {
-		$request = compact('source', 'model', 'persona', 'color', 'language', 'state', 'history', 'candidates', 'message', 'feedback', 'answerMode');
-		return $this->respondWithSizeLimit(fn (string $uid): JSONResponse => self::answer($this->llm->requestMove($uid, array_filter($request, static fn ($v) => $v !== null))));
+		$request = compact(
+			'source',
+			'model',
+			'persona',
+			'color',
+			'language',
+			'state',
+			'history',
+			'candidates',
+			'message',
+			'feedback',
+			'answerMode',
+		);
+		return $this->respondWithSizeLimit(fn (string $uid): JSONResponse => self::answer(
+			$this->llm->requestMove($uid, array_filter($request, static fn ($v) => $v !== null)),
+		));
 	}
 
 	/**
@@ -92,8 +111,21 @@ final class AiController extends ApiController {
 		mixed $source = null, mixed $model = null, mixed $language = null, mixed $state = null, mixed $history = null,
 		mixed $analysis = null, mixed $context = null, mixed $player = null, mixed $chat = null, mixed $question = null,
 	): JSONResponse {
-		$request = compact('source', 'model', 'language', 'state', 'history', 'analysis', 'context', 'player', 'chat', 'question');
-		return $this->respondWithSizeLimit(fn (string $uid): JSONResponse => self::answer($this->llm->requestCoach($uid, array_filter($request, static fn ($v) => $v !== null))));
+		$request = compact(
+			'source',
+			'model',
+			'language',
+			'state',
+			'history',
+			'analysis',
+			'context',
+			'player',
+			'chat',
+			'question',
+		);
+		return $this->respondWithSizeLimit(fn (string $uid): JSONResponse => self::answer(
+			$this->llm->requestCoach($uid, array_filter($request, static fn ($v) => $v !== null)),
+		));
 	}
 
 	#[NoAdminRequired]
@@ -116,6 +148,8 @@ final class AiController extends ApiController {
 	 */
 	#[NoAdminRequired]
 	public function ackNotice(mixed $source = null): JSONResponse {
-		return $this->respondWithSizeLimit(fn (string $uid): array => ['acked' => $this->aiSettings->ackNotice($uid, $this->source($source))]);
+		return $this->respondWithSizeLimit(
+			fn (string $uid): array => ['acked' => $this->aiSettings->ackNotice($uid, $this->source($source))],
+		);
 	}
 }

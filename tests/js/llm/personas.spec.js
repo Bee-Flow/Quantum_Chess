@@ -15,9 +15,22 @@ import { moodToExpression, PERSONAS } from '../../../src/llm/personas.js'
 
 describe('personas', () => {
 	it('ships four personas with their tolerances and canned lines', () => {
-		expect(PERSONAS.map((p) => [p.id, p.tolerance])).toEqual([['professor', 4], ['captain', 10], ['superposa', 8], ['q7', 1]])
+		expect(PERSONAS.map((p) => [p.id, p.tolerance])).toEqual([
+			['professor', 4],
+			['captain', 10],
+			['superposa', 8],
+			['q7', 1],
+		])
 		for (const p of PERSONAS) {
-			for (const event of ['start', 'opponentLucky', 'opponentUnlucky', 'kingDanger', 'win', 'loss', 'fallback']) {
+			for (const event of [
+				'start',
+				'opponentLucky',
+				'opponentUnlucky',
+				'kingDanger',
+				'win',
+				'loss',
+				'fallback',
+			]) {
 				expect(p.canned[event].length, p.id + ' ' + event).toBeGreaterThanOrEqual(2)
 			}
 		}

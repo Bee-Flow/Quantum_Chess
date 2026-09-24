@@ -45,7 +45,12 @@ async function tidy(who) {
  * @return {Promise<object>} the game after the move
  */
 async function move(who, game, code) {
-	const res = await api(who, 'POST', `api/games/${game.id}/moves`, { code, ply: game.ply, clientId: `demo-${game.id}-${game.ply}`, thinkMs: 4000 })
+	const res = await api(who, 'POST', `api/games/${game.id}/moves`, {
+		code,
+		ply: game.ply,
+		clientId: `demo-${game.id}-${game.ply}`,
+		thinkMs: 4000,
+	})
 	return res.game ?? res
 }
 
@@ -57,7 +62,13 @@ export async function seedDemo() {
 		await tidy(who)
 	}
 	// admin (White) against bob: a split and a pawn move each, then bob is to move
-	let game = (await api('admin', 'POST', 'api/games', { opponent: uid('bob'), rated: false, timeControl: 'corr:3d', color: 'w', message: 'Fancy a quantum game?' })).game
+	let game = (await api('admin', 'POST', 'api/games', {
+		opponent: uid('bob'),
+		rated: false,
+		timeControl: 'corr:3d',
+		color: 'w',
+		message: 'Fancy a quantum game?',
+	})).game
 	game = (await api('bob', 'POST', `api/games/${game.id}/accept`)).game ?? game
 	game = await move('admin', game, 'g1-f3|h3')
 	game = await move('bob', game, 'e7-e5')
@@ -65,11 +76,22 @@ export async function seedDemo() {
 	const running = game.id
 
 	// carol invites bob; admin posts an open challenge
-	const invitation = (await api('carol', 'POST', 'api/games', { opponent: uid('bob'), rated: true, timeControl: 'corr:1d', message: 'Rematch of our lunch game?' })).game.id
-	const challenge = (await api('admin', 'POST', 'api/games', { opponent: null, rated: false, timeControl: 'corr:7d' })).game.id
+	const invitation = (await api('carol', 'POST', 'api/games', {
+		opponent: uid('bob'),
+		rated: true,
+		timeControl: 'corr:1d',
+		message: 'Rematch of our lunch game?',
+	})).game.id
+	const challenge = (await api('admin', 'POST', 'api/games', {
+		opponent: null,
+		rated: false,
+		timeControl: 'corr:7d',
+	})).game.id
 
 	// the Quantum Chess widget first on bob's dashboard
-	await occ(['user:setting', uid('bob'), 'dashboard', 'layout', 'quantumchess,recommendations'], { allowFailure: true })
+	await occ(['user:setting', uid('bob'), 'dashboard', 'layout', 'quantumchess,recommendations'], {
+		allowFailure: true,
+	})
 	return { running, invitation, challenge }
 }
 

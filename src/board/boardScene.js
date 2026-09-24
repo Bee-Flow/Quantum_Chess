@@ -15,7 +15,14 @@
 import { t } from '@nextcloud/l10n'
 import { toRaw } from 'vue'
 import { otherColor, squareName, T } from '../engine/index.js'
-import { formatPercentNumber, formatProbability, moveSentence, resolutionLabel, resolutionText, resultSentence } from '../engine/ui/index.js'
+import {
+	formatPercentNumber,
+	formatProbability,
+	moveSentence,
+	resolutionLabel,
+	resolutionText,
+	resultSentence,
+} from '../engine/ui/index.js'
 import { revealArrow, squareLabel } from './boardModel.js'
 import { arcPath, ghostOpacity, isLightSquare, piePath, squareXY } from './geometry.js'
 import { pieceSymbolId } from './pieceSprites.js'
@@ -80,7 +87,8 @@ export function pieceSprites(items, geo, { focus, drag, returning, shaking, hove
 				'qc-piece--return': returning === p.key,
 				'qc-piece--shake': shaking === p.square,
 				'qc-piece--pop': anim.pops.includes(p.key),
-				'qc-piece--source': anim.sourceDim !== null && anim.sourceDim.piece === p.piece && anim.sourceDim.squares.includes(p.square),
+				'qc-piece--source': anim.sourceDim !== null && anim.sourceDim.piece === p.piece
+					&& anim.sourceDim.squares.includes(p.square),
 				'qc-piece--hover': hoverSquare === p.square,
 				'qc-piece--ghost': p.ghost,
 				'qc-piece--crossfade': anim.crossfade,
@@ -290,7 +298,8 @@ export function targetMarkList(targets, geo, { hovered, selected, pieceSet }) {
 			hover,
 			transform: hover ? `translate(${x} ${y}) scale(1.15) translate(${-x} ${-y})` : undefined,
 		}
-		if (tg.kind === 'roll-capture' || tg.kind === 'certain-capture' || tg.kind === 'converging' || tg.kind === 'converging-roll') {
+		if (tg.kind === 'roll-capture' || tg.kind === 'certain-capture' || tg.kind === 'converging'
+			|| tg.kind === 'converging-roll') {
 			mk.corners = cornerTriangles(x, y)
 		}
 		if (tg.kind === 'roll-capture' || tg.kind === 'converging-roll') {
@@ -474,7 +483,11 @@ export function tooltipPlacement(square, geo) {
 	const px = geo.pixelOf(square)
 	const width = Math.min(240, 8 * S - 8)
 	const left = Math.max(4, Math.min(8 * S - width - 4, px.x + S / 2 - width / 2))
-	return { left: left + 'px', width: width + 'px', ...(px.y >= 2 * S ? { bottom: 8 * S - px.y + 4 + 'px' } : { top: px.y + S + 4 + 'px' }) }
+	return {
+		left: left + 'px',
+		width: width + 'px',
+		...(px.y >= 2 * S ? { bottom: 8 * S - px.y + 4 + 'px' } : { top: px.y + S + 4 + 'px' }),
+	}
 }
 
 /**

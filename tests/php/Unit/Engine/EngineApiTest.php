@@ -39,13 +39,23 @@ final class EngineApiTest extends TestCase {
 		$this->assertSame(1, Engine::V);
 		$this->assertSame(16777216, Engine::T);
 		$this->assertSame(2 ** 24, Engine::T);
-		$this->assertSame([8, 64, 4, 100, 3, 1200], [Engine::BUDGET, Engine::MAX_WORLDS, Engine::MAX_LOCATIONS, Engine::FIFTY_MOVE_PLIES, Engine::REPETITION_COUNT, Engine::MAX_PLY]);
+		$this->assertSame([8, 64, 4, 100, 3, 1200], [
+			Engine::BUDGET,
+			Engine::MAX_WORLDS,
+			Engine::MAX_LOCATIONS,
+			Engine::FIFTY_MOVE_PLIES,
+			Engine::REPETITION_COUNT,
+			Engine::MAX_PLY,
+		]);
 		$this->assertSame(2 ** 36, Engine::LINK_THRESHOLD);
 		$this->assertCount(23, Engine::ILLEGAL_REASONS);
 		$this->assertSame('game_over', Engine::ILLEGAL_REASONS[0]);
 		$this->assertSame('merge_part_stuck', Engine::ILLEGAL_REASONS[22]);
 		$this->assertCount(10, Engine::SETUP_ERRORS);
-		$this->assertSame(['king_captured', 'king_trapped', 'bare_kings', 'repetition', 'fifty_moves', 'max_ply', 'no_moves'], Engine::RESULT_REASONS);
+		$this->assertSame(
+			['king_captured', 'king_trapped', 'bare_kings', 'repetition', 'fifty_moves', 'max_ply', 'no_moves'],
+			Engine::RESULT_REASONS,
+		);
 		$this->assertSame(PHP_INT_SIZE, 8, 'the engine needs 64-bit integers');
 	}
 
@@ -71,8 +81,24 @@ final class EngineApiTest extends TestCase {
 		$moves = $this->e->generateMoves($this->w2());
 		$byCode = array_column($moves, null, 'code');
 		$c1h6 = $byCode['c1-h6'];
-		$this->assertSame(['type', 'from', 'to', 'code', 'piece', 'resolution', 'measured', 'fallback', 'capture', 'happenWeight', 'outcomes', 'successProbability'], array_keys($c1h6));
-		$this->assertSame(['standard', [2], [47], 'c1-h6', 4, 'rolled', true, false, true, Engine::T], array_slice(array_values($c1h6), 0, 10));
+		$this->assertSame([
+			'type',
+			'from',
+			'to',
+			'code',
+			'piece',
+			'resolution',
+			'measured',
+			'fallback',
+			'capture',
+			'happenWeight',
+			'outcomes',
+			'successProbability',
+		], array_keys($c1h6));
+		$this->assertSame(
+			['standard', [2], [47], 'c1-h6', 4, 'rolled', true, false, true, Engine::T],
+			array_slice(array_values($c1h6), 0, 10),
+		);
 		$this->assertSame(1.0, $c1h6['successProbability']);
 		$promo = $this->e->generateMoves($this->e->setupPosition(['fen' => '4k3/1P6/8/8/8/8/8/4K3 w - - 0 1']));
 		$codes = array_column($promo, 'code');
@@ -132,7 +158,14 @@ final class EngineApiTest extends TestCase {
 
 	public function testIllegalMovesThrowWithTheReason(): void {
 		$w2 = $this->w2();
-		foreach (['c1-c2' => 'unreachable', 'g8-f6' => 'no_piece', 'e8-d8' => 'not_your_piece', 'Nc1-h6' => 'piece_mismatch', 'nonsense' => 'malformed', 'e1-g1' => 'castle_no_right'] as $code => $reason) {
+		foreach ([
+			'c1-c2' => 'unreachable',
+			'g8-f6' => 'no_piece',
+			'e8-d8' => 'not_your_piece',
+			'Nc1-h6' => 'piece_mismatch',
+			'nonsense' => 'malformed',
+			'e1-g1' => 'castle_no_right',
+		] as $code => $reason) {
 			try {
 				$this->e->applyMove($w2, $code);
 				$this->fail($code . ' was applied');
@@ -146,9 +179,16 @@ final class EngineApiTest extends TestCase {
 		}
 		$done = $this->e->applyMove($w2, 'c1-h6', 9000000)['state'];
 		$done = $this->e->applyMove($done, 'e8-d8')['state'];
-		$over = $this->e->applyMove($this->e->setupPosition(['fen' => '8/8/8/8/8/8/3k4/4K3 b - - 0 1']), 'd2-e1')['state'];
+		$over = $this->e->applyMove(
+			$this->e->setupPosition(['fen' => '8/8/8/8/8/8/3k4/4K3 b - - 0 1']),
+			'd2-e1',
+		)['state'];
 		$this->assertSame('game_over', $this->e->whyIllegal($over, 'e1-e2'));
-		$this->assertSame('malformed', $this->e->whyIllegal($over, 'nonsense'), 'an unparsable string is malformed first');
+		$this->assertSame(
+			'malformed',
+			$this->e->whyIllegal($over, 'nonsense'),
+			'an unparsable string is malformed first',
+		);
 		$this->assertSame('game_over', $this->e->whyIllegal($over, 42), 'any other input on a finished game');
 		$this->assertSame('malformed', $this->e->whyIllegal($done, 42));
 		$this->assertSame([], $this->e->generateMoves($over));
@@ -184,7 +224,10 @@ final class EngineApiTest extends TestCase {
 			$this->e->serializeState($o[1]['state']),
 		);
 		$quantum = $this->e->getOutcomes($this->e->initialState(), 'g1-f3|h3');
-		$this->assertSame([['quantum', Engine::T, 1.0, true, null]], array_map(static fn (array $x): array => [$x['key'], $x['weight'], $x['probability'], $x['happened'], $x['captured']], $quantum));
+		$this->assertSame([['quantum', Engine::T, 1.0, true, null]], array_map(
+			static fn (array $x): array => [$x['key'], $x['weight'], $x['probability'], $x['happened'], $x['captured']],
+			$quantum,
+		));
 		$certain = $this->e->getOutcomes($this->e->initialState(), 'e2-e4');
 		$this->assertSame('certain', $certain[0]['key']);
 		$this->assertSame('-', $certain[0]['state']['ep'], 'no black pawn beside e4');
@@ -195,16 +238,25 @@ final class EngineApiTest extends TestCase {
 		$w2 = $this->w2();
 		$view = $this->e->squareView($w2);
 		$this->assertCount(64, $view);
-		$this->assertSame(['piece' => 23, 'type' => 'n', 'color' => 'b', 'weight' => 8388608, 'probability' => 0.5], $view[45]);
+		$this->assertSame(
+			['piece' => 23, 'type' => 'n', 'color' => 'b', 'weight' => 8388608, 'probability' => 0.5],
+			$view[45],
+		);
 		$this->assertNull($view[0]);
 		$locs = $this->e->pieceLocations($w2);
 		$this->assertCount(32, $locs);
-		$this->assertSame([['square' => 45, 'weight' => 8388608, 'probability' => 0.5], ['square' => 47, 'weight' => 8388608, 'probability' => 0.5]], $locs[23]);
+		$this->assertSame([
+			['square' => 45, 'weight' => 8388608, 'probability' => 0.5],
+			['square' => 47, 'weight' => 8388608, 'probability' => 0.5],
+		], $locs[23]);
 		$this->assertSame([], $locs[1]);
 		$this->assertSame(2, $this->e->worldCount($w2));
 		$this->assertSame(0.0, $this->e->moveRisk($w2, 'c1-h6'));
 		// W4 after 2. a1-a8: the rook is on a8 in half the worlds and sweeps the eighth rank.
-		$w4 = $this->e->applyMove($this->e->setupPosition(['fen' => '4k3/8/1n6/8/8/8/8/R3K3 b - - 0 1']), 'b6-a4|c4')['state'];
+		$w4 = $this->e->applyMove(
+			$this->e->setupPosition(['fen' => '4k3/8/1n6/8/8/8/8/R3K3 b - - 0 1']),
+			'b6-a4|c4',
+		)['state'];
 		$w4 = $this->e->applyMove($w4, 'a1-a8')['state'];
 		$this->assertSame(Engine::T / 2, $this->e->kingDanger($w4, 'b'));
 		$this->assertSame(0.5, $this->e->moveRisk($w4, 'e8-d8'));
@@ -251,10 +303,20 @@ final class EngineApiTest extends TestCase {
 	public function testSetupAcceptsAStateAndRejectsBadSpecs(): void {
 		$s = $this->e->setupPosition(['state' => json_decode(Engine::START_JSON, true)]);
 		$this->assertSame(Engine::START_JSON, $this->e->serializeState($s));
-		$this->assertSame(Engine::START_JSON, $this->e->serializeState($this->e->setupPosition(['state' => Engine::START_JSON])));
-		foreach ([[['state' => null], 'invalid_state'], [[], 'bad_fen'], [['fen' => 42], 'bad_fen'], [['fen' => '4k3/8/8/8/8/8/8/4K3 w - -', 'prelude' => 'e1-e2'], 'prelude_bad_code'],
-			[['fen' => '4k3/8/8/8/8/8/8/4K3 w - -', 'prelude' => ['O-O']], 'prelude_bad_code'], [['fen' => '4k3/8/8/8/8/8/8/4K3 w - - 0 0'], 'bad_fen'],
-			[['fen' => '4k3/8/8/8/8/8/8/4K3 w KK - 0 1'], 'bad_fen'], [['fen' => '4k3/8/8/8/8/8/8/4K3 x - - 0 1'], 'bad_fen']] as [$spec, $reason]) {
+		$this->assertSame(
+			Engine::START_JSON,
+			$this->e->serializeState($this->e->setupPosition(['state' => Engine::START_JSON])),
+		);
+		foreach ([
+			[['state' => null], 'invalid_state'],
+			[[], 'bad_fen'],
+			[['fen' => 42], 'bad_fen'],
+			[['fen' => '4k3/8/8/8/8/8/8/4K3 w - -', 'prelude' => 'e1-e2'], 'prelude_bad_code'],
+			[['fen' => '4k3/8/8/8/8/8/8/4K3 w - -', 'prelude' => ['O-O']], 'prelude_bad_code'],
+			[['fen' => '4k3/8/8/8/8/8/8/4K3 w - - 0 0'], 'bad_fen'],
+			[['fen' => '4k3/8/8/8/8/8/8/4K3 w KK - 0 1'], 'bad_fen'],
+			[['fen' => '4k3/8/8/8/8/8/8/4K3 x - - 0 1'], 'bad_fen'],
+		] as [$spec, $reason]) {
 			try {
 				$this->e->setupPosition($spec);
 				$this->fail('accepted ' . json_encode($spec));
@@ -263,8 +325,14 @@ final class EngineApiTest extends TestCase {
 			}
 		}
 		// Four FEN fields; long zero-padded clocks are numbers.
-		$this->assertSame([0, 1], array_values(array_intersect_key($this->e->setupPosition(['fen' => '4k3/8/8/8/8/8/8/4K3 w - -']), ['halfmove' => 0, 'fullmove' => 0])));
-		$this->assertSame(5, $this->e->setupPosition(['fen' => '4k3/8/8/8/8/8/8/4K3 w - - 0000000000000000000005 1'])['halfmove']);
+		$this->assertSame([0, 1], array_values(array_intersect_key(
+			$this->e->setupPosition(['fen' => '4k3/8/8/8/8/8/8/4K3 w - -']),
+			['halfmove' => 0, 'fullmove' => 0],
+		)));
+		$this->assertSame(
+			5,
+			$this->e->setupPosition(['fen' => '4k3/8/8/8/8/8/8/4K3 w - - 0000000000000000000005 1'])['halfmove'],
+		);
 	}
 
 	public function testServerMoveFlow(): void {
@@ -284,7 +352,14 @@ final class EngineApiTest extends TestCase {
 			$r = $engine->applyMove($state, $legal['code'], u: $u);
 			$notation = $engine->moveNotation($state, $legal['code'], $r['measurement']);
 			$json = $engine->serializeState($r['state']);
-			$chain = $engine->chainNext($chain, $ply, $legal['code'], $r['measurement']['u'] ?? null, $r['measurement']['key'] ?? null, $json);
+			$chain = $engine->chainNext(
+				$chain,
+				$ply,
+				$legal['code'],
+				$r['measurement']['u'] ?? null,
+				$r['measurement']['key'] ?? null,
+				$json,
+			);
 			$this->assertSame($legal['code'], $engine->findMove($state, $notation)['code'] ?? null);
 			$this->assertSame(64, strlen($chain));
 			$this->assertSame(66, strlen($engine->supportKey($r['state'])));

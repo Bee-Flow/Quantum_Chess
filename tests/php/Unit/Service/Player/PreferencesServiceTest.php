@@ -26,11 +26,15 @@ final class PreferencesServiceTest extends TestCase {
 	private function config(): IUserConfig {
 		$store = new \ArrayObject();
 		$config = $this->createMock(IUserConfig::class);
-		$config->method('getValueString')->willReturnCallback(fn (string $u, string $a, string $k, string $d = '') => $store[$k] ?? $d);
-		$config->method('setValueString')->willReturnCallback(function (string $u, string $a, string $k, string $v) use ($store) {
-			$store[$k] = $v;
-			return true;
-		});
+		$config->method('getValueString')->willReturnCallback(
+			fn (string $u, string $a, string $k, string $d = '') => $store[$k] ?? $d,
+		);
+		$config->method('setValueString')->willReturnCallback(
+			function (string $u, string $a, string $k, string $v) use ($store) {
+				$store[$k] = $v;
+				return true;
+			},
+		);
 		return $config;
 	}
 
@@ -43,7 +47,10 @@ final class PreferencesServiceTest extends TestCase {
 	public function testPreferencesAreStoredVerbatimWithinTheLimit(): void {
 		$service = new PreferencesService(new UserDocumentStore($this->config()), $this->l());
 		$this->assertSame([], $service->get('bob'));
-		$this->assertSame(['v' => 1, 'unknown' => ['x' => true]], $service->set('bob', ['v' => 1, 'unknown' => ['x' => true]]));
+		$this->assertSame(
+			['v' => 1, 'unknown' => ['x' => true]],
+			$service->set('bob', ['v' => 1, 'unknown' => ['x' => true]]),
+		);
 		try {
 			$service->set('bob', ['blob' => str_repeat('x', PreferencesService::MAX_BYTES)]);
 			$this->fail('too large');
@@ -54,7 +61,10 @@ final class PreferencesServiceTest extends TestCase {
 			$service->set('bob', ["\xff" => 1]);
 			$this->fail('not encodable');
 		} catch (ApiException $e) {
-			$this->assertSame([400, 'invalid_argument', ['field' => 'preferences']], [$e->getStatus(), $e->getErrorCode(), $e->getExtra()]);
+			$this->assertSame(
+				[400, 'invalid_argument', ['field' => 'preferences']],
+				[$e->getStatus(), $e->getErrorCode(), $e->getExtra()],
+			);
 		}
 		$this->expectException(ApiException::class);
 		$service->set('bob', [1, 2, 3]);

@@ -61,7 +61,10 @@ abstract class HttpProvider implements ProviderInterface {
 				$response = $this->clients->newClient()->get($url, $options);
 			} else {
 				$options['headers']['Content-Type'] = 'application/json';
-				$options['body'] = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+				$options['body'] = json_encode(
+					$body,
+					JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR,
+				);
 				$response = $this->clients->newClient()->post($url, $options);
 			}
 		} catch (LocalServerException $e) {
@@ -100,11 +103,19 @@ abstract class HttpProvider implements ProviderInterface {
 		]);
 		$error = match (true) {
 			$status === 401, $status === 403 => UpstreamError::InvalidKey,
-			$status === 402, str_contains($lower, 'quota'), str_contains($lower, 'insufficient_balance'), str_contains($lower, 'credit') => UpstreamError::QuotaExceeded,
+			$status === 402,
+			str_contains($lower, 'quota'),
+			str_contains($lower, 'insufficient_balance'),
+			str_contains($lower, 'credit') => UpstreamError::QuotaExceeded,
 			$status === 404 => UpstreamError::ModelNotFound,
 			$status === 429 => UpstreamError::RateLimited,
 			$status === 408, $status === 504 => UpstreamError::Timeout,
-			$status === 400 && (str_contains($lower, 'model') && (str_contains($lower, 'not found') || str_contains($lower, 'does not exist') || str_contains($lower, 'invalid model') || str_contains($lower, 'not_found'))) => UpstreamError::ModelNotFound,
+			$status === 400 && (str_contains($lower, 'model') && (
+				str_contains($lower, 'not found')
+				|| str_contains($lower, 'does not exist')
+				|| str_contains($lower, 'invalid model')
+				|| str_contains($lower, 'not_found')
+			)) => UpstreamError::ModelNotFound,
 			$status >= 500 => UpstreamError::Unreachable,
 			default => UpstreamError::BadResponse,
 		};
@@ -118,7 +129,10 @@ abstract class HttpProvider implements ProviderInterface {
 	 */
 	protected static function unsupportedParam(string $raw, array $params): ?string {
 		$lower = strtolower($raw);
-		if (!preg_match('/unsupported|not supported|unrecognized|unknown|not allowed|not permitted|extra inputs|invalid/', $lower)) {
+		if (!preg_match(
+			'/unsupported|not supported|unrecognized|unknown|not allowed|not permitted|extra inputs|invalid/',
+			$lower,
+		)) {
 			return null;
 		}
 		foreach ($params as $param) {

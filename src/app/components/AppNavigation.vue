@@ -45,7 +45,10 @@
 						:name="opponentName(g)"
 						:to="`/game/${g.id}`">
 						<template #icon>
-							<NcAvatar :user="otherPlayer(g)?.userId ?? undefined" :displayName="opponentName(g)" :size="24" />
+							<NcAvatar
+								:user="otherPlayer(g)?.userId ?? undefined"
+								:displayName="opponentName(g)"
+								:size="24" />
 						</template>
 						<template #counter>
 							<NcCounterBubble :count="1" active />
@@ -60,7 +63,10 @@
 						:name="opponentName(g)"
 						:to="`/game/${g.id}`">
 						<template #icon>
-							<NcAvatar :user="otherPlayer(g)?.userId ?? undefined" :displayName="opponentName(g)" :size="24" />
+							<NcAvatar
+								:user="otherPlayer(g)?.userId ?? undefined"
+								:displayName="opponentName(g)"
+								:size="24" />
 						</template>
 					</NcAppNavigationItem>
 				</template>
@@ -73,7 +79,10 @@
 						:name="opponentName(g)"
 						:to="`/game/${g.id}`">
 						<template #icon>
-							<NcAvatar :user="otherPlayer(g)?.userId ?? undefined" :displayName="opponentName(g)" :size="24" />
+							<NcAvatar
+								:user="otherPlayer(g)?.userId ?? undefined"
+								:displayName="opponentName(g)"
+								:size="24" />
 						</template>
 					</NcAppNavigationItem>
 				</template>

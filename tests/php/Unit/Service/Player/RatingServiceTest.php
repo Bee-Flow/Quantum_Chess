@@ -63,7 +63,10 @@ final class RatingServiceTest extends TestCase {
 		$this->assertSame(1287, $bob->getRating());
 		$this->assertSame([26, -13], [$game->getRatingWDelta(), $game->getRatingBDelta()]);
 		$this->assertSame([1200, 1300], [$game->getRatingWBefore(), $game->getRatingBBefore()]);
-		$this->assertSame([1, 0, 1, 1], [$alice->getWins(), $alice->getLosses(), $alice->getGames(), $alice->getRatedGames()]);
+		$this->assertSame(
+			[1, 0, 1, 1],
+			[$alice->getWins(), $alice->getLosses(), $alice->getGames(), $alice->getRatedGames()],
+		);
 		$this->assertSame([0, 1, 13], [$bob->getWins(), $bob->getLosses(), $bob->getRatedGames()]);
 		$this->assertSame(1226, $alice->getPeak());
 		$this->assertSame(['insert alice', 'lock alice', 'lock bob', 'update alice', 'update bob'], $calls);
@@ -78,7 +81,11 @@ final class RatingServiceTest extends TestCase {
 		$game->setResult('1-0');
 		$service->applyResult($game);
 		$this->assertSame(['lock alice', 'lock bob', 'update alice', 'update bob'], $calls);
-		$this->assertSame([1, 2, 13], [$bob->getWins(), $bob->getGames(), $bob->getRatedGames()], 'unrated: counts only');
+		$this->assertSame(
+			[1, 2, 13],
+			[$bob->getWins(), $bob->getGames(), $bob->getRatedGames()],
+			'unrated: counts only',
+		);
 	}
 
 	/**
@@ -92,17 +99,19 @@ final class RatingServiceTest extends TestCase {
 		$mapper->method('findByUid')->willReturnCallback(function (string $uid) use (&$rows) {
 			return $rows[$uid] ?? null;
 		});
-		$mapper->method('insertIfMissing')->willReturnCallback(function (string $uid, int $start, int $now) use (&$rows, &$calls): void {
-			$calls[] = 'insert ' . $uid;
-			if (!isset($rows[$uid])) {
-				$row = new Rating();
-				$row->setUid($uid);
-				$row->setRating($start);
-				$row->setPeak($start);
-				$row->setUpdatedAt($now);
-				$rows[$uid] = $row;
-			}
-		});
+		$mapper->method('insertIfMissing')->willReturnCallback(
+			function (string $uid, int $start, int $now) use (&$rows, &$calls): void {
+				$calls[] = 'insert ' . $uid;
+				if (!isset($rows[$uid])) {
+					$row = new Rating();
+					$row->setUid($uid);
+					$row->setRating($start);
+					$row->setPeak($start);
+					$row->setUpdatedAt($now);
+					$rows[$uid] = $row;
+				}
+			},
+		);
 		$mapper->method('lock')->willReturnCallback(function (string $uid) use (&$calls): void {
 			$calls[] = 'lock ' . $uid;
 		});
@@ -117,7 +126,11 @@ final class RatingServiceTest extends TestCase {
 		$rows = [];
 		$calls = [];
 		$mapper = $this->ratingMapper($rows, $calls);
-		$service = new RatingService($mapper, $this->createMock(GameMapper::class), $this->createMock(ITimeFactory::class));
+		$service = new RatingService(
+			$mapper,
+			$this->createMock(GameMapper::class),
+			$this->createMock(ITimeFactory::class),
+		);
 		$game = new Game();
 		$game->setWhiteUid('alice');
 		$game->setBlackUid('bob');
@@ -125,7 +138,10 @@ final class RatingServiceTest extends TestCase {
 		$game->setRated(0);
 		$game->setResult('1/2-1/2');
 		$service->applyResult($game);
-		$this->assertSame([1200, 1, 0], [$rows['alice']->getRating(), $rows['alice']->getDraws(), $rows['alice']->getRatedGames()]);
+		$this->assertSame(
+			[1200, 1, 0],
+			[$rows['alice']->getRating(), $rows['alice']->getDraws(), $rows['alice']->getRatedGames()],
+		);
 		$this->assertNull($game->getRatingWDelta());
 	}
 }

@@ -22,15 +22,28 @@ final class GameTest extends TestCase {
 	public function testPlayers(): void {
 		$game = GameBuilder::active();
 		$this->assertSame(['w', 'b', null], [$game->colorOf('alice'), $game->colorOf('bob'), $game->colorOf('carol')]);
-		$this->assertSame(['bob', 'alice', null], [$game->opponentOf('alice'), $game->opponentOf('bob'), $game->opponentOf('carol')]);
-		$this->assertSame([true, false, false], [$game->isParticipant('alice'), $game->isParticipant('carol'), $game->isParticipant('')]);
+		$this->assertSame(
+			['bob', 'alice', null],
+			[$game->opponentOf('alice'), $game->opponentOf('bob'), $game->opponentOf('carol')],
+		);
+		$this->assertSame(
+			[true, false, false],
+			[$game->isParticipant('alice'), $game->isParticipant('carol'), $game->isParticipant('')],
+		);
 		$invitation = GameBuilder::pending();
-		$this->assertSame([null, 'bob', 'alice'], [$invitation->colorOf('alice'), $invitation->opponentOf('alice'), $invitation->opponentOf('bob')]);
+		$this->assertSame(
+			[null, 'bob', 'alice'],
+			[$invitation->colorOf('alice'), $invitation->opponentOf('alice'), $invitation->opponentOf('bob')],
+		);
 		$this->assertSame(['b', 'w'], [Game::otherColor('w'), Game::otherColor('b')]);
 	}
 
 	public function testStatus(): void {
-		$this->assertSame([true, true, false], [GameBuilder::pending()->isAwaitingOpponent(), GameBuilder::open()->isAwaitingOpponent(), GameBuilder::active()->isAwaitingOpponent()]);
+		$this->assertSame([true, true, false], [
+			GameBuilder::pending()->isAwaitingOpponent(),
+			GameBuilder::open()->isAwaitingOpponent(),
+			GameBuilder::active()->isAwaitingOpponent(),
+		]);
 		$this->assertSame([true, true, false, false], [
 			GameBuilder::finished()->hasEnded(),
 			GameBuilder::finished(['status' => Game::STATUS_ABORTED])->hasEnded(),

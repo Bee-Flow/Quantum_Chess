@@ -28,7 +28,8 @@ test.describe('AI opponent', () => {
 	})
 
 	test.afterAll(async () => {
-		await api('bob', 'PUT', 'api/settings/personal', { provider: null, apiKey: '', defaultSource: null }).catch(() => {})
+		await api('bob', 'PUT', 'api/settings/personal', { provider: null, apiKey: '', defaultSource: null })
+			.catch(() => {})
 		if (adminBefore) {
 			await api('admin', 'PUT', 'api/settings/admin', {
 				local_allowlist: adminBefore.local_allowlist,

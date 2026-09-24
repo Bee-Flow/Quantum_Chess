@@ -108,7 +108,10 @@ const props = defineProps({
 
 const emit = defineEmits(['squareClick'])
 
-const theme = computed(() => resolveBoardTheme(props.boardTheme ?? boardPrefs.boardTheme, { highContrast: isHighContrast() }))
+const theme = computed(() => resolveBoardTheme(
+	props.boardTheme ?? boardPrefs.boardTheme,
+	{ highContrast: isHighContrast() },
+))
 const set = computed(() => props.pieceSet ?? boardPrefs.pieceSet)
 const ariaLabel = computed(() => props.label ?? t('quantumchess', 'Board preview'))
 

@@ -41,7 +41,10 @@ class RatingMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')->from(self::TABLE)
 			->where($qb->expr()->gte('rated_games', $qb->createNamedParameter($minGames, IQueryBuilder::PARAM_INT)))
-			->andWhere($qb->expr()->gte('last_rated_at', $qb->createNamedParameter($activeSince, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->gte(
+				'last_rated_at',
+				$qb->createNamedParameter($activeSince, IQueryBuilder::PARAM_INT),
+			))
 			->orderBy('rating', 'DESC')->addOrderBy('rated_games', 'DESC')
 			->setMaxResults(1000);
 		return $this->findEntities($qb);
@@ -52,7 +55,12 @@ class RatingMapper extends QBMapper {
 	 * error (INSERT … ON CONFLICT DO NOTHING / INSERT IGNORE), so it never aborts the caller's transaction.
 	 */
 	public function insertIfMissing(string $uid, int $start, int $now): void {
-		$this->db->insertIgnoreConflict(self::TABLE, ['uid' => $uid, 'rating' => $start, 'peak' => $start, 'updated_at' => $now]);
+		$this->db->insertIgnoreConflict(self::TABLE, [
+			'uid' => $uid,
+			'rating' => $start,
+			'peak' => $start,
+			'updated_at' => $now,
+		]);
 	}
 
 	/**

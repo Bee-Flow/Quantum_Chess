@@ -98,7 +98,9 @@ export function loadStoredChain(id) {
 	try {
 		const all = readJson(CHAIN_STORAGE_KEY, {}) ?? {}
 		const entry = all[String(id)]
-		return Array.isArray(entry) && Number.isInteger(entry[0]) && typeof entry[1] === 'string' ? { ply: entry[0], chain: entry[1] } : null
+		return Array.isArray(entry) && Number.isInteger(entry[0]) && typeof entry[1] === 'string'
+			? { ply: entry[0], chain: entry[1] }
+			: null
 	} catch {
 		return null
 	}
@@ -146,7 +148,12 @@ export function verifyGame(game) {
 			alteredPly = dto.ply
 			break
 		}
-		steps.push({ before: states[states.length - 1], after: applied.state, move: applied.move, measurement: applied.measurement })
+		steps.push({
+			before: states[states.length - 1],
+			after: applied.state,
+			move: applied.move,
+			measurement: applied.measurement,
+		})
 		states.push(applied.state)
 		if (!sameMeasurement(dto, applied) && alteredPly === null) {
 			alteredPly = dto.ply

@@ -30,7 +30,10 @@ final class PropertyTest extends TestCase {
 		['fen' => 'r3k3/1P6/8/8/8/8/6p1/4K2R w Kq - 0 1', 'prelude' => []],
 		['fen' => '4k3/8/8/2n1b3/8/8/8/2N1K1B1 w - - 0 1', 'prelude' => []],
 		['fen' => '7k/5ppp/8/8/8/8/5PPP/R6K w - - 0 1', 'prelude' => []],
-		['fen' => 'r3k2r/pppq1ppp/2n1bn2/3pp3/3PP3/2N1BN2/PPPQ1PPP/R3K2R w - - 0 1', 'prelude' => ['c3-a4|b5', 'e3-g5|h6', 'd2-c1|e2', 'c6-a5|b4', 'e6-g4|h3', 'd7-c8|e7']],
+		[
+			'fen' => 'r3k2r/pppq1ppp/2n1bn2/3pp3/3PP3/2N1BN2/PPPQ1PPP/R3K2R w - - 0 1',
+			'prelude' => ['c3-a4|b5', 'e3-g5|h6', 'd2-c1|e2', 'c6-a5|b4', 'e6-g4|h3', 'd7-c8|e7'],
+		],
 	];
 
 	private int $rng = 1;
@@ -122,7 +125,8 @@ final class PropertyTest extends TestCase {
 		}
 		foreach ($moves as $m) {
 			foreach ($e->getOutcomes($state, $m['code']) as $o) {
-				if ($o['state']['result'] !== null || $e->kingDanger($o['state'], (string)$state['turn']) !== Engine::T) {
+				if ($o['state']['result'] !== null
+					|| $e->kingDanger($o['state'], (string)$state['turn']) !== Engine::T) {
 					return false;
 				}
 			}
@@ -162,7 +166,15 @@ final class PropertyTest extends TestCase {
 		$this->rng = $seed * 2654435761 % 4294967296 ?: 1;
 		$e = new Engine();
 		$other = new Engine();
-		$counts = ['plies' => 0, 'rolled' => 0, 'splits' => 0, 'merges' => 0, 'measures' => 0, 'danger' => 0, 'trapped' => 0];
+		$counts = [
+			'plies' => 0,
+			'rolled' => 0,
+			'splits' => 0,
+			'merges' => 0,
+			'measures' => 0,
+			'danger' => 0,
+			'trapped' => 0,
+		];
 		$results = [];
 		for ($g = 0; $g < $games; $g++) {
 			$s = $e->setupPosition(self::STARTS[$g % count(self::STARTS)]);
@@ -182,7 +194,11 @@ final class PropertyTest extends TestCase {
 				$this->assertSame($after, $other->serializeState($again['state']), 'not deterministic' . $where);
 				$this->assertSame($r['measurement'], $again['measurement'], 'record not deterministic' . $where);
 				// I1–I12 and canonical bytes.
-				$this->assertSame($after, $e->serializeState($e->validateState($after)), 'invalid or not canonical' . $where);
+				$this->assertSame(
+					$after,
+					$e->serializeState($e->validateState($after)),
+					'invalid or not canonical' . $where,
+				);
 				$this->assertSame(Engine::T, array_sum(array_column($r['state']['worlds'], 1)), 'sum' . $where);
 				$this->assertLessThanOrEqual(64, count($r['state']['worlds']), 'worlds' . $where);
 				// Budgets: both ≤ 8, the mover's opponent never gains.
@@ -190,7 +206,11 @@ final class PropertyTest extends TestCase {
 				$opp = $mover === 'w' ? 'b' : 'w';
 				$this->assertLessThanOrEqual(8, $e->budget($r['state'], 'w'), 'budget' . $where);
 				$this->assertLessThanOrEqual(8, $e->budget($r['state'], 'b'), 'budget' . $where);
-				$this->assertLessThanOrEqual($e->budget($s, $opp), $e->budget($r['state'], $opp), 'opponent budget grew' . $where);
+				$this->assertLessThanOrEqual(
+					$e->budget($s, $opp),
+					$e->budget($r['state'], $opp),
+					'opponent budget grew' . $where,
+				);
 				// Measurement record.
 				if ($m['resolution'] === 'rolled') {
 					$counts['rolled']++;
@@ -213,7 +233,11 @@ final class PropertyTest extends TestCase {
 					foreach ($e->getOutcomes($s, $m['code']) as $o) {
 						if ($o['key'] === $rec['key']) {
 							$found = true;
-							$this->assertSame($after, $e->serializeState($o['state']), 'getOutcomes differs from applyMove' . $where);
+							$this->assertSame(
+								$after,
+								$e->serializeState($o['state']),
+								'getOutcomes differs from applyMove' . $where,
+							);
 						}
 					}
 					$this->assertTrue($found);
@@ -225,19 +249,39 @@ final class PropertyTest extends TestCase {
 				$counts['measures'] += $m['type'] === 'measure' ? 1 : 0;
 				// Notation round trip and the win mark.
 				$text = $e->moveNotation($s, $m['code'], $r['measurement']);
-				$this->assertSame($m['code'], $e->findMove($s, $text)['code'] ?? null, 'notation does not parse back' . $where . ': ' . $text);
-				$won = $r['state']['result'] !== null && in_array($r['state']['result']['reason'], Engine::WIN_REASONS, true);
+				$this->assertSame(
+					$m['code'],
+					$e->findMove($s, $text)['code'] ?? null,
+					'notation does not parse back' . $where . ': ' . $text,
+				);
+				$won = $r['state']['result'] !== null
+					&& in_array($r['state']['result']['reason'], Engine::WIN_REASONS, true);
 				$this->assertSame($won, str_ends_with($text, ' #'), 'mark' . $where);
 				// Naive cross-checks on a sample.
-				if ($counts['plies'] % 23 === 0 && !in_array(0, $r['state']['captured'], true) && !in_array(16, $r['state']['captured'], true)) {
+				if ($counts['plies'] % 23 === 0
+					&& !in_array(0, $r['state']['captured'], true)
+					&& !in_array(16, $r['state']['captured'], true)) {
 					foreach (['w', 'b'] as $c) {
-						$this->assertSame(self::naiveDanger($e, $r['state'], $c), $e->kingDanger($r['state'], $c), 'kingDanger' . $where);
+						$this->assertSame(
+							self::naiveDanger($e, $r['state'], $c),
+							$e->kingDanger($r['state'], $c),
+							'kingDanger' . $where,
+						);
 					}
 					$counts['danger']++;
 					if ($r['state']['result'] === null) {
-						$this->assertSame(self::naiveTrapped($e, $r['state']), $e->kingTrapped($r['state']), 'kingTrapped' . $where);
+						$this->assertSame(
+							self::naiveTrapped($e, $r['state']),
+							$e->kingTrapped($r['state']),
+							'kingTrapped' . $where,
+						);
 						foreach (array_slice($e->generateMoves($r['state']), 0, 30) as $lm) {
-							$this->assertEqualsWithDelta(self::naiveRisk($e, $r['state'], $lm['code']), $e->moveRisk($r['state'], $lm['code']), 1e-12, 'moveRisk ' . $lm['code'] . $where);
+							$this->assertEqualsWithDelta(
+								self::naiveRisk($e, $r['state'], $lm['code']),
+								$e->moveRisk($r['state'], $lm['code']),
+								1e-12,
+								'moveRisk ' . $lm['code'] . $where,
+							);
 						}
 						$counts['trapped']++;
 					}

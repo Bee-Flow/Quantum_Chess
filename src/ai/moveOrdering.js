@@ -73,8 +73,8 @@ function givesCheck(feat, m, king) {
  */
 export class MoveOrderer {
 	/**
-	 * @param {{splitTargets: number, splitTypes: Set<string>}} params the search parameters: split targets kept per piece
-	 *   and the piece types that may split
+	 * @param {{splitTargets: number, splitTypes: Set<string>}} params the search parameters: split targets kept per
+	 *   piece and the piece types that may split
 	 * @param {number} ignoreKing colour index (0 White, 1 Black) that does not notice danger to its own king, or −1
 	 */
 	constructor(params, ignoreKing) {
@@ -127,7 +127,12 @@ export class MoveOrderer {
 			}
 			seen.add(code)
 			const victim = vid >= 0 ? PIECE_VALUES[feat.types[vid]] : promo ? 800 : 100
-			out.push({ code, king, score: (king ? 1e6 : 0) + pa * (vid >= 0 ? feat.p[to] : 1) * victim * 10 - PIECE_VALUES[feat.types[id]] / 10 })
+			out.push({
+				code,
+				king,
+				score: (king ? 1e6 : 0) + pa * (vid >= 0 ? feat.p[to] : 1) * victim * 10
+					- PIECE_VALUES[feat.types[id]] / 10,
+			})
 			if (!promo && vid >= 0) {
 				let list = parts.get(id)
 				if (list === undefined) {
@@ -216,7 +221,11 @@ export class MoveOrderer {
 					if (!seen.has(code)) {
 						seen.add(code)
 						const king = vid === (mover === 0 ? 16 : 0)
-						out.push({ code, king, score: (king ? 2e6 : 0) + feat.p[to] * PIECE_VALUES[feat.types[vid]] * 12 })
+						out.push({
+							code,
+							king,
+							score: (king ? 2e6 : 0) + feat.p[to] * PIECE_VALUES[feat.types[vid]] * 12,
+						})
 					}
 				}
 			}
@@ -278,7 +287,8 @@ export class MoveOrderer {
 		const byType = new Map()
 		for (const m of moves) {
 			if (m.type === 'split' && top[feat.types[m.piece]] !== undefined) {
-				const s = this.targetScore(feat, m.piece, m.from[0], m.to[0]) + this.targetScore(feat, m.piece, m.from[0], m.to[1])
+				const s = this.targetScore(feat, m.piece, m.from[0], m.to[0])
+					+ this.targetScore(feat, m.piece, m.from[0], m.to[1])
 				const t = feat.types[m.piece]
 				if (!byType.has(t)) {
 					byType.set(t, [])
@@ -315,7 +325,9 @@ export class MoveOrderer {
 		const e = 1 - c
 		const threat = feat.att[e * 64 + to]
 		if (threat > 0) {
-			s -= feat.att[CHEAP + e * 64 + to] < val ? val * threat : feat.att[c * 64 + to] >= 0.5 ? 0 : val * threat * 0.5
+			s -= feat.att[CHEAP + e * 64 + to] < val
+				? val * threat
+				: feat.att[c * 64 + to] >= 0.5 ? 0 : val * threat * 0.5
 		}
 		// Attacking the enemy king zone or undefended pieces from the new square.
 		const k = feat.kingSq[e]

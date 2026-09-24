@@ -67,7 +67,12 @@ describe('analyze (coach)', () => {
 		const seen = []
 		analyze(POS.start(), { ...QUICK, onProgress: (p) => seen.push(p) })
 		expect(seen.length).toBeGreaterThan(0)
-		expect(seen[0]).toEqual({ depth: 1, E: expect.any(Number), code: expect.any(String), nodes: expect.any(Number) })
+		expect(seen[0]).toEqual({
+			depth: 1,
+			E: expect.any(Number),
+			code: expect.any(String),
+			nodes: expect.any(Number),
+		})
 	})
 })
 
@@ -134,9 +139,15 @@ describe('analyzeGame (review)', () => {
 		const legal = E.generateMoves(s).map((m) => m.code)
 		expect(legal.length).toBeGreaterThan(1)
 		// h1-g2 walks onto the rook's rank (a certain king shot); h1-g1 stays safe.
-		const g = analyzeGame({ startState: s, moves: [{ code: 'h1-g2', u: 5 }] }, { msPerPly: Infinity, nodeBudget: 2000 })
+		const g = analyzeGame(
+			{ startState: s, moves: [{ code: 'h1-g2', u: 5 }] },
+			{ msPerPly: Infinity, nodeBudget: 2000 },
+		)
 		expect(g.plies[0].allowsKingShot).toBe(true)
-		const ok = analyzeGame({ startState: s, moves: [{ code: 'h1-g1', u: 5 }] }, { msPerPly: Infinity, nodeBudget: 2000 })
+		const ok = analyzeGame(
+			{ startState: s, moves: [{ code: 'h1-g1', u: 5 }] },
+			{ msPerPly: Infinity, nodeBudget: 2000 },
+		)
 		expect(ok.plies[0].allowsKingShot).toBe(false)
 	})
 

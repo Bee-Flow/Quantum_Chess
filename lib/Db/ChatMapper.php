@@ -48,7 +48,10 @@ class ChatMapper extends QBMapper {
 		$qb->delete(self::TABLE)
 			->where($qb->expr()->eq('game_id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))
 			->andWhere($qb->expr()->eq('uid', $qb->createNamedParameter($uid)))
-			->andWhere($qb->expr()->neq('kind', $qb->createNamedParameter(ChatMessage::KIND_SYSTEM, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->neq(
+				'kind',
+				$qb->createNamedParameter(ChatMessage::KIND_SYSTEM, IQueryBuilder::PARAM_INT),
+			))
 			->executeStatement();
 	}
 }

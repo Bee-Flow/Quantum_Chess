@@ -44,7 +44,10 @@ describe('modes', () => {
 		const { input } = setup(E.initialState())
 		expect(input.modes.move.enabled).toBe(true)
 		expect(input.modes.split.enabled).toBe(true)
-		expect(input.modes.merge).toEqual({ enabled: false, reason: 'You have no ghost of a knight, bishop, rook or queen.' })
+		expect(input.modes.merge).toEqual({
+			enabled: false,
+			reason: 'You have no ghost of a knight, bishop, rook or queen.',
+		})
 		expect(input.modes.measure).toEqual({ enabled: false, reason: 'You have no ghost to measure.' })
 		expect(input.setMode('merge')).toBe(false)
 		expect(input.mode).toBe('move')
@@ -179,7 +182,8 @@ describe('split, merge and Measure flows', () => {
 		const { input, committed } = setup(w4)
 		expect(input.setMode('measure')).toBe(true)
 		expect(input.activate(sq('c4'))).toBe('select')
-		expect(input.targets.map((x) => [E.squareName(x.square), x.kind, x.probability])).toEqual([['a4', 'measure', 0.5], ['c4', 'measure', 0.5]])
+		expect(input.targets.map((x) => [E.squareName(x.square), x.kind, x.probability]))
+			.toEqual([['a4', 'measure', 0.5], ['c4', 'measure', 0.5]])
 		expect(input.previewInfo.title).toContain('Measure')
 		expect(input.activate(sq('a4'))).toBe('committed')
 		expect(committed).toEqual(['?a4'])

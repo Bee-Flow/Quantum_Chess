@@ -22,25 +22,39 @@
 			<NcSettingsSection
 				:name="t('quantumchess', 'Online play')"
 				:description="t('quantumchess', 'Correspondence games between people on this Nextcloud.')">
-				<NcCheckboxRadioSwitch type="switch" :modelValue="v.mp_enabled" @update:modelValue="set('mp_enabled', $event)">
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:modelValue="v.mp_enabled"
+					@update:modelValue="set('mp_enabled', $event)">
 					{{ t('quantumchess', 'Allow online games') }}
 				</NcCheckboxRadioSwitch>
 				<div v-if="v.mp_enabled" class="qc-admin__block">
 					<div class="qc-admin__field">
-						<span class="qc-admin__caption" aria-hidden="true">{{ t('quantumchess', 'Limit online play to these groups') }}</span>
+						<span
+							class="qc-admin__caption"
+							aria-hidden="true">{{ t('quantumchess', 'Limit online play to these groups') }}</span>
 						<NcSettingsSelectGroup
 							:modelValue="v.mp_groups"
 							:label="t('quantumchess', 'Limit online play to these groups')"
 							:placeholder="t('quantumchess', 'Everyone')"
 							@update:modelValue="set('mp_groups', $event)" />
 					</div>
-					<NcCheckboxRadioSwitch type="switch" :modelValue="v.open_challenges" @update:modelValue="set('open_challenges', $event)">
+					<NcCheckboxRadioSwitch
+						type="switch"
+						:modelValue="v.open_challenges"
+						@update:modelValue="set('open_challenges', $event)">
 						{{ t('quantumchess', 'Allow open challenges') }}
 					</NcCheckboxRadioSwitch>
-					<NcCheckboxRadioSwitch type="switch" :modelValue="v.rated_enabled" @update:modelValue="set('rated_enabled', $event)">
+					<NcCheckboxRadioSwitch
+						type="switch"
+						:modelValue="v.rated_enabled"
+						@update:modelValue="set('rated_enabled', $event)">
 						{{ t('quantumchess', 'Allow rated games') }}
 					</NcCheckboxRadioSwitch>
-					<NcCheckboxRadioSwitch type="switch" :modelValue="v.chat_enabled" @update:modelValue="set('chat_enabled', $event)">
+					<NcCheckboxRadioSwitch
+						type="switch"
+						:modelValue="v.chat_enabled"
+						@update:modelValue="set('chat_enabled', $event)">
 						{{ t('quantumchess', 'Allow chat in games') }}
 					</NcCheckboxRadioSwitch>
 					<div class="qc-admin__numbers">
@@ -90,7 +104,9 @@
 							@update:modelValue="setNumber(field.key, $event)" />
 					</div>
 					<div class="qc-admin__field">
-						<span class="qc-admin__caption" aria-hidden="true">{{ t('quantumchess', 'Only list members of these groups') }}</span>
+						<span
+							class="qc-admin__caption"
+							aria-hidden="true">{{ t('quantumchess', 'Only list members of these groups') }}</span>
 						<NcSettingsSelectGroup
 							:modelValue="v.leaderboard_groups"
 							:label="t('quantumchess', 'Only list members of these groups')"
@@ -103,18 +119,28 @@
 			<NcSettingsSection
 				:name="t('quantumchess', 'Nextcloud AI')"
 				:description="t('quantumchess', 'AI opponents and the coach can use the text generation provider of this Nextcloud (Nextcloud Assistant).')">
-				<NcCheckboxRadioSwitch type="switch" :modelValue="v.nc_ai_enabled" @update:modelValue="set('nc_ai_enabled', $event)">
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:modelValue="v.nc_ai_enabled"
+					@update:modelValue="set('nc_ai_enabled', $event)">
 					{{ t('quantumchess', 'Use Nextcloud AI') }}
 				</NcCheckboxRadioSwitch>
 				<NcNoteCard v-if="status.ncAi.providerName" type="success">
 					{{ t('quantumchess', 'Text generation provider: {name}', { name: status.ncAi.providerName }) }}
 					<template v-if="status.ncAi.medianLatencyMs !== null">
 						<br>
-						{{ t('quantumchess', 'Median answer time of the last tasks: {seconds} s', { seconds: Math.round(status.ncAi.medianLatencyMs / 100) / 10 }) }}
+						{{ t(
+							'quantumchess',
+							'Median answer time of the last tasks: {seconds} s',
+							{ seconds: Math.round(status.ncAi.medianLatencyMs / 100) / 10 },
+						) }}
 					</template>
 					<template v-if="status.ncAi.medianLatencyMs > 20000">
 						<br>
-						{{ t('quantumchess', 'Answers are slow. Running a dedicated TaskProcessing worker makes AI tasks start right away.') }}
+						{{ t(
+							'quantumchess',
+							'Answers are slow. Running a dedicated TaskProcessing worker makes AI tasks start right away.',
+						) }}
 					</template>
 				</NcNoteCard>
 				<NcNoteCard v-else type="warning">
@@ -125,7 +151,10 @@
 			<NcSettingsSection
 				:name="t('quantumchess', 'Organisation AI provider')"
 				:description="t('quantumchess', 'An AI service paid by your organisation that users can pick without their own key.')">
-				<NcCheckboxRadioSwitch type="switch" :modelValue="v.shared_enabled" @update:modelValue="set('shared_enabled', $event)">
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:modelValue="v.shared_enabled"
+					@update:modelValue="set('shared_enabled', $event)">
 					{{ t('quantumchess', 'Offer the organisation provider') }}
 				</NcCheckboxRadioSwitch>
 				<div class="qc-admin__block">
@@ -138,7 +167,9 @@
 						@save="saveProvider"
 						@removeKey="removeKey" />
 					<div class="qc-admin__field">
-						<span class="qc-admin__caption" aria-hidden="true">{{ t('quantumchess', 'Only for members of these groups') }}</span>
+						<span
+							class="qc-admin__caption"
+							aria-hidden="true">{{ t('quantumchess', 'Only for members of these groups') }}</span>
 						<NcSettingsSelectGroup
 							:modelValue="v.shared_groups"
 							:label="t('quantumchess', 'Only for members of these groups')"
@@ -170,10 +201,16 @@
 			<NcSettingsSection
 				:name="t('quantumchess', 'Personal keys and local servers')"
 				:description="t('quantumchess', 'Users may connect their own AI account. Local servers (like Ollama) need an exact entry in the allow-list.')">
-				<NcCheckboxRadioSwitch type="switch" :modelValue="v.allow_personal_keys" @update:modelValue="set('allow_personal_keys', $event)">
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:modelValue="v.allow_personal_keys"
+					@update:modelValue="set('allow_personal_keys', $event)">
 					{{ t('quantumchess', 'Allow users to use their own API key') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch type="switch" :modelValue="v.shared_allow_local" @update:modelValue="set('shared_allow_local', $event)">
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:modelValue="v.shared_allow_local"
+					@update:modelValue="set('shared_allow_local', $event)">
 					{{ t('quantumchess', 'The organisation provider may use a local address') }}
 				</NcCheckboxRadioSwitch>
 				<NcTextArea
@@ -200,8 +237,14 @@
 						:modelValue="String(v[field.key])"
 						@update:modelValue="setNumber(field.key, $event)" />
 				</div>
-				<NcCheckboxRadioSwitch type="switch" :modelValue="v.ai_safety_identifier" @update:modelValue="set('ai_safety_identifier', $event)">
-					{{ t('quantumchess', 'Send a pseudonymous safety identifier to the provider (never the user name)') }}
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:modelValue="v.ai_safety_identifier"
+					@update:modelValue="set('ai_safety_identifier', $event)">
+					{{ t(
+						'quantumchess',
+						'Send a pseudonymous safety identifier to the provider (never the user name)',
+					) }}
 				</NcCheckboxRadioSwitch>
 				<NcTextArea
 					v-model="notice"
@@ -263,19 +306,73 @@ const leaderboardModes = [
 
 const numberFields = computed(() => ({
 	online: [
-		{ key: 'invite_expiry_days', min: 1, max: 60, label: t('quantumchess', 'Invitation expiry (days)'), help: '1–60' },
-		{ key: 'open_expiry_days', min: 1, max: 30, label: t('quantumchess', 'Open challenge expiry (days)'), help: '1–30' },
-		{ key: 'max_active_games', min: 1, max: 200, label: t('quantumchess', 'Active games per person'), help: '1–200' },
-		{ key: 'chat_retention_days', min: 1, max: 3650, label: t('quantumchess', 'Keep chat (days)'), help: t('quantumchess', '1–3650 days after the game ends') },
-		{ key: 'purge_finished_days', min: 0, max: 3650, label: t('quantumchess', 'Delete finished games (days)'), help: t('quantumchess', '0 keeps them, otherwise 30–3650') },
+		{
+			key: 'invite_expiry_days',
+			min: 1,
+			max: 60,
+			label: t('quantumchess', 'Invitation expiry (days)'),
+			help: '1–60',
+		},
+		{
+			key: 'open_expiry_days',
+			min: 1,
+			max: 30,
+			label: t('quantumchess', 'Open challenge expiry (days)'),
+			help: '1–30',
+		},
+		{
+			key: 'max_active_games',
+			min: 1,
+			max: 200,
+			label: t('quantumchess', 'Active games per person'),
+			help: '1–200',
+		},
+		{
+			key: 'chat_retention_days',
+			min: 1,
+			max: 3650,
+			label: t('quantumchess', 'Keep chat (days)'),
+			help: t('quantumchess', '1–3650 days after the game ends'),
+		},
+		{
+			key: 'purge_finished_days',
+			min: 0,
+			max: 3650,
+			label: t('quantumchess', 'Delete finished games (days)'),
+			help: t('quantumchess', '0 keeps them, otherwise 30–3650'),
+		},
 	],
 	leaderboard: [
-		{ key: 'leaderboard_min_games', min: 1, max: 100, label: t('quantumchess', 'Rated games to be listed'), help: '1–100' },
-		{ key: 'leaderboard_active_days', min: 1, max: 3650, label: t('quantumchess', 'Listed while active (days)'), help: '1–3650' },
+		{
+			key: 'leaderboard_min_games',
+			min: 1,
+			max: 100,
+			label: t('quantumchess', 'Rated games to be listed'),
+			help: '1–100',
+		},
+		{
+			key: 'leaderboard_active_days',
+			min: 1,
+			max: 3650,
+			label: t('quantumchess', 'Listed while active (days)'),
+			help: '1–3650',
+		},
 	],
 	limits: [
-		{ key: 'ai_requests_per_hour', min: 1, max: 1000, label: t('quantumchess', 'AI requests per hour'), help: t('quantumchess', '1–1000 per person') },
-		{ key: 'ai_max_output_tokens', min: 100, max: 4000, label: t('quantumchess', 'Answer length (tokens)'), help: '100–4000' },
+		{
+			key: 'ai_requests_per_hour',
+			min: 1,
+			max: 1000,
+			label: t('quantumchess', 'AI requests per hour'),
+			help: t('quantumchess', '1–1000 per person'),
+		},
+		{
+			key: 'ai_max_output_tokens',
+			min: 100,
+			max: 4000,
+			label: t('quantumchess', 'Answer length (tokens)'),
+			help: '100–4000',
+		},
 	],
 }))
 
@@ -284,8 +381,18 @@ const diagnosticRows = computed(() => {
 	return [
 		{ label: t('quantumchess', 'Active games'), value: d.activeGames },
 		{ label: t('quantumchess', 'Games finished today'), value: d.finishedToday },
-		{ label: t('quantumchess', 'AI requests today'), value: t('quantumchess', 'Nextcloud AI {nextcloud} · organisation {shared} · personal keys {personal}', d.aiRequestsToday ?? {}) },
-		{ label: t('quantumchess', 'Distributed cache'), value: d.distributedCache ? t('quantumchess', 'Available') : t('quantumchess', 'Not configured') },
+		{
+			label: t('quantumchess', 'AI requests today'),
+			value: t(
+				'quantumchess',
+				'Nextcloud AI {nextcloud} · organisation {shared} · personal keys {personal}',
+				d.aiRequestsToday ?? {},
+			),
+		},
+		{
+			label: t('quantumchess', 'Distributed cache'),
+			value: d.distributedCache ? t('quantumchess', 'Available') : t('quantumchess', 'Not configured'),
+		},
 		{ label: t('quantumchess', 'Background jobs'), value: d.backgroundJobMode },
 	]
 })

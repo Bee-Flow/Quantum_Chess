@@ -38,7 +38,8 @@ export async function openApp(page, route = '', { ready = APP_ROOT } = {}) {
 export function waitForSave(page, route, matches = () => true) {
 	return page.waitForResponse((response) => {
 		const request = response.request()
-		if (request.method() !== 'PUT' || !new URL(response.url()).pathname.endsWith(`/apps/quantumchess/api${route}`)) {
+		if (request.method() !== 'PUT'
+			|| !new URL(response.url()).pathname.endsWith(`/apps/quantumchess/api${route}`)) {
 			return false
 		}
 		try {
@@ -57,5 +58,7 @@ export function waitForSave(page, route, matches = () => true) {
  * @return {import('@playwright/test').Locator}
  */
 export function appMenuIcon(page) {
-	return page.locator('header img[src*="quantumchess/img/app.svg"], header [style*="quantumchess/img/app.svg"]').first()
+	return page
+		.locator('header img[src*="quantumchess/img/app.svg"], header [style*="quantumchess/img/app.svg"]')
+		.first()
 }

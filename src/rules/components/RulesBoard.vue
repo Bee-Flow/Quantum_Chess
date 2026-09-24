@@ -63,7 +63,11 @@ const outcomes = move
 	? getOutcomes(before, move.code).map((o) => ({
 			key: o.key,
 			state: o.state,
-			label: ['miss', 'move', 'capture'].includes(o.key) ? outcomeLabel(o.key) : (o.key === 'certain' || o.key === 'quantum' ? '' : t('quantumchess', 'On {square}', { square: o.key })),
+			label: ['miss', 'move', 'capture'].includes(o.key)
+				? outcomeLabel(o.key)
+				: (o.key === 'certain' || o.key === 'quantum'
+						? ''
+						: t('quantumchess', 'On {square}', { square: o.key })),
 			percent: formatProbability(o.probability),
 		}))
 	: []
@@ -72,7 +76,9 @@ const after = computed(() => outcomes.find((o) => o.key === chosen.value)?.state
 const arrows = move ? move.to.map((to) => ({ from: move.from[0], to, kind: 'played' })) : []
 const afterLabel = computed(() => {
 	const o = outcomes.find((x) => x.key === chosen.value)
-	return o?.label ? t('quantumchess', 'After the move: {result}', { result: o.label }) : t('quantumchess', 'After the move')
+	return o?.label
+		? t('quantumchess', 'After the move: {result}', { result: o.label })
+		: t('quantumchess', 'After the move')
 })
 </script>
 

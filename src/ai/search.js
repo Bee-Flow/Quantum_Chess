@@ -247,7 +247,8 @@ export class Searcher {
 			}
 			// Analysis (usePartial off) always completes the first iteration, so that every root move gets a value; a
 			// move choice may stop inside it once at least one move has one.
-			if (t >= this.deadline && (this.depth > 0 || (this.usePartial && this.iter !== null && this.iter.index > 0))) {
+			if (t >= this.deadline
+				&& (this.depth > 0 || (this.usePartial && this.iter !== null && this.iter.index > 0))) {
 				if (!this.extended && this.extendTo > this.deadline && this.unstable()) {
 					this.extended = true
 					this.deadline = this.extendTo
@@ -268,7 +269,8 @@ export class Searcher {
 			return false
 		}
 		const first = this.root[0]
-		return first.depth === this.iter.depth && first.prevValue !== undefined && first.value < first.prevValue - INSTABILITY_MARGIN
+		return first.depth === this.iter.depth && first.prevValue !== undefined
+			&& first.value < first.prevValue - INSTABILITY_MARGIN
 	}
 
 	/**
@@ -534,7 +536,9 @@ export class Searcher {
 				if (o.state === null) {
 					o.state = applyForSearch(state, move, o.key)
 				}
-				const u = o.state.result !== null ? 1 - terminalValue(o.state, ply + 1) : 1 - this.probe(o.state, depth - 1, ply + 1)
+				const u = o.state.result !== null
+					? 1 - terminalValue(o.state, ply + 1)
+					: 1 - this.probe(o.state, depth - 1, ply + 1)
 				upper[i] = u
 				upperSum += (o.weight / T) * u
 			}
@@ -721,7 +725,9 @@ export class Searcher {
 		const qDepth = -qd / 16
 		const entry = this.tt.get(hash)
 		if (entry !== undefined && entry.depth >= qDepth) {
-			if (entry.flag === EXACT || (entry.flag === LOWER && entry.value >= beta) || (entry.flag === UPPER && entry.value <= alpha)) {
+			if (entry.flag === EXACT
+				|| (entry.flag === LOWER && entry.value >= beta)
+				|| (entry.flag === UPPER && entry.value <= alpha)) {
 				return entry.value
 			}
 		}
@@ -891,7 +897,12 @@ export class Searcher {
 			exact: e.exact,
 			depth: e.depth,
 			outcomes: e.children.length > 1 || e.move.resolution === 'rolled'
-				? e.children.map((c) => ({ key: c.key, weight: c.weight, value: c.value === null ? null : cleanValue(c.value), E: c.value === null ? null : this.toWhite(cleanValue(c.value)) }))
+				? e.children.map((c) => ({
+						key: c.key,
+						weight: c.weight,
+						value: c.value === null ? null : cleanValue(c.value),
+						E: c.value === null ? null : this.toWhite(cleanValue(c.value)),
+					}))
 				: null,
 		}))
 		const best = this.root[0]

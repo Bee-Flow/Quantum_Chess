@@ -15,7 +15,10 @@ const MIDGAME = E.setupPosition({
 	fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 0 1',
 	prelude: ['f3-g5|h4', 'c4-b5|d5', 'd1-d2|e2', 'f6-g4|h5', 'c6-a5|b4', 'd8-e7|f6'],
 })
-const OPEN = E.setupPosition({ fen: '3qk2r/pp3ppp/8/8/8/8/PP3PPP/R2QK2R w - - 0 1', prelude: ['d1-d4|g4', 'a1-b1|c1', 'd8-d5|a5', 'h8-g8|f8'] })
+const OPEN = E.setupPosition({
+	fen: '3qk2r/pp3ppp/8/8/8/8/PP3PPP/R2QK2R w - - 0 1',
+	prelude: ['d1-d4|g4', 'a1-b1|c1', 'd8-d5|a5', 'h8-g8|f8'],
+})
 const MID_JSON = JSON.stringify(MIDGAME)
 const OPEN_JSON = JSON.stringify(OPEN)
 const MID_MOVES = E.generateMoves(MIDGAME).map((m) => m.code)

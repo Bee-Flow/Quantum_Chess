@@ -62,14 +62,21 @@ class MoveDescriber {
 		}
 		if (preg_match('/^([KQRBN]?)([a-h][1-8])-([a-h][1-8])\|([a-h][1-8])/', $head, $m)) {
 			// Translations may not contain a pipe character, so the two targets are one parameter.
-			return $l->t('They split their %1$s: %2$s → %3$s', [self::pieceName($l, $m[1] === '' ? 'p' : $m[1]), $m[2], $m[3] . ' | ' . $m[4]]);
+			return $l->t('They split their %1$s: %2$s → %3$s', [
+				self::pieceName($l, $m[1] === '' ? 'p' : $m[1]),
+				$m[2],
+				$m[3] . ' | ' . $m[4],
+			]);
 		}
 		if (preg_match('/^([KQRBN]?)([a-h][1-8])\|([a-h][1-8])([x-])([a-h][1-8])/', $head, $m)) {
 			$piece = self::pieceName($l, $m[1] === '' ? 'p' : $m[1]);
 			if ($captured !== null) {
 				return $pct === null
 					? $l->t('They merged their %1$s on %2$s and captured your %3$s', [$piece, $m[5], $captured])
-					: $l->t('They merged their %1$s on %2$s and captured your %3$s (%4$d %% chance)', [$piece, $m[5], $captured, $pct]);
+					: $l->t(
+						'They merged their %1$s on %2$s and captured your %3$s (%4$d %% chance)',
+						[$piece, $m[5], $captured, $pct],
+					);
 			}
 			return $l->t('They merged their %1$s on %2$s', [$piece, $m[5]]);
 		}

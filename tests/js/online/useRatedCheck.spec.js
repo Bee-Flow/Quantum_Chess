@@ -22,7 +22,9 @@ async function settle() {
 describe('useRatedCheck', () => {
 	it('is null until an opponent is chosen, then follows the server', async () => {
 		const opponent = ref(null)
-		const checkRated = vi.fn(async (uid) => (uid === 'bob' ? { rated: true, reason: null } : { rated: false, reason: 'admin' }))
+		const checkRated = vi.fn(async (uid) => (
+			uid === 'bob' ? { rated: true, reason: null } : { rated: false, reason: 'admin' }
+		))
 		const blocked = useRatedCheck(opponent, { rated: true, checkRated })
 		expect(blocked.value).toBe(null)
 

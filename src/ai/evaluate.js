@@ -192,7 +192,8 @@ function baseCp(state) {
 				structure += sign * PASSED[rel] * (0.5 + eg)
 			}
 		} else if (files[own + file] === 0) {
-			structure += sign * p[s] * (files[(1 - c) * 8 + file] === 0 ? EVAL_WEIGHTS.rookOpen : EVAL_WEIGHTS.rookSemiOpen)
+			structure += sign * p[s]
+				* (files[(1 - c) * 8 + file] === 0 ? EVAL_WEIGHTS.rookOpen : EVAL_WEIGHTS.rookSemiOpen)
 		}
 	}
 	let bonus = 0
@@ -261,7 +262,8 @@ function baseCp(state) {
 	const m1 = th[mover * 2]
 	const o1 = th[(1 - mover) * 2]
 	const o2 = th[(1 - mover) * 2 + 1]
-	const threats = msign * (EVAL_WEIGHTS.threatMover * m1 - EVAL_WEIGHTS.threatFirst * o1 - EVAL_WEIGHTS.threatSecond * o2)
+	const threats = msign
+		* (EVAL_WEIGHTS.threatMover * m1 - EVAL_WEIGHTS.threatFirst * o1 - EVAL_WEIGHTS.threatSecond * o2)
 	const mobility = feat.mobility[0] - feat.mobility[1]
 	const tempo = msign * EVAL_WEIGHTS.tempo
 	feat.base = mat0 - mat1 + pst + structure + bonus + kings + mop + quantum + threats + mobility + tempo

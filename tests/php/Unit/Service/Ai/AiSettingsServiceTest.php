@@ -36,15 +36,24 @@ final class AiSettingsServiceTest extends TestCase {
 	public function testPersonalSettings(): void {
 		$ai = $this->aiSettings();
 		try {
-			$ai->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'http://127.0.0.1:9000/v1', 'model' => 'm']]);
+			$ai->setPersonal('bob', [
+				'provider' => ['preset' => 'custom', 'baseUrl' => 'http://127.0.0.1:9000/v1', 'model' => 'm'],
+			]);
 			$this->fail('local refused');
 		} catch (ApiException $e) {
 			$this->assertSame(['url_not_allowed', 'provider'], [$e->getErrorCode(), $e->getExtra()['field']]);
 		}
 		$this->settings()->setAdmin(['local_allowlist' => ['http://127.0.0.1:9000/v1']]);
-		$personal = $ai->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'http://127.0.0.1:9000/v1/', 'model' => 'm'], 'apiKey' => 'sk-local-9999', 'defaultSource' => 'personal']);
+		$personal = $ai->setPersonal('bob', [
+			'provider' => ['preset' => 'custom', 'baseUrl' => 'http://127.0.0.1:9000/v1/', 'model' => 'm'],
+			'apiKey' => 'sk-local-9999',
+			'defaultSource' => 'personal',
+		]);
 		$this->assertSame('http://127.0.0.1:9000/v1', $personal['provider']['baseUrl']);
-		$this->assertSame([true, '9999', 'personal'], [$personal['hasKey'], $personal['keyHint'], $personal['defaultSource']]);
+		$this->assertSame(
+			[true, '9999', 'personal'],
+			[$personal['hasKey'], $personal['keyHint'], $personal['defaultSource']],
+		);
 		$this->assertStringNotContainsString('sk-local-9999', json_encode($personal));
 		$personal = $ai->setPersonal('bob', ['apiKey' => null]);
 		$this->assertTrue($personal['hasKey'], 'null keeps the key');
@@ -62,17 +71,31 @@ final class AiSettingsServiceTest extends TestCase {
 
 	public function testAPersonalKeyStaysWithItsAddress(): void {
 		$ai = $this->aiSettings();
-		$ai->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'm'], 'apiKey' => 'sk-bob-PRIVATE-99']);
-		$this->assertTrue($ai->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'x']])['hasKey']);
-		$this->assertFalse($ai->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'https://other.example.com/v1', 'model' => 'x']])['hasKey']);
-		$personal = $ai->setPersonal('bob', ['provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'x'], 'apiKey' => 'sk-bob-PRIVATE-99']);
+		$ai->setPersonal('bob', [
+			'provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'm'],
+			'apiKey' => 'sk-bob-PRIVATE-99',
+		]);
+		$this->assertTrue($ai->setPersonal('bob', [
+			'provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'x'],
+		])['hasKey']);
+		$this->assertFalse($ai->setPersonal('bob', [
+			'provider' => ['preset' => 'custom', 'baseUrl' => 'https://other.example.com/v1', 'model' => 'x'],
+		])['hasKey']);
+		$personal = $ai->setPersonal('bob', [
+			'provider' => ['preset' => 'custom', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'x'],
+			'apiKey' => 'sk-bob-PRIVATE-99',
+		]);
 		$this->assertTrue($personal['hasKey'], 'a key sent with the new address is stored');
-		$this->assertSame(['preset' => 'custom', 'kind' => 'openai', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'x'], $this->user['bob']['ai_provider']);
+		$this->assertSame(
+			['preset' => 'custom', 'kind' => 'openai', 'baseUrl' => 'https://ai.example.com/v1', 'model' => 'x'],
+			$this->user['bob']['ai_provider'],
+		);
 	}
 
 	public function testPersonalOutput(): void {
 		$this->assertSame([
-			'allowPersonalKeys' => true, 'provider' => null, 'hasKey' => false, 'keyHint' => null, 'keyUnreadable' => false,
+			'allowPersonalKeys' => true, 'provider' => null,
+			'hasKey' => false, 'keyHint' => null, 'keyUnreadable' => false,
 			'defaultSource' => null, 'presets' => Presets::publicList(), 'localAllowlist' => [],
 		], $this->aiSettings()->getPersonal('bob'));
 	}
@@ -82,6 +105,10 @@ final class AiSettingsServiceTest extends TestCase {
 		$this->user['bob']['ai_notice_ack'] = ['personal', 'bogus', 'nextcloud'];
 		$this->assertSame(['nextcloud', 'personal'], $ai->noticeAcked('bob'), 'known sources, in their order');
 		$this->assertSame(['nextcloud', 'personal', 'shared'], $ai->ackNotice('bob', AiSource::Shared));
-		$this->assertSame(['nextcloud', 'shared', 'personal'], $ai->ackNotice('bob', AiSource::Shared), 'acknowledging twice stores nothing');
+		$this->assertSame(
+			['nextcloud', 'shared', 'personal'],
+			$ai->ackNotice('bob', AiSource::Shared),
+			'acknowledging twice stores nothing',
+		);
 	}
 }

@@ -60,7 +60,8 @@ class UrlGuard {
 	public function isLocal(string $normalizedUrl): bool {
 		$host = (string)parse_url($normalizedUrl, PHP_URL_HOST);
 		$host = trim($host, '[]');
-		if ($host === '' || $host === 'localhost' || str_ends_with($host, '.localhost') || str_ends_with($host, '.local')) {
+		if ($host === '' || $host === 'localhost' || str_ends_with($host, '.localhost')
+			|| str_ends_with($host, '.local')) {
 			return true;
 		}
 		if (filter_var($host, FILTER_VALIDATE_IP) !== false) {

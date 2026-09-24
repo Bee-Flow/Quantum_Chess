@@ -187,7 +187,10 @@ watch(() => anim.state.travel, async (tr) => {
 .qc-roll-ring__seg {
 	fill: none;
 	stroke-width: 0.13;
-	transition: stroke-dasharray calc(200ms * var(--qc-speed)) var(--qc-ease-io), stroke-dashoffset calc(200ms * var(--qc-speed)) var(--qc-ease-io), opacity calc(200ms * var(--qc-speed)) ease;
+	transition:
+		stroke-dasharray calc(200ms * var(--qc-speed)) var(--qc-ease-io),
+		stroke-dashoffset calc(200ms * var(--qc-speed)) var(--qc-ease-io),
+		opacity calc(200ms * var(--qc-speed)) ease;
 	animation: qc-seg-breathe 600ms ease-in-out infinite alternate;
 
 	&--capture {

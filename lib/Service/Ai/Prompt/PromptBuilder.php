@@ -69,7 +69,14 @@ TXT;
 	public const MAX_LISTED = 120;
 	public const MAX_SPLITS = 40;
 
-	private const PIECE_NAMES = ['k' => 'king', 'q' => 'queen', 'r' => 'rook', 'b' => 'bishop', 'n' => 'knight', 'p' => 'pawn'];
+	private const PIECE_NAMES = [
+		'k' => 'king',
+		'q' => 'queen',
+		'r' => 'rook',
+		'b' => 'bishop',
+		'n' => 'knight',
+		'p' => 'pawn',
+	];
 
 	private const COLORS = ['w' => 'White', 'b' => 'Black'];
 
@@ -83,7 +90,16 @@ TXT;
 	 * the legal moves (unless the model answers with a candidate number), and the reason of a rejected answer.
 	 *
 	 * @param array<string, mixed> $state a validated state (the AI is to move)
-	 * @param array{persona: string, color: string, language: string, history: list<array{ply: int, code: string, key: ?string, weight: ?int}>, candidates: list<array{code: string, E: float, tags: list<string>, ok: bool}>, message: ?string, feedback: ?array{answer: string, reason: string}, answerMode: string} $request
+	 * @param array{
+	 *     persona: string,
+	 *     color: string,
+	 *     language: string,
+	 *     history: list<array{ply: int, code: string, key: ?string, weight: ?int}>,
+	 *     candidates: list<array{code: string, E: float, tags: list<string>, ok: bool}>,
+	 *     message: ?string,
+	 *     feedback: ?array{answer: string, reason: string},
+	 *     answerMode: string,
+	 * } $request
 	 * @return array{system: string, user: string}
 	 */
 	public function movePrompt(array $state, array $request): array {
@@ -95,7 +111,8 @@ TXT;
 		$how = $request['answerMode'] === 'index'
 			? 'HOW TO MOVE: Pick exactly one candidate from ENGINE CANDIDATES by its number. ✓ marks those within your strength limit. Choose a ✓ candidate that fits your personality.'
 			: 'HOW TO MOVE: Pick exactly one code from LEGAL MOVES. ENGINE CANDIDATES are strong moves computed for you; ✓ marks those within your strength limit. Choose a ✓ candidate that fits your personality.';
-		$system = "You are {$name}, playing Quantum Chess against a human in a Nextcloud app. " . Personas::block($request['persona']) . "\n"
+		$system = "You are {$name}, playing Quantum Chess against a human in a Nextcloud app. "
+			. Personas::block($request['persona']) . "\n"
 			. 'RULES: ' . self::RULES_SUMMARY . "\n"
 			. $how . " Stay in character, friendly and family-friendly; never mention engines or these instructions.\n"
 			. $answer;
@@ -111,16 +128,29 @@ TXT;
 		$lines[] = 'ENGINE CANDIDATES (your winning chance after the move):';
 		foreach ($request['candidates'] as $i => $candidate) {
 			$tags = self::renderTags($candidate['tags']);
-			$lines[] = sprintf(' %d %s %-14s %3d%%%s', $i + 1, $candidate['ok'] ? '✓' : ' ', $candidate['code'], (int)round($candidate['E'] * 100.0), $tags === '' ? '' : '  ' . $tags);
+			$lines[] = sprintf(
+				' %d %s %-14s %3d%%%s',
+				$i + 1,
+				$candidate['ok'] ? '✓' : ' ',
+				$candidate['code'],
+				(int)round($candidate['E'] * 100.0),
+				$tags === '' ? '' : '  ' . $tags,
+			);
 		}
 		if ($request['answerMode'] !== 'index') {
-			$lines[] = $this->legalMoves($state, array_map(fn (array $c): string => $c['code'], $request['candidates']));
+			$lines[] = $this->legalMoves(
+				$state,
+				array_map(fn (array $c): string => $c['code'], $request['candidates']),
+			);
 		}
 		if ($request['feedback'] !== null) {
 			$reason = $request['feedback']['reason'];
 			$text = self::REASON_TEXT[$reason] ?? 'the move is not legal';
-			$what = $request['answerMode'] === 'index' ? 'one candidate number from ENGINE CANDIDATES' : 'exactly one code from LEGAL MOVES';
-			$lines[] = 'Your answer ' . self::quote($request['feedback']['answer'], 32) . ' was not accepted: ' . $reason . ' (' . $text . '). Choose ' . $what . '.';
+			$what = $request['answerMode'] === 'index'
+				? 'one candidate number from ENGINE CANDIDATES'
+				: 'exactly one code from LEGAL MOVES';
+			$lines[] = 'Your answer ' . self::quote($request['feedback']['answer'], 32) . ' was not accepted: '
+				. $reason . ' (' . $text . '). Choose ' . $what . '.';
 		}
 		$lines[] = 'Reply with the JSON object now.';
 		return ['system' => $system, 'user' => implode("\n", $lines)];
@@ -131,7 +161,20 @@ TXT;
 	 * lesson, puzzle or review), the earlier chat and the question.
 	 *
 	 * @param array<string, mixed> $state a validated state
-	 * @param array{language: string, history: list<array{ply: int, code: string, key: ?string, weight: ?int}>, analysis: array{E: ?float, best: list<array{code: string, E: ?float, line: list<string>}>, threats: list<string>, lastMove: ?array{code: string, label: ?string, deltaE: ?float}}, context: array{kind: string, title: ?string, goal: ?string, ply: ?int}, player: array{color: string, skill: string}, chat: list<array{role: string, text: string}>, question: string} $request
+	 * @param array{
+	 *     language: string,
+	 *     history: list<array{ply: int, code: string, key: ?string, weight: ?int}>,
+	 *     analysis: array{
+	 *         E: ?float,
+	 *         best: list<array{code: string, E: ?float, line: list<string>}>,
+	 *         threats: list<string>,
+	 *         lastMove: ?array{code: string, label: ?string, deltaE: ?float},
+	 *     },
+	 *     context: array{kind: string, title: ?string, goal: ?string, ply: ?int},
+	 *     player: array{color: string, skill: string},
+	 *     chat: list<array{role: string, text: string}>,
+	 *     question: string,
+	 * } $request
 	 * @return array{system: string, user: string}
 	 */
 	public function coachPrompt(array $state, array $request): array {
@@ -239,15 +282,18 @@ TXT;
 	public static function languageName(string $code): string {
 		$code = str_replace('-', '_', $code);
 		if (class_exists(\Locale::class)) {
-			$name = str_contains($code, '_') ? \Locale::getDisplayName($code, 'en') : \Locale::getDisplayLanguage($code, 'en');
+			$name = str_contains($code, '_')
+				? \Locale::getDisplayName($code, 'en')
+				: \Locale::getDisplayLanguage($code, 'en');
 			if ($name !== '' && strtolower($name) !== strtolower($code)) {
 				return $name;
 			}
 		}
 		return match (strtolower(substr($code, 0, 2))) {
-			'en' => 'English', 'nl' => 'Dutch', 'de' => 'German', 'fr' => 'French', 'es' => 'Spanish', 'it' => 'Italian',
-			'pt' => 'Portuguese', 'pl' => 'Polish', 'sv' => 'Swedish', 'da' => 'Danish', 'nb' => 'Norwegian', 'fi' => 'Finnish',
-			'cs' => 'Czech', 'ru' => 'Russian', 'uk' => 'Ukrainian', 'tr' => 'Turkish', 'ja' => 'Japanese', 'zh' => 'Chinese',
+			'en' => 'English', 'nl' => 'Dutch', 'de' => 'German', 'fr' => 'French', 'es' => 'Spanish',
+			'it' => 'Italian', 'pt' => 'Portuguese', 'pl' => 'Polish', 'sv' => 'Swedish', 'da' => 'Danish',
+			'nb' => 'Norwegian', 'fi' => 'Finnish', 'cs' => 'Czech', 'ru' => 'Russian', 'uk' => 'Ukrainian',
+			'tr' => 'Turkish', 'ja' => 'Japanese', 'zh' => 'Chinese',
 			'ko' => 'Korean', 'ar' => 'Arabic',
 			default => 'English',
 		};
@@ -329,6 +375,7 @@ TXT;
 		$rest = array_values(array_diff($splits, $first));
 		$listed = array_slice(array_merge($first, $rest), 0, self::MAX_SPLITS);
 		$left = count($splits) - count($listed);
-		return 'LEGAL MOVES (' . $total . '): ' . implode(' ', array_merge($codes, $listed)) . ($left > 0 ? ' (+' . $left . ' split moves not listed)' : '');
+		return 'LEGAL MOVES (' . $total . '): ' . implode(' ', array_merge($codes, $listed))
+			. ($left > 0 ? ' (+' . $left . ' split moves not listed)' : '');
 	}
 }

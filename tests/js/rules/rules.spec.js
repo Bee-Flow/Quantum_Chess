@@ -25,7 +25,15 @@ describe('rules content', () => {
 		for (const s of RULES_SECTIONS) {
 			expect(s.title()).not.toBe('')
 			for (const b of s.blocks) {
-				const texts = [b.text, b.q, b.a, b.caption, ...(b.items ?? []), ...(b.head ?? []), ...(b.rows ?? []).flat()].filter(Boolean)
+				const texts = [
+					b.text,
+					b.q,
+					b.a,
+					b.caption,
+					...(b.items ?? []),
+					...(b.head ?? []),
+					...(b.rows ?? []).flat(),
+				].filter(Boolean)
 				expect(texts.length, s.id).toBeGreaterThan(0)
 				for (const fn of texts) {
 					expect(typeof fn()).toBe('string')

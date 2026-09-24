@@ -49,7 +49,10 @@ final class ViewsAndRecordsTest extends TestCase {
 		$this->assertSame($c['linkGroups'], $e->linkGroups($s));
 		$this->assertSame($c['kingTrapped'], $e->kingTrapped($s));
 		// Probabilities are exact dyadic doubles; JSON prints 1 and 0 without a fraction.
-		$this->assertSame(FixtureLoader::numbersAsFloats($c['squareView']), FixtureLoader::numbersAsFloats($e->squareView($s)));
+		$this->assertSame(
+			FixtureLoader::numbersAsFloats($c['squareView']),
+			FixtureLoader::numbersAsFloats($e->squareView($s)),
+		);
 		$risks = [];
 		foreach ($e->generateMoves($s) as $m) {
 			$risks[$m['code']] = $e->moveRisk($s, $m['code']);
@@ -96,7 +99,14 @@ final class ViewsAndRecordsTest extends TestCase {
 		$r = $this->engine->applyMove($w2, 'c1-h6', 8388608);
 		$json = $this->engine->serializeState($r['state']);
 		$this->assertSame('b4b4d83ee34de58f4039ea6b4a6ffe08c84f95a850b2396bc18f0d23ed6234eb', hash('sha256', $json));
-		$c1 = $this->engine->chainNext($c0, 0, 'c1-h6', $r['measurement']['u'] ?? null, $r['measurement']['key'] ?? null, $json);
+		$c1 = $this->engine->chainNext(
+			$c0,
+			0,
+			'c1-h6',
+			$r['measurement']['u'] ?? null,
+			$r['measurement']['key'] ?? null,
+			$json,
+		);
 		$this->assertSame('23c84483be0638e3765cec8a1f46c3ed84d01806ad05c3598ebd9355fa8d6608', $c1);
 	}
 
@@ -117,17 +127,44 @@ final class ViewsAndRecordsTest extends TestCase {
 		$cases = [
 			[$w2, 'move', 6227703, 'Moved [0.0000, 0.5000) · Captured [0.5000, 1.0000) · rolled 0.3712 → Moved'],
 			[$w2, 'move', 8388607, 'Moved [0.0000, 0.5000) · Captured [0.5000, 1.0000) · rolled 0.4999 → Moved'],
-			[[['key' => 'miss', 'weight' => 8388608], ['key' => 'move', 'weight' => 4194304], ['key' => 'capture', 'weight' => 4194304]], 'move', 10368000,
-				'Missed [0.0000, 0.5000) · Moved [0.5000, 0.7500) · Captured [0.7500, 1.0000) · rolled 0.6179 → Moved'],
-			[[['key' => 'miss', 'weight' => 11184811], ['key' => 'capture', 'weight' => 5592405]], 'miss', 11184810,
-				'Missed [0.00000000, 0.66666668) · Captured [0.66666668, 1.00000000) · rolled 0.66666662 → Missed'],
-			[[['key' => 'miss', 'weight' => 11184811], ['key' => 'capture', 'weight' => 5592405]], 'capture', 11184811,
-				'Missed [0.0000, 0.6666) · Captured [0.6666, 1.0000) · rolled 0.6666 → Captured'],
+			[
+				[
+					['key' => 'miss', 'weight' => 8388608],
+					['key' => 'move', 'weight' => 4194304],
+					['key' => 'capture', 'weight' => 4194304],
+				],
+				'move',
+				10368000,
+				'Missed [0.0000, 0.5000) · Moved [0.5000, 0.7500) · Captured [0.7500, 1.0000) · rolled 0.6179 → Moved',
+			],
+			[
+				[['key' => 'miss', 'weight' => 11184811], ['key' => 'capture', 'weight' => 5592405]],
+				'miss',
+				11184810,
+				'Missed [0.00000000, 0.66666668) · Captured [0.66666668, 1.00000000) · rolled 0.66666662 → Missed',
+			],
+			[
+				[['key' => 'miss', 'weight' => 11184811], ['key' => 'capture', 'weight' => 5592405]],
+				'capture',
+				11184811,
+				'Missed [0.0000, 0.6666) · Captured [0.6666, 1.0000) · rolled 0.6666 → Captured',
+			],
 			[$w2, 'capture', null, 'Moved [0.0000, 0.5000) · Captured [0.5000, 1.0000) · forced → Captured'],
-			[[['key' => 'a4', 'weight' => 8388608], ['key' => 'c4', 'weight' => 8388608]], 'c4', 9000000, 'a4 [0.0000, 0.5000) · c4 [0.5000, 1.0000) · rolled 0.5364 → c4'],
+			[
+				[['key' => 'a4', 'weight' => 8388608], ['key' => 'c4', 'weight' => 8388608]],
+				'c4',
+				9000000,
+				'a4 [0.0000, 0.5000) · c4 [0.5000, 1.0000) · rolled 0.5364 → c4',
+			],
 		];
 		foreach ($cases as [$outcomes, $key, $u, $text]) {
-			$this->assertSame($text, $this->engine->rollDisplay(['key' => $key, 'u' => $u, 'captured' => null, 'outcomes' => $outcomes, 'fallback' => false]));
+			$this->assertSame($text, $this->engine->rollDisplay([
+				'key' => $key,
+				'u' => $u,
+				'captured' => null,
+				'outcomes' => $outcomes,
+				'fallback' => false,
+			]));
 		}
 	}
 
@@ -152,15 +189,24 @@ final class ViewsAndRecordsTest extends TestCase {
 			$this->assertSame(66, strlen($this->engine->supportKey($s)), 'fits the support_key column (string 66)');
 		}
 		$start = $this->engine->initialState();
-		$this->assertSame('w|RNBQKBNRPPPPPPPP................................pppppppprnbqkbnr', $this->engine->supportKey($start));
-		$this->assertSame('b|RNBQKBNRPPPPPPPP................................pppppppprnbqkbnr', $this->engine->supportKeyMirror($start));
+		$this->assertSame(
+			'w|RNBQKBNRPPPPPPPP................................pppppppprnbqkbnr',
+			$this->engine->supportKey($start),
+		);
+		$this->assertSame(
+			'b|RNBQKBNRPPPPPPPP................................pppppppprnbqkbnr',
+			$this->engine->supportKeyMirror($start),
+		);
 	}
 
 	public function testCertainFen(): void {
 		foreach (self::records()['certainFen'] as $c) {
 			$this->assertSame($c['fen'], $this->engine->certainFen(FixtureLoader::state($c['state'])));
 		}
-		$this->assertSame('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', $this->engine->certainFen($this->engine->initialState()));
+		$this->assertSame(
+			'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+			$this->engine->certainFen($this->engine->initialState()),
+		);
 	}
 
 	public function testSha256(): void {

@@ -25,9 +25,36 @@ vi.mock('../../../src/services/api.js', () => ({
 }))
 
 const PRESETS = [
-	{ id: 'openai', label: 'OpenAI', kind: 'openai', baseUrl: 'https://api.openai.com/v1', keyRequired: true, local: false, fixedUrl: true, suggestedModels: ['gpt-5-mini'] },
-	{ id: 'ollama', label: 'Ollama', kind: 'openai', baseUrl: 'http://localhost:11434/v1', keyRequired: false, local: true, fixedUrl: false, suggestedModels: [] },
-	{ id: 'custom', label: 'Custom', kind: 'openai', baseUrl: '', keyRequired: false, local: false, fixedUrl: false, suggestedModels: [] },
+	{
+		id: 'openai',
+		label: 'OpenAI',
+		kind: 'openai',
+		baseUrl: 'https://api.openai.com/v1',
+		keyRequired: true,
+		local: false,
+		fixedUrl: true,
+		suggestedModels: ['gpt-5-mini'],
+	},
+	{
+		id: 'ollama',
+		label: 'Ollama',
+		kind: 'openai',
+		baseUrl: 'http://localhost:11434/v1',
+		keyRequired: false,
+		local: true,
+		fixedUrl: false,
+		suggestedModels: [],
+	},
+	{
+		id: 'custom',
+		label: 'Custom',
+		kind: 'openai',
+		baseUrl: '',
+		keyRequired: false,
+		local: false,
+		fixedUrl: false,
+		suggestedModels: [],
+	},
 ]
 
 const PERSONAL = {
@@ -51,7 +78,15 @@ const MULTIPLAYER = {
 	blocked: [],
 	listed: null,
 	leaderboardMode: 'opt-in',
-	notifications: { invites: true, yourTurn: true, reminders: true, drawOffers: true, results: true, chat: true, previews: true },
+	notifications: {
+		invites: true,
+		yourTurn: true,
+		reminders: true,
+		drawOffers: true,
+		results: true,
+		chat: true,
+		previews: true,
+	},
 }
 
 beforeEach(() => {
@@ -61,7 +96,12 @@ beforeEach(() => {
 describe('ProviderForm', () => {
 	it('shows the key hint and saves the provider with a new key', async () => {
 		const wrapper = mount(ProviderForm, {
-			props: { provider: PERSONAL.provider, presets: PRESETS, scope: 'personal', keyInfo: { hasKey: true, keyHint: 'a1B2', keyUnreadable: false } },
+			props: {
+				provider: PERSONAL.provider,
+				presets: PRESETS,
+				scope: 'personal',
+				keyInfo: { hasKey: true, keyHint: 'a1B2', keyUnreadable: false },
+			},
 		})
 		expect(wrapper.text()).toContain('Address: https://api.openai.com/v1')
 		expect(wrapper.text()).toContain('a1B2')
@@ -76,13 +116,30 @@ describe('ProviderForm', () => {
 	})
 
 	it('keeps the saved key when the field is empty, and tests the connection', async () => {
-		api.testAiConnection.mockResolvedValue({ ok: true, code: null, modelCount: 2, models: [{ id: 'gpt-5', label: 'gpt-5' }, { id: 'gpt-5-mini', label: 'gpt-5-mini' }] })
+		api.testAiConnection.mockResolvedValue({
+			ok: true,
+			code: null,
+			modelCount: 2,
+			models: [{ id: 'gpt-5', label: 'gpt-5' }, { id: 'gpt-5-mini', label: 'gpt-5-mini' }],
+		})
 		const wrapper = mount(ProviderForm, {
-			props: { provider: PERSONAL.provider, presets: PRESETS, scope: 'personal', keyInfo: { hasKey: true, keyHint: 'a1B2', keyUnreadable: false } },
+			props: {
+				provider: PERSONAL.provider,
+				presets: PRESETS,
+				scope: 'personal',
+				keyInfo: { hasKey: true, keyHint: 'a1B2', keyUnreadable: false },
+			},
 		})
 		await wrapper.findAll('button').find((b) => b.text() === 'Test connection').trigger('click')
 		await flushPromises()
-		expect(api.testAiConnection).toHaveBeenCalledWith({ scope: 'personal', preset: 'openai', kind: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-5-mini', apiKey: null })
+		expect(api.testAiConnection).toHaveBeenCalledWith({
+			scope: 'personal',
+			preset: 'openai',
+			kind: 'openai',
+			baseUrl: 'https://api.openai.com/v1',
+			model: 'gpt-5-mini',
+			apiKey: null,
+		})
 		expect(wrapper.text()).toContain('Connected. The server offers 2 chat models.')
 
 		await wrapper.findAll('button').find((b) => b.text() === 'Save').trigger('click')
@@ -92,7 +149,11 @@ describe('ProviderForm', () => {
 	it('explains a refused address', async () => {
 		api.testAiConnection.mockResolvedValue({ ok: false, code: 'url_not_allowed', modelCount: null, models: null })
 		const wrapper = mount(ProviderForm, {
-			props: { provider: { preset: 'custom', kind: 'openai', baseUrl: 'http://10.0.0.5/v1', model: 'm' }, presets: PRESETS, scope: 'personal' },
+			props: {
+				provider: { preset: 'custom', kind: 'openai', baseUrl: 'http://10.0.0.5/v1', model: 'm' },
+				presets: PRESETS,
+				scope: 'personal',
+			},
 		})
 		expect(wrapper.find('input[type="url"]').element.value).toBe('http://10.0.0.5/v1')
 		await wrapper.findAll('button').find((b) => b.text() === 'Test connection').trigger('click')
@@ -102,7 +163,12 @@ describe('ProviderForm', () => {
 
 	it('warns when no local server is allowed', () => {
 		const wrapper = mount(ProviderForm, {
-			props: { provider: { preset: 'ollama', kind: 'openai', baseUrl: '', model: 'llama3' }, presets: PRESETS, scope: 'personal', localAllowlist: [] },
+			props: {
+				provider: { preset: 'ollama', kind: 'openai', baseUrl: '', model: 'llama3' },
+				presets: PRESETS,
+				scope: 'personal',
+				localAllowlist: [],
+			},
 		})
 		expect(wrapper.text()).toContain('Your administrator has not allowed any local AI server yet.')
 	})
@@ -112,11 +178,20 @@ describe('PersonalSettings', () => {
 	it('renders the sections, disables unavailable sources and saves a switch', async () => {
 		api.getPersonalSettings.mockResolvedValue(PERSONAL)
 		api.getMultiplayerSettings.mockResolvedValue(MULTIPLAYER)
-		api.saveMultiplayerSettings.mockResolvedValue({ ...MULTIPLAYER, notifications: { ...MULTIPLAYER.notifications, chat: false } })
+		api.saveMultiplayerSettings.mockResolvedValue({
+			...MULTIPLAYER,
+			notifications: { ...MULTIPLAYER.notifications, chat: false },
+		})
 		const wrapper = mount(PersonalSettings)
 		await flushPromises()
 		const text = wrapper.text()
-		for (const heading of ['Online play', 'Notifications', 'AI opponent and coach', 'My own API key', 'What is sent to the AI']) {
+		for (const heading of [
+			'Online play',
+			'Notifications',
+			'AI opponent and coach',
+			'My own API key',
+			'What is sent to the AI',
+		]) {
 			expect(text).toContain(heading)
 		}
 		expect(text).not.toContain('Reminders')

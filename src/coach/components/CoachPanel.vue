@@ -24,8 +24,15 @@
 					<QualityBadge :label="last.label" :luck="last.luck" />
 				</div>
 				<p v-if="last.deltaPp > 2 && last.bestCode !== last.code" class="qc-coach__detail">
-					{{ t('quantumchess', 'About {pp} % worse than {best}.', { pp: Math.round(last.deltaPp), best: last.bestCode }) }}
-					<NcButton size="small" variant="tertiary" @click="emit('showMove', { code: last.bestCode, pin: true, before: last.ply })">
+					{{ t(
+						'quantumchess',
+						'About {pp} % worse than {best}.',
+						{ pp: Math.round(last.deltaPp), best: last.bestCode },
+					) }}
+					<NcButton
+						size="small"
+						variant="tertiary"
+						@click="emit('showMove', { code: last.bestCode, pin: true, before: last.ply })">
 						{{ t('quantumchess', 'Show') }}
 					</NcButton>
 				</p>
@@ -152,14 +159,22 @@ const warnings = computed(() => {
 			text: o.chance >= 1
 				? t('quantumchess', 'You can capture the king for certain!')
 				: (o.chance > 0
-						? t('quantumchess', 'You can capture the king: {pct}!', { pct: formatPercentNumber(Math.round(o.chance * 100)) })
+						? t(
+								'quantumchess',
+								'You can capture the king: {pct}!',
+								{ pct: formatPercentNumber(Math.round(o.chance * 100)) },
+							)
 						: t('quantumchess', 'You can trap the enemy king.')),
 		})
 	}
 	for (const x of props.coach.threats.value) {
 		out.push({
 			kind: 'threat',
-			text: t('quantumchess', 'Your {piece} is {pct} capturable.', { piece: pieceTypeName(x.type), pct: formatPercentNumber(Math.round(x.pCap * 100)) }),
+			text: t(
+				'quantumchess',
+				'Your {piece} is {pct} capturable.',
+				{ piece: pieceTypeName(x.type), pct: formatPercentNumber(Math.round(x.pCap * 100)) },
+			),
 		})
 	}
 	return out

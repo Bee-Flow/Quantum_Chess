@@ -29,7 +29,9 @@ final class Pipeline {
 
 	/** @var array<string, Analysis> */
 	private array $analyses = [];
-	/** @var array<string, array{0: array{result: string, reason: string}|null, 1: Analysis}> end checks per new state */
+	/**
+	 * @var array<string, array{0: array{result: string, reason: string}|null, 1: Analysis}> end checks per new state
+	 */
 	private array $ends = [];
 
 	/**
@@ -77,14 +79,22 @@ final class Pipeline {
 		$worlds = $state['worlds'] ?? null;
 		$types = $state['types'] ?? null;
 		$turn = $state['turn'] ?? null;
-		if (!is_array($worlds) || $worlds === [] || count($worlds) > Tables::MAX_WORLDS || !is_string($types) || strlen($types) !== 32
-			|| ($turn !== 'w' && $turn !== 'b') || !is_string($state['castling'] ?? null) || !is_string($state['ep'] ?? null)
+		if (!is_array($worlds) || $worlds === [] || count($worlds) > Tables::MAX_WORLDS
+			|| !is_string($types) || strlen($types) !== 32
+			|| ($turn !== 'w' && $turn !== 'b')
+			|| !is_string($state['castling'] ?? null) || !is_string($state['ep'] ?? null)
 			|| !array_key_exists('result', $state) || !is_int($state['ply'] ?? null)) {
-			throw new InvalidStateException('shape', 'not an engine state (check untrusted input with validateState first)');
+			throw new InvalidStateException(
+				'shape',
+				'not an engine state (check untrusted input with validateState first)',
+			);
 		}
 		foreach ($worlds as $w) {
 			if (!is_array($w) || !is_string($w[0] ?? null) || strlen($w[0]) !== 64 || !is_int($w[1] ?? null)) {
-				throw new InvalidStateException('shape', 'not an engine state (check untrusted input with validateState first)');
+				throw new InvalidStateException(
+					'shape',
+					'not an engine state (check untrusted input with validateState first)',
+				);
 			}
 		}
 	}

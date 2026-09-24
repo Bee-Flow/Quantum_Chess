@@ -8,7 +8,16 @@
  * grading and the punishing roll of a refutation.
  */
 
-import { applyMove, findMove, getOutcomes, normaliseCode, otherColor, setupPosition, squareIndex, T } from '../engine/index.js'
+import {
+	applyMove,
+	findMove,
+	getOutcomes,
+	normaliseCode,
+	otherColor,
+	setupPosition,
+	squareIndex,
+	T,
+} from '../engine/index.js'
 
 /** @typedef {import('../engine/types.js').EngineState} EngineState */
 /** @typedef {import('../engine/types.js').LegalMove} LegalMove */
@@ -163,7 +172,8 @@ export function punishingOutcome(state, code, victim) {
 	}
 	const outs = getOutcomes(state, code)
 	const other = otherColor(victim)
-	const score = (o) => (wonBy(o.state, other) ? 3 : 0) + (wonBy(o.state, victim) ? -3 : 0) + (state.turn === victim ? (o.captured === null ? 1 : 0) : (o.captured !== null ? 1 : 0))
+	const score = (o) => (wonBy(o.state, other) ? 3 : 0) + (wonBy(o.state, victim) ? -3 : 0)
+		+ (state.turn === victim ? (o.captured === null ? 1 : 0) : (o.captured !== null ? 1 : 0))
 	return outs.reduce((a, b) => (score(b) > score(a) ? b : a)).key
 }
 

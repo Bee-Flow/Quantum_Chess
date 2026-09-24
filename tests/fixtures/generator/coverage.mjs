@@ -89,7 +89,9 @@ export function track(before, m, r, forced) {
 	if (m.type !== 'standard') {
 		cover[m.type]++
 	}
-	const key = m.resolution === 'rolled' ? r.measurement.key : (m.outcomes.length === 1 ? m.outcomes[0].key : m.resolution)
+	const key = m.resolution === 'rolled'
+		? r.measurement.key
+		: (m.outcomes.length === 1 ? m.outcomes[0].key : m.resolution)
 	const types = before.types
 	if (m.type === 'standard' && types[m.piece] === 'k' && Math.abs(m.to[0] - m.from[0]) === 2) {
 		cover.castling++
@@ -118,8 +120,11 @@ export function track(before, m, r, forced) {
 	if (m.resolution === 'certain' && key === 'capture') {
 		cover.certainCapture++
 	}
-	const capturedId = r.state.captured.length > before.captured.length ? r.state.captured[r.state.captured.length - 1] : -1
-	if (m.resolution === 'rolled' && key === 'capture' && capturedId >= 0 && E.pieceLocations(before)[capturedId].length > 1) {
+	const capturedId = r.state.captured.length > before.captured.length
+		? r.state.captured[r.state.captured.length - 1]
+		: -1
+	if (m.resolution === 'rolled' && key === 'capture' && capturedId >= 0
+		&& E.pieceLocations(before)[capturedId].length > 1) {
 		cover.rolledCaptureOfGhost++
 	}
 	if (m.type === 'merge' && key === 'capture') {
@@ -158,9 +163,14 @@ export function reportCoverage(gameCount) {
 	const failures = Object.entries(MINIMUM).filter(([k, min]) => (cover[k] ?? 0) < min)
 	console.log('Coverage over ' + gameCount + ' games (' + cover.steps + ' steps):')
 	for (const [k, v] of Object.entries(cover)) {
-		console.log('  ' + k.padEnd(26) + String(v).padStart(6) + (MINIMUM[k] !== undefined ? '   (min ' + MINIMUM[k] + ')' : ''))
+		console.log('  '
+			+ k.padEnd(26)
+			+ String(v).padStart(6)
+			+ (MINIMUM[k] !== undefined ? '   (min ' + MINIMUM[k] + ')' : ''))
 	}
-	console.log('  whyIllegal reason codes covered: ' + [...reasonsSeen].filter((r) => r !== 'legal').length + ' of 23 (cannot_merge is always pre-empted by check 6)')
+	console.log('  whyIllegal reason codes covered: '
+		+ [...reasonsSeen].filter((r) => r !== 'legal').length
+		+ ' of 23 (cannot_merge is always pre-empted by check 6)')
 	if (failures.length > 0 || missingReasons.length > 0) {
 		console.error('Coverage too low: ' + failures.map(([k]) => k).concat(missingReasons).join(', '))
 		return false

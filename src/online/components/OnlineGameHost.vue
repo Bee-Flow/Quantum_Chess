@@ -216,7 +216,8 @@ const c = useOnlineGame(props.id, {
 	onLobbyChange: () => lobby.poke(),
 })
 const g = computed(() => c.game.value)
-const started = computed(() => !!g.value && !['pending', 'open', 'declined', 'cancelled', 'expired'].includes(g.value.status))
+const started = computed(() => !!g.value
+	&& !['pending', 'open', 'declined', 'cancelled', 'expired'].includes(g.value.status))
 const active = computed(() => g.value?.status === 'active')
 const notFound = computed(() => c.error.value?.status === 404 && !g.value)
 const { busy, run } = useBusyAction()

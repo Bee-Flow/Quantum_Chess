@@ -25,8 +25,14 @@ final class AiRequestValidatorTest extends TestCase {
 
 	/** @return array<string, mixed> */
 	private static function validMove(): array {
-		return ['source' => 'personal', 'persona' => 'professor', 'color' => 'w', 'language' => 'en', 'state' => (new Engine())->initialState(),
-			'candidates' => [['code' => 'e2-e4', 'E' => 0.5, 'tags' => [], 'ok' => true]]];
+		return [
+			'source' => 'personal',
+			'persona' => 'professor',
+			'color' => 'w',
+			'language' => 'en',
+			'state' => (new Engine())->initialState(),
+			'candidates' => [['code' => 'e2-e4', 'E' => 0.5, 'tags' => [], 'ok' => true]],
+		];
 	}
 
 	/**
@@ -60,21 +66,36 @@ final class AiRequestValidatorTest extends TestCase {
 			$this->assertContains($code, ['invalid_argument', 'invalid_state'], $name);
 			$this->assertSame(400, $status, $name);
 		}
-		$this->assertSame(['ai_unavailable', 403, ['reason' => 'not_configured']], $this->error(fn () => $validator->move('bob', self::validMove())),
-			'the source is checked after the fields');
+		$this->assertSame(
+			['ai_unavailable', 403, ['reason' => 'not_configured']],
+			$this->error(fn () => $validator->move('bob', self::validMove())),
+			'the source is checked after the fields',
+		);
 	}
 
 	public function testAValidMoveRequest(): void {
 		$this->taskType = 'core:text2text:chat';
-		$request = $this->validator()->move('bob', ['source' => 'nextcloud', 'model' => 'm1', 'feedback' => ['answer' => str_repeat('a', 80), 'reason' => 'blocked'],
-			'history' => [['ply' => 0, 'code' => 'e2-e4'], 'junk', ['ply' => 1, 'code' => 'bad code!'], ['ply' => 1, 'code' => 'e7-e5', 'key' => 'move', 'weight' => 5]],
-			'candidates' => [['code' => 'e2e4', 'E' => 1.5, 'tags' => ['safe', 'BAD'], 'ok' => 1]]] + self::validMove());
+		$request = $this->validator()->move('bob', [
+			'source' => 'nextcloud',
+			'model' => 'm1',
+			'feedback' => ['answer' => str_repeat('a', 80), 'reason' => 'blocked'],
+			'history' => [
+				['ply' => 0, 'code' => 'e2-e4'],
+				'junk',
+				['ply' => 1, 'code' => 'bad code!'],
+				['ply' => 1, 'code' => 'e7-e5', 'key' => 'move', 'weight' => 5],
+			],
+			'candidates' => [['code' => 'e2e4', 'E' => 1.5, 'tags' => ['safe', 'BAD'], 'ok' => 1]],
+		] + self::validMove());
 		$this->assertSame(['nextcloud', 'm1'], [$request->connection->source->value, $request->model]);
 		$this->assertSame([
 			'persona' => 'professor',
 			'color' => 'w',
 			'language' => 'en',
-			'history' => [['ply' => 0, 'code' => 'e2-e4', 'key' => null, 'weight' => null], ['ply' => 1, 'code' => 'e7-e5', 'key' => 'move', 'weight' => 5]],
+			'history' => [
+				['ply' => 0, 'code' => 'e2-e4', 'key' => null, 'weight' => null],
+				['ply' => 1, 'code' => 'e7-e5', 'key' => 'move', 'weight' => 5],
+			],
 			'candidates' => [['code' => 'e2-e4', 'E' => 1.0, 'tags' => ['safe'], 'ok' => false]],
 			'message' => null,
 			'feedback' => ['answer' => str_repeat('a', 64), 'reason' => 'blocked'],
@@ -84,20 +105,52 @@ final class AiRequestValidatorTest extends TestCase {
 
 	public function testCoachRequestOrder(): void {
 		$validator = $this->validator();
-		$valid = ['source' => 'personal', 'state' => (new Engine())->initialState(), 'question' => 'Why?', 'player' => ['color' => 'w', 'skill' => 'beginner']];
-		$this->assertSame(['invalid_argument', 400, ['field' => 'player']], $this->error(fn () => $validator->coach('bob', ['player' => ['color' => 'w']] + $valid)));
-		$this->assertSame(['invalid_argument', 400, ['field' => 'question']], $this->error(fn () => $validator->coach('bob', ['question' => ' '] + $valid)));
-		$this->assertSame('ai_unavailable', $this->error(fn () => $validator->coach('bob', ['context' => ['kind' => 'chess club']] + $valid))[0],
-			'the context is checked after the source');
+		$valid = [
+			'source' => 'personal',
+			'state' => (new Engine())->initialState(),
+			'question' => 'Why?',
+			'player' => ['color' => 'w', 'skill' => 'beginner'],
+		];
+		$this->assertSame(
+			['invalid_argument', 400, ['field' => 'player']],
+			$this->error(fn () => $validator->coach('bob', ['player' => ['color' => 'w']] + $valid)),
+		);
+		$this->assertSame(
+			['invalid_argument', 400, ['field' => 'question']],
+			$this->error(fn () => $validator->coach('bob', ['question' => ' '] + $valid)),
+		);
+		$this->assertSame(
+			'ai_unavailable',
+			$this->error(fn () => $validator->coach('bob', ['context' => ['kind' => 'chess club']] + $valid))[0],
+			'the context is checked after the source',
+		);
 		$this->taskType = 'core:text2text';
-		$this->assertSame(['invalid_argument', 400, ['field' => 'context']],
-			$this->error(fn () => $validator->coach('bob', ['source' => 'nextcloud', 'context' => ['kind' => 'lesson', 'title' => 5]] + $valid)));
-		$request = $validator->coach('bob', ['source' => 'nextcloud', 'chat' => [['role' => 'user', 'text' => 'hi'], ['role' => 'robot', 'text' => 'x']],
-			'analysis' => ['E' => -0.5, 'best' => [['code' => 'e2-e4', 'E' => 2, 'line' => ['e7-e5', 7]]], 'threats' => ['', 'mate'], 'lastMove' => ['code' => 'd2-d4', 'label' => 'Blunder!', 'deltaE' => -0.2]]] + $valid);
+		$this->assertSame(
+			['invalid_argument', 400, ['field' => 'context']],
+			$this->error(fn () => $validator->coach('bob', [
+				'source' => 'nextcloud',
+				'context' => ['kind' => 'lesson', 'title' => 5],
+			] + $valid)),
+		);
+		$request = $validator->coach('bob', [
+			'source' => 'nextcloud',
+			'chat' => [['role' => 'user', 'text' => 'hi'], ['role' => 'robot', 'text' => 'x']],
+			'analysis' => [
+				'E' => -0.5,
+				'best' => [['code' => 'e2-e4', 'E' => 2, 'line' => ['e7-e5', 7]]],
+				'threats' => ['', 'mate'],
+				'lastMove' => ['code' => 'd2-d4', 'label' => 'Blunder!', 'deltaE' => -0.2],
+			],
+		] + $valid);
 		$this->assertSame([
 			'language' => 'en',
 			'history' => [],
-			'analysis' => ['E' => 0.0, 'best' => [['code' => 'e2-e4', 'E' => 1.0, 'line' => ['e7-e5']]], 'threats' => ['mate'], 'lastMove' => ['code' => 'd2-d4', 'label' => null, 'deltaE' => -0.2]],
+			'analysis' => [
+				'E' => 0.0,
+				'best' => [['code' => 'e2-e4', 'E' => 1.0, 'line' => ['e7-e5']]],
+				'threats' => ['mate'],
+				'lastMove' => ['code' => 'd2-d4', 'label' => null, 'deltaE' => -0.2],
+			],
 			'context' => ['kind' => 'game', 'title' => null, 'goal' => null, 'ply' => null],
 			'player' => ['color' => 'w', 'skill' => 'beginner'],
 			'chat' => [['role' => 'user', 'text' => 'hi']],

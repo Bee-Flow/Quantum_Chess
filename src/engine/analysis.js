@@ -50,7 +50,8 @@ export function analyze(state) {
 	let a = CACHE.get(state)
 	if (a === undefined) {
 		if (state === null || typeof state !== 'object' || !Array.isArray(state.worlds) || state.worlds.length === 0
-			|| typeof state.types !== 'string' || state.types.length !== 32 || (state.turn !== 'w' && state.turn !== 'b')) {
+			|| typeof state.types !== 'string' || state.types.length !== 32
+			|| (state.turn !== 'w' && state.turn !== 'b')) {
 			throw new InvalidStateError('shape', 'not an engine state (check untrusted input with validateState first)')
 		}
 		a = build(state)

@@ -20,7 +20,9 @@ describe('describeForLlm', () => {
 		expect(text).toContain('Certain pieces (FEN, uncertain pieces removed): 4k3/8/8/8/8/8/8/4K3 b - - 2 2')
 		expect(text).toContain('- White rook: a1 50%, a8 50%')
 		expect(text).toContain('- Black knight: a4 50%, c4 50%')
-		expect(text).toContain('Links: white rook a8 <-> black knight c4 (knight on c4 in 100% of the cases where the rook is on a8)')
+		const links
+			= 'Links: white rook a8 <-> black knight c4 (knight on c4 in 100% of the cases where the rook is on a8)'
+		expect(text).toContain(links)
 		expect(text).toContain('Possibilities: 2. Budget: White 2/8, Black 2/8. King danger: White 0%, Black 50%.')
 		expect(text).toContain('?a4 (measure: a4 50%, c4 50%)')
 		expect(text).toContain('Na4 may split to two of:')

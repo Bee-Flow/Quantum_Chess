@@ -135,7 +135,8 @@ export class MoveRecord {
 export function recCode(rec) {
 	switch (rec.kind) {
 		case 'standard':
-			return SQUARE_NAMES[rec.f] + '-' + SQUARE_NAMES[rec.t] + (rec.promo === null ? '' : '=' + rec.promo.toUpperCase())
+			return SQUARE_NAMES[rec.f] + '-' + SQUARE_NAMES[rec.t]
+				+ (rec.promo === null ? '' : '=' + rec.promo.toUpperCase())
 		case 'split':
 			return SQUARE_NAMES[rec.f] + '-' + SQUARE_NAMES[rec.t] + '|' + SQUARE_NAMES[rec.t2]
 		case 'merge':

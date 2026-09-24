@@ -14,7 +14,15 @@ vi.mock('../../../src/services/api.js', () => ({
 	saveTrainerProgress: vi.fn(async (doc) => doc),
 }))
 
-const { lessonStars, mergeProgress, nextLesson, progress, puzzleStars, recordLesson, refreshProgress } = await import('../../../src/trainer/progress.js')
+const {
+	lessonStars,
+	mergeProgress,
+	nextLesson,
+	progress,
+	puzzleStars,
+	recordLesson,
+	refreshProgress,
+} = await import('../../../src/trainer/progress.js')
 const { reportGameEvent, markGraduationGame } = await import('../../../src/trainer/events.js')
 
 describe('progress merge', () => {

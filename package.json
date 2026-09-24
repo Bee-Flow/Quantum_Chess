@@ -22,6 +22,7 @@
     "l10n:verify": "node tools/l10n.mjs verify",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint --fix .",
+    "lint:lines": "node tools/check-line-length.mjs",
     "lint:refs": "node tools/check-references.mjs",
     "screenshots": "node tools/screenshots/screenshots.mjs",
     "test": "vitest run",

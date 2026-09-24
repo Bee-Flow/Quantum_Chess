@@ -44,8 +44,10 @@ jobs:
           APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
           APPSTORE_TOKEN: ${{ secrets.APPSTORE_TOKEN }}
         run: |
-          [ -n "$APP_PRIVATE_KEY" ] || { echo '::error::The secret APP_PRIVATE_KEY is missing (see RELEASING.md, step 4)'; exit 1; }
-          [ -n "$APPSTORE_TOKEN" ] || { echo '::error::The secret APPSTORE_TOKEN is missing (see RELEASING.md, step 4)'; exit 1; }
+          [ -n "$APP_PRIVATE_KEY" ] \
+            || { echo '::error::The secret APP_PRIVATE_KEY is missing (see RELEASING.md, step 4)'; exit 1; }
+          [ -n "$APPSTORE_TOKEN" ] \
+            || { echo '::error::The secret APPSTORE_TOKEN is missing (see RELEASING.md, step 4)'; exit 1; }
 
       - name: Set app version from the tag
         run: echo "APP_VERSION=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
@@ -97,7 +99,8 @@ jobs:
       - name: Check server download link for ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
         run: |
           NCVERSION='${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}'
-          DOWNLOAD_URL=$(curl -s "https://updates.nextcloud.com/updater_server/latest?channel=beta&version=$NCVERSION" | jq -r '.downloads.zip[0]')
+          DOWNLOAD_URL=$(curl -s "https://updates.nextcloud.com/updater_server/latest?channel=beta&version=$NCVERSION" \
+            | jq -r '.downloads.zip[0]')
           echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> "$GITHUB_ENV"
 
       - name: Download server ${{ fromJSON(steps.appinfo.outputs.result).nextcloud.min-version }}
@@ -127,16 +130,20 @@ jobs:
         run: |
           umask 077
           printf '%s\n' "$APP_PRIVATE_KEY" > "$RUNNER_TEMP/$APP_NAME.key"
-          wget --quiet -O "$RUNNER_TEMP/$APP_NAME.crt" "https://github.com/nextcloud/app-certificate-requests/raw/master/$APP_NAME/$APP_NAME.crt"
+          wget --quiet -O "$RUNNER_TEMP/$APP_NAME.crt" \
+            "https://github.com/nextcloud/app-certificate-requests/raw/master/$APP_NAME/$APP_NAME.crt"
           openssl x509 -in "$RUNNER_TEMP/$APP_NAME.crt" -noout -subject | grep -Eq "CN ?= ?${APP_NAME}(,|$)" \
             || { echo "::error::The certificate is not issued for $APP_NAME"; exit 1; }
           cert_key=$(openssl x509 -in "$RUNNER_TEMP/$APP_NAME.crt" -noout -pubkey | openssl sha256)
           private_key=$(openssl pkey -in "$RUNNER_TEMP/$APP_NAME.key" -pubout | openssl sha256)
-          [ "$cert_key" = "$private_key" ] || { echo '::error::APP_PRIVATE_KEY does not belong to the App Store certificate'; exit 1; }
+          [ "$cert_key" = "$private_key" ] \
+            || { echo '::error::APP_PRIVATE_KEY does not belong to the App Store certificate'; exit 1; }
 
       - name: Sign the app (occ integrity:sign-app) and the tarball
         working-directory: ${{ env.APP_NAME }}
-        run: make sign KEY="$RUNNER_TEMP/$APP_NAME.key" CERT="$RUNNER_TEMP/$APP_NAME.crt" NEXTCLOUD="$GITHUB_WORKSPACE/nextcloud"
+        run: |
+          make sign KEY="$RUNNER_TEMP/$APP_NAME.key" CERT="$RUNNER_TEMP/$APP_NAME.crt" \
+            NEXTCLOUD="$GITHUB_WORKSPACE/nextcloud"
 
       - name: Attach tarball to GitHub release
         uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # 2.11.5

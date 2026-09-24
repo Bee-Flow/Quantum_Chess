@@ -20,7 +20,12 @@ test.describe('online invitation from a notification', () => {
 				await api('admin', 'POST', `api/games/${g.id}/cancel`)
 			}
 		}
-		const { game } = await api('admin', 'POST', 'api/games', { opponent: getUser('bob').uid, rated: false, timeControl: 'corr:3d', color: 'b' })
+		const { game } = await api('admin', 'POST', 'api/games', {
+			opponent: getUser('bob').uid,
+			rated: false,
+			timeControl: 'corr:3d',
+			color: 'b',
+		})
 		await openApp(page, '/', { ready: '.qc-home' })
 		await page.locator('#notifications .header-menu__trigger, #notifications button').first().click()
 		const item = page.locator('.notification', { hasText: /invited you/ }).first()

@@ -52,7 +52,9 @@ final class ProvidersTest extends TestCase {
 			$response->method('getBody')->willReturn($answer[1]);
 			return $response;
 		};
-		$client->method('post')->willReturnCallback(fn (string $url, array $options) => $respond('POST', $url, $options));
+		$client->method('post')->willReturnCallback(
+			fn (string $url, array $options) => $respond('POST', $url, $options),
+		);
 		$client->method('get')->willReturnCallback(fn (string $url, array $options) => $respond('GET', $url, $options));
 		$service = $this->createMock(IClientService::class);
 		$service->method('newClient')->willReturn($client);
@@ -69,18 +71,36 @@ final class ProvidersTest extends TestCase {
 		return $logger;
 	}
 
-	private function openai(string $preset = 'openai', string $baseUrl = 'https://api.openai.com/v1', ?ArrayMemcache $cache = null): OpenAiProvider {
-		return new OpenAiProvider($this->clients(), $cache ?? new ArrayMemcache(), $this->logger(), ['preset' => $preset, 'baseUrl' => $baseUrl, 'apiKey' => 'sk-secret-1234', 'allowLocal' => false]);
+	private function openai(
+		string $preset = 'openai',
+		string $baseUrl = 'https://api.openai.com/v1',
+		?ArrayMemcache $cache = null,
+	): OpenAiProvider {
+		return new OpenAiProvider(
+			$this->clients(),
+			$cache ?? new ArrayMemcache(),
+			$this->logger(),
+			['preset' => $preset, 'baseUrl' => $baseUrl, 'apiKey' => 'sk-secret-1234', 'allowLocal' => false],
+		);
 	}
 
 	private function options(array $override = []): array {
-		return $override + ['model' => 'gpt-5-mini', 'maxTokens' => 3200, 'temperature' => 0.7, 'effort' => null, 'safetyId' => 'abc', 'purpose' => 'move'];
+		return $override + [
+			'model' => 'gpt-5-mini',
+			'maxTokens' => 3200,
+			'temperature' => 0.7,
+			'effort' => null,
+			'safetyId' => 'abc',
+			'purpose' => 'move',
+		];
 	}
 
 	private const MESSAGES = [['role' => 'system', 'content' => 'S'], ['role' => 'user', 'content' => 'U']];
 
 	private static function ok(string $content): array {
-		return [200, json_encode(['choices' => [['message' => ['role' => 'assistant', 'content' => $content], 'finish_reason' => 'stop']]])];
+		return [200, json_encode([
+			'choices' => [['message' => ['role' => 'assistant', 'content' => $content], 'finish_reason' => 'stop']],
+		])];
 	}
 
 	public function testOpenAiRequest(): void {
@@ -95,7 +115,16 @@ final class ProvidersTest extends TestCase {
 		$this->assertSame(10, $call['options']['connect_timeout']);
 		$this->assertSame(['allow_local_address' => false], $call['options']['nextcloud']);
 		$body = json_decode($call['options']['body'], true);
-		$this->assertSame(['model' => 'gpt-5-mini', 'messages' => self::MESSAGES, 'temperature' => 0.7, 'max_completion_tokens' => 3200, 'safety_identifier' => 'abc'], $body);
+		$this->assertSame(
+			[
+				'model' => 'gpt-5-mini',
+				'messages' => self::MESSAGES,
+				'temperature' => 0.7,
+				'max_completion_tokens' => 3200,
+				'safety_identifier' => 'abc',
+			],
+			$body,
+		);
 	}
 
 	public function testUnsupportedParameterIsRetriedOnceAndRemembered(): void {
@@ -116,7 +145,10 @@ final class ProvidersTest extends TestCase {
 
 	public function testOpenRouterHeadersAndMaxTokens(): void {
 		$this->answers = [self::ok('hi')];
-		$this->openai('openrouter', 'https://openrouter.ai/api/v1')->chat(self::MESSAGES, $this->options(['model' => 'openai/gpt-5-mini']));
+		$this->openai('openrouter', 'https://openrouter.ai/api/v1')->chat(
+			self::MESSAGES,
+			$this->options(['model' => 'openai/gpt-5-mini']),
+		);
 		$headers = $this->calls[0]['options']['headers'];
 		$this->assertSame('Quantum Chess', $headers['X-Title']);
 		$this->assertArrayNotHasKey('HTTP-Referer', $headers);
@@ -161,7 +193,16 @@ final class ProvidersTest extends TestCase {
 	}
 
 	public function testModelListIsFiltered(): void {
-		$this->answers = [[200, json_encode(['data' => [['id' => 'gpt-5'], ['id' => 'text-embedding-3-small'], ['id' => 'whisper-1'], ['id' => 'gpt-4.1-mini'], ['id' => 'omni-moderation-latest']]])]];
+		$this->answers = [[
+			200,
+			json_encode(['data' => [
+				['id' => 'gpt-5'],
+				['id' => 'text-embedding-3-small'],
+				['id' => 'whisper-1'],
+				['id' => 'gpt-4.1-mini'],
+				['id' => 'omni-moderation-latest'],
+			]]),
+		]];
 		$models = $this->openai()->listModels();
 		$this->assertSame(['gpt-4.1-mini', 'gpt-5'], array_column($models, 'id'));
 		$this->assertSame('https://api.openai.com/v1/models', $this->calls[0]['url']);
@@ -169,15 +210,43 @@ final class ProvidersTest extends TestCase {
 	}
 
 	private function anthropic(): AnthropicProvider {
-		return new AnthropicProvider($this->clients(), new ArrayMemcache(), $this->logger(), ['preset' => 'anthropic', 'baseUrl' => 'https://api.anthropic.com/v1', 'apiKey' => 'sk-ant-secret', 'allowLocal' => false]);
+		return new AnthropicProvider(
+			$this->clients(),
+			new ArrayMemcache(),
+			$this->logger(),
+			[
+				'preset' => 'anthropic',
+				'baseUrl' => 'https://api.anthropic.com/v1',
+				'apiKey' => 'sk-ant-secret',
+				'allowLocal' => false,
+			],
+		);
 	}
 
 	public function testAnthropicRequestAndEffortRetry(): void {
 		$this->answers = [
 			[400, '{"type":"error","error":{"type":"invalid_request_error","message":"output_config: Extra inputs are not permitted"}}'],
-			[200, json_encode(['content' => [['type' => 'thinking', 'thinking' => '…'], ['type' => 'text', 'text' => 'Hello '], ['type' => 'text', 'text' => 'there']], 'stop_reason' => 'end_turn'])],
+			[
+				200,
+				json_encode([
+					'content' => [
+						['type' => 'thinking', 'thinking' => '…'],
+						['type' => 'text', 'text' => 'Hello '],
+						['type' => 'text', 'text' => 'there'],
+					],
+					'stop_reason' => 'end_turn',
+				]),
+			],
 		];
-		$result = $this->anthropic()->chat(self::MESSAGES, $this->options(['model' => 'claude-opus-5', 'temperature' => null, 'effort' => 'low', 'purpose' => 'coach']));
+		$result = $this->anthropic()->chat(
+			self::MESSAGES,
+			$this->options([
+				'model' => 'claude-opus-5',
+				'temperature' => null,
+				'effort' => 'low',
+				'purpose' => 'coach',
+			]),
+		);
 		$this->assertEquals(ChatResult::done('Hello there'), $result);
 		$first = $this->calls[0];
 		$this->assertSame('https://api.anthropic.com/v1/messages', $first['url']);
@@ -185,16 +254,32 @@ final class ProvidersTest extends TestCase {
 		$this->assertSame('2023-06-01', $first['options']['headers']['anthropic-version']);
 		$this->assertSame(90, $first['options']['timeout']);
 		$body = json_decode($first['options']['body'], true);
-		$this->assertSame(['model' => 'claude-opus-5', 'max_tokens' => 3200, 'system' => 'S', 'messages' => [['role' => 'user', 'content' => 'U']], 'metadata' => ['user_id' => 'abc'], 'output_config' => ['effort' => 'low']], $body);
+		$this->assertSame(
+			[
+				'model' => 'claude-opus-5',
+				'max_tokens' => 3200,
+				'system' => 'S',
+				'messages' => [['role' => 'user', 'content' => 'U']],
+				'metadata' => ['user_id' => 'abc'],
+				'output_config' => ['effort' => 'low'],
+			],
+			$body,
+		);
 		$this->assertArrayNotHasKey('temperature', $body);
 		$this->assertArrayNotHasKey('output_config', json_decode($this->calls[1]['options']['body'], true));
 	}
 
 	public function testAnthropicStopReasons(): void {
 		foreach (['refusal' => 'refused', 'max_tokens' => 'bad_response'] as $stop => $code) {
-			$this->answers = [[200, json_encode(['content' => [['type' => 'text', 'text' => 'x']], 'stop_reason' => $stop])]];
+			$this->answers = [[
+				200,
+				json_encode(['content' => [['type' => 'text', 'text' => 'x']], 'stop_reason' => $stop]),
+			]];
 			try {
-				$this->anthropic()->chat(self::MESSAGES, $this->options(['model' => 'claude-opus-5', 'effort' => null]));
+				$this->anthropic()->chat(
+					self::MESSAGES,
+					$this->options(['model' => 'claude-opus-5', 'effort' => null]),
+				);
 				$this->fail('expected an exception');
 			} catch (ProviderException $e) {
 				$this->assertSame($code, $e->getUpstream());

@@ -27,7 +27,9 @@ const helpersDir = dirname(fileURLToPath(import.meta.url))
  */
 export async function occ(args, { env: extraEnv = {}, allowFailure = false } = {}) {
 	if (!env.occ) {
-		throw new Error('occ is not available: set QC_NC_ROOT to the Nextcloud server directory or QC_OCC to an occ command')
+		const message
+			= 'occ is not available: set QC_NC_ROOT to the Nextcloud server directory or QC_OCC to an occ command'
+		throw new Error(message)
 	}
 	const [command, ...prefix] = env.occ
 	try {
@@ -40,7 +42,9 @@ export async function occ(args, { env: extraEnv = {}, allowFailure = false } = {
 		if (allowFailure && typeof error.code === 'number') {
 			return { stdout: error.stdout ?? '', stderr: error.stderr ?? '', code: error.code }
 		}
-		throw new Error(`occ ${args.join(' ')} failed: ${(error.stderr || error.stdout || error.message).trim()}`, { cause: error })
+		throw new Error(`occ ${args.join(' ')} failed: ${(error.stderr || error.stdout || error.message).trim()}`, {
+			cause: error,
+		})
 	}
 }
 
@@ -59,7 +63,9 @@ export async function ensureUser(who) {
 		await occ(['user:resetpassword', '--password-from-env', user.uid], { env: passwordEnv })
 	} else {
 		const groups = user.admin ? ['--group=admin'] : []
-		await occ(['user:add', '--password-from-env', `--display-name=${user.displayName}`, ...groups, user.uid], { env: passwordEnv })
+		await occ(['user:add', '--password-from-env', `--display-name=${user.displayName}`, ...groups, user.uid], {
+			env: passwordEnv,
+		})
 	}
 	await occ(['user:enable', user.uid], { allowFailure: true })
 }
@@ -96,7 +102,9 @@ export async function resetAppData({ adminSettings = false } = {}) {
 		const { stdout } = await run('php', args, { maxBuffer: 4 * 1024 * 1024 })
 		return stdout.trim()
 	} catch (error) {
-		throw new Error(`Resetting the app data failed: ${(error.stderr || error.stdout || error.message).trim()}`, { cause: error })
+		throw new Error(`Resetting the app data failed: ${(error.stderr || error.stdout || error.message).trim()}`, {
+			cause: error,
+		})
 	}
 }
 

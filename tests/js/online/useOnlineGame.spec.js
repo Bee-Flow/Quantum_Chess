@@ -29,7 +29,15 @@ const OPENING = ['g1-f3|h3', 'e7-e5']
 function moveAnswer(list, replayed = false) {
 	const after = makeGame(list)
 	const move = after.moves[after.moves.length - 1]
-	return { game: live(after), move, measurement: move.measurement, chain: after.chain, rev: after.rev, now: after.now, replayed }
+	return {
+		game: live(after),
+		move,
+		measurement: move.measurement,
+		chain: after.chain,
+		rev: after.rev,
+		now: after.now,
+		replayed,
+	}
 }
 
 /**
@@ -198,7 +206,10 @@ describe('useOnlineGame', () => {
 		// another tab of ours already moved and Black replied: our ply is stale
 		const { c, api, notify, animator } = await setup(makeGame(['g1-f3|h3', 'e7-e5']))
 		const server = makeGame(['g1-f3|h3', 'e7-e5', 'b1-c3', 'd7-d6'])
-		api.sendMove.mockRejectedValue(Object.assign(new Error('conflict'), { status: 409, code: 'conflict', data: { game: server } }))
+		api.sendMove.mockRejectedValue(Object.assign(
+			new Error('conflict'),
+			{ status: 409, code: 'conflict', data: { game: server } },
+		))
 		await c.submitMove(c.legalMoves.value.find((m) => m.code === 'b1-a3'))
 		expect(notify.info).toHaveBeenCalledWith('Your opponent moved first')
 		expect(c.moves.value.map((m) => m.code)).toEqual(['g1-f3|h3', 'e7-e5', 'b1-c3', 'd7-d6'])
@@ -212,7 +223,14 @@ describe('useOnlineGame', () => {
 		const start = makeGame(['g1-f3|h3'], { myColor: 'b' })
 		const { c, api, animator } = await setup(start, { me: 'bob' })
 		const later = makeGame(['g1-f3|h3', 'e7-e5', { code: 'f3-e5', u: 5 }], { myColor: 'b' })
-		api.pollGame.mockResolvedValue({ changed: true, rev: later.rev, now: later.now, game: live(later), moves: later.moves.slice(1), chat: [] })
+		api.pollGame.mockResolvedValue({
+			changed: true,
+			rev: later.rev,
+			now: later.now,
+			game: live(later),
+			moves: later.moves.slice(1),
+			chat: [],
+		})
 		await c.start()
 		c.pollNow()
 		await vi.waitFor(() => expect(c.moves.value).toHaveLength(3))
@@ -228,28 +246,84 @@ describe('useOnlineGame', () => {
 		const { c, api } = await setup(makeGame(['g1-f3|h3']))
 		const later = makeGame(['g1-f3|h3', 'e7-e5'])
 		const bad = { ...later.moves[1], chain: '0'.repeat(64) }
-		api.pollGame.mockResolvedValue({ changed: true, rev: later.rev, now: later.now, game: live(later), moves: [bad], chat: [] })
+		api.pollGame.mockResolvedValue({
+			changed: true,
+			rev: later.rev,
+			now: later.now,
+			game: live(later),
+			moves: [bad],
+			chat: [],
+		})
 		await c.start()
 		c.pollNow()
 		await vi.waitFor(() => expect(c.altered.value).toEqual({ ply: 1 }))
-		expect(c.banners.value[0]).toMatchObject({ id: 'altered', type: 'error', text: 'Game history was altered on the server' })
+		expect(c.banners.value[0]).toMatchObject({
+			id: 'altered',
+			type: 'error',
+			text: 'Game history was altered on the server',
+		})
 		c.dispose()
 	})
 
 	it('sends quick phrases as keys and text as text, and counts unread messages', async () => {
 		const full = makeGame([], {
-			chat: [{ id: 1, kind: 'text', userId: 'bob', displayName: 'Bob', message: 'hi', params: null, createdAt: 1 }],
+			chat: [{
+				id: 1,
+				kind: 'text',
+				userId: 'bob',
+				displayName: 'Bob',
+				message: 'hi',
+				params: null,
+				createdAt: 1,
+			}],
 		})
 		const { c, api } = await setup(full)
 		expect(c.unread.value).toBe(0)
-		api.sendChat.mockResolvedValueOnce({ message: { id: 2, kind: 'phrase', userId: 'alice', displayName: 'Alice', message: 'good_luck', params: null, createdAt: 2 }, rev: 12 })
+		api.sendChat.mockResolvedValueOnce({
+			message: {
+				id: 2,
+				kind: 'phrase',
+				userId: 'alice',
+				displayName: 'Alice',
+				message: 'good_luck',
+				params: null,
+				createdAt: 2,
+			},
+			rev: 12,
+		})
 		await c.sendChat('good_luck')
 		expect(api.sendChat).toHaveBeenLastCalledWith(42, { phrase: 'good_luck' })
-		api.sendChat.mockResolvedValueOnce({ message: { id: 3, kind: 'text', userId: 'alice', displayName: 'Alice', message: '<b>x</b>', params: null, createdAt: 3 }, rev: 13 })
+		api.sendChat.mockResolvedValueOnce({
+			message: {
+				id: 3,
+				kind: 'text',
+				userId: 'alice',
+				displayName: 'Alice',
+				message: '<b>x</b>',
+				params: null,
+				createdAt: 3,
+			},
+			rev: 13,
+		})
 		await c.sendChat('<b>x</b>')
 		expect(api.sendChat).toHaveBeenLastCalledWith(42, { message: '<b>x</b>' })
 		expect(c.chat.value.map((m) => m.id)).toEqual([1, 2, 3])
-		api.pollGame.mockResolvedValue({ changed: true, rev: 14, now: 1, game: live(full), moves: [], chat: [{ id: 4, kind: 'text', userId: 'bob', displayName: 'Bob', message: 'gl', params: null, createdAt: 4 }] })
+		api.pollGame.mockResolvedValue({
+			changed: true,
+			rev: 14,
+			now: 1,
+			game: live(full),
+			moves: [],
+			chat: [{
+				id: 4,
+				kind: 'text',
+				userId: 'bob',
+				displayName: 'Bob',
+				message: 'gl',
+				params: null,
+				createdAt: 4,
+			}],
+		})
 		await c.start()
 		c.pollNow()
 		await vi.waitFor(() => expect(c.unread.value).toBe(1))
@@ -259,12 +333,23 @@ describe('useOnlineGame', () => {
 	})
 
 	it('shows the result and the rematch state of a finished game', async () => {
-		const full = makeGame(OPENING, { status: 'finished', result: '0-1', resultReason: 'resignation', winner: 'b', canRematch: true, ratingChange: { w: -20, b: 20 } })
+		const full = makeGame(OPENING, {
+			status: 'finished',
+			result: '0-1',
+			resultReason: 'resignation',
+			winner: 'b',
+			canRematch: true,
+			ratingChange: { w: -20, b: 20 },
+		})
 		const { c, api } = await setup(full)
 		expect(c.result.value).toEqual({ result: '0-1', reason: 'resignation', winner: 'b', source: 'server' })
 		expect(c.interactive.value).toBe(false)
 		expect(c.fairPlayLock.value).toBe(false)
-		api.requestRematch.mockResolvedValue({ ...live(makeGame([], { id: 43, status: 'pending', creator: { userId: 'alice', displayName: 'Alice' } })), moves: [], chat: [] })
+		api.requestRematch.mockResolvedValue({
+			...live(makeGame([], { id: 43, status: 'pending', creator: { userId: 'alice', displayName: 'Alice' } })),
+			moves: [],
+			chat: [],
+		})
 		await c.rematch()
 		expect(c.rematchState.value).toBe('pending')
 	})

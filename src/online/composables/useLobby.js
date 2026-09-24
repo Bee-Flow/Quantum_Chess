@@ -25,7 +25,13 @@ let store = null
  * @return {object}
  */
 export function createLobby(deps = {}) {
-	const d = { api: realApi, initialLobby: initial('lobby', null), notify: (text) => showError(text), poller: {}, ...deps }
+	const d = {
+		api: realApi,
+		initialLobby: initial('lobby', null),
+		notify: (text) => showError(text),
+		poller: {},
+		...deps,
+	}
 	const api = d.api
 	const lobby = ref(d.initialLobby)
 	const loading = ref(false)

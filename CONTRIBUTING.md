@@ -38,7 +38,7 @@ it before your first change; it is the map of the repository.
 | `make build` | Production build of the web app into `js/` and `assets/` (`npm ci` runs only when the lock file changed) |
 | `npm run dev`, `npm run watch` | Development build with source maps, once or on every change |
 | `make test` | The unit tests: Vitest (`npm test`) and PHPUnit (`composer test:unit`) |
-| `make lint` | ESLint, the comment-reference check, `php -l`, php-cs-fixer, Psalm, `info.xml` against the App Store schema and the SPDX headers |
+| `make lint` | ESLint, the comment-reference check, the line-length check, `php -l`, php-cs-fixer, Psalm, `info.xml` against the App Store schema and the SPDX headers |
 | `npm run lint:fix`, `composer cs:fix` | Fix what the JavaScript and PHP linters can fix automatically |
 | `npm run fixtures` | Regenerate the rules engine's parity fixtures (see below) |
 | `npm run bench` | Benchmarks of the rules engine and the computer player |
@@ -120,7 +120,8 @@ source string invalidates its translations, so treat it as a product decision.
 
 - Every file starts with an SPDX licence header (`make lint-spdx` checks it) and a short doc block that says what
   the file is responsible for.
-- JavaScript follows `@nextcloud/eslint-config`, PHP the Nextcloud coding standard. Indent with tabs.
+- JavaScript follows `@nextcloud/eslint-config`, PHP the Nextcloud coding standard. Indent with tabs and keep
+  lines within 120 columns (`npm run lint:lines`); only a string too long for a line of its own may exceed it.
 - Use Nextcloud's components (`@nextcloud/vue`) and CSS variables; the app's own design tokens are in
   `src/styles/tokens.scss`.
 - Comments explain **why** and state contracts. They never refer to planning documents, work packages or release

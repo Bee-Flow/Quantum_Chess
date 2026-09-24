@@ -3,7 +3,8 @@
   - SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-<!-- The privacy notice before the first use of an LLM source, once per source; opened by useAiSources().ensureNotice. -->
+<!-- The privacy notice before the first use of an LLM source, once per source; opened by
+	useAiSources().ensureNotice. -->
 <template>
 	<NcDialog
 		v-if="aiNotice.open"
@@ -11,7 +12,11 @@
 		size="small"
 		@update:open="(v) => !v && answer(false)">
 		<p class="qc-ai-notice__text">
-			{{ t('quantumchess', 'Your position and questions will be sent to {provider}. No names or account data are included.', { provider: aiNotice.label }) }}
+			{{ t(
+				'quantumchess',
+				'Your position and questions will be sent to {provider}. No names or account data are included.',
+				{ provider: aiNotice.label },
+			) }}
 		</p>
 		<p v-if="aiNotice.adminNotice" class="qc-ai-notice__admin">
 			{{ aiNotice.adminNotice }}

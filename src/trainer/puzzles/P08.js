@@ -18,7 +18,10 @@ export default {
 	value: 75,
 	traps: [
 		{ code: 'a8-h8', value: 50, text: () => t('quantumchess', '50 %: only one part of the queen.') },
-		{ code: 'b2|d4-h8', value: 50, text: () => t('quantumchess', '50 %: these two parts add up to half the queen.') },
+		{ code: 'b2|d4-h8', value: 50, text: () => t(
+			'quantumchess',
+			'50 %: these two parts add up to half the queen.',
+		) },
 		{ code: 'd4-h8', value: 25, text: () => t('quantumchess', '25 %.') },
 		{ code: 'b2-h8', value: 25, text: () => t('quantumchess', '25 %.') },
 	],

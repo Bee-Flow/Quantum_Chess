@@ -20,7 +20,10 @@ export default {
 			setup: { fen: '3k4/pp6/8/8/8/8/5PPP/3R2K1 w - - 0 1' },
 			text: [
 				() => t('quantumchess', 'Pieces move as in chess. There is no check: take the enemy king and you win.'),
-				() => t('quantumchess', 'The ring around a king shows the chance it could be captured right now. It turns red at 100 %.'),
+				() => t(
+					'quantumchess',
+					'The ring around a king shows the chance it could be captured right now. It turns red at 100 %.',
+				),
 			],
 		},
 		{
@@ -29,17 +32,28 @@ export default {
 			prompt: () => t('quantumchess', 'Capture the black king.'),
 			success: { moveIs: ['d1-d8'] },
 			accepted: ['d1-d8'],
-			hints: [() => t('quantumchess', 'Which piece can travel the open d-file?'), { highlight: 'd1' }, { arrow: ['d1', 'd8'] }],
+			hints: [
+				() => t('quantumchess', 'Which piece can travel the open d-file?'),
+				{ highlight: 'd1' },
+				{ arrow: ['d1', 'd8'] },
+			],
 			done: () => t('quantumchess', 'The king is captured for certain: you win.'),
 			fail: () => t('quantumchess', 'The king is still on the board. Look along the open file.'),
 		},
 		{
 			type: 'task',
 			setup: { fen: '4k3/8/8/8/8/8/4BPPP/r5K1 w - - 0 1' },
-			prompt: () => t('quantumchess', 'The ring on your king shows 100 %: the black rook can take it. Make your king safe.'),
+			prompt: () => t(
+				'quantumchess',
+				'The ring on your king shows 100 %: the black rook can take it. Make your king safe.',
+			),
 			success: { kingRisk: 0 },
 			accepted: ['e2-d1', 'e2-f1', 'e2-d1|f1'],
-			hints: [() => t('quantumchess', 'Something has to stand between the rook and your king.'), { highlight: 'e2' }, { arrow: ['e2', 'f1'] }],
+			hints: [
+				() => t('quantumchess', 'Something has to stand between the rook and your king.'),
+				{ highlight: 'e2' },
+				{ arrow: ['e2', 'f1'] },
+			],
 			failReply: { engine: 3 },
 			done: () => t('quantumchess', 'Safe: the bishop blocks the rook. (Splitting it to d1 and f1 works too: both parts stand in the rook\'s way. A trick for later.)'),
 			fail: () => t('quantumchess', 'The rook captured your king. Put a piece in its way.'),
@@ -50,9 +64,16 @@ export default {
 			prompt: () => t('quantumchess', 'Win in one move.'),
 			success: { gameWon: true },
 			accepted: ['a1-a8'],
-			hints: [() => t('quantumchess', 'The black king has nowhere to go.'), { highlight: 'a1' }, { arrow: ['a1', 'a8'] }],
+			hints: [
+				() => t('quantumchess', 'The black king has nowhere to go.'),
+				{ highlight: 'a1' },
+				{ arrow: ['a1', 'a8'] },
+			],
 			done: () => t('quantumchess', 'Every black move now leaves the king capturable for certain, so the game ends at once: Black\'s king cannot escape.'),
-			fail: () => t('quantumchess', 'Black can still defend. Look for a move after which every black move leaves the king capturable.'),
+			fail: () => t(
+				'quantumchess',
+				'Black can still defend. Look for a move after which every black move leaves the king capturable.',
+			),
 		},
 		{
 			type: 'explain',

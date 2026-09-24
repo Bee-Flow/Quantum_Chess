@@ -49,16 +49,22 @@ final class OpenAiProvider extends HttpProvider {
 			}
 		}
 		$this->throwForStatus($status, $raw);
-		$choice = is_array($data) && isset($data['choices'][0]) && is_array($data['choices'][0]) ? $data['choices'][0] : null;
+		$choice = is_array($data) && isset($data['choices'][0]) && is_array($data['choices'][0])
+			? $data['choices'][0]
+			: null;
 		if ($choice === null) {
 			throw new ProviderException(UpstreamError::BadResponse, 'no choices');
 		}
 		$content = $choice['message']['content'] ?? null;
 		if (is_array($content)) {
-			$content = implode('', array_map(static fn ($part) => is_array($part) && is_string($part['text'] ?? null) ? $part['text'] : '', $content));
+			$content = implode('', array_map(
+				static fn ($part) => is_array($part) && is_string($part['text'] ?? null) ? $part['text'] : '',
+				$content,
+			));
 		}
 		$refusal = $choice['message']['refusal'] ?? null;
-		if ((!is_string($content) || trim($content) === '') && (is_string($refusal) || ($choice['finish_reason'] ?? null) === 'content_filter')) {
+		if ((!is_string($content) || trim($content) === '')
+			&& (is_string($refusal) || ($choice['finish_reason'] ?? null) === 'content_filter')) {
 			throw new ProviderException(UpstreamError::Refused, 'refusal');
 		}
 		if (!is_string($content) || trim($content) === '') {

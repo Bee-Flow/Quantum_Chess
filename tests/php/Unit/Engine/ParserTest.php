@@ -97,15 +97,30 @@ final class ParserTest extends TestCase {
 
 	public function testEveryWorkedExampleNotationParsesBack(): void {
 		// The notation examples of §5.7 and the notation strings of the worked examples (§10).
-		foreach (['Bc1xh6 {capture 50%}', 'd3-e4 {miss 75%}', '?Na4 {c4 50%}', 'Qd4|h5xh8 #', 'Ng1-f3|h3', 'Nf3xe5 {capture 25%} #', 'Ra1-a8 #'] as $text) {
+		foreach ([
+			'Bc1xh6 {capture 50%}',
+			'd3-e4 {miss 75%}',
+			'?Na4 {c4 50%}',
+			'Qd4|h5xh8 #',
+			'Ng1-f3|h3',
+			'Nf3xe5 {capture 25%} #',
+			'Ra1-a8 #',
+		] as $text) {
 			$this->assertNotNull($this->engine->parseMoveCode($text), $text);
 		}
 	}
 
 	public function testMoveCode(): void {
 		$this->assertSame('e2-e4', $this->engine->moveCode(['type' => 'standard', 'from' => [12], 'to' => [28]]));
-		$this->assertSame('e7-e8=Q', $this->engine->moveCode(['type' => 'standard', 'from' => [52], 'to' => [60], 'promo' => 'q']));
-		$this->assertSame('h4-h3|a4', $this->engine->moveCode(['type' => 'split', 'from' => [31], 'to' => [24, 23]]), 'index order, not name order (W12)');
+		$this->assertSame(
+			'e7-e8=Q',
+			$this->engine->moveCode(['type' => 'standard', 'from' => [52], 'to' => [60], 'promo' => 'q']),
+		);
+		$this->assertSame(
+			'h4-h3|a4',
+			$this->engine->moveCode(['type' => 'split', 'from' => [31], 'to' => [24, 23]]),
+			'index order, not name order (W12)',
+		);
 		$this->assertSame('d1-h1|d5', $this->engine->moveCode(['type' => 'split', 'from' => [3], 'to' => [35, 7]]));
 		$this->assertSame('f3|h3-g1', $this->engine->moveCode(['type' => 'merge', 'from' => [23, 21], 'to' => [6]]));
 		$this->assertSame('?a3', $this->engine->moveCode(['type' => 'measure', 'from' => [16], 'to' => []]));

@@ -68,7 +68,12 @@ class GameplayService {
 			$thinkMs = null;
 		}
 		if ($clientId !== null && ($stored = $this->moves->findByClientId($id, $clientId)) !== null) {
-			return ['game' => $game, 'move' => $stored, 'measurement' => $stored->getMeasurementRecord(), 'replayed' => true];
+			return [
+				'game' => $game,
+				'move' => $stored,
+				'measurement' => $stored->getMeasurementRecord(),
+				'replayed' => true,
+			];
 		}
 		$game = $this->lifecycle->resolveLazy($game);
 		if ($game->getStatus() !== Game::STATUS_ACTIVE) {
@@ -96,7 +101,14 @@ class GameplayService {
 		$measurement = $applied['measurement'];
 		$notation = $this->engine->moveNotation($state, $legal['code'], $measurement);
 		$json = $this->engine->serializeState($after);
-		$chain = $this->engine->chainNext((string)$game->getChain(), $ply, $legal['code'], $measurement['u'] ?? null, $measurement['key'] ?? null, $json);
+		$chain = $this->engine->chainNext(
+			(string)$game->getChain(),
+			$ply,
+			$legal['code'],
+			$measurement['u'] ?? null,
+			$measurement['key'] ?? null,
+			$json,
+		);
 		$capturedType = null;
 		$capturedAfter = $after['captured'];
 		if (count($capturedAfter) > count($state['captured'])) {
@@ -111,7 +123,9 @@ class GameplayService {
 		$move->setUid($uid);
 		$move->setCode($legal['code']);
 		$move->setNotation($notation);
-		$move->setMeasurement($measurement === null ? null : json_encode($measurement, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+		$move->setMeasurement(
+			$measurement === null ? null : json_encode($measurement, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+		);
 		$move->setChain($chain);
 		$move->setStateHash($this->engine->positionHash($after));
 		$move->setSupportKey($this->engine->supportKey($after));
@@ -120,7 +134,18 @@ class GameplayService {
 		$move->setCreatedAt($now);
 
 		try {
-			return $this->transaction->run(function () use ($game, $move, $after, $json, $chain, $color, $ply, $now, $measurement, $capturedType): array {
+			return $this->transaction->run(function () use (
+				$game,
+				$move,
+				$after,
+				$json,
+				$chain,
+				$color,
+				$ply,
+				$now,
+				$measurement,
+				$capturedType,
+			): array {
 				$move = $this->moves->insert($move);
 				$game->setState($json);
 				$game->setPly((int)$after['ply']);
@@ -158,7 +183,12 @@ class GameplayService {
 			}
 			if ($clientId !== null && ($stored = $this->moves->findByClientId($id, $clientId)) !== null) {
 				$fresh = $this->repository->find($id) ?? $game;
-				return ['game' => $fresh, 'move' => $stored, 'measurement' => $stored->getMeasurementRecord(), 'replayed' => true];
+				return [
+					'game' => $fresh,
+					'move' => $stored,
+					'measurement' => $stored->getMeasurementRecord(),
+					'replayed' => true,
+				];
 			}
 			throw $this->errors->conflict();
 		}
@@ -189,7 +219,10 @@ class GameplayService {
 	public function abort(int $id, string $uid): Game {
 		$game = $this->lifecycle->loadActive($id, $uid);
 		if ($game->getPly() >= 2) {
-			throw new ApiException(ApiError::AbortNotAllowed, $this->l->t('The game can only be aborted before both sides have moved.'));
+			throw new ApiException(
+				ApiError::AbortNotAllowed,
+				$this->l->t('The game can only be aborted before both sides have moved.'),
+			);
 		}
 		$color = (string)$game->colorOf($uid);
 		return $this->transaction->run(function () use ($game, $color, $uid): Game {

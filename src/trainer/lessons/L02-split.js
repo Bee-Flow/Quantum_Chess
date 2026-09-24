@@ -22,7 +22,11 @@ export default {
 			modes: ['split'],
 			success: { moveIs: ['g1-f3|h3'] },
 			accepted: ['g1-f3|h3'],
-			hints: [() => t('quantumchess', 'Choose Split, then tap the knight and both target squares.'), { highlight: 'g1' }, { arrow: ['g1', 'f3'] }],
+			hints: [
+				() => t('quantumchess', 'Choose Split, then tap the knight and both target squares.'),
+				{ highlight: 'g1' },
+				{ arrow: ['g1', 'f3'] },
+			],
 			reply: { scripted: 'e7-e6' },
 			done: () => t('quantumchess', 'The knight is now 50 % on f3 and 50 % on h3. The badges show each share.'),
 			fail: () => t('quantumchess', 'Split the knight to f3 and h3.'),
@@ -32,9 +36,16 @@ export default {
 			prompt: () => t('quantumchess', 'Split the f3 part again, to any two squares.'),
 			modes: ['split'],
 			success: { all: [{ moveType: 'split' }, { fromSquare: 'f3' }] },
-			hints: [() => t('quantumchess', 'Only the part on f3 moves. Split targets must be certainly empty.'), { highlight: 'f3' }, { arrow: ['f3', 'e5'] }],
+			hints: [
+				() => t('quantumchess', 'Only the part on f3 moves. Split targets must be certainly empty.'),
+				{ highlight: 'f3' },
+				{ arrow: ['f3', 'e5'] },
+			],
 			reply: { scripted: 'd7-d6' },
-			done: () => t('quantumchess', 'The knight is now 50 % on h3 and 25 % on each new square. The budget pips show 3/8.'),
+			done: () => t(
+				'quantumchess',
+				'The knight is now 50 % on h3 and 25 % on each new square. The budget pips show 3/8.',
+			),
 			fail: () => t('quantumchess', 'Split the part on f3.'),
 		},
 		{

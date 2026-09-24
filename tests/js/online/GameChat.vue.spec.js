@@ -11,8 +11,14 @@
 
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { computed, ref, shallowRef } from 'vue'
+import { computed, defineComponent, h, ref, shallowRef } from 'vue'
 import GameChat from '../../../src/online/components/GameChat.vue'
+
+// The emoji picker is loaded lazily; a stub keeps that import from finishing after the test environment is torn down.
+vi.mock('@nextcloud/vue/components/NcEmojiPicker', () => ({
+	__esModule: true,
+	default: defineComponent({ name: 'NcEmojiPicker', setup: (props, { slots }) => () => h('div', slots.default?.()) }),
+}))
 
 /**
  * A minimal online controller for the chat.
@@ -29,9 +35,33 @@ function controller({ muted = false, chatOpen = true } = {}) {
 		participant: computed(() => true),
 		can: computed(() => ({ chat: chatOpen })),
 		chat: ref([
-			{ id: 1, kind: 'system', userId: null, displayName: null, message: 'draw_offered', params: { color: 'b' }, createdAt: 1 },
-			{ id: 2, kind: 'text', userId: 'bob', displayName: 'Bob', message: '<img src=x onerror=alert(1)>hi', params: null, createdAt: 2 },
-			{ id: 3, kind: 'phrase', userId: 'alice', displayName: 'Alice', message: 'good_game', params: null, createdAt: 3 },
+			{
+				id: 1,
+				kind: 'system',
+				userId: null,
+				displayName: null,
+				message: 'draw_offered',
+				params: { color: 'b' },
+				createdAt: 1,
+			},
+			{
+				id: 2,
+				kind: 'text',
+				userId: 'bob',
+				displayName: 'Bob',
+				message: '<img src=x onerror=alert(1)>hi',
+				params: null,
+				createdAt: 2,
+			},
+			{
+				id: 3,
+				kind: 'phrase',
+				userId: 'alice',
+				displayName: 'Alice',
+				message: 'good_game',
+				params: null,
+				createdAt: 3,
+			},
 			{ id: 4, kind: 'text', userId: 'bob', displayName: 'Bob', message: 'second', params: null, createdAt: 4 },
 		]),
 		sendChat: vi.fn(async () => true),

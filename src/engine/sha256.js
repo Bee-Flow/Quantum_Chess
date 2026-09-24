@@ -135,7 +135,16 @@ function sha256Bytes(bytes) {
 	buf[total - 3] = (lo >>> 16) & 255
 	buf[total - 2] = (lo >>> 8) & 255
 	buf[total - 1] = lo & 255
-	const H = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19])
+	const H = new Uint32Array([
+		0x6a09e667,
+		0xbb67ae85,
+		0x3c6ef372,
+		0xa54ff53a,
+		0x510e527f,
+		0x9b05688c,
+		0x1f83d9ab,
+		0x5be0cd19,
+	])
 	const W = new Uint32Array(64)
 	for (let off = 0; off < total; off += 64) {
 		for (let t = 0; t < 16; t++) {

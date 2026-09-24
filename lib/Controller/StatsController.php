@@ -66,7 +66,13 @@ final class StatsController extends ApiController {
 	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 60, period: 3600)]
-	public function recordLocal(mixed $opponent = null, mixed $level = null, mixed $persona = null, mixed $result = null, mixed $color = null): JSONResponse {
+	public function recordLocal(
+		mixed $opponent = null,
+		mixed $level = null,
+		mixed $persona = null,
+		mixed $result = null,
+		mixed $color = null,
+	): JSONResponse {
 		return $this->respond(fn (string $uid) => ['local' => self::localDto($this->stats->recordLocal($uid, [
 			'opponent' => $opponent, 'level' => $level, 'persona' => $persona, 'result' => $result, 'color' => $color,
 		]))]);

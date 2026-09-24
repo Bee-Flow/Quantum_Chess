@@ -82,7 +82,15 @@ export function useBoardPointer({ frame, input, anim, squareFromEvent, items, in
 					input.value.select(press.square)
 				}
 				const item = items.value.find((p) => p.square === press.square)
-				drag.value = { from: press.square, key: item?.key, dragging: true, touch: press.touch, x: 0, y: 0, over: null }
+				drag.value = {
+					from: press.square,
+					key: item?.key,
+					dragging: true,
+					touch: press.touch,
+					x: 0,
+					y: 0,
+					over: null,
+				}
 			}
 			if (drag.value) {
 				const rect = frame.value.getBoundingClientRect()
@@ -178,5 +186,15 @@ export function useBoardPointer({ frame, input, anim, squareFromEvent, items, in
 		}, SPRING_BACK_MS)
 	}
 
-	return { drag, pointerSquare, returning, shaking, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onPointerLeave }
+	return {
+		drag,
+		pointerSquare,
+		returning,
+		shaking,
+		onPointerDown,
+		onPointerMove,
+		onPointerUp,
+		onPointerCancel,
+		onPointerLeave,
+	}
 }

@@ -60,15 +60,27 @@ final class GameplayServiceTest extends TestCase {
 
 	/** How often a notification of `$method` was sent. */
 	private function notified(string $method): int {
-		return count(array_filter($this->log, fn (string $entry) => str_starts_with($entry, 'notify ' . $method . '(')));
+		return count(array_filter(
+			$this->log,
+			fn (string $entry) => str_starts_with($entry, 'notify ' . $method . '('),
+		));
 	}
 
 	public function testCheckOrder(): void {
 		$this->assertApiError('not_found', fn () => $this->gameplay()->move(7, 'carol', 'e2-e4', 0, null, null));
 		$this->assertApiError('not_found', fn () => $this->gameplay()->move(8, 'alice', 'e2-e4', 0, null, null));
-		$this->assertSame(403, $this->assertApiError('not_your_turn', fn () => $this->gameplay()->move(7, 'bob', 'e7-e5', 0, null, null))->getStatus());
+		$this->assertSame(
+			403,
+			$this->assertApiError(
+				'not_your_turn',
+				fn () => $this->gameplay()->move(7, 'bob', 'e7-e5', 0, null, null),
+			)->getStatus(),
+		);
 		$this->assertApiError('conflict', fn () => $this->gameplay()->move(7, 'alice', 'e2-e4', 3, null, null));
-		$e = $this->assertApiError('illegal_move', fn () => $this->gameplay()->move(7, 'alice', 'e1-e3', 0, null, null));
+		$e = $this->assertApiError(
+			'illegal_move',
+			fn () => $this->gameplay()->move(7, 'alice', 'e1-e3', 0, null, null),
+		);
 		$this->assertIsString($e->getExtra()['reason']);
 		$this->game->setStatus(Game::STATUS_FINISHED);
 		$this->assertApiError('game_over', fn () => $this->gameplay()->move(7, 'alice', 'e2-e4', 0, null, null));
@@ -92,7 +104,10 @@ final class GameplayServiceTest extends TestCase {
 		$this->assertSame(self::NOW + 259200, $this->game->getDeadlineAt());
 		$this->assertSame(66, strlen($r['move']->getSupportKey()));
 		$this->assertSame('client-0001', $r['move']->getClientId());
-		$this->assertSame(['begin', 'insert move g1-f3|h3', 'save #7 rev 5→6', 'commit', 'notify yourTurn(#7, Move, NULL)'], $this->log);
+		$this->assertSame(
+			['begin', 'insert move g1-f3|h3', 'save #7 rev 5→6', 'commit', 'notify yourTurn(#7, Move, NULL)'],
+			$this->log,
+		);
 	}
 
 	public function testRolledMoveDrawsExactlyOnce(): void {
@@ -157,7 +172,10 @@ final class GameplayServiceTest extends TestCase {
 	public function testOfferWhileTheOtherOfferIsPendingAccepts(): void {
 		$this->game->setDrawOffer('w');
 		$game = $this->gameplay()->draw(7, 'bob', 'offer');
-		$this->assertSame([Game::STATUS_FINISHED, '1/2-1/2', 'agreement'], [$game->getStatus(), $game->getResult(), $game->getResultReason()]);
+		$this->assertSame(
+			[Game::STATUS_FINISHED, '1/2-1/2', 'agreement'],
+			[$game->getStatus(), $game->getResult(), $game->getResultReason()],
+		);
 		$this->assertContains('chat #7 draw_accepted {"color":"b"}', $this->log);
 	}
 
@@ -168,14 +186,30 @@ final class GameplayServiceTest extends TestCase {
 		$this->store($this->game);
 		$this->advance(['e2-e4']);
 		$game = $this->gameplay()->abort(7, 'bob');
-		$this->assertSame([Game::STATUS_ABORTED, 'aborted', 0, 'aborted'], [$game->getStatus(), $game->getResultReason(), $game->getRated(), $game->getUnratedReason()]);
+		$this->assertSame(
+			[Game::STATUS_ABORTED, 'aborted', 0, 'aborted'],
+			[$game->getStatus(), $game->getResultReason(), $game->getRated(), $game->getUnratedReason()],
+		);
 	}
 
 	public function testResign(): void {
 		$this->advance(['e2-e4', 'e7-e5']);
 		$game = $this->gameplay()->resign(7, 'alice');
-		$this->assertSame([Game::STATUS_FINISHED, '0-1', 'resignation'], [$game->getStatus(), $game->getResult(), $game->getResultReason()]);
-		$this->assertSame(['begin', 'rate #7 0-1', 'chat #7 resigned {"color":"w"}', 'save #7 rev 5→6', 'commit', "notify gameOver(#7, 'alice')"], $this->log);
+		$this->assertSame(
+			[Game::STATUS_FINISHED, '0-1', 'resignation'],
+			[$game->getStatus(), $game->getResult(), $game->getResultReason()],
+		);
+		$this->assertSame(
+			[
+				'begin',
+				'rate #7 0-1',
+				'chat #7 resigned {"color":"w"}',
+				'save #7 rev 5→6',
+				'commit',
+				"notify gameOver(#7, 'alice')",
+			],
+			$this->log,
+		);
 		$this->assertApiError('game_over', fn () => $this->gameplay()->resign(7, 'bob'));
 	}
 
@@ -184,6 +218,14 @@ final class GameplayServiceTest extends TestCase {
 		$this->game->setDeadlineAt(self::NOW - 50);
 		$this->assertApiError('game_over', fn () => $this->gameplay()->move(7, 'bob', 'd7-d6', 3, null, null));
 		$this->assertSame(1, $this->notified('gameOver'));
-		$this->assertSame([Game::STATUS_FINISHED, '1-0', 'timeout', self::NOW - 50], [$this->game->getStatus(), $this->game->getResult(), $this->game->getResultReason(), $this->game->getFinishedAt()]);
+		$this->assertSame(
+			[Game::STATUS_FINISHED, '1-0', 'timeout', self::NOW - 50],
+			[
+				$this->game->getStatus(),
+				$this->game->getResult(),
+				$this->game->getResultReason(),
+				$this->game->getFinishedAt(),
+			],
+		);
 	}
 }

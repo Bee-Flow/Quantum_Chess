@@ -27,7 +27,18 @@ final class MultiplayerSettingsServiceTest extends TestCase {
 		$result = $settings->setMultiplayer('bob', ['notifications' => ['chat' => false, 'previews' => false]]);
 		$this->assertFalse($result['notifications']['chat']);
 		$this->assertTrue($result['notifications']['yourTurn']);
-		$this->assertSame(['invites' => true, 'yourTurn' => true, 'reminders' => true, 'drawOffers' => true, 'results' => true, 'chat' => false, 'previews' => false], $settings->notificationSwitches('bob'));
+		$this->assertSame(
+			[
+				'invites' => true,
+				'yourTurn' => true,
+				'reminders' => true,
+				'drawOffers' => true,
+				'results' => true,
+				'chat' => false,
+				'previews' => false,
+			],
+			$settings->notificationSwitches('bob'),
+		);
 		$this->expectException(ApiException::class);
 		$settings->setMultiplayer('bob', ['notifications' => ['chat' => 'no']]);
 	}
@@ -36,14 +47,31 @@ final class MultiplayerSettingsServiceTest extends TestCase {
 		$settings = $this->multiplayerSettings();
 		$this->assertSame([
 			'invitePolicy' => 'everyone', 'blocked' => [], 'listed' => null, 'leaderboardMode' => 'opt-in',
-			'notifications' => ['invites' => true, 'yourTurn' => true, 'reminders' => true, 'drawOffers' => true, 'results' => true, 'chat' => true, 'previews' => true],
+			'notifications' => [
+				'invites' => true,
+				'yourTurn' => true,
+				'reminders' => true,
+				'drawOffers' => true,
+				'results' => true,
+				'chat' => true,
+				'previews' => true,
+			],
 		], $settings->getMultiplayer('bob'));
-		foreach ([['invitePolicy' => 'everyone'], ['blocked' => []], ['listed' => 'yes'], ['notifications' => ['unknown' => true]], ['notifications' => 'all']] as $patch) {
+		foreach ([
+			['invitePolicy' => 'everyone'],
+			['blocked' => []],
+			['listed' => 'yes'],
+			['notifications' => ['unknown' => true]],
+			['notifications' => 'all'],
+		] as $patch) {
 			try {
 				$settings->setMultiplayer('bob', $patch);
 				$this->fail('rejected: ' . json_encode($patch));
 			} catch (ApiException $e) {
-				$this->assertSame(['invalid_argument', 400, ['field' => array_key_first($patch)]], [$e->getErrorCode(), $e->getStatus(), $e->getExtra()]);
+				$this->assertSame(
+					['invalid_argument', 400, ['field' => array_key_first($patch)]],
+					[$e->getErrorCode(), $e->getStatus(), $e->getExtra()],
+				);
 			}
 		}
 	}

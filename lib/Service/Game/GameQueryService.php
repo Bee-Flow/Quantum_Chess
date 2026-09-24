@@ -49,12 +49,26 @@ class GameQueryService {
 	 * The user's lobby. Games where it is the user's move come first, nearest deadline first; open challenges are the
 	 * ones the user may join.
 	 *
-	 * @return array{yourTurn: list<Game>, waiting: list<Game>, invitations: list<Game>, outgoing: list<Game>, open: list<Game>, recent: list<Game>}
+	 * @return array{
+	 *     yourTurn: list<Game>,
+	 *     waiting: list<Game>,
+	 *     invitations: list<Game>,
+	 *     outgoing: list<Game>,
+	 *     open: list<Game>,
+	 *     recent: list<Game>,
+	 * }
 	 */
 	public function getLobby(string $uid): array {
 		$live = array_map(fn (Game $g) => $this->lifecycle->resolveLazy($g),
 			$this->games->findForUser($uid, [Game::STATUS_PENDING, Game::STATUS_OPEN, Game::STATUS_ACTIVE]));
-		$groups = ['yourTurn' => [], 'waiting' => [], 'invitations' => [], 'outgoing' => [], 'open' => [], 'recent' => []];
+		$groups = [
+			'yourTurn' => [],
+			'waiting' => [],
+			'invitations' => [],
+			'outgoing' => [],
+			'open' => [],
+			'recent' => [],
+		];
 		foreach ($live as $game) {
 			$status = $game->getStatus();
 			if ($status === Game::STATUS_ACTIVE) {
@@ -65,8 +79,11 @@ class GameQueryService {
 				$groups['outgoing'][] = $game;
 			}
 		}
-		usort($groups['yourTurn'], fn (Game $a, Game $b) => [$a->getDeadlineAt() ?? PHP_INT_MAX, $this->clock->lastActivity($a)]
-			<=> [$b->getDeadlineAt() ?? PHP_INT_MAX, $this->clock->lastActivity($b)]);
+		usort(
+			$groups['yourTurn'],
+			fn (Game $a, Game $b) => [$a->getDeadlineAt() ?? PHP_INT_MAX, $this->clock->lastActivity($a)]
+				<=> [$b->getDeadlineAt() ?? PHP_INT_MAX, $this->clock->lastActivity($b)],
+		);
 		foreach ($this->games->findOpen(100) as $game) {
 			if (count($groups['open']) >= self::LOBBY_GROUP_MAX) {
 				break;
@@ -215,7 +232,11 @@ class GameQueryService {
 	 */
 	public function recentOpponents(string $uid, int $limit = 8): array {
 		$result = [];
-		foreach ($this->games->findForUser($uid, [Game::STATUS_ACTIVE, Game::STATUS_FINISHED, Game::STATUS_ABORTED], 100) as $game) {
+		foreach ($this->games->findForUser(
+			$uid,
+			[Game::STATUS_ACTIVE, Game::STATUS_FINISHED, Game::STATUS_ABORTED],
+			100,
+		) as $game) {
 			$other = $game->opponentOf($uid);
 			if ($other !== null && !in_array($other, $result, true) && $this->userManager->userExists($other)) {
 				$result[] = $other;
@@ -233,7 +254,9 @@ class GameQueryService {
 	 * @return array{rated: bool, reason: ?string}
 	 */
 	public function ratedCheck(): array {
-		return $this->settings->ratedEnabled() ? ['rated' => true, 'reason' => null] : ['rated' => false, 'reason' => 'admin'];
+		return $this->settings->ratedEnabled()
+			? ['rated' => true, 'reason' => null]
+			: ['rated' => false, 'reason' => 'admin'];
 	}
 
 	/**

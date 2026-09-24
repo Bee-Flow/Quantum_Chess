@@ -37,7 +37,12 @@ function play(white, black, seed) {
 	const rolls = E.seededRng(1000 + seed)
 	while (state.result === null && state.ply < MAX_PLY) {
 		const level = state.turn === 'w' ? white : black
-		const r = bestMove(state, { level, seed: seed * 7919 + state.ply, deterministic: true, nodeBudget: BUDGETS[level - 1] })
+		const r = bestMove(state, {
+			level,
+			seed: seed * 7919 + state.ply,
+			deterministic: true,
+			nodeBudget: BUDGETS[level - 1],
+		})
 		state = E.applyMove(state, r.code, { rng: rolls }).state
 	}
 	if (state.result !== null) {

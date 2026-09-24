@@ -21,7 +21,8 @@ test.describe('installation', () => {
 		await openApp(page)
 		// the header knows where the app lives (apps/, custom_apps/ or another apps path)
 		const icon = appMenuIcon(page)
-		const src = (await icon.getAttribute('src')) ?? (await icon.getAttribute('style')).match(/url\("?([^")]+)"?\)/)[1]
+		const src = (await icon.getAttribute('src'))
+			?? (await icon.getAttribute('style')).match(/url\("?([^")]+)"?\)/)[1]
 		for (const url of [src, src.replace('app.svg', 'app-dark.svg')]) {
 			const response = await request.get(new URL(url, env.baseURL).href)
 			expect(response.ok(), `${url} is served`).toBe(true)

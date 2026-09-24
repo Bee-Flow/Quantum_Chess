@@ -58,7 +58,10 @@ class AiSettingsService {
 	 * The user's own provider, or null.
 	 */
 	public function personalProvider(string $uid): ?ProviderConfig {
-		return ProviderConfig::fromStored($this->userConfig->getValueArray($uid, Application::APP_ID, 'ai_provider', [], true), false);
+		return ProviderConfig::fromStored(
+			$this->userConfig->getValueArray($uid, Application::APP_ID, 'ai_provider', [], true),
+			false,
+		);
 	}
 
 	/** The source the user prefers, or null. */
@@ -133,7 +136,13 @@ class AiSettingsService {
 				if (!$this->settings->allowPersonalKeys()) {
 					throw $this->personalKeysOff();
 				}
-				$provider = $this->providers->validate('provider', $patch['provider'], 'personal', false, $this->settings->localAllowlist());
+				$provider = $this->providers->validate(
+					'provider',
+					$patch['provider'],
+					'personal',
+					false,
+					$this->settings->localAllowlist(),
+				);
 			} else {
 				throw $this->invalid('provider');
 			}
@@ -150,11 +159,13 @@ class AiSettingsService {
 		$default = false;
 		if (array_key_exists('defaultSource', $patch)) {
 			$default = $patch['defaultSource'];
-			if ($default !== null && $default !== '' && (!is_string($default) || AiSource::tryFrom($default) === null)) {
+			if ($default !== null && $default !== ''
+				&& (!is_string($default) || AiSource::tryFrom($default) === null)) {
 				throw $this->invalid('defaultSource');
 			}
 		}
-		if ($provider !== false && !is_string($apiKey) && !ProviderConfig::sameEndpoint($this->personalProvider($uid), $provider)) {
+		if ($provider !== false && !is_string($apiKey)
+			&& !ProviderConfig::sameEndpoint($this->personalProvider($uid), $provider)) {
 			// A saved key follows its provider only while the address stays the same.
 			$apiKey = '';
 		}
@@ -184,11 +195,21 @@ class AiSettingsService {
 	 * @throws ApiException invalid_argument or url_not_allowed, naming `baseUrl`
 	 */
 	public function checkProvider(array $value, string $scope): ProviderConfig {
-		return $this->providers->validate('baseUrl', $value, $scope, $this->settings->sharedAllowLocal(), $this->settings->localAllowlist());
+		return $this->providers->validate(
+			'baseUrl',
+			$value,
+			$scope,
+			$this->settings->sharedAllowLocal(),
+			$this->settings->localAllowlist(),
+		);
 	}
 
 	private function personalKeysOff(): ApiException {
-		return new ApiException(ApiError::AiUnavailable, $this->l->t('Your administrator does not allow personal AI providers.'), ['reason' => 'disabled']);
+		return new ApiException(
+			ApiError::AiUnavailable,
+			$this->l->t('Your administrator does not allow personal AI providers.'),
+			['reason' => 'disabled'],
+		);
 	}
 
 	private function invalid(string $field): ApiException {

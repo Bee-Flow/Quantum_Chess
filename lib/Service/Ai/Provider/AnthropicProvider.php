@@ -33,7 +33,12 @@ final class AnthropicProvider extends HttpProvider {
 				$turns[] = ['role' => $message['role'], 'content' => $message['content']];
 			}
 		}
-		$body = ['model' => $model, 'max_tokens' => $options['maxTokens'], 'system' => implode("\n\n", $system), 'messages' => $turns];
+		$body = [
+			'model' => $model,
+			'max_tokens' => $options['maxTokens'],
+			'system' => implode("\n\n", $system),
+			'messages' => $turns,
+		];
 		if ($options['safetyId'] !== null) {
 			$body['metadata'] = ['user_id' => $options['safetyId']];
 		}
@@ -81,7 +86,9 @@ final class AnthropicProvider extends HttpProvider {
 		foreach ($data['data'] as $entry) {
 			$id = is_array($entry) ? ($entry['id'] ?? null) : null;
 			if (is_string($id) && $id !== '' && strlen($id) <= 128) {
-				$label = is_string($entry['display_name'] ?? null) && $entry['display_name'] !== '' ? $entry['display_name'] : $id;
+				$label = is_string($entry['display_name'] ?? null) && $entry['display_name'] !== ''
+					? $entry['display_name']
+					: $id;
 				$models[] = ['id' => $id, 'label' => $label];
 			}
 		}

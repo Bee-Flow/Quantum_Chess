@@ -37,7 +37,14 @@ final class InvitationServiceTest extends TestCase {
 	}
 
 	public function testCreateChecksTheRequestInOrder(): void {
-		$request = ['opponent' => '', 'color' => 'x', 'rated' => 'yes', 'timeControl' => 'corr:2d', 'message' => 5, 'scopeGroup' => 7];
+		$request = [
+			'opponent' => '',
+			'color' => 'x',
+			'rated' => 'yes',
+			'timeControl' => 'corr:2d',
+			'message' => 5,
+			'scopeGroup' => 7,
+		];
 		$steps = [
 			[fn () => $this->allow['multiplayer'] = false, ['multiplayer_disabled', 403, []]],
 			[fn () => $this->allow['multiplayer'] = true, ['invalid_argument', 400, ['field' => 'opponent']]],
@@ -90,29 +97,48 @@ final class InvitationServiceTest extends TestCase {
 		];
 		foreach ($steps as $i => [$change, $expected]) {
 			$change();
-			$this->assertSame($expected, $this->apiError(fn () => $this->invitations()->create('alice', $request)), "step $i");
+			$this->assertSame(
+				$expected,
+				$this->apiError(fn () => $this->invitations()->create('alice', $request)),
+				"step $i",
+			);
 		}
 		$this->assertSame([], $this->log, 'a rejected request stores nothing');
 	}
 
 	public function testCreateAnOpenChallenge(): void {
-		$game = $this->invitations()->create('alice', ['rated' => false, 'color' => 'b', 'timeControl' => 'corr:7d',
-			'message' => "  Let's\x07play\n ", 'scopeGroup' => 'staff']);
+		$game = $this->invitations()->create('alice', [
+			'rated' => false,
+			'color' => 'b',
+			'timeControl' => 'corr:7d',
+			'message' => "  Let's\x07play\n ",
+			'scopeGroup' => 'staff',
+		]);
 		$this->assertSame([
 			'creatorUid' => 'alice', 'opponentUid' => null, 'colorChoice' => 'b', 'status' => Game::STATUS_OPEN,
-			'state' => $this->engine->serializeState($this->engine->initialState()), 'ply' => 0, 'turn' => 'w', 'rev' => 1,
+			'state' => $this->engine->serializeState($this->engine->initialState()),
+			'ply' => 0, 'turn' => 'w', 'rev' => 1,
 			'ratedRequested' => 0, 'rated' => 0, 'timeControl' => 'corr:7d', 'expiresAt' => self::NOW + 7 * 86400,
-			'inviteMessage' => "Let's play", 'scopeGroup' => 'staff', 'createdAt' => self::NOW, 'updatedAt' => self::NOW,
-		], $this->fields($game, ['creatorUid', 'opponentUid', 'colorChoice', 'status', 'state', 'ply', 'turn', 'rev', 'ratedRequested',
-			'rated', 'timeControl', 'expiresAt', 'inviteMessage', 'scopeGroup', 'createdAt', 'updatedAt']));
+			'inviteMessage' => "Let's play", 'scopeGroup' => 'staff',
+			'createdAt' => self::NOW, 'updatedAt' => self::NOW,
+		], $this->fields($game, [
+			'creatorUid', 'opponentUid', 'colorChoice', 'status', 'state', 'ply', 'turn', 'rev', 'ratedRequested',
+			'rated', 'timeControl', 'expiresAt', 'inviteMessage', 'scopeGroup', 'createdAt', 'updatedAt',
+		]));
 		$this->assertSame(['insert game #100'], $this->log, 'an open challenge notifies nobody');
 	}
 
 	public function testCreateAnInvitation(): void {
 		$game = $this->invitations()->create('alice', ['opponent' => 'Bob', 'color' => 'w', 'message' => '']);
-		$this->assertSame(['bob', 'r', Game::STATUS_PENDING, 1, 'corr:3d', self::NOW + 14 * 86400, null],
-			[$game->getOpponentUid(), $game->getColorChoice(), $game->getStatus(), $game->getRatedRequested(), $game->getTimeControl(),
-				$game->getExpiresAt(), $game->getInviteMessage()], 'rated games always get random colours');
+		$this->assertSame(['bob', 'r', Game::STATUS_PENDING, 1, 'corr:3d', self::NOW + 14 * 86400, null], [
+			$game->getOpponentUid(),
+			$game->getColorChoice(),
+			$game->getStatus(),
+			$game->getRatedRequested(),
+			$game->getTimeControl(),
+			$game->getExpiresAt(),
+			$game->getInviteMessage(),
+		], 'rated games always get random colours');
 		$this->assertSame(['insert game #100', 'notify invite(#100)'], $this->log);
 		$long = $this->invitations()->create('alice', ['opponent' => 'bob', 'message' => str_repeat('é', 250)]);
 		$this->assertSame(200, mb_strlen((string)$long->getInviteMessage()));
@@ -121,18 +147,33 @@ final class InvitationServiceTest extends TestCase {
 	public function testAcceptStartsTheGame(): void {
 		$this->store(GameBuilder::pending());
 		$game = $this->invitations()->accept(7, 'bob');
-		$this->assertSame([Game::STATUS_ACTIVE, 'alice', 'bob', 1, null, self::NOW + 259200, self::NOW, null],
-			[$game->getStatus(), $game->getWhiteUid(), $game->getBlackUid(), $game->getRated(), $game->getUnratedReason(),
-				$game->getDeadlineAt(), $game->getStartedAt(), $game->getExpiresAt()]);
+		$this->assertSame([Game::STATUS_ACTIVE, 'alice', 'bob', 1, null, self::NOW + 259200, self::NOW, null], [
+			$game->getStatus(),
+			$game->getWhiteUid(),
+			$game->getBlackUid(),
+			$game->getRated(),
+			$game->getUnratedReason(),
+			$game->getDeadlineAt(),
+			$game->getStartedAt(),
+			$game->getExpiresAt(),
+		]);
 		$this->assertSame($this->engine->chainStart(7, 'alice', 'bob', self::NOW - 600), $game->getChain());
-		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)', 'notify inviteAccepted(#7, false)'], $this->log);
+		$this->assertSame(
+			['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)', 'notify inviteAccepted(#7, false)'],
+			$this->log,
+		);
 	}
 
 	public function testAcceptDecidesColoursAndRating(): void {
 		$this->store(GameBuilder::pending(['colorChoice' => 'b', 'timeControl' => 'corr:none']));
 		$game = $this->invitations()->accept(7, 'bob');
-		$this->assertSame(['bob', 'alice', 0, 'admin', null], [$game->getWhiteUid(), $game->getBlackUid(), $game->getRated(),
-			$game->getUnratedReason(), $game->getDeadlineAt()]);
+		$this->assertSame(['bob', 'alice', 0, 'admin', null], [
+			$game->getWhiteUid(),
+			$game->getBlackUid(),
+			$game->getRated(),
+			$game->getUnratedReason(),
+			$game->getDeadlineAt(),
+		]);
 
 		$this->store(GameBuilder::pending(['colorChoice' => 'r']));
 		$this->config['ratedEnabled'] = false;
@@ -144,20 +185,39 @@ final class InvitationServiceTest extends TestCase {
 
 		$this->store(GameBuilder::pending(['ratedRequested' => 0]));
 		$game = $this->invitations()->accept(7, 'bob');
-		$this->assertSame([0, null], [$game->getRated(), $game->getUnratedReason()], 'an unrated request keeps no reason');
+		$this->assertSame(
+			[0, null],
+			[$game->getRated(), $game->getUnratedReason()],
+			'an unrated request keeps no reason',
+		);
 	}
 
 	public function testOnlyTheInviteeAcceptsOrDeclines(): void {
 		$this->store(GameBuilder::pending());
-		$this->assertSame(['invalid_status', 409, []], $this->apiError(fn () => $this->invitations()->accept(7, 'alice')));
-		$this->assertSame(['invalid_status', 409, []], $this->apiError(fn () => $this->invitations()->decline(7, 'alice')));
+		$this->assertSame(
+			['invalid_status', 409, []],
+			$this->apiError(fn () => $this->invitations()->accept(7, 'alice')),
+		);
+		$this->assertSame(
+			['invalid_status', 409, []],
+			$this->apiError(fn () => $this->invitations()->decline(7, 'alice')),
+		);
 		$this->assertSame(['not_found', 404, []], $this->apiError(fn () => $this->invitations()->accept(7, 'carol')));
 		$this->assertSame(['not_found', 404, []], $this->apiError(fn () => $this->invitations()->accept(8, 'bob')));
 		$this->allow['active'] = 'too_many_active';
-		$this->assertSame(['too_many_active', 429, []], $this->apiError(fn () => $this->invitations()->accept(7, 'bob')));
+		$this->assertSame(
+			['too_many_active', 429, []],
+			$this->apiError(fn () => $this->invitations()->accept(7, 'bob')),
+		);
 		$this->store(GameBuilder::active());
-		$this->assertSame(['invalid_status', 409, []], $this->apiError(fn () => $this->invitations()->accept(7, 'bob')));
-		$this->assertSame(['invalid_status', 409, []], $this->apiError(fn () => $this->invitations()->decline(7, 'bob')));
+		$this->assertSame(
+			['invalid_status', 409, []],
+			$this->apiError(fn () => $this->invitations()->accept(7, 'bob')),
+		);
+		$this->assertSame(
+			['invalid_status', 409, []],
+			$this->apiError(fn () => $this->invitations()->decline(7, 'bob')),
+		);
 		$this->assertSame([], $this->log);
 	}
 
@@ -165,7 +225,10 @@ final class InvitationServiceTest extends TestCase {
 		$this->store(GameBuilder::pending());
 		$game = $this->invitations()->decline(7, 'bob');
 		$this->assertSame([Game::STATUS_DECLINED, self::NOW], [$game->getStatus(), $game->getFinishedAt()]);
-		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)', 'notify inviteDeclined(#7)'], $this->log);
+		$this->assertSame(
+			['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)', 'notify inviteDeclined(#7)'],
+			$this->log,
+		);
 	}
 
 	public function testCancel(): void {
@@ -174,9 +237,15 @@ final class InvitationServiceTest extends TestCase {
 		$this->assertSame([Game::STATUS_CANCELLED, self::NOW], [$game->getStatus(), $game->getFinishedAt()]);
 		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)'], $this->log);
 		$this->store(GameBuilder::pending());
-		$this->assertSame(['invalid_status', 409, []], $this->apiError(fn () => $this->invitations()->cancel(7, 'bob')));
+		$this->assertSame(
+			['invalid_status', 409, []],
+			$this->apiError(fn () => $this->invitations()->cancel(7, 'bob')),
+		);
 		$this->store(GameBuilder::active());
-		$this->assertSame(['invalid_status', 409, []], $this->apiError(fn () => $this->invitations()->cancel(7, 'alice')));
+		$this->assertSame(
+			['invalid_status', 409, []],
+			$this->apiError(fn () => $this->invitations()->cancel(7, 'alice')),
+		);
 	}
 
 	public function testJoinChecks(): void {
@@ -187,24 +256,40 @@ final class InvitationServiceTest extends TestCase {
 		$this->assertSame(['not_found', 404, []], $this->apiError(fn () => $this->invitations()->join(7, 'carol')));
 		$this->allow['seeOpen'] = true;
 		$this->allow['active'] = 'too_many_active';
-		$this->assertSame(['too_many_active', 429, []], $this->apiError(fn () => $this->invitations()->join(7, 'carol')));
+		$this->assertSame(
+			['too_many_active', 429, []],
+			$this->apiError(fn () => $this->invitations()->join(7, 'carol')),
+		);
 		$this->store(GameBuilder::pending());
-		$this->assertSame(['invalid_status', 409, []], $this->apiError(fn () => $this->invitations()->join(7, 'alice')));
-		$this->assertSame(['not_found', 404, []], $this->apiError(fn () => $this->invitations()->join(7, 'carol')), 'a taken challenge cannot be probed');
+		$this->assertSame(
+			['invalid_status', 409, []],
+			$this->apiError(fn () => $this->invitations()->join(7, 'alice')),
+		);
+		$this->assertSame(
+			['not_found', 404, []],
+			$this->apiError(fn () => $this->invitations()->join(7, 'carol')),
+			'a taken challenge cannot be probed',
+		);
 		$this->assertSame([], $this->log);
 	}
 
 	public function testJoinAnExpiredChallenge(): void {
 		$this->store(GameBuilder::open(['expiresAt' => self::NOW]));
 		$this->assertSame(['not_found', 404, []], $this->apiError(fn () => $this->invitations()->join(7, 'carol')));
-		$this->assertSame([Game::STATUS_EXPIRED, self::NOW], [$this->stored[7]->getStatus(), $this->stored[7]->getFinishedAt()]);
+		$this->assertSame(
+			[Game::STATUS_EXPIRED, self::NOW],
+			[$this->stored[7]->getStatus(), $this->stored[7]->getFinishedAt()],
+		);
 		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)'], $this->log);
 	}
 
 	public function testJoin(): void {
 		$this->store(GameBuilder::open(['colorChoice' => 'w', 'ratedRequested' => 0]));
 		$game = $this->invitations()->join(7, 'carol');
-		$this->assertSame([Game::STATUS_ACTIVE, 'carol', 'alice', 'carol'], [$game->getStatus(), $game->getOpponentUid(), $game->getWhiteUid(), $game->getBlackUid()]);
+		$this->assertSame(
+			[Game::STATUS_ACTIVE, 'carol', 'alice', 'carol'],
+			[$game->getStatus(), $game->getOpponentUid(), $game->getWhiteUid(), $game->getBlackUid()],
+		);
 		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteAccepted(#7, true)'], $this->log);
 	}
 
@@ -218,20 +303,37 @@ final class InvitationServiceTest extends TestCase {
 	public function testRematchOffer(): void {
 		$this->store(GameBuilder::finished(['ratedRequested' => 1, 'timeControl' => 'corr:7d']));
 		$game = $this->invitations()->rematch(7, 'bob');
-		$this->assertSame(['bob', 'alice', 'w', Game::STATUS_PENDING, 1, 1, 'corr:7d', self::NOW + 86400, 7],
-			[$game->getCreatorUid(), $game->getOpponentUid(), $game->getColorChoice(), $game->getStatus(), $game->getRev(),
-				$game->getRatedRequested(), $game->getTimeControl(), $game->getExpiresAt(), $game->getRematchOf()]);
+		$this->assertSame(['bob', 'alice', 'w', Game::STATUS_PENDING, 1, 1, 'corr:7d', self::NOW + 86400, 7], [
+			$game->getCreatorUid(),
+			$game->getOpponentUid(),
+			$game->getColorChoice(),
+			$game->getStatus(),
+			$game->getRev(),
+			$game->getRatedRequested(),
+			$game->getTimeControl(),
+			$game->getExpiresAt(),
+			$game->getRematchOf(),
+		]);
 		$this->assertSame(100, $this->stored[7]->getRematchId());
-		$this->assertSame(['begin', 'insert game #100', 'chat #7 rematch_offered {"color":"b"}', 'save #7 rev 5→6', 'commit',
-			'notify invite(#100)'], $this->log);
+		$this->assertSame([
+			'begin', 'insert game #100', 'chat #7 rematch_offered {"color":"b"}', 'save #7 rev 5→6', 'commit',
+			'notify invite(#100)',
+		], $this->log);
 	}
 
 	public function testRematchIsIdempotent(): void {
-		$this->store(GameBuilder::finished(['rematchId' => 8]), GameBuilder::pending(['id' => 8, 'creatorUid' => 'bob', 'opponentUid' => 'alice']));
+		$this->store(
+			GameBuilder::finished(['rematchId' => 8]),
+			GameBuilder::pending(['id' => 8, 'creatorUid' => 'bob', 'opponentUid' => 'alice']),
+		);
 		$this->assertSame(8, $this->invitations()->rematch(7, 'bob')->getId(), 'the requester gets the pending offer');
 		$this->assertSame([], $this->log);
 		$accepted = $this->invitations()->rematch(7, 'alice');
-		$this->assertSame([8, Game::STATUS_ACTIVE], [$accepted->getId(), $accepted->getStatus()], 'the other player accepts it');
+		$this->assertSame(
+			[8, Game::STATUS_ACTIVE],
+			[$accepted->getId(), $accepted->getStatus()],
+			'the other player accepts it',
+		);
 		$this->log = [];
 		$this->assertSame(8, $this->invitations()->rematch(7, 'bob')->getId(), 'a running rematch is returned');
 		$this->assertSame([], $this->log);
@@ -239,18 +341,30 @@ final class InvitationServiceTest extends TestCase {
 
 	public function testRematchChecks(): void {
 		$this->store(GameBuilder::active());
-		$this->assertSame(['invalid_status', 409, []], $this->apiError(fn () => $this->invitations()->rematch(7, 'bob')));
+		$this->assertSame(
+			['invalid_status', 409, []],
+			$this->apiError(fn () => $this->invitations()->rematch(7, 'bob')),
+		);
 		$this->assertSame(['not_found', 404, []], $this->apiError(fn () => $this->invitations()->rematch(7, 'carol')));
 		$this->store(GameBuilder::finished(['blackUid' => null, 'opponentUid' => null]));
-		$this->assertSame(['user_not_found', 404, []], $this->apiError(fn () => $this->invitations()->rematch(7, 'alice')));
+		$this->assertSame(
+			['user_not_found', 404, []],
+			$this->apiError(fn () => $this->invitations()->rematch(7, 'alice')),
+		);
 		$this->store(GameBuilder::finished());
 		$this->allow['limits'] = 'too_many_invitations';
-		$this->assertSame(['too_many_invitations', 429, []], $this->apiError(fn () => $this->invitations()->rematch(7, 'alice')));
+		$this->assertSame(
+			['too_many_invitations', 429, []],
+			$this->apiError(fn () => $this->invitations()->rematch(7, 'alice')),
+		);
 		$this->assertSame([], $this->log);
 	}
 
 	public function testSimultaneousRematchRequestsAreIdempotent(): void {
-		$this->store(GameBuilder::finished(), GameBuilder::pending(['id' => 8, 'creatorUid' => 'bob', 'opponentUid' => 'alice']));
+		$this->store(
+			GameBuilder::finished(),
+			GameBuilder::pending(['id' => 8, 'creatorUid' => 'bob', 'opponentUid' => 'alice']),
+		);
 		// bob's first request loses the race against his own second request, which created game 8 meanwhile
 		$this->updateOk = false;
 		$this->onConflict = fn () => $this->stored[7]->setRematchId(8);

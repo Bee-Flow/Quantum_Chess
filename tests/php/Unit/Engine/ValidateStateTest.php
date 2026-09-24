@@ -119,10 +119,18 @@ final class ValidateStateTest extends TestCase {
 			$this->assertSame($json, $e->serializeState($e->validateState($s)));
 			$this->assertSame($json, $e->serializeState($e->validateState($json)));
 			$this->assertSame($json, $e->serializeState($e->parseState($json)));
-			$this->assertSame($json, json_encode($e->validateState($json), JSON_UNESCAPED_SLASHES), 'the copy is canonical as it is');
+			$this->assertSame(
+				$json,
+				json_encode($e->validateState($json), JSON_UNESCAPED_SLASHES),
+				'the copy is canonical as it is',
+			);
 		}
 		$reversed = array_reverse($e->initialState(), true);
-		$this->assertSame(Engine::START_JSON, $e->serializeState($e->validateState($reversed)), 'keys in another order are canonicalised');
+		$this->assertSame(
+			Engine::START_JSON,
+			$e->serializeState($e->validateState($reversed)),
+			'keys in another order are canonicalised',
+		);
 		$this->assertSame(Engine::START_JSON, json_encode($e->validateState($reversed), JSON_UNESCAPED_SLASHES));
 	}
 
@@ -164,9 +172,18 @@ final class ValidateStateTest extends TestCase {
 		yield 'I12 v = 2' => [static fn (array $s): array => ['v' => 2] + $s, 'I12'];
 		yield 'I12 v = "1"' => [static fn (array $s): array => ['v' => '1'] + $s, 'I12'];
 		yield 'I8 short types' => [static fn (array $s): array => ['types' => substr($s['types'], 1)] + $s, 'I8'];
-		yield 'I8 bad type letter' => [static fn (array $s): array => ['types' => 'x' . substr($s['types'], 1)] + $s, 'I8'];
-		yield 'I8 queen id changes type' => [static fn (array $s): array => ['types' => 'kr' . substr($s['types'], 2)] + $s, 'I8'];
-		yield 'I8 pawn id becomes a king' => [static fn (array $s): array => ['types' => substr($s['types'], 0, 8) . 'k' . substr($s['types'], 9)] + $s, 'I8'];
+		yield 'I8 bad type letter' => [
+			static fn (array $s): array => ['types' => 'x' . substr($s['types'], 1)] + $s,
+			'I8',
+		];
+		yield 'I8 queen id changes type' => [
+			static fn (array $s): array => ['types' => 'kr' . substr($s['types'], 2)] + $s,
+			'I8',
+		];
+		yield 'I8 pawn id becomes a king' => [
+			static fn (array $s): array => ['types' => substr($s['types'], 0, 8) . 'k' . substr($s['types'], 9)] + $s,
+			'I8',
+		];
 		yield 'turn' => [static fn (array $s): array => ['turn' => 'x'] + $s, 'shape'];
 		yield 'castling order' => [static fn (array $s): array => ['castling' => 'QK'] + $s, 'shape'];
 		yield 'castling empty' => [static fn (array $s): array => ['castling' => ''] + $s, 'shape'];
@@ -180,28 +197,80 @@ final class ValidateStateTest extends TestCase {
 		yield 'I11 fullmove 0' => [static fn (array $s): array => ['fullmove' => 0] + $s, 'I11'];
 		yield 'I11 empty history' => [static fn (array $s): array => ['history' => []] + $s, 'I11', true];
 		yield 'I11 bad history entry' => [static fn (array $s): array => ['history' => ['XYZ']] + $s, 'I11', true];
-		yield 'I11 wrong last hash' => [static fn (array $s): array => ['history' => ['0123456789abcdef']] + $s, 'I11', true];
-		yield 'I11 history longer than halfmove + 1' => [static fn (array $s): array => ['history' => ['0123456789abcdef', $s['history'][0]]] + $s, 'I11'];
+		yield 'I11 wrong last hash' => [
+			static fn (array $s): array => ['history' => ['0123456789abcdef']] + $s,
+			'I11',
+			true,
+		];
+		yield 'I11 history longer than halfmove + 1' => [
+			static fn (array $s): array => ['history' => ['0123456789abcdef', $s['history'][0]]] + $s,
+			'I11',
+		];
 		yield 'I11 result shape' => [static fn (array $s): array => ['result' => ['result' => '1-0']] + $s, 'I11'];
-		yield 'I11 result key order' => [static fn (array $s): array => ['result' => ['reason' => 'king_trapped', 'result' => '1-0']] + $s, 'I11'];
-		yield 'I11 result value' => [static fn (array $s): array => ['result' => ['result' => '2-0', 'reason' => 'king_trapped']] + $s, 'I11'];
-		yield 'I11 result reason' => [static fn (array $s): array => ['result' => ['result' => '1-0', 'reason' => 'resigned']] + $s, 'I11'];
-		yield 'I11 result mismatch' => [static fn (array $s): array => ['result' => ['result' => '1/2-1/2', 'reason' => 'king_trapped']] + $s, 'I11'];
-		yield 'I4 king_captured with both kings' => [static fn (array $s): array => ['result' => ['result' => '1-0', 'reason' => 'king_captured']] + $s, 'I4'];
+		yield 'I11 result key order' => [
+			static fn (array $s): array => ['result' => ['reason' => 'king_trapped', 'result' => '1-0']] + $s,
+			'I11',
+		];
+		yield 'I11 result value' => [
+			static fn (array $s): array => ['result' => ['result' => '2-0', 'reason' => 'king_trapped']] + $s,
+			'I11',
+		];
+		yield 'I11 result reason' => [
+			static fn (array $s): array => ['result' => ['result' => '1-0', 'reason' => 'resigned']] + $s,
+			'I11',
+		];
+		yield 'I11 result mismatch' => [
+			static fn (array $s): array => ['result' => ['result' => '1/2-1/2', 'reason' => 'king_trapped']] + $s,
+			'I11',
+		];
+		yield 'I4 king_captured with both kings' => [
+			static fn (array $s): array => ['result' => ['result' => '1-0', 'reason' => 'king_captured']] + $s,
+			'I4',
+		];
 		yield 'I7 no worlds' => [static fn (array $s): array => ['worlds' => []] + $s, 'I7'];
-		yield 'I7 too many worlds' => [static fn (array $s): array => ['worlds' => array_fill(0, 65, $s['worlds'][0])] + $s, 'I7'];
+		yield 'I7 too many worlds' => [
+			static fn (array $s): array => ['worlds' => array_fill(0, 65, $s['worlds'][0])] + $s,
+			'I7',
+		];
 		yield 'world shape' => [static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0]]]] + $s, 'shape'];
-		yield 'board length' => [static fn (array $s): array => ['worlds' => [[substr($s['worlds'][0][0], 1), $T]]] + $s, 'shape'];
-		yield 'board character' => [static fn (array $s): array => ['worlds' => [['Z' . substr($s['worlds'][0][0], 1), $T]]] + $s, 'shape'];
+		yield 'board length' => [
+			static fn (array $s): array => ['worlds' => [[substr($s['worlds'][0][0], 1), $T]]] + $s,
+			'shape',
+		];
+		yield 'board character' => [
+			static fn (array $s): array => ['worlds' => [['Z' . substr($s['worlds'][0][0], 1), $T]]] + $s,
+			'shape',
+		];
 		yield 'I5 weight 0' => [static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0], 0]]] + $s, 'I5'];
-		yield 'I5 weight float' => [static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0], $T - 0.5]]] + $s, 'I5'];
-		yield 'I5 weight string' => [static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0], (string)$T]]] + $s, 'I5'];
-		yield 'I5 weight too large' => [static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0], $T + 1]]] + $s, 'I5'];
+		yield 'I5 weight float' => [
+			static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0], $T - 0.5]]] + $s,
+			'I5',
+		];
+		yield 'I5 weight string' => [
+			static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0], (string)$T]]] + $s,
+			'I5',
+		];
+		yield 'I5 weight too large' => [
+			static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0], $T + 1]]] + $s,
+			'I5',
+		];
 		yield 'I5 sum' => [static fn (array $s): array => ['worlds' => [[$s['worlds'][0][0], $T - 1]]] + $s, 'I5'];
-		yield 'I2 captured duplicate' => [static fn (array $s): array => ['captured' => [...$s['captured'], $s['captured'][0]]] + $s, 'I2'];
-		yield 'I2 captured out of range' => [static fn (array $s): array => ['captured' => [...array_slice($s['captured'], 1), 32]] + $s, 'I2'];
-		yield 'I2 captured live piece' => [static fn (array $s): array => ['captured' => [...$s['captured'], 2]] + $s, 'I2'];
-		yield 'I2 live piece missing' => [static fn (array $s): array => ['captured' => array_slice($s['captured'], 1)] + $s, 'I2'];
+		yield 'I2 captured duplicate' => [
+			static fn (array $s): array => ['captured' => [...$s['captured'], $s['captured'][0]]] + $s,
+			'I2',
+		];
+		yield 'I2 captured out of range' => [
+			static fn (array $s): array => ['captured' => [...array_slice($s['captured'], 1), 32]] + $s,
+			'I2',
+		];
+		yield 'I2 captured live piece' => [
+			static fn (array $s): array => ['captured' => [...$s['captured'], 2]] + $s,
+			'I2',
+		];
+		yield 'I2 live piece missing' => [
+			static fn (array $s): array => ['captured' => array_slice($s['captured'], 1)] + $s,
+			'I2',
+		];
 		yield 'I2 piece twice' => [static function (array $s): array {
 			$b = $s['worlds'][0][0];
 			$b[7] = 'C';
@@ -248,7 +317,13 @@ final class ValidateStateTest extends TestCase {
 
 	public function testI3AndI4PawnsAndKingsAreClassical(): void {
 		foreach ([
-			[[[['e1' => 'A', 'e8' => 'a', 'a2' => 'I'], self::T / 2], [['e1' => 'A', 'e8' => 'a', 'a3' => 'I'], self::T / 2]], 'I3'],
+			[
+				[
+					[['e1' => 'A', 'e8' => 'a', 'a2' => 'I'], self::T / 2],
+					[['e1' => 'A', 'e8' => 'a', 'a3' => 'I'], self::T / 2],
+				],
+				'I3',
+			],
 			[[[['e1' => 'A', 'e8' => 'a'], self::T / 2], [['e2' => 'A', 'e8' => 'a'], self::T / 2]], 'I4'],
 		] as [$worlds, $expect]) {
 			try {
@@ -284,7 +359,11 @@ final class ValidateStateTest extends TestCase {
 	public function testI10EnPassantDetailsWithoutWrapAround(): void {
 		$e = self::engine();
 		$this->assertSame('e3', $e->setupPosition(['fen' => '4k3/8/8/8/3pP3/8/8/4K3 b - e3 0 1'])['ep']);
-		foreach (['4k3/8/8/8/p6P/8/8/4K3 b - - 0 1' => 'h3', '4k3/8/8/8/4P3/8/8/4K3 b - - 0 1' => 'e3', '4k3/8/8/8/3pP3/4N3/8/4K3 b - - 0 1' => 'e3'] as $fen => $ep) {
+		foreach ([
+			'4k3/8/8/8/p6P/8/8/4K3 b - - 0 1' => 'h3',
+			'4k3/8/8/8/4P3/8/8/4K3 b - - 0 1' => 'e3',
+			'4k3/8/8/8/3pP3/4N3/8/4K3 b - - 0 1' => 'e3',
+		] as $fen => $ep) {
 			$s = $e->setupPosition(['fen' => $fen]);
 			$s['ep'] = $ep;
 			$this->assertSame('I10', self::code(self::rehash($s)), $fen);
@@ -328,8 +407,33 @@ final class ValidateStateTest extends TestCase {
 
 	public function testRandomMutationsNeverThrowAnythingElse(): void {
 		$e = self::engine();
-		$pool = [$e->initialState(), self::base(), self::ghosty(), $e->setupPosition(['fen' => '3qk3/8/8/8/8/8/8/3QK3 w - - 0 1', 'prelude' => ['d1-d4|h5', 'd8-a5|d5']])];
-		$values = [null, 0, -1, 1, 1.5, self::T, self::T + 1, '', 'w', '-', 'e3', 'K', [], [[]], ['result' => '1-0'], true, str_repeat('x', 64), NAN, INF];
+		$pool = [
+			$e->initialState(),
+			self::base(),
+			self::ghosty(),
+			$e->setupPosition(['fen' => '3qk3/8/8/8/8/8/8/3QK3 w - - 0 1', 'prelude' => ['d1-d4|h5', 'd8-a5|d5']]),
+		];
+		$values = [
+			null,
+			0,
+			-1,
+			1,
+			1.5,
+			self::T,
+			self::T + 1,
+			'',
+			'w',
+			'-',
+			'e3',
+			'K',
+			[],
+			[[]],
+			['result' => '1-0'],
+			true,
+			str_repeat('x', 64),
+			NAN,
+			INF,
+		];
 		$x = 2024;
 		$rand = static function (int $n) use (&$x): int {
 			$x = ($x * 1103515245 + 12345) & 0x7fffffff;
@@ -366,7 +470,10 @@ final class ValidateStateTest extends TestCase {
 				$this->assertSame($e->serializeState($valid), $e->serializeState($e->validateState($valid)));
 				$this->assertIsArray($e->generateMoves($valid));
 			} catch (InvalidStateException $ex) {
-				$this->assertContains($ex->getInvariant(), ['shape', 'I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10', 'I11', 'I12']);
+				$this->assertContains(
+					$ex->getInvariant(),
+					['shape', 'I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10', 'I11', 'I12'],
+				);
 			}
 		}
 		$this->assertGreaterThan(0, $accepted);

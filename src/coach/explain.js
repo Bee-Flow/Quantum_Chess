@@ -34,12 +34,30 @@ export function engineAnswer(state, analysis, color) {
 	const pct = Math.round(forMover(analysis.E, color) * 100)
 	const lines = [t('quantumchess', 'Your winning chances: about {pct} %.', { pct })]
 	if (state.turn === color) {
-		lines.push(t('quantumchess', 'Best move: {move}. {theme}', { move: '`' + best[0].code + '`', theme: themeText(themeOf(state, best[0].code)) }, undefined, RAW))
+		lines.push(t(
+			'quantumchess',
+			'Best move: {move}. {theme}',
+			{ move: '`' + best[0].code + '`', theme: themeText(themeOf(state, best[0].code)) },
+			undefined,
+			RAW,
+		))
 		if (best.length > 1) {
-			lines.push(t('quantumchess', 'Also good: {moves}.', { moves: best.slice(1).map((b) => '`' + b.code + '`').join(', ') }, undefined, RAW))
+			lines.push(t(
+				'quantumchess',
+				'Also good: {moves}.',
+				{ moves: best.slice(1).map((b) => '`' + b.code + '`').join(', ') },
+				undefined,
+				RAW,
+			))
 		}
 	} else {
-		lines.push(t('quantumchess', 'Your opponent\'s best move: {move}.', { move: '`' + best[0].code + '`' }, undefined, RAW))
+		lines.push(t(
+			'quantumchess',
+			'Your opponent\'s best move: {move}.',
+			{ move: '`' + best[0].code + '`' },
+			undefined,
+			RAW,
+		))
 	}
 	return lines.join('\n\n')
 }

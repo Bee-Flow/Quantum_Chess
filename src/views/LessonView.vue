@@ -29,7 +29,9 @@
 				<h2>{{ t('quantumchess', 'Lesson {n}', { n: lesson.order }) }} · {{ lesson.title() }}</h2>
 				<p>{{ lesson.goal() }}</p>
 			</div>
-			<ol class="qc-lesson__dots" :aria-label="t('quantumchess', 'Step {n} of {total}', { n: index + 1, total: lesson.steps.length })">
+			<ol
+				class="qc-lesson__dots"
+				:aria-label="t('quantumchess', 'Step {n} of {total}', { n: index + 1, total: lesson.steps.length })">
 				<li
 					v-for="(s, i) in lesson.steps"
 					:key="i"
@@ -147,7 +149,9 @@
 							v-if="otherKeys.length && phase === 'success'"
 							data-test="show-other-result"
 							@click="toggleOther">
-							{{ otherIndex + 1 < otherKeys.length ? t('quantumchess', 'Show the other result') : t('quantumchess', 'Back to what happened') }}
+							{{ otherIndex + 1 < otherKeys.length
+								? t('quantumchess', 'Show the other result')
+								: t('quantumchess', 'Back to what happened') }}
 						</NcButton>
 						<NcButton
 							v-if="step.type === 'watch' && phase === 'ready'"
@@ -175,7 +179,9 @@
 							variant="primary"
 							data-test="lesson-next"
 							@click="advance">
-							{{ index + 1 < lesson.steps.length ? t('quantumchess', 'Next') : t('quantumchess', 'Finish') }}
+							{{ index + 1 < lesson.steps.length
+								? t('quantumchess', 'Next')
+								: t('quantumchess', 'Finish') }}
 						</NcButton>
 					</div>
 				</template>

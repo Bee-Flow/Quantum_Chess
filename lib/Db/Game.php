@@ -118,7 +118,13 @@ class Game extends Entity {
 	public const STATUS_CANCELLED = 'cancelled';
 	public const STATUS_EXPIRED = 'expired';
 	public const STATUS_ABORTED = 'aborted';
-	public const FINAL_STATUSES = [self::STATUS_FINISHED, self::STATUS_DECLINED, self::STATUS_CANCELLED, self::STATUS_EXPIRED, self::STATUS_ABORTED];
+	public const FINAL_STATUSES = [
+		self::STATUS_FINISHED,
+		self::STATUS_DECLINED,
+		self::STATUS_CANCELLED,
+		self::STATUS_EXPIRED,
+		self::STATUS_ABORTED,
+	];
 
 	/** After a declined draw offer, the same player may offer again once this many plies have been played. */
 	public const DRAW_COOLDOWN_PLIES = 6;
@@ -168,17 +174,18 @@ class Game extends Entity {
 	protected $finishedAt;
 
 	public function __construct() {
-		foreach (['ply', 'rev', 'ratedRequested', 'rated', 'deadlineAt', 'expiresAt', 'reminders', 'extDays', 'drawOfferPly',
-			'lastDrawW', 'lastDrawB', 'ratingWBefore', 'ratingBBefore', 'ratingWDelta', 'ratingBDelta', 'rematchOf',
-			'rematchId', 'chatCount', 'muteW', 'muteB', 'visibility', 'createdAt', 'updatedAt', 'startedAt', 'lastMoveAt',
-			'finishedAt'] as $field) {
+		foreach (['ply', 'rev', 'ratedRequested', 'rated', 'deadlineAt', 'expiresAt', 'reminders', 'extDays',
+			'drawOfferPly', 'lastDrawW', 'lastDrawB', 'ratingWBefore', 'ratingBBefore', 'ratingWDelta', 'ratingBDelta',
+			'rematchOf', 'rematchId', 'chatCount', 'muteW', 'muteB', 'visibility', 'createdAt', 'updatedAt',
+			'startedAt', 'lastMoveAt', 'finishedAt'] as $field) {
 			$this->addType($field, Types::INTEGER);
 		}
 		$this->addType('id', Types::INTEGER);
 	}
 
 	public function isParticipant(string $uid): bool {
-		return $uid !== '' && in_array($uid, [$this->whiteUid, $this->blackUid, $this->creatorUid, $this->opponentUid], true);
+		return $uid !== ''
+			&& in_array($uid, [$this->whiteUid, $this->blackUid, $this->creatorUid, $this->opponentUid], true);
 	}
 
 	/** The colour of `$uid` once the game has started, else null. */

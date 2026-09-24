@@ -17,7 +17,16 @@ namespace OCA\QuantumChess\Engine\Internal;
  *
  * @internal
  *
- * @psalm-type SplitContext = array{X: int, f: int, type: int, letter: string, onF: list<int>, rc: list<int>|null, base: int, flags: array<int, list<int>>}
+ * @psalm-type SplitContext = array{
+ *     X: int,
+ *     f: int,
+ *     type: int,
+ *     letter: string,
+ *     onF: list<int>,
+ *     rc: list<int>|null,
+ *     base: int,
+ *     flags: array<int, list<int>>,
+ * }
  */
 final class QuantumMoves {
 	/**
@@ -33,7 +42,16 @@ final class QuantumMoves {
 				$onF[] = $i;
 			}
 		}
-		return ['X' => $X, 'f' => $f, 'type' => $a->typeCodes[$X], 'letter' => $letter, 'onF' => $onF, 'rc' => null, 'base' => -1, 'flags' => []];
+		return [
+			'X' => $X,
+			'f' => $f,
+			'type' => $a->typeCodes[$X],
+			'letter' => $letter,
+			'onF' => $onF,
+			'rc' => null,
+			'base' => -1,
+			'flags' => [],
+		];
 	}
 
 	/**
@@ -65,9 +83,17 @@ final class QuantumMoves {
 	 * @param SplitContext|null $ctx
 	 * @return MoveRecord|string record or reason code
 	 */
-	public static function evalSplit(Analysis $a, int $X, int $f, int $t1, int $t2, ?array &$ctx = null): MoveRecord|string {
+	public static function evalSplit(
+		Analysis $a,
+		int $X,
+		int $f,
+		int $t1,
+		int $t2,
+		?array &$ctx = null,
+	): MoveRecord|string {
 		$type = $a->typeCodes[$X];
-		if ($t1 === $f || $t2 === $f || !isset(Tables::$geo[$type * 4096 + $f * 64 + $t1]) || !isset(Tables::$geo[$type * 4096 + $f * 64 + $t2])) {
+		if ($t1 === $f || $t2 === $f || !isset(Tables::$geo[$type * 4096 + $f * 64 + $t1])
+			|| !isset(Tables::$geo[$type * 4096 + $f * 64 + $t2])) {
 			return 'unreachable';
 		}
 		if ($a->occ[$t1] >= 0 || $a->occ[$t2] >= 0) {
@@ -167,7 +193,8 @@ final class QuantumMoves {
 	public static function evalMerge(Analysis $a, int $X, int $f1, int $f2, int $t): MoveRecord|string {
 		$type = $a->typeCodes[$X];
 		$ci = $X < 16 ? 0 : 1;
-		if ($t === $f1 || $t === $f2 || !isset(Tables::$geo[$type * 4096 + $f1 * 64 + $t]) || !isset(Tables::$geo[$type * 4096 + $f2 * 64 + $t])) {
+		if ($t === $f1 || $t === $f2 || !isset(Tables::$geo[$type * 4096 + $f1 * 64 + $t])
+			|| !isset(Tables::$geo[$type * 4096 + $f2 * 64 + $t])) {
 			return 'unreachable';
 		}
 		$z = $a->occ[$t];

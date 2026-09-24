@@ -85,7 +85,14 @@ export function useMoveSender(game, deps) {
 		} else {
 			const applied = replayMove(before, { code: legal.code, measurement: null })
 			p.optimistic = true
-			await animate(() => animator()?.play({ before, after: applied.state, move: applied.move, measurement: null, actor: 'self', names: eventNames(before.turn) }))
+			await animate(() => animator()?.play({
+				before,
+				after: applied.state,
+				move: applied.move,
+				measurement: null,
+				actor: 'self',
+				names: eventNames(before.turn),
+			}))
 			replay.state.value = applied.state
 			replay.lastMove.value = { move: applied.move, key: null }
 		}
@@ -103,7 +110,12 @@ export function useMoveSender(game, deps) {
 				return
 			}
 			try {
-				const res = await api.sendMove(gameId, { code: p.code, ply: p.ply, clientId: p.clientId, thinkMs: p.thinkMs })
+				const res = await api.sendMove(gameId, {
+					code: p.code,
+					ply: p.ply,
+					clientId: p.clientId,
+					thinkMs: p.thinkMs,
+				})
 				await confirm(p, res)
 				return
 			} catch (e) {
@@ -143,9 +155,20 @@ export function useMoveSender(game, deps) {
 		replay.verify(dto, applied)
 		await animate(async () => {
 			if (p.handle) {
-				await p.handle.resolve({ after: applied.state, measurement: applied.measurement, names: eventNames(p.before.turn) })
+				await p.handle.resolve({
+					after: applied.state,
+					measurement: applied.measurement,
+					names: eventNames(p.before.turn),
+				})
 			} else if (!p.optimistic && animator()) {
-				await animator().play({ before: p.before, after: applied.state, move: applied.move, measurement: applied.measurement, actor: 'self', names: eventNames(p.before.turn) })
+				await animator().play({
+					before: p.before,
+					after: applied.state,
+					move: applied.move,
+					measurement: applied.measurement,
+					actor: 'self',
+					names: eventNames(p.before.turn),
+				})
 			}
 		})
 		replay.pushConfirmed(dto, applied)

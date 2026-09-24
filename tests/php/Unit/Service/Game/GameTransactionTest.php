@@ -53,7 +53,11 @@ final class GameTransactionTest extends TestCase {
 			return 'done';
 		});
 		$this->assertSame('done', $result);
-		$this->assertSame(['begin', 'work', 'commit', 'first', 'warning', 'third'], $this->log, 'a failing callback is logged and skipped');
+		$this->assertSame(
+			['begin', 'work', 'commit', 'first', 'warning', 'third'],
+			$this->log,
+			'a failing callback is logged and skipped',
+		);
 	}
 
 	public function testARollbackDiscardsTheCallbacks(): void {

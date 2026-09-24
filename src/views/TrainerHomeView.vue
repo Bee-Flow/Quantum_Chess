@@ -36,10 +36,25 @@
 					<p>{{ t('quantumchess', 'Sharpen your skills with the puzzles below.') }}</p>
 				</div>
 			</template>
-			<NcProgressBar :value="Math.round((100 * doneCount) / LESSONS.length)" size="medium" :aria-label="t('quantumchess', 'Lessons done')" />
+			<NcProgressBar
+				:value="Math.round((100 * doneCount) / LESSONS.length)"
+				size="medium"
+				:aria-label="t('quantumchess', 'Lessons done')" />
 			<p class="qc-trainer__summary">
-				{{ n('quantumchess', '{done} of {total} lesson done', '{done} of {total} lessons done', doneCount, { done: doneCount, total: LESSONS.length }) }}
-				· {{ n('quantumchess', '{done} of {total} puzzle solved', '{done} of {total} puzzles solved', solvedCount, { done: solvedCount, total: PUZZLES.length }) }}
+				{{ n(
+					'quantumchess',
+					'{done} of {total} lesson done',
+					'{done} of {total} lessons done',
+					doneCount,
+					{ done: doneCount, total: LESSONS.length },
+				) }}
+				· {{ n(
+					'quantumchess',
+					'{done} of {total} puzzle solved',
+					'{done} of {total} puzzles solved',
+					solvedCount,
+					{ done: solvedCount, total: PUZZLES.length },
+				) }}
 			</p>
 		</section>
 
@@ -58,7 +73,9 @@
 						</span>
 						<span class="qc-trainer__lesson-text">
 							<span class="qc-trainer__lesson-title">{{ l.title() }}</span>
-							<span class="qc-trainer__lesson-meta">{{ n('quantumchess', '{n} minute', '{n} minutes', l.minutes, { n: l.minutes }) }}</span>
+							<span class="qc-trainer__lesson-meta">{{
+								n('quantumchess', '{n} minute', '{n} minutes', l.minutes, { n: l.minutes })
+							}}</span>
 						</span>
 						<StarRating v-if="lessonDone(l.id)" :stars="progress.lessons[l.id].stars ?? 1" />
 					</router-link>
@@ -113,9 +130,24 @@ const solvedCount = computed(() => PUZZLES.filter((p) => puzzleSolved(p.id)).len
 const upcoming = computed(() => nextLesson(LESSONS))
 
 const groups = computed(() => [
-	{ id: 'essentials', title: t('quantumchess', 'Essentials'), subtitle: t('quantumchess', 'about 10 minutes'), lessons: LESSONS.filter((l) => l.group === 'essentials') },
-	{ id: 'deeper', title: t('quantumchess', 'Deeper'), subtitle: t('quantumchess', 'about 15 minutes'), lessons: LESSONS.filter((l) => l.group === 'deeper') },
-	{ id: 'graduation', title: t('quantumchess', 'Graduation'), subtitle: t('quantumchess', 'one full game'), lessons: LESSONS.filter((l) => l.group === 'graduation') },
+	{
+		id: 'essentials',
+		title: t('quantumchess', 'Essentials'),
+		subtitle: t('quantumchess', 'about 10 minutes'),
+		lessons: LESSONS.filter((l) => l.group === 'essentials'),
+	},
+	{
+		id: 'deeper',
+		title: t('quantumchess', 'Deeper'),
+		subtitle: t('quantumchess', 'about 15 minutes'),
+		lessons: LESSONS.filter((l) => l.group === 'deeper'),
+	},
+	{
+		id: 'graduation',
+		title: t('quantumchess', 'Graduation'),
+		subtitle: t('quantumchess', 'one full game'),
+		lessons: LESSONS.filter((l) => l.group === 'graduation'),
+	},
 ])
 
 const boards = new Map()

@@ -156,7 +156,8 @@ export function useOnlineGame(id, deps = {}) {
 	// --- Derived game state ------------------------------------------------------------------------------------------
 
 	const interactive = computed(() => !loading.value && !error.value && status.value === 'active' && !pending.value
-		&& !animating.value && myColor.value !== null && state.value.turn === myColor.value && game.value.turn === myColor.value
+		&& !animating.value && myColor.value !== null
+		&& state.value.turn === myColor.value && game.value.turn === myColor.value
 		&& state.value.result === null)
 	const legalMoves = computed(() => (interactive.value ? generateMoves(state.value) : []))
 	const movableColor = computed(() => myColor.value)
@@ -325,7 +326,11 @@ export function useOnlineGame(id, deps = {}) {
 		if (!game.value || pending.value || animating.value || disposed) {
 			return
 		}
-		const res = await api.pollGame(gameId, { rev: game.value.rev, ply: moves.value.length, chat: lastChatId(), watching: 1 }, { signal })
+		const res = await api.pollGame(
+			gameId,
+			{ rev: game.value.rev, ply: moves.value.length, chat: lastChatId(), watching: 1 },
+			{ signal },
+		)
 		if (res?.changed && !pending.value) {
 			const hadTurn = game.value.turn
 			await ingest(res)
@@ -547,6 +552,7 @@ export function useOnlineGame(id, deps = {}) {
 		load,
 		start,
 		pollNow: () => poller.pollNow(),
-		shareUrl: computed(() => (globalThis.location?.origin ?? '') + generateUrl('/apps/quantumchess/g/{id}', { id: gameId })),
+		shareUrl: computed(() => (globalThis.location?.origin ?? '')
+			+ generateUrl('/apps/quantumchess/g/{id}', { id: gameId })),
 	}
 }

@@ -144,19 +144,42 @@ trait SettingsFixture {
 
 	private function settings(): AppSettings {
 		$groups = $this->createMock(IGroupManager::class);
-		$groups->method('groupExists')->willReturnCallback(fn (string $gid) => in_array($gid, ['staff', 'admin'], true));
-		$groups->method('isInGroup')->willReturnCallback(fn (string $uid, string $gid) => $uid === 'bob' && in_array($gid, $this->groupsOfBob, true));
+		$groups->method('groupExists')->willReturnCallback(
+			fn (string $gid) => in_array($gid, ['staff', 'admin'], true),
+		);
+		$groups->method('isInGroup')->willReturnCallback(
+			fn (string $uid, string $gid) => $uid === 'bob' && in_array($gid, $this->groupsOfBob, true),
+		);
 		$users = $this->createMock(IUserManager::class);
 		$users->method('get')->willReturn($this->createMock(IUser::class));
-		return new AppSettings($this->appConfig(), $groups, $users, $this->l(), $this->keys(), $this->guard(), $this->providerValidator());
+		return new AppSettings(
+			$this->appConfig(),
+			$groups,
+			$users,
+			$this->l(),
+			$this->keys(),
+			$this->guard(),
+			$this->providerValidator(),
+		);
 	}
 
 	private function aiSettings(): AiSettingsService {
-		return new AiSettingsService($this->settings(), $this->userConfig(), $this->keys(), $this->providerValidator(), $this->l());
+		return new AiSettingsService(
+			$this->settings(),
+			$this->userConfig(),
+			$this->keys(),
+			$this->providerValidator(),
+			$this->l(),
+		);
 	}
 
 	private function multiplayerSettings(): MultiplayerSettingsService {
-		return new MultiplayerSettingsService($this->userConfig(), $this->createMock(RatingService::class), $this->settings(), $this->l());
+		return new MultiplayerSettingsService(
+			$this->userConfig(),
+			$this->createMock(RatingService::class),
+			$this->settings(),
+			$this->l(),
+		);
 	}
 
 	private function usage(): AiUsageService {
@@ -171,7 +194,15 @@ trait SettingsFixture {
 		$users->method('get')->willReturn($this->createMock(IUser::class));
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1790000000);
-		return new AiUsageService($this->appConfig(), $limiter, $this->cacheFactory(), $users, $time, $this->settings(), $this->l());
+		return new AiUsageService(
+			$this->appConfig(),
+			$limiter,
+			$this->cacheFactory(),
+			$users,
+			$time,
+			$this->settings(),
+			$this->l(),
+		);
 	}
 
 	private function cacheFactory(): ICacheFactory {
@@ -188,12 +219,25 @@ trait SettingsFixture {
 	}
 
 	private function sources(): AiSourceService {
-		return new AiSourceService($this->settings(), $this->aiSettings(), $this->keys(), $this->nextcloudAi(), $this->usage(), $this->guard(),
-			$this->providerValidator(), $this->l());
+		return new AiSourceService(
+			$this->settings(),
+			$this->aiSettings(),
+			$this->keys(),
+			$this->nextcloudAi(),
+			$this->usage(),
+			$this->guard(),
+			$this->providerValidator(),
+			$this->l(),
+		);
 	}
 
 	private function providerFactory(IClientService $clients): ProviderFactory {
-		return new ProviderFactory($this->nextcloudAi(), $clients, $this->cacheFactory(), $this->createMock(LoggerInterface::class));
+		return new ProviderFactory(
+			$this->nextcloudAi(),
+			$clients,
+			$this->cacheFactory(),
+			$this->createMock(LoggerInterface::class),
+		);
 	}
 
 	private function validator(): AiRequestValidator {
@@ -201,11 +245,28 @@ trait SettingsFixture {
 	}
 
 	private function llm(IClientService $clients): LlmService {
-		return new LlmService($this->validator(), new PromptBuilder(new Engine()), $this->sources(), $this->usage(), $this->settings(),
-			$this->nextcloudAi(), $this->providerFactory($clients), $this->cacheFactory(), $this->l(), $this->createMock(LoggerInterface::class));
+		return new LlmService(
+			$this->validator(),
+			new PromptBuilder(new Engine()),
+			$this->sources(),
+			$this->usage(),
+			$this->settings(),
+			$this->nextcloudAi(),
+			$this->providerFactory($clients),
+			$this->cacheFactory(),
+			$this->l(),
+			$this->createMock(LoggerInterface::class),
+		);
 	}
 
 	private function tester(IClientService $clients): ConnectionTester {
-		return new ConnectionTester($this->aiSettings(), $this->settings(), $this->keys(), $this->guard(), $this->providerFactory($clients), $this->l());
+		return new ConnectionTester(
+			$this->aiSettings(),
+			$this->settings(),
+			$this->keys(),
+			$this->guard(),
+			$this->providerFactory($clients),
+			$this->l(),
+		);
 	}
 }

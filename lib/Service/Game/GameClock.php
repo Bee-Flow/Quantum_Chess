@@ -94,7 +94,11 @@ class GameClock {
 			}
 		}
 		if ($bareKing) {
-			return ['status' => Game::STATUS_FINISHED, 'result' => '1/2-1/2', 'reason' => $abandoned ? 'abandoned' : 'timeout_draw'];
+			return [
+				'status' => Game::STATUS_FINISHED,
+				'result' => '1/2-1/2',
+				'reason' => $abandoned ? 'abandoned' : 'timeout_draw',
+			];
 		}
 		return [
 			'status' => Game::STATUS_FINISHED,

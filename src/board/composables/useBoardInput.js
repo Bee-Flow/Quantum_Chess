@@ -30,7 +30,8 @@ export { markerKind, MODES } from '../input/targets.js'
  * The board input controller: a reactive object that unwraps the refs of `BoardSelection` and `MoveFlow` and adds the
  * members below.
  *
- * @typedef {import('./useBoardSelection.js').BoardSelection & import('./useMoveFlow.js').MoveFlow & BoardInputActions} BoardInput
+ * @typedef {import('./useBoardSelection.js').BoardSelection & import('./useMoveFlow.js').MoveFlow
+ *   & BoardInputActions} BoardInput
  */
 
 /**
@@ -67,7 +68,13 @@ export { markerKind, MODES } from '../input/targets.js'
  * @param {object} [options.preferences] preference source (default: boardPrefs)
  * @return {BoardInput}
  */
-export function useBoardInput({ state, legalMoves = [], movableColor = null, interactive = false, preferences = boardPrefs }) {
+export function useBoardInput({
+	state,
+	legalMoves = [],
+	movableColor = null,
+	interactive = false,
+	preferences = boardPrefs,
+}) {
 	const whatIf = ref(null)
 	const feedback = shallowRef(null)
 	const panelOpen = ref(false)
@@ -100,7 +107,10 @@ export function useBoardInput({ state, legalMoves = [], movableColor = null, int
 			return null
 		}
 		try {
-			return movePreview(st.value, m, { format: preferences.probabilityFormat, physics: preferences.physicsNames })
+			return movePreview(st.value, m, {
+				format: preferences.probabilityFormat,
+				physics: preferences.physicsNames,
+			})
 		} catch {
 			return null
 		}

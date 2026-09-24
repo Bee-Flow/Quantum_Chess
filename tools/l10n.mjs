@@ -419,7 +419,9 @@ if (command === 'extract') {
 	const list = [...entries.values()].map((e) => ({ ...e, comments: [...e.comments] }))
 	mkdirSync(dirname(POT), { recursive: true })
 	writeFileSync(POT, writePo(list, null))
-	console.info(`${list.length} strings (${list.filter((e) => e.plural).length} with plurals) → ${relative(ROOT, POT)}`)
+	console.info(`${list.length} strings (${list.filter((e) => e.plural).length} with plurals) → ${
+		relative(ROOT, POT)
+	}`)
 	for (const p of problems) {
 		console.warn(p)
 	}
@@ -435,8 +437,13 @@ if (command === 'extract') {
 		const keys = new Set(template.map(keyOf))
 		const gone = old.filter((e) => !keys.has(keyOf(e)) && e.str.some(Boolean))
 		for (const e of gone) {
-			text += '\n' + [`msgid ${poQuote(e.id)}`, ...(e.plural !== undefined ? [`msgid_plural ${poQuote(e.plural)}`] : []), ...e.str.map((s, i) => (e.plural !== undefined ? `msgstr[${i}] ${poQuote(s)}` : `msgstr ${poQuote(s)}`))]
-				.join('\n').split('\n').map((l) => `#~ ${l}`).join('\n') + '\n'
+			text += '\n' + [
+				`msgid ${poQuote(e.id)}`,
+				...(e.plural !== undefined ? [`msgid_plural ${poQuote(e.plural)}`] : []),
+				...e.str.map((s, i) => (e.plural !== undefined
+					? `msgstr[${i}] ${poQuote(s)}`
+					: `msgstr ${poQuote(s)}`)),
+			].join('\n').split('\n').map((l) => `#~ ${l}`).join('\n') + '\n'
 		}
 		writeFileSync(file, text)
 		console.info(`${lang}: ${template.length} entries, ${gone.length} obsolete`)
@@ -472,9 +479,19 @@ if (command === 'extract') {
 		}
 		failures += missing
 		if (command === 'build') {
-			const json = JSON.stringify(translations, null, 4).slice(1, -2).split('\n').map((l) => l.replace(/^ {4}/, '    ')).join('\n')
-			writeFileSync(join(ROOT, 'l10n', `${lang}.js`), `OC.L10N.register(\n    "${APP}",\n    {${json}\n},\n"${PLURAL_FORMS[lang]}");\n`)
-			writeFileSync(join(ROOT, 'l10n', `${lang}.json`), `{ "translations": {${json}\n},"pluralForm" :"${PLURAL_FORMS[lang]}"\n}\n`)
+			const json = JSON.stringify(translations, null, 4)
+				.slice(1, -2)
+				.split('\n')
+				.map((l) => l.replace(/^ {4}/, '    '))
+				.join('\n')
+			writeFileSync(
+				join(ROOT, 'l10n', `${lang}.js`),
+				`OC.L10N.register(\n    "${APP}",\n    {${json}\n},\n"${PLURAL_FORMS[lang]}");\n`,
+			)
+			writeFileSync(
+				join(ROOT, 'l10n', `${lang}.json`),
+				`{ "translations": {${json}\n},"pluralForm" :"${PLURAL_FORMS[lang]}"\n}\n`,
+			)
 		}
 		console.info(`${lang}: ${entries.length - missing}/${entries.length} translated`)
 	}

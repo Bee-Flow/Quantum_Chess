@@ -55,7 +55,19 @@ class Rating extends Entity {
 	protected $updatedAt = 0;
 
 	public function __construct() {
-		foreach (['id', 'rating', 'peak', 'ratedGames', 'games', 'wins', 'losses', 'draws', 'listed', 'lastRatedAt', 'updatedAt'] as $field) {
+		foreach ([
+			'id',
+			'rating',
+			'peak',
+			'ratedGames',
+			'games',
+			'wins',
+			'losses',
+			'draws',
+			'listed',
+			'lastRatedAt',
+			'updatedAt',
+		] as $field) {
 			$this->addType($field, Types::INTEGER);
 		}
 	}

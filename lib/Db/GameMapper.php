@@ -29,7 +29,9 @@ class GameMapper extends QBMapper {
 
 	public function findById(int $id): ?Game {
 		$qb = $this->db->getQueryBuilder();
-		$qb->select('*')->from(self::TABLE)->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
+		$qb->select('*')
+			->from(self::TABLE)
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($id, IQueryBuilder::PARAM_INT)));
 		try {
 			return $this->findEntity($qb);
 		} catch (DoesNotExistException) {
@@ -50,7 +52,10 @@ class GameMapper extends QBMapper {
 		$qb->update(self::TABLE);
 		foreach (array_keys($fields) as $property) {
 			$getter = 'get' . ucfirst($property);
-			$qb->set($game->propertyToColumn($property), $qb->createNamedParameter($game->$getter(), $this->getParameterTypeForProperty($game, $property)));
+			$qb->set(
+				$game->propertyToColumn($property),
+				$qb->createNamedParameter($game->$getter(), $this->getParameterTypeForProperty($game, $property)),
+			);
 		}
 		$qb->where($qb->expr()->eq('id', $qb->createNamedParameter($game->getId(), IQueryBuilder::PARAM_INT)))
 			->andWhere($qb->expr()->eq('rev', $qb->createNamedParameter($expectedRev, IQueryBuilder::PARAM_INT)));
@@ -111,7 +116,10 @@ class GameMapper extends QBMapper {
 			$qb->andWhere($qb->expr()->orX(
 				$qb->expr()->lt('finished_at', $qb->createNamedParameter($beforeFinished, IQueryBuilder::PARAM_INT)),
 				$qb->expr()->andX(
-					$qb->expr()->eq('finished_at', $qb->createNamedParameter($beforeFinished, IQueryBuilder::PARAM_INT)),
+					$qb->expr()->eq(
+						'finished_at',
+						$qb->createNamedParameter($beforeFinished, IQueryBuilder::PARAM_INT),
+					),
 					$qb->expr()->lt('id', $qb->createNamedParameter($beforeId, IQueryBuilder::PARAM_INT)),
 				),
 			));
@@ -142,7 +150,10 @@ class GameMapper extends QBMapper {
 	public function findChatToPurge(int $cutoff, int $limit): array {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('*')->from(self::TABLE)
-			->where($qb->expr()->in('status', $qb->createNamedParameter(Game::FINAL_STATUSES, IQueryBuilder::PARAM_STR_ARRAY)))
+			->where($qb->expr()->in(
+				'status',
+				$qb->createNamedParameter(Game::FINAL_STATUSES, IQueryBuilder::PARAM_STR_ARRAY),
+			))
 			->andWhere($qb->expr()->lte('finished_at', $qb->createNamedParameter($cutoff, IQueryBuilder::PARAM_INT)))
 			->andWhere($qb->expr()->gt('chat_count', $qb->createNamedParameter(0, IQueryBuilder::PARAM_INT)))
 			->orderBy('finished_at', 'ASC')
@@ -262,10 +273,14 @@ class GameMapper extends QBMapper {
 	public function deleteWithChildren(int $gameId): void {
 		foreach ([MoveMapper::TABLE, ChatMapper::TABLE] as $table) {
 			$qb = $this->db->getQueryBuilder();
-			$qb->delete($table)->where($qb->expr()->eq('game_id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))->executeStatement();
+			$qb->delete($table)
+				->where($qb->expr()->eq('game_id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))
+				->executeStatement();
 		}
 		$qb = $this->db->getQueryBuilder();
-		$qb->delete(self::TABLE)->where($qb->expr()->eq('id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))->executeStatement();
+		$qb->delete(self::TABLE)
+			->where($qb->expr()->eq('id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))
+			->executeStatement();
 	}
 
 	/**
@@ -300,7 +315,10 @@ class GameMapper extends QBMapper {
 		$qb = $this->db->getQueryBuilder();
 		$qb->select($qb->func()->count('*', 'n'))->from(self::TABLE)
 			->where($qb->expr()->eq('status', $qb->createNamedParameter(Game::STATUS_FINISHED)))
-			->andWhere($qb->expr()->gte('finished_at', $qb->createNamedParameter($finishedSince, IQueryBuilder::PARAM_INT)));
+			->andWhere($qb->expr()->gte(
+				'finished_at',
+				$qb->createNamedParameter($finishedSince, IQueryBuilder::PARAM_INT),
+			));
 		return ['active' => $active, 'finishedToday' => $this->fetchCount($qb)];
 	}
 

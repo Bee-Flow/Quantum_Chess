@@ -57,7 +57,13 @@ export function squareView(state) {
 			out[s] = null
 		} else {
 			const weight = a.occW[s]
-			out[s] = { piece: id, type: TYPE_CHAR[a.typeCodes[id]], color: colorOf(id), weight, probability: weight / T }
+			out[s] = {
+				piece: id,
+				type: TYPE_CHAR[a.typeCodes[id]],
+				color: colorOf(id),
+				weight,
+				probability: weight / T,
+			}
 		}
 	}
 	return out

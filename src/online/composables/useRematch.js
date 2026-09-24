@@ -81,7 +81,8 @@ export function useRematch({ gameId, api, me, act, pollNow }, deps) {
 		if (r.status === 'active' && (before === 'pending' || requested)) {
 			deps.notify.info(t('quantumchess', 'The rematch has started'))
 			deps.onRematchStarted(r.id)
-		} else if (['declined', 'expired', 'cancelled'].includes(r.status) && before === 'pending' && r.creator?.userId === me) {
+		} else if (['declined', 'expired', 'cancelled'].includes(r.status) && before === 'pending'
+			&& r.creator?.userId === me) {
 			requested = false
 			deps.notify.info(t('quantumchess', 'The rematch was declined'))
 		}

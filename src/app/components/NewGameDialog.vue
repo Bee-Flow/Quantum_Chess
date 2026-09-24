@@ -163,13 +163,21 @@ const onlineAvailable = features.multiplayer
 const modes = computed(() => [
 	...(onlineAvailable ? [{ id: 'online', icon: mdiEarth, label: t('quantumchess', 'Online') }] : []),
 	{ id: 'computer', icon: mdiRobotOutline, label: t('quantumchess', 'Computer') },
-	{ id: 'ai', icon: mdiCreationOutline, label: t('quantumchess', 'AI opponent'), disabled: !ai.anyAvailable.value, reason: unavailableText(null) },
+	{
+		id: 'ai',
+		icon: mdiCreationOutline,
+		label: t('quantumchess', 'AI opponent'),
+		disabled: !ai.anyAvailable.value,
+		reason: unavailableText(null),
+	},
 	{ id: 'local', icon: mdiAccountMultipleOutline, label: t('quantumchess', 'Pass & play') },
 ])
 
 const last = preferences.lastNewGame ?? {}
 const wanted = ['online', 'computer', 'ai', 'local'].includes(props.initialMode) ? props.initialMode : 'computer'
-const mode = ref((wanted === 'online' && !onlineAvailable) || (wanted === 'ai' && !ai.anyAvailable.value) ? 'computer' : wanted)
+const mode = ref((wanted === 'online' && !onlineAvailable) || (wanted === 'ai' && !ai.anyAvailable.value)
+	? 'computer'
+	: wanted)
 const busy = ref(false)
 const errorText = ref('')
 
@@ -276,13 +284,25 @@ async function start() {
 			}
 			const human = resolveColor(aiOpts.color)
 			const source = ai.sources.value.find((s) => s.id === aiOpts.source)
-			const bot = { kind: 'ai', persona: aiOpts.persona, source: aiOpts.source, model: null, strength: aiOpts.strength, sourceLabel: source?.label ?? '' }
+			const bot = {
+				kind: 'ai',
+				persona: aiOpts.persona,
+				source: aiOpts.source,
+				model: null,
+				strength: aiOpts.strength,
+				sourceLabel: source?.label ?? '',
+			}
 			const record = createLocalGame({
 				mode: 'ai',
 				players: human === 'w' ? { w: { kind: 'human' }, b: bot } : { w: bot, b: { kind: 'human' } },
 				humanColor: human,
 			})
-			rememberNewGame('ai', { persona: aiOpts.persona, source: aiOpts.source, strength: aiOpts.strength, color: aiOpts.color })
+			rememberNewGame('ai', {
+				persona: aiOpts.persona,
+				source: aiOpts.source,
+				strength: aiOpts.strength,
+				color: aiOpts.color,
+			})
 			router.replace(`/play/ai/${record.id}`)
 		} else if (mode.value === 'local') {
 			const white = local.white.trim() === t('quantumchess', 'White') ? '' : local.white.trim()

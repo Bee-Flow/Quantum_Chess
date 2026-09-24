@@ -64,7 +64,8 @@ export async function waitForTurn(page, timeout = 30_000) {
 export async function localGameRecord(page) {
 	return page.evaluate(() => {
 		const id = window.location.hash.split('/').pop()
-		return JSON.parse(window.localStorage.getItem(`quantumchess/${document.head.dataset.user}/localGame.v1.` + id) ?? 'null')
+		return JSON.parse(window.localStorage.getItem(`quantumchess/${document.head.dataset.user}/localGame.v1.` + id)
+			?? 'null')
 	})
 }
 

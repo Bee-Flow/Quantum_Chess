@@ -18,7 +18,16 @@ namespace OCA\QuantumChess\Engine\Internal;
  * @internal
  */
 final class Parser {
-	private const PROMO = ['Q' => 'q', 'R' => 'r', 'B' => 'b', 'N' => 'n', 'q' => 'q', 'r' => 'r', 'b' => 'b', 'n' => 'n'];
+	private const PROMO = [
+		'Q' => 'q',
+		'R' => 'r',
+		'B' => 'b',
+		'N' => 'n',
+		'q' => 'q',
+		'r' => 'r',
+		'b' => 'b',
+		'n' => 'n',
+	];
 	private const PIECES = ['K' => true, 'Q' => true, 'R' => true, 'B' => true, 'N' => true];
 	private const SEP = ['-' => true, 'x' => true, 'X' => true, ':' => true];
 	private const PAIRSEP = ['|' => true, '/' => true, ',' => true];
@@ -105,7 +114,10 @@ final class Parser {
 			if ($t < 0 || !$this->end()) {
 				return null;
 			}
-			return self::withLetter(['type' => 'merge', 'from' => $a < $b ? [$a, $b] : [$b, $a], 'to' => [$t]], $letter);
+			return self::withLetter(
+				['type' => 'merge', 'from' => $a < $b ? [$a, $b] : [$b, $a], 'to' => [$t]],
+				$letter,
+			);
 		}
 		$this->optional(self::SEP);
 		$b = $this->square();
@@ -118,7 +130,10 @@ final class Parser {
 			if ($c < 0 || !$this->end()) {
 				return null;
 			}
-			return self::withLetter(['type' => 'split', 'from' => [$a], 'to' => $b < $c ? [$b, $c] : [$c, $b]], $letter);
+			return self::withLetter(
+				['type' => 'split', 'from' => [$a], 'to' => $b < $c ? [$b, $c] : [$c, $b]],
+				$letter,
+			);
 		}
 		// standard: sq [sep] sq [promo]
 		$promo = null;
@@ -227,7 +242,8 @@ final class Parser {
 		if ($len === 3 && isset(self::OH[$s[0]]) && $s[1] === '-' && isset(self::OH[$s[2]])) {
 			return ['castle' => 'O-O'];
 		}
-		if ($len === 5 && isset(self::OH[$s[0]]) && $s[1] === '-' && isset(self::OH[$s[2]]) && $s[3] === '-' && isset(self::OH[$s[4]])) {
+		if ($len === 5 && isset(self::OH[$s[0]]) && $s[1] === '-' && isset(self::OH[$s[2]]) && $s[3] === '-'
+			&& isset(self::OH[$s[4]])) {
 			return ['castle' => 'O-O-O'];
 		}
 		return null;
@@ -255,7 +271,8 @@ final class Parser {
 		switch ($move['type'] ?? null) {
 			case 'standard':
 				$promo = $move['promo'] ?? null;
-				return $sq($from[0] ?? null) . '-' . $sq($to[0] ?? null) . (is_string($promo) && $promo !== '' ? '=' . strtoupper($promo) : '');
+				return $sq($from[0] ?? null) . '-' . $sq($to[0] ?? null)
+					. (is_string($promo) && $promo !== '' ? '=' . strtoupper($promo) : '');
 			case 'split':
 				$a = $to[0] ?? null;
 				$b = $to[1] ?? null;

@@ -59,14 +59,20 @@ describe('explainOutcome', () => {
 		const s = S('4k3/8/8/8/6n1/8/4P3/4K3 w - - 0 1', ['g4-e3|h6'])
 		expect(UI.explainOutcome(s, 'e2-e3', 'miss').cause).toBe('occupied')
 		expect(UI.explainOutcome(s, 'e2-e4', 'miss').cause).toBe('blocked')
-		const w7 = ['g8-f6|h6', 'e1-e2', 'f6-d5|e4'].reduce((st, c) => play(st, c), S('4k1n1/8/8/8/8/3P4/8/4K3 b - - 0 1'))
+		const w7 = ['g8-f6|h6', 'e1-e2', 'f6-d5|e4'].reduce(
+			(st, c) => play(st, c),
+			S('4k1n1/8/8/8/8/3P4/8/4K3 b - - 0 1'),
+		)
 		const x = UI.explainOutcome(w7, 'd3-e4', 'miss')
 		expect(x.cause).toBe('no_enemy')
 		expect(x.causes.no_enemy).toBe(12582912)
 	})
 
 	it('merge that misses because of a third part; Measure; quantum and certain moves', () => {
-		const w7 = play(['g8-f6|h6', 'e1-e2', 'f6-d5|e4'].reduce((st, c) => play(st, c), S('4k1n1/8/8/8/8/3P4/8/4K3 b - - 0 1')), 'e2-e1')
+		const w7 = play(
+			['g8-f6|h6', 'e1-e2', 'f6-d5|e4'].reduce((st, c) => play(st, c), S('4k1n1/8/8/8/8/3P4/8/4K3 b - - 0 1')),
+			'e2-e1',
+		)
 		expect(UI.explainOutcome(w7, 'd5|e4-f6', 'quantum').key).toBe('quantum')
 		const w4 = play(play(S('4k3/8/1n6/8/8/8/8/R3K3 b - - 0 1'), 'b6-a4|c4'), 'a1-a8')
 		const m = UI.explainOutcome(w4, '?a4', 'c4')
@@ -74,7 +80,8 @@ describe('explainOutcome', () => {
 		expect(m.settled).toEqual([{ piece: 2, square: 56 }])
 		expect(UI.explainOutcome(E.initialState(), 'e2-e4', 'certain').probability).toBe(1)
 		expect(() => UI.explainOutcome(W3, 'f3-e5', 'certain')).toThrow(RangeError)
-		expect(() => UI.explainOutcome(W3, 'f3-e4', 'miss')).toThrowError(expect.objectContaining({ code: 'unreachable' }))
+		expect(() => UI.explainOutcome(W3, 'f3-e4', 'miss'))
+			.toThrowError(expect.objectContaining({ code: 'unreachable' }))
 	})
 })
 

@@ -20,8 +20,10 @@ describe('online banners', () => {
 	})
 
 	it('warns about a changed history before an unverifiable one', () => {
-		expect(onlineBanners({ ...quiet, altered: { ply: 3 }, unverifiable: true }, actions).map((b) => [b.id, b.type])).toEqual([['altered', 'error']])
-		expect(onlineBanners({ ...quiet, unverifiable: true }, actions).map((b) => [b.id, b.type])).toEqual([['unverifiable', 'info']])
+		expect(onlineBanners({ ...quiet, altered: { ply: 3 }, unverifiable: true }, actions).map((b) => [b.id, b.type]))
+			.toEqual([['altered', 'error']])
+		expect(onlineBanners({ ...quiet, unverifiable: true }, actions).map((b) => [b.id, b.type]))
+			.toEqual([['unverifiable', 'info']])
 	})
 
 	it('offers Retry and Undo for a move that was not sent', () => {
@@ -33,8 +35,10 @@ describe('online banners', () => {
 
 	it('reports the connection', () => {
 		const one = (state) => onlineBanners({ ...quiet, ...state }, actions).map((b) => [b.id, b.type, b.text])
-		expect(one({ connection: 'expired' })).toEqual([['connection', 'error', 'Your session expired. Reload the page.']])
-		expect(one({ connection: 'maintenance' })).toEqual([['connection', 'warning', 'Nextcloud is in maintenance mode']])
+		expect(one({ connection: 'expired' }))
+			.toEqual([['connection', 'error', 'Your session expired. Reload the page.']])
+		expect(one({ connection: 'maintenance' }))
+			.toEqual([['connection', 'warning', 'Nextcloud is in maintenance mode']])
 		expect(one({ connection: 'offline' })).toEqual([['connection', 'warning', 'Connection lost, retrying…']])
 		expect(one({ pendingPhase: 'retrying' })).toEqual([['connection', 'warning', 'Connection lost, retrying…']])
 	})

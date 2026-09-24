@@ -194,7 +194,10 @@ export function modeAvailability(state, byType, locations, canInteract) {
  * @param {(square: number) => object|null} position.measureMove the Measure move of the piece on a square
  * @return {Target[]}
  */
-export function moveTargets({ mode, selection: s, splitFirst: first, mergeSources: src }, { state, byType, locations, occupant, partsOf, measureMove }) {
+export function moveTargets(
+	{ mode, selection: s, splitFirst: first, mergeSources: src },
+	{ state, byType, locations, occupant, partsOf, measureMove },
+) {
 	const out = []
 	if (mode === 'move') {
 		const bySquare = new Map()
@@ -225,9 +228,17 @@ export function moveTargets({ mode, selection: s, splitFirst: first, mergeSource
 		}
 		for (const target of info.targets) {
 			if (first !== null && target.square === first) {
-				out.push({ square: target.square, kind: 'split-chosen', move: null, moves: [], disabled: false, reason: null })
+				out.push({
+					square: target.square,
+					kind: 'split-chosen',
+					move: null,
+					moves: [],
+					disabled: false,
+					reason: null,
+				})
 			} else if (first !== null) {
-				const pair = info.pairs.find((p) => p.to[0] === Math.min(first, target.square) && p.to[1] === Math.max(first, target.square))
+				const pair = info.pairs.find((p) => p.to[0] === Math.min(first, target.square)
+					&& p.to[1] === Math.max(first, target.square))
 				const legal = pair && pair.reason === null
 				out.push({
 					square: target.square,
@@ -275,7 +286,16 @@ export function moveTargets({ mode, selection: s, splitFirst: first, mergeSource
 		const m = measureMove(s)
 		if (m !== null) {
 			for (const l of locations[occupant(s).piece]) {
-				out.push({ square: l.square, kind: 'measure', move: m, moves: [m], probability: l.probability, weight: l.weight, disabled: false, reason: null })
+				out.push({
+					square: l.square,
+					kind: 'measure',
+					move: m,
+					moves: [m],
+					probability: l.probability,
+					weight: l.weight,
+					disabled: false,
+					reason: null,
+				})
 			}
 		}
 	}

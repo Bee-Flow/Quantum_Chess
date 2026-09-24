@@ -42,9 +42,19 @@ ai.refresh()
 const tiles = computed(() => {
 	const out = []
 	if (features.multiplayer) {
-		out.push({ mode: 'online', icon: mdiEarth, title: t('quantumchess', 'Online'), subtitle: t('quantumchess', 'Play someone on this Nextcloud') })
+		out.push({
+			mode: 'online',
+			icon: mdiEarth,
+			title: t('quantumchess', 'Online'),
+			subtitle: t('quantumchess', 'Play someone on this Nextcloud'),
+		})
 	}
-	out.push({ mode: 'computer', icon: mdiRobotOutline, title: t('quantumchess', 'Computer'), subtitle: t('quantumchess', 'Five levels, from Wobbles to The Observer') })
+	out.push({
+		mode: 'computer',
+		icon: mdiRobotOutline,
+		title: t('quantumchess', 'Computer'),
+		subtitle: t('quantumchess', 'Five levels, from Wobbles to The Observer'),
+	})
 	// "Add your own API key" is the one reason the user can act on: show it first
 	const reasons = ai.sources.value.filter((s) => !s.available).map((s) => s.reason)
 	const firstReason = reasons.includes('no_key') ? 'no_key' : (reasons[0] ?? null)
@@ -56,7 +66,12 @@ const tiles = computed(() => {
 		disabled: !ai.anyAvailable.value,
 		reason: unavailableText(firstReason === 'not_configured' ? null : firstReason),
 	})
-	out.push({ mode: 'local', icon: mdiAccountMultipleOutline, title: t('quantumchess', 'Pass & play'), subtitle: t('quantumchess', 'Two players, one device') })
+	out.push({
+		mode: 'local',
+		icon: mdiAccountMultipleOutline,
+		title: t('quantumchess', 'Pass & play'),
+		subtitle: t('quantumchess', 'Two players, one device'),
+	})
 	return out
 })
 

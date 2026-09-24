@@ -15,7 +15,9 @@
 				v-if="rolls.length > 1"
 				variant="tertiary"
 				size="small"
-				:aria-label="newestFirst ? t('quantumchess', 'Show oldest first') : t('quantumchess', 'Show newest first')"
+				:aria-label="newestFirst
+					? t('quantumchess', 'Show oldest first')
+					: t('quantumchess', 'Show newest first')"
 				@click="newestFirst = !newestFirst">
 				<template #icon>
 					<NcIconSvgWrapper :path="mdiSwapVertical" :size="18" />
@@ -94,7 +96,13 @@ const rolls = computed(() => {
 		const other = otherColor(mover)
 		let sentence
 		try {
-			sentence = resultSentence({ before, move: entry.code, measurement: entry.measurement, pov: 'mover', names: { mover: props.names[mover], opponent: props.names[other] } })
+			sentence = resultSentence({
+				before,
+				move: entry.code,
+				measurement: entry.measurement,
+				pov: 'mover',
+				names: { mover: props.names[mover], opponent: props.names[other] },
+			})
 		} catch {
 			sentence = null
 		}

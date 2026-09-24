@@ -38,11 +38,37 @@ final class GameSerializerTest extends TestCase {
 
 	private function serializer(): GameSerializer {
 		$users = $this->createMock(IUserManager::class);
-		$users->method('getDisplayName')->willReturnCallback(fn (string $uid) => ['alice' => 'Alice A.', 'bob' => 'Bob B.', 'carol' => 'Carol'][$uid] ?? null);
+		$users->method('getDisplayName')->willReturnCallback(fn (string $uid) => [
+			'alice' => 'Alice A.',
+			'bob' => 'Bob B.',
+			'carol' => 'Carol',
+		][$uid] ?? null);
 		$ratings = $this->createMock(RatingService::class);
 		$ratings->method('get')->willReturnCallback(fn (string $uid) => match ($uid) {
-			'alice' => ['rating' => 1234, 'provisional' => false, 'ratedGames' => 12, 'peak' => 1300, 'games' => 14, 'wins' => 8, 'losses' => 5, 'draws' => 1, 'listed' => true, 'lastRatedAt' => self::NOW - 50],
-			'bob' => ['rating' => 1180, 'provisional' => true, 'ratedGames' => 3, 'peak' => 1210, 'games' => 3, 'wins' => 1, 'losses' => 2, 'draws' => 0, 'listed' => null, 'lastRatedAt' => null],
+			'alice' => [
+				'rating' => 1234,
+				'provisional' => false,
+				'ratedGames' => 12,
+				'peak' => 1300,
+				'games' => 14,
+				'wins' => 8,
+				'losses' => 5,
+				'draws' => 1,
+				'listed' => true,
+				'lastRatedAt' => self::NOW - 50,
+			],
+			'bob' => [
+				'rating' => 1180,
+				'provisional' => true,
+				'ratedGames' => 3,
+				'peak' => 1210,
+				'games' => 3,
+				'wins' => 1,
+				'losses' => 2,
+				'draws' => 0,
+				'listed' => null,
+				'lastRatedAt' => null,
+			],
 			default => null,
 		});
 		$settings = $this->createMock(AppSettings::class);
@@ -98,18 +124,56 @@ final class GameSerializerTest extends TestCase {
 		};
 		return [
 			'summary of an active game' => fn (GameSerializer $s) => $s->summary(self::active(), 'alice'),
-			'summary of a pending invitation' => fn (GameSerializer $s) => $short($s->summary(GameBuilder::pending(), 'bob')),
-			'summary of an open challenge' => fn (GameSerializer $s) => $short($s->summary(GameBuilder::open(), 'carol')),
-			'summary of a finished game' => fn (GameSerializer $s) => $short($s->summary(GameBuilder::finished(), 'bob')),
-			'summary of a draw' => fn (GameSerializer $s) => $short($s->summary(GameBuilder::finished(['result' => '1/2-1/2', 'resultReason' => 'agreement']), 'alice')),
-			'summary of a loss for White' => fn (GameSerializer $s) => $short($s->summary(GameBuilder::finished(['result' => '0-1', 'rated' => 0, 'ratingWDelta' => null, 'ratingBDelta' => null]), 'alice')),
-			'summary of an aborted game' => fn (GameSerializer $s) => $short($s->summary(GameBuilder::finished(['status' => Game::STATUS_ABORTED, 'result' => null, 'resultReason' => 'aborted', 'rated' => 0, 'unratedReason' => 'aborted']), 'alice')),
-			'summary with deleted accounts' => fn (GameSerializer $s) => $short($s->summary(GameBuilder::finished(['blackUid' => null, 'opponentUid' => 'ghost']), 'alice')),
-			'summary of a rematch offer' => fn (GameSerializer $s) => $short($s->summary(GameBuilder::pending(['rematchOf' => 3, 'scopeGroup' => null, 'inviteMessage' => null]), 'bob')),
+			'summary of a pending invitation' => fn (GameSerializer $s) => $short($s->summary(
+				GameBuilder::pending(),
+				'bob',
+			)),
+			'summary of an open challenge' => fn (GameSerializer $s) => $short($s->summary(
+				GameBuilder::open(),
+				'carol',
+			)),
+			'summary of a finished game' => fn (GameSerializer $s) => $short($s->summary(
+				GameBuilder::finished(),
+				'bob',
+			)),
+			'summary of a draw' => fn (GameSerializer $s) => $short($s->summary(
+				GameBuilder::finished(['result' => '1/2-1/2', 'resultReason' => 'agreement']),
+				'alice',
+			)),
+			'summary of a loss for White' => fn (GameSerializer $s) => $short($s->summary(
+				GameBuilder::finished([
+					'result' => '0-1',
+					'rated' => 0,
+					'ratingWDelta' => null,
+					'ratingBDelta' => null,
+				]),
+				'alice',
+			)),
+			'summary of an aborted game' => fn (GameSerializer $s) => $short($s->summary(
+				GameBuilder::finished([
+					'status' => Game::STATUS_ABORTED,
+					'result' => null,
+					'resultReason' => 'aborted',
+					'rated' => 0,
+					'unratedReason' => 'aborted',
+				]),
+				'alice',
+			)),
+			'summary with deleted accounts' => fn (GameSerializer $s) => $short($s->summary(
+				GameBuilder::finished(['blackUid' => null, 'opponentUid' => 'ghost']),
+				'alice',
+			)),
+			'summary of a rematch offer' => fn (GameSerializer $s) => $short($s->summary(
+				GameBuilder::pending(['rematchOf' => 3, 'scopeGroup' => null, 'inviteMessage' => null]),
+				'bob',
+			)),
 			'live for White' => fn (GameSerializer $s) => $withoutState($s->live(self::active(), 'alice')),
 			'live for Black' => fn (GameSerializer $s) => $withoutState($s->live(self::active(), 'bob')),
 			'live for a spectator' => fn (GameSerializer $s) => $withoutState($s->live(GameBuilder::open(), 'carol')),
-			'live of a finished game' => fn (GameSerializer $s) => $withoutState($s->live(GameBuilder::finished(), 'bob')),
+			'live of a finished game' => fn (GameSerializer $s) => $withoutState($s->live(
+				GameBuilder::finished(),
+				'bob',
+			)),
 			'full' => function (GameSerializer $s) use ($withoutState): array {
 				$move = new Move();
 				$move->setId(1);
@@ -127,9 +191,17 @@ final class GameSerializerTest extends TestCase {
 				$line->setKind(ChatMessage::KIND_PHRASE);
 				$line->setMessage('good_luck');
 				$line->setCreatedAt(self::NOW - 250);
-				return $withoutState($s->full(self::active(['startState' => '{"custom":true}']), 'alice', [$move], [$line]));
+				return $withoutState($s->full(
+					self::active(['startState' => '{"custom":true}']),
+					'alice',
+					[$move],
+					[$line],
+				));
 			},
-			'full without start state' => fn (GameSerializer $s) => array_intersect_key($s->full(self::active(), 'bob', [], []), ['startState' => 0, 'moves' => 0, 'chat' => 0]),
+			'full without start state' => fn (GameSerializer $s) => array_intersect_key(
+				$s->full(self::active(), 'bob', [], []),
+				['startState' => 0, 'moves' => 0, 'chat' => 0],
+			),
 			'move with a roll' => function (GameSerializer $s): array {
 				$move = new Move();
 				$move->setId(9);
@@ -166,11 +238,22 @@ final class GameSerializerTest extends TestCase {
 			},
 			'lobby' => fn (GameSerializer $s) => array_map(
 				fn ($value) => is_array($value) && array_is_list($value) ? array_column($value, 'id') : $value,
-				$s->lobby(['yourTurn' => [GameBuilder::active(['id' => 1])], 'invitations' => [GameBuilder::pending(['id' => 2])],
-					'open' => [GameBuilder::open(['id' => 3]), GameBuilder::open(['id' => 4])], 'recent' => [GameBuilder::finished(['id' => 5])]], 'bob', 'u0123456789.oabcdef'),
+				$s->lobby([
+					'yourTurn' => [GameBuilder::active(['id' => 1])],
+					'invitations' => [GameBuilder::pending(['id' => 2])],
+					'open' => [GameBuilder::open(['id' => 3]), GameBuilder::open(['id' => 4])],
+					'recent' => [GameBuilder::finished(['id' => 5])],
+				], 'bob', 'u0123456789.oabcdef'),
 			),
-			'preview of a broken state' => fn (GameSerializer $s) => $s->preview(GameBuilder::active(['state' => '{"v":1}'])),
-			'user references' => fn (GameSerializer $s) => [$s->userRef('alice'), $s->userRef(null), $s->userRef('ghost'), $s->deletedRef()],
+			'preview of a broken state' => fn (GameSerializer $s) => $s->preview(
+				GameBuilder::active(['state' => '{"v":1}']),
+			),
+			'user references' => fn (GameSerializer $s) => [
+				$s->userRef('alice'),
+				$s->userRef(null),
+				$s->userRef('ghost'),
+				$s->deletedRef(),
+			],
 		];
 	}
 
@@ -216,9 +299,24 @@ final class GameSerializerTest extends TestCase {
 			'active game' => [true, [], 'alice', true],
 			'chat turned off' => [false, [], 'alice', false],
 			'spectator' => [true, [], 'carol', false],
-			'finished a week ago' => [true, ['status' => Game::STATUS_FINISHED, 'finishedAt' => self::NOW - self::WEEK], 'bob', true],
-			'finished a week and a second ago' => [true, ['status' => Game::STATUS_FINISHED, 'finishedAt' => self::NOW - self::WEEK - 1], 'bob', false],
-			'aborted today' => [true, ['status' => Game::STATUS_ABORTED, 'finishedAt' => self::NOW - 10], 'alice', true],
+			'finished a week ago' => [
+				true,
+				['status' => Game::STATUS_FINISHED, 'finishedAt' => self::NOW - self::WEEK],
+				'bob',
+				true,
+			],
+			'finished a week and a second ago' => [
+				true,
+				['status' => Game::STATUS_FINISHED, 'finishedAt' => self::NOW - self::WEEK - 1],
+				'bob',
+				false,
+			],
+			'aborted today' => [
+				true,
+				['status' => Game::STATUS_ABORTED, 'finishedAt' => self::NOW - 10],
+				'alice',
+				true,
+			],
 			'declined' => [true, ['status' => Game::STATUS_DECLINED, 'finishedAt' => self::NOW - 10], 'alice', false],
 		];
 	}

@@ -60,7 +60,10 @@
 				@promotionCancel="onPromotionCancel" />
 		</div>
 
-		<SafetyNetDialog :net="input.safetyNet" :state="shown" @resolve="(action, dontAsk) => input.resolveSafetyNet(action, dontAsk)" />
+		<SafetyNetDialog
+			:net="input.safetyNet"
+			:state="shown"
+			@resolve="(action, dontAsk) => input.resolveSafetyNet(action, dontAsk)" />
 		<div class="hidden-visually" aria-live="polite">
 			{{ announcement }}
 		</div>
@@ -161,7 +164,11 @@ const anim = createAnimator({
 	describe,
 	announce,
 })
-const { geo, squareFromEvent } = useBoardGeometry({ orientation: () => props.orientation, squareSize: () => props.squareSize, frame })
+const { geo, squareFromEvent } = useBoardGeometry({
+	orientation: () => props.orientation,
+	squareSize: () => props.squareSize,
+	frame,
+})
 provideBoardContext({ uid, geo, anim })
 
 /** The position on screen: the animation's frame, a read-only preview, or the live position. */
@@ -216,7 +223,10 @@ const identity = computed(() => {
 	}
 })
 
-const items = computed(() => pieceItems(shown.value, { whatIf: anim.state.busy ? null : input.value.whatIf, identity: identity.value }))
+const items = computed(() => pieceItems(shown.value, {
+	whatIf: anim.state.busy ? null : input.value.whatIf,
+	identity: identity.value,
+}))
 const pointer = useBoardPointer({
 	frame,
 	input,
@@ -277,7 +287,11 @@ const rootStyle = computed(() => ({
 	height: 8 * geo.value.S + 'px',
 }))
 
-watch(() => [boardPrefs.sound, boardPrefs.volume], ([enabled, volume]) => configureSound({ enabled, volume }), { immediate: true })
+watch(
+	() => [boardPrefs.sound, boardPrefs.volume],
+	([enabled, volume]) => configureSound({ enabled, volume }),
+	{ immediate: true },
+)
 
 /**
  * Play a sound effect with the current speed.
@@ -311,7 +325,13 @@ const focusPiece = computed(() => {
 	}
 	const { view } = viewsOf(shown.value)
 	const drag = pointer.drag.value
-	const candidates = [drag?.from, input.value.selection, input.value.whatIf, pointer.pointerSquare.value, keyboard.hasFocus.value ? keyboard.focusSquare.value : null]
+	const candidates = [
+		drag?.from,
+		input.value.selection,
+		input.value.whatIf,
+		pointer.pointerSquare.value,
+		keyboard.hasFocus.value ? keyboard.focusSquare.value : null,
+	]
 	for (const s of candidates) {
 		if (s !== null && s !== undefined && view[s] !== null) {
 			return { square: s, piece: view[s].piece }
@@ -328,7 +348,9 @@ const pieces = computed(() => {
 		drag,
 		returning: pointer.returning.value,
 		shaking: pointer.shaking.value,
-		hoverSquare: canPlay.value && drag === null && hovered !== null && input.value.isMovablePiece(hovered) ? hovered : null,
+		hoverSquare: canPlay.value && drag === null && hovered !== null && input.value.isMovablePiece(hovered)
+			? hovered
+			: null,
 		anim: anim.state,
 		prefs: boardPrefs,
 	})
@@ -349,8 +371,12 @@ const whatIfChanged = computed(() => items.value.filter((p) => p.delta !== null 
 const deltas = computed(() => deltaList(whatIfChanged.value, geo.value))
 const threads = computed(() => partThreads(viewsOf(shown.value), focusPiece.value, geo.value))
 const linkGlyphs = computed(() => linkGlyphList(viewsOf(shown.value), focusPiece.value, geo.value))
-const linkChords = computed(() => (boardPrefs.linkThreads !== 'always' || anim.state.busy ? [] : linkChordList(viewsOf(shown.value), geo.value)))
-const lastSquares = computed(() => (boardPrefs.highlightLastMove && !props.preview ? lastMoveSquares(props.lastMove) : { fill: [], dashed: [] }))
+const linkChords = computed(() => (boardPrefs.linkThreads !== 'always' || anim.state.busy
+	? []
+	: linkChordList(viewsOf(shown.value), geo.value)))
+const lastSquares = computed(() => (boardPrefs.highlightLastMove && !props.preview
+	? lastMoveSquares(props.lastMove)
+	: { fill: [], dashed: [] }))
 const targets = computed(() => (boardPrefs.showLegalMoves || input.value.mode !== 'move' ? input.value.targets : []))
 
 const targetMarks = computed(() => {
@@ -410,7 +436,11 @@ const rows = computed(() => {
  * @return {{chip: object|null, reveal: object|null, speech: string}}
  */
 function describe(event) {
-	return describeMoveEvent(event, { names: props.names, lessonRoll: props.lessonRoll, format: boardPrefs.probabilityFormat })
+	return describeMoveEvent(event, {
+		names: props.names,
+		lessonRoll: props.lessonRoll,
+		format: boardPrefs.probabilityFormat,
+	})
 }
 
 // A warning sound once per position in which the user's own king will certainly be captured.

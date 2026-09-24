@@ -86,7 +86,12 @@ final class GameBuilder {
 	 * @param array<string, mixed> $fields
 	 */
 	public static function open(array $fields = []): Game {
-		return self::pending($fields + ['opponentUid' => null, 'status' => Game::STATUS_OPEN, 'colorChoice' => 'r', 'inviteMessage' => null]);
+		return self::pending($fields + [
+			'opponentUid' => null,
+			'status' => Game::STATUS_OPEN,
+			'colorChoice' => 'r',
+			'inviteMessage' => null,
+		]);
 	}
 
 	/**

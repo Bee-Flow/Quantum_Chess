@@ -51,10 +51,19 @@ final class NextcloudAiProviderTest extends TestCase {
 	}
 
 	private const MESSAGES = [['role' => 'system', 'content' => 'SYS'], ['role' => 'user', 'content' => 'USR']];
-	private const OPTIONS = ['model' => null, 'maxTokens' => 800, 'temperature' => 0.7, 'effort' => null, 'safetyId' => null, 'purpose' => 'move'];
+	private const OPTIONS = [
+		'model' => null,
+		'maxTokens' => 800,
+		'temperature' => 0.7,
+		'effort' => null,
+		'safetyId' => null,
+		'purpose' => 'move',
+	];
 
 	public function testPrefersChatWithSystemPrompt(): void {
-		$result = $this->provider(['core:text2text', 'core:text2text:chat'])->forUser('bob')->chat(self::MESSAGES, self::OPTIONS);
+		$result = $this->provider(['core:text2text', 'core:text2text:chat'])
+			->forUser('bob')
+			->chat(self::MESSAGES, self::OPTIONS);
 		$this->assertEquals(ChatResult::pending(41), $result);
 		$task = $this->scheduled[0];
 		$this->assertSame('core:text2text:chat', $task->getTaskTypeId());
@@ -64,7 +73,10 @@ final class NextcloudAiProviderTest extends TestCase {
 	}
 
 	public function testFallsBackToTextToText(): void {
-		$this->provider(['core:text2text'])->forUser('bob')->chat(self::MESSAGES, ['purpose' => 'coach'] + self::OPTIONS);
+		$this->provider(['core:text2text'])->forUser('bob')->chat(
+			self::MESSAGES,
+			['purpose' => 'coach'] + self::OPTIONS,
+		);
 		$this->assertSame(['input' => "SYSTEM:\nSYS\n\nUSER:\nUSR"], $this->scheduled[0]->getInput());
 		$this->assertStringStartsWith('quantumchess:coach:', (string)$this->scheduled[0]->getCustomId());
 		$this->assertNull($this->provider([])->taskType('bob'));
@@ -84,7 +96,10 @@ final class NextcloudAiProviderTest extends TestCase {
 		$task->setStartedAt(100);
 		$task->setEndedAt(108);
 		$done = $provider->status('bob', 7);
-		$this->assertSame([TaskStatus::DONE, 'coach', '**Answer**', 8000], [$done?->state, $done?->purpose, $done?->text, $done?->durationMs]);
+		$this->assertSame(
+			[TaskStatus::DONE, 'coach', '**Answer**', 8000],
+			[$done?->state, $done?->purpose, $done?->text, $done?->durationMs],
+		);
 		$this->assertSame([$task], $this->deleted, 'deleted after reading');
 
 		$task->setStatus(Task::STATUS_FAILED);
@@ -93,6 +108,9 @@ final class NextcloudAiProviderTest extends TestCase {
 
 		$foreign = new Task('core:text2text:chat', [], 'assistant', 'bob', 'x');
 		$foreign->setId(8);
-		$this->assertNull($this->provider(['core:text2text:chat'], $foreign)->status('bob', 8), 'only tasks of this app');
+		$this->assertNull(
+			$this->provider(['core:text2text:chat'], $foreign)->status('bob', 8),
+			'only tasks of this app',
+		);
 	}
 }

@@ -27,7 +27,9 @@ export function useOnlineChat({ gameId, api, me, game, notify }) {
 	const seenChatId = ref(0)
 
 	/** Messages of the other player that the viewer has not seen yet. */
-	const unread = computed(() => chat.value.filter((m) => m.kind !== 'system' && m.userId !== me && m.id > seenChatId.value).length)
+	const unread = computed(() => chat.value
+		.filter((m) => m.kind !== 'system' && m.userId !== me && m.id > seenChatId.value)
+		.length)
 
 	/** Everything read. */
 	function markChatSeen() {

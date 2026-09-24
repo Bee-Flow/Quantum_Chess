@@ -14,7 +14,24 @@ import { E, POS, S } from './helpers.js'
 const QUICK = { timeMs: Infinity, nodeBudget: 5000 }
 
 /** The tag grammar documented in src/ai/candidates.js. */
-const TAG = /^(king-capture:\d{1,3}|certain-capture|converging|traps-king|capture:\d{1,3}:[qrbnp]|threatens-king:\d{1,3}|probe|split|merge|measure|defends-king|saves:[qrbnp]|hangs:[qrbnp]|risky|safe|trap)$/
+const TAG = new RegExp('^(' + [
+	'king-capture:\\d{1,3}',
+	'certain-capture',
+	'converging',
+	'traps-king',
+	'capture:\\d{1,3}:[qrbnp]',
+	'threatens-king:\\d{1,3}',
+	'probe',
+	'split',
+	'merge',
+	'measure',
+	'defends-king',
+	'saves:[qrbnp]',
+	'hangs:[qrbnp]',
+	'risky',
+	'safe',
+	'trap',
+].join('|') + ')$')
 
 /**
  * The tags of one candidate move.
@@ -56,7 +73,8 @@ describe('candidates for an LLM opponent', () => {
 		const list = candidates(POS.w6(), { strength: 'balanced', tolerance: 0.05, multiPv: 3, ...QUICK })
 		expect(list[0].code).toBe('d4|h5-h8')
 		expect(list[0].E).toBe(1)
-		expect(tagsOf(list, 'd4|h5-h8')).toEqual(expect.arrayContaining(['king-capture:100', 'certain-capture', 'converging', 'merge']))
+		expect(tagsOf(list, 'd4|h5-h8'))
+			.toEqual(expect.arrayContaining(['king-capture:100', 'certain-capture', 'converging', 'merge']))
 		expect(tagsOf(list, 'h5-h8')).toContain('king-capture:50')
 	})
 

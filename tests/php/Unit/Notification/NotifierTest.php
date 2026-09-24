@@ -34,8 +34,12 @@ use PHPUnit\Framework\TestCase;
 final class NotifierTest extends TestCase {
 	private function l10n(array $dictionary = []): IL10N {
 		$l = $this->createMock(IL10N::class);
-		$l->method('t')->willReturnCallback(fn (string $text, array $p = []) => vsprintf($dictionary[$text] ?? $text, $p));
-		$l->method('n')->willReturnCallback(fn (string $s, string $pl, int $n, array $p = []) => str_replace('%n', (string)$n, $n === 1 ? $s : $pl));
+		$l->method('t')->willReturnCallback(
+			fn (string $text, array $p = []) => vsprintf($dictionary[$text] ?? $text, $p),
+		);
+		$l->method('n')->willReturnCallback(
+			fn (string $s, string $pl, int $n, array $p = []) => str_replace('%n', (string)$n, $n === 1 ? $s : $pl),
+		);
 		return $l;
 	}
 
@@ -58,7 +62,9 @@ final class NotifierTest extends TestCase {
 		$factory = $this->createMock(IFactory::class);
 		$factory->method('get')->willReturn($l ?? $this->l10n());
 		$url = $this->createMock(IURLGenerator::class);
-		$url->method('linkToOCSRouteAbsolute')->willReturnCallback(fn (string $route, array $p) => 'https://cloud/ocs/' . $route . '/' . $p['id']);
+		$url->method('linkToOCSRouteAbsolute')->willReturnCallback(
+			fn (string $route, array $p) => 'https://cloud/ocs/' . $route . '/' . $p['id'],
+		);
 		$url->method('linkToRouteAbsolute')->willReturn('https://cloud/apps/quantumchess/');
 		$url->method('imagePath')->willReturn('/img/app-dark.svg');
 		$url->method('getAbsoluteURL')->willReturnArgument(0);
@@ -69,16 +75,34 @@ final class NotifierTest extends TestCase {
 		return new Notifier($factory, $url, $users, $mapper, new MoveDescriber(new Engine()));
 	}
 
-	private function incoming(string $subject, array $params, string $app = 'quantumchess', string $id = '42'): INotification {
-		return (new FakeNotification())->setApp($app)->setUser('bob')->setObject('game', $id)->setSubject($subject, $params);
+	private function incoming(
+		string $subject,
+		array $params,
+		string $app = 'quantumchess',
+		string $id = '42',
+	): INotification {
+		return (new FakeNotification())
+			->setApp($app)
+			->setUser('bob')
+			->setObject('game', $id)
+			->setSubject($subject, $params);
 	}
 
 	public function testInviteHasAcceptAndDeclineActions(): void {
 		$game = $this->game();
 		$game->setStatus(Game::STATUS_PENDING);
-		$n = $this->notifier($game)->prepare($this->incoming('invite', ['actor' => 'alice', 'timeControl' => 'corr:1d', 'rated' => true, 'color' => 'b', 'message' => 'Hi']), 'en');
+		$n = $this->notifier($game)->prepare($this->incoming('invite', [
+			'actor' => 'alice',
+			'timeControl' => 'corr:1d',
+			'rated' => true,
+			'color' => 'b',
+			'message' => 'Hi',
+		]), 'en');
 		$this->assertSame('{user} invited you to a game of Quantum Chess', $n->getRichSubject());
-		$this->assertSame(['type' => 'user', 'id' => 'alice', 'name' => 'Alice'], $n->getRichSubjectParameters()['user']);
+		$this->assertSame(
+			['type' => 'user', 'id' => 'alice', 'name' => 'Alice'],
+			$n->getRichSubjectParameters()['user'],
+		);
 		$this->assertSame('Alice invited you to a game of Quantum Chess', $n->getParsedSubject());
 		$this->assertSame('1 day per move · Rated · You play Black · “Hi”', $n->getParsedMessage());
 		$actions = $n->getParsedActions();
@@ -92,7 +116,8 @@ final class NotifierTest extends TestCase {
 		$game = $this->game();
 		$l = $this->l10n(['{user} offers a draw' => '{user} bietet Remis an', 'Move %d' => 'Zug %d']);
 		$game->setDrawOffer('w');
-		$n = $this->notifier($game, $l)->prepare($this->incoming('draw_offer', ['actor' => 'alice', 'moveNumber' => 23]), 'de');
+		$n = $this->notifier($game, $l)
+			->prepare($this->incoming('draw_offer', ['actor' => 'alice', 'moveNumber' => 23]), 'de');
 		$this->assertSame(['Alice bietet Remis an', 'Zug 23'], [$n->getParsedSubject(), $n->getParsedMessage()]);
 	}
 
@@ -125,7 +150,13 @@ final class NotifierTest extends TestCase {
 	public function testGameOverMessage(): void {
 		$game = $this->game();
 		$game->setStatus(Game::STATUS_FINISHED);
-		$n = $this->notifier($game)->prepare($this->incoming('game_over', ['actor' => 'alice', 'outcome' => 'loss', 'reason' => 'king_captured', 'rating' => 1188, 'delta' => -12]), 'en');
+		$n = $this->notifier($game)->prepare($this->incoming('game_over', [
+			'actor' => 'alice',
+			'outcome' => 'loss',
+			'reason' => 'king_captured',
+			'rating' => 1188,
+			'delta' => -12,
+		]), 'en');
 		$this->assertSame('You lost against Alice', $n->getParsedSubject());
 		$this->assertSame('King captured · Rating 1188 (−12)', $n->getParsedMessage());
 		$this->assertSame(['Rematch'], array_map(fn (IAction $a) => $a->getParsedLabel(), $n->getParsedActions()));
@@ -137,18 +168,27 @@ final class NotifierTest extends TestCase {
 		$game->setWhiteUid(null);
 		$game->setCreatorUid(null);
 		$notifier = $this->notifier($game);
-		$n = $notifier->prepare($this->incoming('game_over', ['actor' => 'zed', 'outcome' => 'win', 'reason' => 'resignation']), 'en');
+		$n = $notifier->prepare(
+			$this->incoming('game_over', ['actor' => 'zed', 'outcome' => 'win', 'reason' => 'resignation']),
+			'en',
+		);
 		$this->assertSame('You won against Deleted user', $n->getParsedSubject());
 		$this->assertStringNotContainsString('zed', json_encode($n->getRichSubjectParameters()));
 		$this->assertSame([], $n->getParsedActions(), 'no rematch against a deleted account');
 		try {
-			$notifier->prepare($this->incoming('chat', ['actor' => 'zed', 'excerpt' => 'my phone number is 555-0199']), 'en');
+			$notifier->prepare(
+				$this->incoming('chat', ['actor' => 'zed', 'excerpt' => 'my phone number is 555-0199']),
+				'en',
+			);
 			$this->fail('the chat of a deleted account is gone');
 		} catch (AlreadyProcessedException) {
 		}
 		// an opponent who left the game (data erased) gets no rematch offer either
 		$game->setWhiteUid(null);
-		$n = $notifier->prepare($this->incoming('game_over', ['actor' => 'alice', 'outcome' => 'win', 'reason' => 'resignation']), 'en');
+		$n = $notifier->prepare(
+			$this->incoming('game_over', ['actor' => 'alice', 'outcome' => 'win', 'reason' => 'resignation']),
+			'en',
+		);
 		$this->assertSame([], $n->getParsedActions());
 	}
 
@@ -157,11 +197,28 @@ final class NotifierTest extends TestCase {
 		$l = $this->l10n();
 		$this->assertSame('They split their knight: g1 → f3 | h3', $d->describe($l, ['notation' => 'Ng1-f3|h3']));
 		$this->assertSame('They merged their bishop on d5', $d->describe($l, ['notation' => 'Bc4|e6-d5']));
-		$this->assertSame("They measured their knight: it's on c4", $d->describe($l, ['notation' => '?Na4 {c4 50%}', 'key' => 'c4', 'weight' => 8388608]));
-		$this->assertSame('They captured your bishop on e5 (58 % chance)', $d->describe($l, ['notation' => 'Qd4xe5 {capture 58%}', 'key' => 'capture', 'weight' => 9730785, 'capturedType' => 'b']));
-		$this->assertSame('They captured your pawn on e5', $d->describe($l, ['notation' => 'Nf3xe5', 'capturedType' => 'p']));
-		$this->assertSame('Their move to e5 missed (42 %)', $d->describe($l, ['notation' => 'Nf3-e5 {miss 42%}', 'key' => 'miss', 'weight' => 7046431]));
-		$this->assertSame('Their bishop landed on e5 (42 %)', $d->describe($l, ['notation' => 'Bc3-e5 {move 42%}', 'key' => 'move', 'weight' => 7046431]));
+		$this->assertSame(
+			"They measured their knight: it's on c4",
+			$d->describe($l, ['notation' => '?Na4 {c4 50%}', 'key' => 'c4', 'weight' => 8388608]),
+		);
+		$this->assertSame('They captured your bishop on e5 (58 % chance)', $d->describe($l, [
+			'notation' => 'Qd4xe5 {capture 58%}',
+			'key' => 'capture',
+			'weight' => 9730785,
+			'capturedType' => 'b',
+		]));
+		$this->assertSame(
+			'They captured your pawn on e5',
+			$d->describe($l, ['notation' => 'Nf3xe5', 'capturedType' => 'p']),
+		);
+		$this->assertSame(
+			'Their move to e5 missed (42 %)',
+			$d->describe($l, ['notation' => 'Nf3-e5 {miss 42%}', 'key' => 'miss', 'weight' => 7046431]),
+		);
+		$this->assertSame(
+			'Their bishop landed on e5 (42 %)',
+			$d->describe($l, ['notation' => 'Bc3-e5 {move 42%}', 'key' => 'move', 'weight' => 7046431]),
+		);
 		$this->assertSame('They moved their pawn to e4', $d->describe($l, ['notation' => 'e2-e4']));
 		$this->assertSame('They castled.', $d->describe($l, ['notation' => 'O-O']));
 	}

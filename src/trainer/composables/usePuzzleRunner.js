@@ -50,12 +50,16 @@ export function usePuzzleRunner({ puzzleId, playback }) {
 		switch (puzzle.value?.type) {
 			case 'forced': return t('quantumchess', 'Win with certainty.')
 			case 'max': return t('quantumchess', 'Find the best chance to capture the king.')
-			case 'survive': return puzzle.value.side === 'b' ? t('quantumchess', 'Don\'t lose by force.') : t('quantumchess', 'Keep your king.')
+			case 'survive': return puzzle.value.side === 'b'
+				? t('quantumchess', 'Don\'t lose by force.')
+				: t('quantumchess', 'Keep your king.')
 			default: return t('quantumchess', 'Save as much as you can.')
 		}
 	})
 
-	const legalMoves = computed(() => (phase.value === 'ready' && playback.state.value ? generateMoves(toRaw(playback.state.value)) : []))
+	const legalMoves = computed(() => (phase.value === 'ready' && playback.state.value
+		? generateMoves(toRaw(playback.state.value))
+		: []))
 
 	/** Set up the puzzle (again). */
 	function reset() {
@@ -78,19 +82,29 @@ export function usePuzzleRunner({ puzzleId, playback }) {
 	}, { immediate: true })
 
 	// --- Hints: a nudge (highlight and sentence), then the idea (arrow) ---
-	const solution = computed(() => (start.value && puzzle.value ? findMove(start.value, puzzle.value.accepted[0]) : null))
+	const solution = computed(() => (start.value && puzzle.value
+		? findMove(start.value, puzzle.value.accepted[0])
+		: null))
 	const hintTexts = computed(() => {
 		const out = []
 		if (hintTier.value >= 1) {
 			out.push(puzzle.value.nudge())
 		}
 		if (hintTier.value >= 2 && solution.value) {
-			out.push(t('quantumchess', 'Look at the move to {square}.', { square: solution.value.to.map(squareName).join(' / ') }))
+			out.push(t(
+				'quantumchess',
+				'Look at the move to {square}.',
+				{ square: solution.value.to.map(squareName).join(' / ') },
+			))
 		}
 		return out
 	})
-	const highlights = computed(() => (hintTier.value >= 1 && phase.value === 'ready' && solution.value ? solution.value.from.map((square) => ({ square, kind: 'hint' })) : []))
-	const arrows = computed(() => (hintTier.value >= 2 && phase.value === 'ready' && solution.value ? [{ from: solution.value.from[0], to: solution.value.to[0], kind: 'best' }] : []))
+	const highlights = computed(() => (hintTier.value >= 1 && phase.value === 'ready' && solution.value
+		? solution.value.from.map((square) => ({ square, kind: 'hint' }))
+		: []))
+	const arrows = computed(() => (hintTier.value >= 2 && phase.value === 'ready' && solution.value
+		? [{ from: solution.value.from[0], to: solution.value.to[0], kind: 'best' }]
+		: []))
 
 	/** Reveal the next hint tier. */
 	function nextHint() {
@@ -137,8 +151,12 @@ export function usePuzzleRunner({ puzzleId, playback }) {
 		const accepted = isAccepted(p, move)
 		const before = toRaw(playback.state.value)
 		// Rolls are real for a right move; a wrong move gets the roll that punishes it.
-		const res = await playback.play(move.code, { outcome: accepted ? null : punishingOutcome(before, move.code, p.side) })
-		const sentence = res.measurement ? resultSentence({ before, move: res.move, measurement: res.measurement })?.text : null
+		const res = await playback.play(move.code, {
+			outcome: accepted ? null : punishingOutcome(before, move.code, p.side),
+		})
+		const sentence = res.measurement
+			? resultSentence({ before, move: res.move, measurement: res.measurement })?.text
+			: null
 		if (accepted) {
 			played.value = res.measurement ? { before, move: res.move, key: res.measurement.key } : null
 			earned.value = puzzleStars(tries.value, hints.value)
@@ -147,7 +165,11 @@ export function usePuzzleRunner({ puzzleId, playback }) {
 			phase.value = 'solved'
 			return
 		}
-		recordPuzzle(p.id, { solved: Boolean(progress.puzzles?.[p.id]?.solved), tries: tries.value, hints: hints.value })
+		recordPuzzle(p.id, {
+			solved: Boolean(progress.puzzles?.[p.id]?.solved),
+			tries: tries.value,
+			hints: hints.value,
+		})
 		if (!wonBy(res.after, p.side)) {
 			await sleep(REPLY_DELAY_MS)
 			await playback.engineReply(REPLY_LEVEL, (s, code) => punishingOutcome(s, code, p.side))
@@ -155,7 +177,11 @@ export function usePuzzleRunner({ puzzleId, playback }) {
 		const trap = trapFor(p, move)
 		message.value = {
 			type: 'error',
-			text: trap ? trap.text() : (wonBy(res.after, p.side) ? t('quantumchess', 'That worked this time, but it was a gamble. There is a better move.') : t('quantumchess', 'Not the best move.')),
+			text: trap
+				? trap.text()
+				: (wonBy(res.after, p.side)
+						? t('quantumchess', 'That worked this time, but it was a gamble. There is a better move.')
+						: t('quantumchess', 'Not the best move.')),
 			detail: t('quantumchess', 'Try again.'),
 		}
 		phase.value = 'failed'

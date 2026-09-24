@@ -141,7 +141,8 @@ trait GameServiceFixture {
 		});
 		$this->chatMapper = $this->createMock(ChatMapper::class);
 		$this->chatMapper->method('insert')->willReturnCallback(function (ChatMessage $line): ChatMessage {
-			$this->log[] = 'chat #' . $line->getGameId() . ' ' . $line->getMessage() . ($line->getParams() === null ? '' : ' ' . $line->getParams());
+			$this->log[] = 'chat #' . $line->getGameId() . ' ' . $line->getMessage()
+				. ($line->getParams() === null ? '' : ' ' . $line->getParams());
 			return $line;
 		});
 		$this->chatMapper->method('deleteByGame')->willReturnCallback(function (int $id): int {
@@ -152,14 +153,29 @@ trait GameServiceFixture {
 			$this->log[] = 'delete own chat #' . $id . ' ' . $uid;
 		});
 		$this->notifications = $this->createMock(NotificationService::class);
-		foreach (['invite', 'inviteAccepted', 'inviteDeclined', 'inviteClosed', 'yourTurn', 'drawOffered', 'drawClosed', 'gameOver',
-			'chat', 'gameEndedDeleted', 'markSeen', 'removeForGame'] as $method) {
+		foreach ([
+			'invite',
+			'inviteAccepted',
+			'inviteDeclined',
+			'inviteClosed',
+			'yourTurn',
+			'drawOffered',
+			'drawClosed',
+			'gameOver',
+			'chat',
+			'gameEndedDeleted',
+			'markSeen',
+			'removeForGame',
+		] as $method) {
 			$this->notifications->method($method)->willReturnCallback(function (mixed ...$args) use ($method): void {
-				$this->log[] = 'notify ' . $method . '(' . implode(', ', array_map(static fn (mixed $arg): string => match (true) {
-					$arg instanceof Game => '#' . $arg->getId(),
-					is_object($arg) => (new \ReflectionClass($arg))->getShortName(),
-					default => var_export($arg, true),
-				}, $args)) . ')';
+				$this->log[] = 'notify ' . $method . '(' . implode(', ', array_map(
+					static fn (mixed $arg): string => match (true) {
+						$arg instanceof Game => '#' . $arg->getId(),
+						is_object($arg) => (new \ReflectionClass($arg))->getShortName(),
+						default => var_export($arg, true),
+					},
+					$args,
+				)) . ')';
 			});
 		}
 		$this->ratings = $this->createMock(RatingService::class);
@@ -184,12 +200,13 @@ trait GameServiceFixture {
 		$policy->method('isMultiplayerUser')->willReturnCallback(fn () => $this->allow['multiplayer']);
 		$policy->method('canSeeOpenChallenge')->willReturnCallback(fn () => $this->allow['seeOpen']);
 		$policy->method('isInGroup')->willReturnCallback(fn () => $this->allow['inGroup']);
-		$policy->method('assertCanInvite')->willReturnCallback(function (string $from, string $to) use ($error): string {
-			if (is_string($this->allow['invite'])) {
-				throw $error($this->allow['invite']);
-			}
-			return strtolower($to);
-		});
+		$policy->method('assertCanInvite')
+			->willReturnCallback(function (string $from, string $to) use ($error): string {
+				if (is_string($this->allow['invite'])) {
+					throw $error($this->allow['invite']);
+				}
+				return strtolower($to);
+			});
 		$policy->method('assertWithinLimits')->willReturnCallback(function () use ($error): void {
 			if (is_string($this->allow['limits'])) {
 				throw $error($this->allow['limits']);
@@ -239,7 +256,15 @@ trait GameServiceFixture {
 	/**
 	 * The shared building blocks of the services, created once per test so that all services share one transaction.
 	 *
-	 * @return array{repository: GameRepository, transaction: GameTransaction, lifecycle: GameLifecycle, clock: GameClock, policy: InvitePolicy, settings: AppSettings, errors: GameErrors}
+	 * @return array{
+	 *     repository: GameRepository,
+	 *     transaction: GameTransaction,
+	 *     lifecycle: GameLifecycle,
+	 *     clock: GameClock,
+	 *     policy: InvitePolicy,
+	 *     settings: AppSettings,
+	 *     errors: GameErrors
+	 * }
 	 */
 	private function parts(): array {
 		if ($this->parts === null) {
@@ -249,8 +274,18 @@ trait GameServiceFixture {
 			$errors = new GameErrors($this->l10n());
 			$repository = new GameRepository($this->gameMapper, $policy, $this->engine, $clock, $errors);
 			$transaction = new GameTransaction($this->database(), $this->createMock(LoggerInterface::class));
-			$lifecycle = new GameLifecycle($repository, $transaction, $clock, $this->random, $this->ratings, $this->notifications,
-				$this->chatMapper, $settings, $this->engine, $errors);
+			$lifecycle = new GameLifecycle(
+				$repository,
+				$transaction,
+				$clock,
+				$this->random,
+				$this->ratings,
+				$this->notifications,
+				$this->chatMapper,
+				$settings,
+				$this->engine,
+				$errors,
+			);
 			$this->parts = compact('repository', 'transaction', 'lifecycle', 'clock', 'policy', 'settings', 'errors');
 		}
 		return $this->parts;
@@ -258,32 +293,80 @@ trait GameServiceFixture {
 
 	protected function invitations(): InvitationService {
 		$p = $this->parts();
-		return new InvitationService($p['repository'], $p['lifecycle'], $p['transaction'], $p['policy'], $p['settings'], $p['clock'],
-			$this->engine, $this->notifications, $this->l10n(), $p['errors']);
+		return new InvitationService(
+			$p['repository'],
+			$p['lifecycle'],
+			$p['transaction'],
+			$p['policy'],
+			$p['settings'],
+			$p['clock'],
+			$this->engine,
+			$this->notifications,
+			$this->l10n(),
+			$p['errors'],
+		);
 	}
 
 	protected function gameplay(): GameplayService {
 		$p = $this->parts();
-		return new GameplayService($p['repository'], $p['lifecycle'], $p['transaction'], $this->moveMapper, $this->engine, $this->random,
-			$p['clock'], $this->notifications, $this->l10n(), $p['errors']);
+		return new GameplayService(
+			$p['repository'],
+			$p['lifecycle'],
+			$p['transaction'],
+			$this->moveMapper,
+			$this->engine,
+			$this->random,
+			$p['clock'],
+			$this->notifications,
+			$this->l10n(),
+			$p['errors'],
+		);
 	}
 
 	protected function chat(): ChatService {
 		$p = $this->parts();
-		return new ChatService($p['lifecycle'], $p['repository'], $p['transaction'], $this->chatMapper, $p['settings'], $this->notifications,
-			$p['clock'], $this->l10n(), $p['errors']);
+		return new ChatService(
+			$p['lifecycle'],
+			$p['repository'],
+			$p['transaction'],
+			$this->chatMapper,
+			$p['settings'],
+			$this->notifications,
+			$p['clock'],
+			$this->l10n(),
+			$p['errors'],
+		);
 	}
 
 	protected function queries(): GameQueryService {
 		$p = $this->parts();
-		return new GameQueryService($this->gameMapper, $this->moveMapper, $this->chatMapper, $p['lifecycle'], $p['policy'], $p['clock'],
-			$p['settings'], $this->notifications, $this->userManager, $this->l10n());
+		return new GameQueryService(
+			$this->gameMapper,
+			$this->moveMapper,
+			$this->chatMapper,
+			$p['lifecycle'],
+			$p['policy'],
+			$p['clock'],
+			$p['settings'],
+			$this->notifications,
+			$this->userManager,
+			$this->l10n(),
+		);
 	}
 
 	protected function maintenance(): GameMaintenanceService {
 		$p = $this->parts();
-		return new GameMaintenanceService($this->gameMapper, $this->moveMapper, $this->chatMapper, $p['repository'], $p['lifecycle'],
-			$p['transaction'], $p['settings'], $this->notifications, $p['clock']);
+		return new GameMaintenanceService(
+			$this->gameMapper,
+			$this->moveMapper,
+			$this->chatMapper,
+			$p['repository'],
+			$p['lifecycle'],
+			$p['transaction'],
+			$p['settings'],
+			$this->notifications,
+			$p['clock'],
+		);
 	}
 
 	/**

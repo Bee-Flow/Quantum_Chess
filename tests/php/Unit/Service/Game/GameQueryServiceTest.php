@@ -31,13 +31,29 @@ final class GameQueryServiceTest extends TestCase {
 
 	protected function setUp(): void {
 		$this->setUpGames();
-		$this->gameMapper->method('findForUser')->willReturnCallback(fn (string $uid, array $statuses) => array_values(array_filter($this->stored,
-			fn (Game $g) => $g->isParticipant($uid) && in_array($g->getStatus(), $statuses, true))));
-		$this->gameMapper->method('findOpen')->willReturnCallback(fn () => array_values(array_filter($this->stored, fn (Game $g) => $g->getStatus() === Game::STATUS_OPEN)));
-		$this->gameMapper->method('history')->willReturnCallback(function (string $uid, array $statuses, ?int $before, ?int $beforeId, int $limit): array {
-			$this->page = [$before, $beforeId, $limit];
-			return array_slice(array_values(array_filter($this->stored, fn (Game $g) => in_array($g->getStatus(), $statuses, true))), 0, $limit);
-		});
+		$this->gameMapper->method('findForUser')->willReturnCallback(
+			fn (string $uid, array $statuses) => array_values(array_filter(
+				$this->stored,
+				fn (Game $g) => $g->isParticipant($uid) && in_array($g->getStatus(), $statuses, true),
+			)),
+		);
+		$this->gameMapper->method('findOpen')->willReturnCallback(fn () => array_values(array_filter(
+			$this->stored,
+			fn (Game $g) => $g->getStatus() === Game::STATUS_OPEN,
+		)));
+		$this->gameMapper->method('history')->willReturnCallback(
+			function (string $uid, array $statuses, ?int $before, ?int $beforeId, int $limit): array {
+				$this->page = [$before, $beforeId, $limit];
+				return array_slice(
+					array_values(array_filter(
+						$this->stored,
+						fn (Game $g) => in_array($g->getStatus(), $statuses, true),
+					)),
+					0,
+					$limit,
+				);
+			},
+		);
 	}
 
 	public function testLobbyGroups(): void {
@@ -51,8 +67,17 @@ final class GameQueryServiceTest extends TestCase {
 			GameBuilder::finished(['id' => 7]),
 		);
 		$lobby = $this->queries()->getLobby('bob');
-		$this->assertSame(['yourTurn' => [2, 1], 'waiting' => [3], 'invitations' => [4, 5], 'outgoing' => [], 'open' => [6], 'recent' => [7]],
-			array_map(fn (array $games) => array_map(fn (Game $g) => $g->getId(), $games), $lobby));
+		$this->assertSame(
+			[
+				'yourTurn' => [2, 1],
+				'waiting' => [3],
+				'invitations' => [4, 5],
+				'outgoing' => [],
+				'open' => [6],
+				'recent' => [7],
+			],
+			array_map(fn (array $games) => array_map(fn (Game $g) => $g->getId(), $games), $lobby),
+		);
 		$this->assertSame(['yourTurn' => 2, 'invitations' => 2], $this->queries()->countActionNeeded('bob'));
 		$this->assertSame([4, 5, 2], array_map(fn (Game $g) => $g->getId(), $this->queries()->listDashboard('bob', 3)));
 	}
@@ -62,7 +87,10 @@ final class GameQueryServiceTest extends TestCase {
 			$this->store(GameBuilder::finished(['id' => $id, 'finishedAt' => self::NOW - $id]));
 		}
 		$page = $this->queries()->history('bob', ['limit' => 2]);
-		$this->assertSame([[11, 12], base64_encode((self::NOW - 12) . ':12')], [array_map(fn (Game $g) => $g->getId(), $page['games']), $page['next']]);
+		$this->assertSame(
+			[[11, 12], base64_encode((self::NOW - 12) . ':12')],
+			[array_map(fn (Game $g) => $g->getId(), $page['games']), $page['next']],
+		);
 		$this->assertSame([null, null, 3], $this->page, 'one more than the page to know whether there is a next page');
 		$this->queries()->history('bob', ['cursor' => $page['next'], 'limit' => 500]);
 		$this->assertSame([self::NOW - 12, 12, 51], $this->page);
@@ -78,9 +106,15 @@ final class GameQueryServiceTest extends TestCase {
 		$this->store(GameBuilder::active());
 		$this->moveMapper->method('findByGame')->willReturn([]);
 		$this->chatMapper->method('findByGame')->willReturn([]);
-		$this->assertSame(['changed' => false, 'rev' => 5, 'now' => self::NOW], $this->queries()->poll(7, 'bob', 5, 0, 0));
+		$this->assertSame(
+			['changed' => false, 'rev' => 5, 'now' => self::NOW],
+			$this->queries()->poll(7, 'bob', 5, 0, 0),
+		);
 		$changed = $this->queries()->poll(7, 'bob', 4, 0, 0);
-		$this->assertSame([true, 5, [], []], [$changed['changed'], $changed['rev'], $changed['moves'], $changed['chat']]);
+		$this->assertSame(
+			[true, 5, [], []],
+			[$changed['changed'], $changed['rev'], $changed['moves'], $changed['chat']],
+		);
 		$this->assertSame(['rated' => true, 'reason' => null], $this->queries()->ratedCheck());
 		$this->config['ratedEnabled'] = false;
 		$this->assertSame(['rated' => false, 'reason' => 'admin'], $this->queries()->ratedCheck());

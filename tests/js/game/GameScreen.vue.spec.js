@@ -17,7 +17,12 @@ import GameScreen from '../../../src/game/components/GameScreen.vue'
 import { applyMove, generateMoves, initialState, moveNotation } from '../../../src/engine/index.js'
 import { NO_CAPABILITIES } from '../../../src/game/gameController.js'
 
-vi.mock('../../../src/services/sound.js', () => ({ playSound: vi.fn(), configureSound: vi.fn(), startSuspense: () => () => {}, unlockAudio: vi.fn() }))
+vi.mock('../../../src/services/sound.js', () => ({
+	playSound: vi.fn(),
+	configureSound: vi.fn(),
+	startSuspense: () => () => {},
+	unlockAudio: vi.fn(),
+}))
 
 /**
  * A fake controller after e2-e4 e7-e5.
@@ -29,7 +34,15 @@ function fakeController() {
 	const r1 = applyMove(s0, 'e2-e4')
 	const r2 = applyMove(r1.state, 'e7-e5')
 	const states = [s0, r1.state, r2.state]
-	const entry = (before, r, color) => ({ ply: before.ply, color, code: r.move.code, notation: moveNotation(before, r.move, null), measurement: null, u: null, by: 'human' })
+	const entry = (before, r, color) => ({
+		ply: before.ply,
+		color,
+		code: r.move.code,
+		notation: moveNotation(before, r.move, null),
+		measurement: null,
+		u: null,
+		by: 'human',
+	})
 	const state = shallowRef(r2.state)
 	const attach = vi.fn(() => () => {})
 	return {
@@ -41,7 +54,10 @@ function fakeController() {
 		startState: ref(null),
 		legalMoves: computed(() => generateMoves(state.value)),
 		moves: ref([entry(s0, r1, 'w'), entry(r1.state, r2, 'b')]),
-		players: computed(() => ({ w: { color: 'w', kind: 'local', name: 'Ann' }, b: { color: 'b', kind: 'local', name: 'Ben' } })),
+		players: computed(() => ({
+			w: { color: 'w', kind: 'local', name: 'Ann' },
+			b: { color: 'b', kind: 'local', name: 'Ben' },
+		})),
 		myColor: computed(() => null),
 		movableColor: computed(() => 'w'),
 		orientation: ref('w'),
@@ -69,10 +85,18 @@ function fakeController() {
  * @return {Promise<import('@vue/test-utils').VueWrapper>}
  */
 async function mountScreen(controller, slots = {}) {
-	const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: { render: () => null } }] })
+	const router = createRouter({
+		history: createMemoryHistory(),
+		routes: [{ path: '/', component: { render: () => null } }],
+	})
 	router.push('/')
 	await router.isReady()
-	const w = mount(GameScreen, { props: { controller }, slots, global: { plugins: [router] }, attachTo: document.body })
+	const w = mount(GameScreen, {
+		props: { controller },
+		slots,
+		global: { plugins: [router] },
+		attachTo: document.body,
+	})
 	await flushPromises()
 	return w
 }

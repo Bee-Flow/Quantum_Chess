@@ -46,7 +46,10 @@ export async function expectApiError(promise, status, code, what) {
 	const message = what ?? `the call fails with ${status} ${code ?? ''}`.trim()
 	const error = await promise.then(() => null, (reason) => reason)
 	expect(error, message).toBeInstanceOf(ApiError)
-	expect({ status: error.status, code: code === undefined ? undefined : error.body?.error }, message).toEqual({ status, code })
+	expect(
+		{ status: error.status, code: code === undefined ? undefined : error.body?.error },
+		message,
+	).toEqual({ status, code })
 	return error.body
 }
 

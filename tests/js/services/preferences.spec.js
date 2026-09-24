@@ -16,7 +16,9 @@ vi.mock('../../../src/services/api.js', () => ({
 	}),
 }))
 vi.mock('@nextcloud/initial-state', () => ({
-	loadState: (app, key, fallback) => (key === 'preferences' ? { sound: false, future: { x: 1 }, volume: 'loud', seenTips: 'x' } : fallback),
+	loadState: (app, key, fallback) => (
+		key === 'preferences' ? { sound: false, future: { x: 1 }, volume: 'loud', seenTips: 'x' } : fallback
+	),
 }))
 
 const prefs = await import('../../../src/services/preferences.js')
@@ -53,14 +55,23 @@ describe('preferences', () => {
 		expect(saved).toHaveLength(0)
 		await vi.advanceTimersByTimeAsync(2)
 		expect(saved).toHaveLength(1)
-		expect(saved[0]).toMatchObject({ volume: 55, boardTheme: 'wood', seenTips: ['ghost'], future: { x: 1 }, sound: false })
+		expect(saved[0]).toMatchObject({
+			volume: 55,
+			boardTheme: 'wood',
+			seenTips: ['ghost'],
+			future: { x: 1 },
+			sound: false,
+		})
 	})
 
 	it('remembers new game options per mode', async () => {
 		vi.useFakeTimers()
 		prefs.rememberNewGame('computer', { level: 3, color: 'b' })
 		prefs.rememberNewGame('local', { white: 'Ann', black: 'Ben' })
-		expect(prefs.preferences.lastNewGame).toEqual({ computer: { level: 3, color: 'b' }, local: { white: 'Ann', black: 'Ben' } })
+		expect(prefs.preferences.lastNewGame).toEqual({
+			computer: { level: 3, color: 'b' },
+			local: { white: 'Ann', black: 'Ben' },
+		})
 		await vi.advanceTimersByTimeAsync(600)
 	})
 })

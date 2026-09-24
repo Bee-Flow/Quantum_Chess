@@ -42,21 +42,45 @@ class MultiplayerSettingsService {
 	}
 
 	/**
-	 * @return array{invites: bool, yourTurn: bool, reminders: bool, drawOffers: bool, results: bool, chat: bool, previews: bool}
+	 * @return array{
+	 *     invites: bool,
+	 *     yourTurn: bool,
+	 *     reminders: bool,
+	 *     drawOffers: bool,
+	 *     results: bool,
+	 *     chat: bool,
+	 *     previews: bool,
+	 * }
 	 */
 	public function notificationSwitches(string $uid): array {
 		$switches = [];
 		foreach (self::NOTIFY_KEYS as $name => $key) {
 			$switches[$name] = $this->userConfig->getValueBool($uid, Application::APP_ID, $key, true);
 		}
-		/** @var array{invites: bool, yourTurn: bool, reminders: bool, drawOffers: bool, results: bool, chat: bool, previews: bool} $switches */
+		/**
+		 * @var array{
+		 *     invites: bool,
+		 *     yourTurn: bool,
+		 *     reminders: bool,
+		 *     drawOffers: bool,
+		 *     results: bool,
+		 *     chat: bool,
+		 *     previews: bool,
+		 * } $switches
+		 */
 		return $switches;
 	}
 
 	/**
 	 * The settings as the settings API returns them. `blocked` is always empty: there is no block list.
 	 *
-	 * @return array{invitePolicy: string, blocked: list<array>, listed: ?bool, leaderboardMode: string, notifications: array<string, bool>}
+	 * @return array{
+	 *     invitePolicy: string,
+	 *     blocked: list<array>,
+	 *     listed: ?bool,
+	 *     leaderboardMode: string,
+	 *     notifications: array<string, bool>,
+	 * }
 	 */
 	public function getMultiplayer(string $uid): array {
 		return [

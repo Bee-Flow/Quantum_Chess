@@ -17,9 +17,76 @@ import { describe, expect, it } from 'vitest'
 import { E, play, S } from './helpers.js'
 
 const CONTRACT = {
-	constants: ['V', 'T', 'BUDGET', 'MAX_WORLDS', 'MAX_LOCATIONS', 'FIFTY_MOVE_PLIES', 'REPETITION_COUNT', 'MAX_PLY', 'LINK_THRESHOLD', 'PIECE_TYPES', 'PROMOTION_TYPES', 'INITIAL_TYPES', 'START_SQUARES', 'WHITE_KING', 'BLACK_KING', 'START_JSON', 'START_HASH', 'CASTLING', 'CASTLING_FLAGS', 'RESULT_REASONS', 'WIN_REASONS', 'ILLEGAL_REASONS', 'SETUP_ERRORS', 'OUTCOME_KEYS'],
+	constants: [
+		'V',
+		'T',
+		'BUDGET',
+		'MAX_WORLDS',
+		'MAX_LOCATIONS',
+		'FIFTY_MOVE_PLIES',
+		'REPETITION_COUNT',
+		'MAX_PLY',
+		'LINK_THRESHOLD',
+		'PIECE_TYPES',
+		'PROMOTION_TYPES',
+		'INITIAL_TYPES',
+		'START_SQUARES',
+		'WHITE_KING',
+		'BLACK_KING',
+		'START_JSON',
+		'START_HASH',
+		'CASTLING',
+		'CASTLING_FLAGS',
+		'RESULT_REASONS',
+		'WIN_REASONS',
+		'ILLEGAL_REASONS',
+		'SETUP_ERRORS',
+		'OUTCOME_KEYS',
+	],
 	errors: ['IllegalMoveError', 'EngineArgumentError', 'SetupError', 'InvalidStateError'],
-	functions: ['initialState', 'validateState', 'parseState', 'serializeState', 'canonicalCopy', 'positionHash', 'gameResult', 'generateMoves', 'hasAnyLegalMove', 'findMove', 'isLegal', 'whyIllegal', 'getOutcomes', 'applyMove', 'moveCode', 'parseMoveCode', 'moveNotation', 'squareName', 'squareIndex', 'worldCount', 'budget', 'squareView', 'pieceLocations', 'conditionalView', 'links', 'linkGroups', 'kingDanger', 'moveRisk', 'kingTrapped', 'pct', 'rollDisplay', 'rollIntervals', 'setupPosition', 'rollIdentity', 'sha256hex', 'chainStart', 'chainNext', 'supportKey', 'supportKeyMirror', 'applyForSearch', 'outcomesForSearch'],
+	functions: [
+		'initialState',
+		'validateState',
+		'parseState',
+		'serializeState',
+		'canonicalCopy',
+		'positionHash',
+		'gameResult',
+		'generateMoves',
+		'hasAnyLegalMove',
+		'findMove',
+		'isLegal',
+		'whyIllegal',
+		'getOutcomes',
+		'applyMove',
+		'moveCode',
+		'parseMoveCode',
+		'moveNotation',
+		'squareName',
+		'squareIndex',
+		'worldCount',
+		'budget',
+		'squareView',
+		'pieceLocations',
+		'conditionalView',
+		'links',
+		'linkGroups',
+		'kingDanger',
+		'moveRisk',
+		'kingTrapped',
+		'pct',
+		'rollDisplay',
+		'rollIntervals',
+		'setupPosition',
+		'rollIdentity',
+		'sha256hex',
+		'chainStart',
+		'chainNext',
+		'supportKey',
+		'supportKeyMirror',
+		'applyForSearch',
+		'outcomesForSearch',
+	],
 }
 
 describe('public API names', () => {
@@ -48,7 +115,8 @@ describe('public API names', () => {
 			expect(() => E.generateMoves(bad)).toThrow()
 			expect(() => E.kingTrapped(bad)).toThrow()
 			expect(() => E.whyIllegal(bad, 'e2-e4')).toThrow()
-			expect(() => E.kingDanger(bad, 'w')).toThrowError(expect.objectContaining({ name: 'InvalidStateError', code: 'shape' }))
+			expect(() => E.kingDanger(bad, 'w'))
+				.toThrowError(expect.objectContaining({ name: 'InvalidStateError', code: 'shape' }))
 		}
 	})
 })
@@ -116,7 +184,10 @@ describe('purity and layering of src/engine', () => {
 			for (const spec of specifiers(readFileSync(f, 'utf8'))) {
 				expect(spec.startsWith('.'), f + ' imports ' + spec).toBe(true)
 				const target = resolve(dirname(f), spec)
-				expect(relative(root, target).startsWith('..'), f + ' imports ' + spec + ' outside src/engine').toBe(false)
+				expect(
+					relative(root, target).startsWith('..'),
+					f + ' imports ' + spec + ' outside src/engine',
+				).toBe(false)
 				expect(target.startsWith(ui + '/'), f + ' imports the presentation helper ' + spec).toBe(false)
 			}
 		}
@@ -131,7 +202,10 @@ describe('purity and layering of src/engine', () => {
 					continue
 				}
 				expect(spec.startsWith('.'), f + ' imports ' + spec).toBe(true)
-				expect(relative(root, resolve(dirname(f), spec)).startsWith('..'), f + ' imports ' + spec + ' outside src/engine').toBe(false)
+				expect(
+					relative(root, resolve(dirname(f), spec)).startsWith('..'),
+					f + ' imports ' + spec + ' outside src/engine',
+				).toBe(false)
 			}
 			const code = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
 			for (const re of [/Math\.random/, /\bDate\b/, /\bwindow\b/, /\bdocument\b/, /\bfetch\(/, /localStorage/]) {
@@ -162,13 +236,14 @@ describe('purity and layering of src/engine', () => {
 		]
 		const list = files(root).filter((f) => !f.startsWith(ui + '/'))
 		expect(list.length).toBeGreaterThan(20)
+		const spdx = '/**\n * SPDX-FileCopyrightText: 2026 BeeFlow\n * SPDX-License-Identifier: AGPL-3.0-or-later\n */'
 		for (const f of list) {
 			const text = readFileSync(f, 'utf8')
 			const code = text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
 			for (const re of banned) {
 				expect(re.test(code), f + ' uses ' + re).toBe(false)
 			}
-			expect(text.startsWith('/**\n * SPDX-FileCopyrightText: 2026 BeeFlow\n * SPDX-License-Identifier: AGPL-3.0-or-later\n */'), f).toBe(true)
+			expect(text.startsWith(spdx), f).toBe(true)
 			expect(/from '\.\/ui\//.test(text), f + ' imports UI code').toBe(false)
 		}
 	})

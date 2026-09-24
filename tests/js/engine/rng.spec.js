@@ -42,8 +42,10 @@ describe('rescale', () => {
 describe('randomness', () => {
 	it('u, rng and outcome precedence', () => {
 		const w2 = S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6'])
-		expect(E.applyMove(w2, 'c1-h6', { outcome: 'move', u: 16000000 }).measurement).toMatchObject({ key: 'move', u: null })
-		expect(E.applyMove(w2, 'c1-h6', { u: 16000000, rng: () => 0 }).measurement).toMatchObject({ key: 'capture', u: 16000000 })
+		expect(E.applyMove(w2, 'c1-h6', { outcome: 'move', u: 16000000 }).measurement)
+			.toMatchObject({ key: 'move', u: null })
+		expect(E.applyMove(w2, 'c1-h6', { u: 16000000, rng: () => 0 }).measurement)
+			.toMatchObject({ key: 'capture', u: 16000000 })
 		expect(E.applyMove(w2, 'c1-h6', { rng: () => 0 }).measurement).toMatchObject({ key: 'move', u: 0 })
 		const r = E.applyMove(w2, 'c1-h6')
 		expect(r.measurement.u).toBeGreaterThanOrEqual(0)
@@ -53,12 +55,15 @@ describe('randomness', () => {
 	it('invalid u and rng throw argument errors, not IllegalMove', () => {
 		const w2 = S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6'])
 		for (const u of [-1, T, 1.5, '5', NaN]) {
-			expect(() => E.applyMove(w2, 'c1-h6', { u })).toThrowError(expect.objectContaining({ name: 'EngineArgumentError' }))
+			expect(() => E.applyMove(w2, 'c1-h6', { u }))
+				.toThrowError(expect.objectContaining({ name: 'EngineArgumentError' }))
 		}
 		for (const r of [1, -0.1, NaN, Infinity, '0.5']) {
-			expect(() => E.applyMove(w2, 'c1-h6', { rng: () => r })).toThrowError(expect.objectContaining({ name: 'EngineArgumentError' }))
+			expect(() => E.applyMove(w2, 'c1-h6', { rng: () => r }))
+				.toThrowError(expect.objectContaining({ name: 'EngineArgumentError' }))
 		}
-		expect(() => E.applyMove(w2, 'c1-h6', { rng: 5 })).toThrowError(expect.objectContaining({ name: 'EngineArgumentError' }))
+		expect(() => E.applyMove(w2, 'c1-h6', { rng: 5 }))
+			.toThrowError(expect.objectContaining({ name: 'EngineArgumentError' }))
 	})
 
 	it('the rng is consulted exactly once per rolled move and never otherwise', () => {
