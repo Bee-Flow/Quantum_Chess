@@ -241,7 +241,11 @@ try {
 	await demoPreferences('bob')
 
 	// 01 (+ small), 06, 07: the demo position; the h5 part of the queen is selected, so its thread and link show
-	for (const [name, options] of [['01-game-ghosts', {}], ['06-dark', { dark: true }], ['07-phone', { phone: true }]]) {
+	for (const [name, options] of [
+		['01-game-ghosts', {}],
+		['06-dark', { dark: true }],
+		['07-phone', { phone: true }],
+	]) {
 		const page = await newPage(browser, 'carol', options)
 		await playDemo(page)
 		await clickSquare(page, 'h5')
@@ -288,10 +292,18 @@ try {
 
 	// 03 and 05 with an AI source for bob: the fake OpenAI-compatible server plays Captain Collapse
 	{
-		const fake = await startFakeOpenAi({ comment: ['Arr, the centre be mine! Watch me knight, matey.', 'Two knights where there was one? Ye cannot fool an old sea dog!'] })
+		const fake = await startFakeOpenAi({
+			comment: [
+				'Arr, the centre be mine! Watch me knight, matey.',
+				'Two knights where there was one? Ye cannot fool an old sea dog!',
+			],
+		})
 		const before = await api('admin', 'GET', 'api/settings/admin')
 		try {
-			await api('admin', 'PUT', 'api/settings/admin', { local_allowlist: [fake.baseUrl], allow_personal_keys: true })
+			await api('admin', 'PUT', 'api/settings/admin', {
+				local_allowlist: [fake.baseUrl],
+				allow_personal_keys: true,
+			})
 			await api('bob', 'PUT', 'api/settings/personal', {
 				provider: { preset: 'custom', baseUrl: fake.baseUrl, model: 'fake-chess-1' },
 				apiKey: 'sk-demo-0000',
@@ -313,9 +325,13 @@ try {
 			const widget = join(OUT, '.widget.png')
 			await panel.screenshot({ path: widget })
 			await home.context().close()
-			await renderHtml(browser, `<body style="margin:0;width:1440px;height:900px;overflow:hidden;background:linear-gradient(135deg,#0082c9,#1cafff);display:flex;align-items:center;justify-content:center;gap:40px">
-				<img src="${dataUrl(lobby)}" style="width:1000px;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35)">
-				<img src="${dataUrl(widget)}" style="width:320px;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);background:#fff">
+			const body = 'margin:0;width:1440px;height:900px;overflow:hidden;'
+				+ 'background:linear-gradient(135deg,#0082c9,#1cafff);'
+				+ 'display:flex;align-items:center;justify-content:center;gap:40px'
+			const card = 'border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35)'
+			await renderHtml(browser, `<body style="${body}">
+				<img src="${dataUrl(lobby)}" style="width:1000px;${card}">
+				<img src="${dataUrl(widget)}" style="width:320px;${card};background:#fff">
 			</body>`, { width: 1440, height: 900 }, '03-lobby-dashboard')
 			rmSync(lobby)
 			rmSync(widget)
@@ -338,8 +354,12 @@ try {
 			await save(page, '05-ai-opponent')
 			await page.context().close()
 		} finally {
-			await api('bob', 'PUT', 'api/settings/personal', { provider: null, apiKey: '', defaultSource: null }).catch(() => {})
-			await api('admin', 'PUT', 'api/settings/admin', { local_allowlist: before.local_allowlist, allow_personal_keys: before.allow_personal_keys }).catch(() => {})
+			await api('bob', 'PUT', 'api/settings/personal', { provider: null, apiKey: '', defaultSource: null })
+				.catch(() => {})
+			await api('admin', 'PUT', 'api/settings/admin', {
+				local_allowlist: before.local_allowlist,
+				allow_personal_keys: before.allow_personal_keys,
+			}).catch(() => {})
 			await fake.close()
 		}
 	}

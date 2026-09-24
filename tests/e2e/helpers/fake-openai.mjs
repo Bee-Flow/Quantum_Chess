@@ -71,20 +71,41 @@ export async function startFakeOpenAi({ port = 0, slowMs = 3000, comment } = {})
 			}
 			const auth = req.headers.authorization ?? ''
 			if (auth.startsWith('Bearer sk-bad')) {
-				send(401, { error: { message: 'Incorrect API key provided', type: 'invalid_request_error', code: 'invalid_api_key' } })
+				send(401, {
+					error: {
+						message: 'Incorrect API key provided',
+						type: 'invalid_request_error',
+						code: 'invalid_api_key',
+					},
+				})
 				return
 			}
 			if (req.method === 'GET' && req.url === '/v1/models') {
-				send(200, { object: 'list', data: ['fake-chess-1', 'fake-reasoning', 'fake-slow', 'text-embedding-3-small'].map((id) => ({ id, object: 'model' })) })
+				send(200, {
+					object: 'list',
+					data: ['fake-chess-1', 'fake-reasoning', 'fake-slow', 'text-embedding-3-small'].map((id) => ({
+						id,
+						object: 'model',
+					})),
+				})
 				return
 			}
 			if (req.method === 'POST' && req.url === '/v1/chat/completions' && body && typeof body === 'object') {
 				if (body.model === 'fake-reasoning' && body.temperature !== undefined) {
-					send(400, { error: { message: "Unsupported value: 'temperature' does not support 0.7 with this model.", type: 'invalid_request_error', param: 'temperature', code: 'unsupported_value' } })
+					send(400, {
+						error: {
+							message: "Unsupported value: 'temperature' does not support 0.7 with this model.",
+							type: 'invalid_request_error',
+							param: 'temperature',
+							code: 'unsupported_value',
+						},
+					})
 					return
 				}
 				if (!['fake-chess-1', 'fake-reasoning', 'fake-slow'].includes(body.model)) {
-					send(404, { error: { message: `The model \`${body.model}\` does not exist`, code: 'model_not_found' } })
+					send(404, {
+						error: { message: `The model \`${body.model}\` does not exist`, code: 'model_not_found' },
+					})
 					return
 				}
 				if (body.model === 'fake-slow') {
@@ -94,7 +115,13 @@ export async function startFakeOpenAi({ port = 0, slowMs = 3000, comment } = {})
 					id: 'chatcmpl-fake',
 					object: 'chat.completion',
 					model: body.model,
-					choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: answerFor(body, nextComment()) } }],
+					choices: [
+						{
+							index: 0,
+							finish_reason: 'stop',
+							message: { role: 'assistant', content: answerFor(body, nextComment()) },
+						},
+					],
 					usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
 				})
 				return

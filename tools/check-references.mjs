@@ -32,14 +32,36 @@ const SELF = relative(ROOT, fileURLToPath(import.meta.url))
 
 /** Where code and its comments live. */
 const CODE = ['src/', 'lib/', 'tests/', 'tools/', 'appinfo/', 'templates/', '.github/']
-const CODE_FILES = ['Makefile', 'package.json', 'composer.json', 'psalm.xml', 'eslint.config.js', 'vite.config.js', 'vitest.config.js']
+const CODE_FILES = [
+	'Makefile',
+	'package.json',
+	'composer.json',
+	'psalm.xml',
+	'eslint.config.js',
+	'vite.config.js',
+	'vitest.config.js',
+]
 /** Generated files, which are checked by their own tests. */
 const GENERATED = [/^tests\/fixtures\/engine\/.*\.json$/]
-/** The rules engine and the computer player, whose file headers declare that bare section numbers refer to the rules. */
-const ENGINE = ['src/engine/', 'src/ai/', 'lib/Engine/', 'tests/js/engine/', 'tests/js/ai/', 'tests/php/Unit/Engine/', 'tests/fixtures/']
+/**
+ * The rules engine and the computer player, whose file headers declare that bare section numbers refer to the
+ * rules.
+ */
+const ENGINE = [
+	'src/engine/',
+	'src/ai/',
+	'lib/Engine/',
+	'tests/js/engine/',
+	'tests/js/ai/',
+	'tests/php/Unit/Engine/',
+	'tests/fixtures/',
+]
 const SECTION = '\u00a7'
 const FORBIDDEN = [
-	[new RegExp(`\\b(spec|gd|er) ?${SECTION}`, 'i'), 'cites a planning document; state the rule itself, or name docs/engine-rules.md'],
+	[
+		new RegExp(`\\b(spec|gd|er) ?${SECTION}`, 'i'),
+		'cites a planning document; state the rule itself, or name docs/engine-rules.md',
+	],
 	[/\u2039[a-z-]+\u203a/, 'module marker'],
 	[/\bOwner: /, 'owner tag'],
 	[/\b(TODO|FIXME)\b(?!\(#\d+\))/, 'a TODO names its issue: TODO(#123)'],
@@ -50,7 +72,11 @@ const TEXT = /\.(js|mjs|cjs|vue|php|md|yml|yaml|json|xml|scss|css|html|txt)$|^Ma
  * @return {string[]} the files of the repository: tracked, and untracked but not ignored
  */
 function repositoryFiles() {
-	const out = execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+	const out = execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z'], {
+		cwd: ROOT,
+		encoding: 'utf8',
+		maxBuffer: 64 * 1024 * 1024,
+	})
 	return [...new Set(out.split('\0').filter(Boolean))].filter((file) => existsSync(join(ROOT, file))).sort()
 }
 
@@ -84,7 +110,11 @@ for (const file of codeFiles) {
 			}
 		}
 		if (!inEngine && text.includes(SECTION) && !text.includes('docs/engine-rules.md')) {
-			report(file, i + 1, `a section number outside the rules engine names its document: "docs/engine-rules.md ${SECTION}9.4"`)
+			report(
+				file,
+				i + 1,
+				`a section number outside the rules engine names its document: "docs/engine-rules.md ${SECTION}9.4"`,
+			)
 		}
 	})
 }
@@ -108,5 +138,7 @@ for (const file of documents) {
 for (const problem of problems) {
 	console.error(problem)
 }
-console.info(`${codeFiles.length} code files and ${documents.length} documents checked: ${problems.length ? `${problems.length} problems` : 'no problems'}`)
+console.info(`${codeFiles.length} code files and ${documents.length} documents checked: ${
+	problems.length ? `${problems.length} problems` : 'no problems'
+}`)
 process.exitCode = problems.length ? 1 : 0

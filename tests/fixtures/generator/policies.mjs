@@ -96,7 +96,8 @@ export function choose(policy, s, moves, rng) {
 			return r < 0.9 ? hunter(s, moves, rng) : pick(moves, rng)
 		case 'shuffle': {
 		// Reversible moves only, preferring ones that recreate a position already seen.
-			const rev = moves.filter((m) => m.resolution === 'certain' && !m.capture && m.type === 'standard' && s.types[m.piece] !== 'p')
+			const rev = moves.filter((m) => m.resolution === 'certain' && !m.capture && m.type === 'standard'
+				&& s.types[m.piece] !== 'p')
 			const seen = new Set(s.history)
 			const back = rev.filter((m) => seen.has(E.positionHash(E.applyForSearch(s, m))))
 			if (back.length > 0 && r < 0.8) {
@@ -107,7 +108,8 @@ export function choose(policy, s, moves, rng) {
 		case 'fifty': {
 		// No captures, no pawn moves, never a repeated position: the 50-move rule ends the game.
 			const seen = new Set(s.history)
-			const ok = moves.filter((m) => m.resolution === 'certain' && !m.capture && s.types[m.piece] !== 'p' && m.type === 'standard'
+			const ok = moves.filter((m) => m.resolution === 'certain' && !m.capture && s.types[m.piece] !== 'p'
+				&& m.type === 'standard'
 				&& !seen.has(E.positionHash(E.applyForSearch(s, m))))
 			return ok.length > 0 ? pick(ok, rng) : pick(moves, rng)
 		}

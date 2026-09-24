@@ -101,7 +101,17 @@ export function recordFixtures(examples, games) {
 			createdAt: 1790000000,
 			start: json(w2),
 			chain0,
-			moves: [{ ply: 0, code: 'c1-h6', u: 8388608, key: 'capture', after, afterSha256: E.sha256hex(after), chain: E.chainNext(chain0, 0, 'c1-h6', 8388608, 'capture', after) }],
+			moves: [
+				{
+					ply: 0,
+					code: 'c1-h6',
+					u: 8388608,
+					key: 'capture',
+					after,
+					afterSha256: E.sha256hex(after),
+					chain: E.chainNext(chain0, 0, 'c1-h6', 8388608, 'capture', after),
+				},
+			],
 		})
 		for (const [gi, g] of games.slice(0, 3).entries()) {
 			const gameId = 1000 + gi
@@ -114,7 +124,15 @@ export function recordFixtures(examples, games) {
 				const u = st.measurement === null ? null : st.measurement.u
 				const key = st.measurement === null ? null : st.measurement.key
 				const chain = E.chainNext(prev, JSON.parse(g.start).ply + i, st.code, u, key, st.after)
-				entry.moves.push({ ply: JSON.parse(g.start).ply + i, code: st.code, u, key, after: st.after, afterSha256: E.sha256hex(st.after), chain })
+				entry.moves.push({
+					ply: JSON.parse(g.start).ply + i,
+					code: st.code,
+					u,
+					key,
+					after: st.after,
+					afterSha256: E.sha256hex(st.after),
+					chain,
+				})
 				prev = chain
 			})
 			chains.push(entry)
@@ -123,12 +141,18 @@ export function recordFixtures(examples, games) {
 	const rollRecords = [...ROLL_RECORDS]
 	for (const g of games) {
 		for (const st of g.steps) {
-			if (st.measurement !== null && rollRecords.length < 60 && (st.measurement.outcomes.length === 3 || rollRecords.length % 4 === 0)) {
+			if (st.measurement !== null && rollRecords.length < 60
+				&& (st.measurement.outcomes.length === 3 || rollRecords.length % 4 === 0)) {
 				rollRecords.push(st.measurement)
 			}
 		}
 	}
-	const recordStates = [START, W2, ...examples.map((g) => JSON.parse(g.steps[0].after)), ...games.slice(0, 15).map((g) => JSON.parse(g.steps[Math.min(9, g.steps.length - 1)].after))]
+	const recordStates = [
+		START,
+		W2,
+		...examples.map((g) => JSON.parse(g.steps[0].after)),
+		...games.slice(0, 15).map((g) => JSON.parse(g.steps[Math.min(9, g.steps.length - 1)].after)),
+	]
 	return {
 		v: 1,
 		chain: chains,
@@ -140,12 +164,26 @@ export function recordFixtures(examples, games) {
 		})),
 		rollIdentity: [
 			{ state: json(W2), code: 'c1-h6', expect: E.rollIdentity(W2, 'c1-h6') },
-			...examples.slice(0, 20).map((g) => ({ state: g.start, code: g.steps[0].code, expect: E.rollIdentity(JSON.parse(g.start), g.steps[0].code) })),
-			{ state: json(E.setupPosition({ fen: '7k/4P1n1/8/8/8/8/8/K7 w - - 0 1', prelude: ['g7-e8|f5'] })), code: 'e7-e8=N', expect: E.rollIdentity(E.setupPosition({ fen: '7k/4P1n1/8/8/8/8/8/K7 w - - 0 1', prelude: ['g7-e8|f5'] }), 'e7-e8=N') },
+			...examples.slice(0, 20).map((g) => ({
+				state: g.start,
+				code: g.steps[0].code,
+				expect: E.rollIdentity(JSON.parse(g.start), g.steps[0].code),
+			})),
+			{
+				state: json(E.setupPosition({ fen: '7k/4P1n1/8/8/8/8/8/K7 w - - 0 1', prelude: ['g7-e8|f5'] })),
+				code: 'e7-e8=N',
+				expect: E.rollIdentity(
+					E.setupPosition({ fen: '7k/4P1n1/8/8/8/8/8/K7 w - - 0 1', prelude: ['g7-e8|f5'] }),
+					'e7-e8=N',
+				),
+			},
 		],
 		supportKey: recordStates.map((s) => ({ state: json(s), key: E.supportKey(s), mirror: E.supportKeyMirror(s) })),
 		certainFen: recordStates.map((s) => ({ state: json(s), fen: E.certainFen(s) })),
-		sha256: ['', 'abc', 'qchess-chain|v1|42|alice|bob|1790000000', 'Élodie|ユーザー|😀'].map((text) => ({ text, hex: E.sha256hex(text) })),
+		sha256: ['', 'abc', 'qchess-chain|v1|42|alice|bob|1790000000', 'Élodie|ユーザー|😀'].map((text) => ({
+			text,
+			hex: E.sha256hex(text),
+		})),
 	}
 }
 
@@ -178,8 +216,12 @@ export function vectorFixtures(examples, whyCases) {
 			{ weights: [16777215], expect: E.rescaleWeights([16777215]) },
 		],
 		rToU: [0, 0.3, 0.5, 0.999999999, 0.1, 0.75, 1 / 3].map((r) => ({ r, u: E.uFromRandom(r) })),
-		pct: [0, 1, 83886, 83887, 167772, 8388608, 11184811, 5592405, 16609443, 16609444, 16777215, 16777216].map((w) => ({ weight: w, expect: E.pct(w) })),
-		moveOrder: { state: json(E.setupPosition({ fen: '4k3/8/8/8/8/8/8/4K1N1 w - - 0 1' })), legal: E.legalCodes(E.setupPosition({ fen: '4k3/8/8/8/8/8/8/4K1N1 w - - 0 1' })) },
+		pct: [0, 1, 83886, 83887, 167772, 8388608, 11184811, 5592405, 16609443, 16609444, 16777215, 16777216]
+			.map((w) => ({ weight: w, expect: E.pct(w) })),
+		moveOrder: {
+			state: json(E.setupPosition({ fen: '4k3/8/8/8/8/8/8/4K1N1 w - - 0 1' })),
+			legal: E.legalCodes(E.setupPosition({ fen: '4k3/8/8/8/8/8/8/4K1N1 w - - 0 1' })),
+		},
 		examples,
 		whyIllegal: whyCases,
 		setup: SETUP_SPECS.map((spec) => ({ spec, expect: json(E.setupPosition(spec)) })),

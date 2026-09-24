@@ -58,7 +58,12 @@ return [
 		['name' => 'ai#move', 'url' => '/api/ai/move', 'verb' => 'POST'],
 		['name' => 'ai#coach', 'url' => '/api/ai/coach', 'verb' => 'POST'],
 		['name' => 'ai#task', 'url' => '/api/ai/task/{taskId}', 'verb' => 'GET', 'requirements' => ['taskId' => '\d+']],
-		['name' => 'ai#cancelTask', 'url' => '/api/ai/task/{taskId}', 'verb' => 'DELETE', 'requirements' => ['taskId' => '\d+']],
+		[
+			'name' => 'ai#cancelTask',
+			'url' => '/api/ai/task/{taskId}',
+			'verb' => 'DELETE',
+			'requirements' => ['taskId' => '\d+'],
+		],
 		['name' => 'ai#ackNotice', 'url' => '/api/ai/notice', 'verb' => 'POST'],
 
 		// Settings (personal, multiplayer, admin)
@@ -75,8 +80,18 @@ return [
 		// Notification actions (Accept/Decline/Rematch) for the web, mobile and desktop clients
 		['name' => 'ocs_game#accept', 'url' => '/api/v1/games/{id}/accept', 'verb' => 'POST', 'requirements' => $id],
 		['name' => 'ocs_game#decline', 'url' => '/api/v1/games/{id}/decline', 'verb' => 'POST', 'requirements' => $id],
-		['name' => 'ocs_game#drawAccept', 'url' => '/api/v1/games/{id}/draw-accept', 'verb' => 'POST', 'requirements' => $id],
-		['name' => 'ocs_game#drawDecline', 'url' => '/api/v1/games/{id}/draw-decline', 'verb' => 'POST', 'requirements' => $id],
+		[
+			'name' => 'ocs_game#drawAccept',
+			'url' => '/api/v1/games/{id}/draw-accept',
+			'verb' => 'POST',
+			'requirements' => $id,
+		],
+		[
+			'name' => 'ocs_game#drawDecline',
+			'url' => '/api/v1/games/{id}/draw-decline',
+			'verb' => 'POST',
+			'requirements' => $id,
+		],
 		['name' => 'ocs_game#rematch', 'url' => '/api/v1/games/{id}/rematch', 'verb' => 'POST', 'requirements' => $id],
 	],
 ];
