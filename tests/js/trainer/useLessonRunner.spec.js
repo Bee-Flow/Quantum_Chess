@@ -27,7 +27,12 @@ vi.mock('../../../src/services/api.js', () => ({
 function runner(id) {
 	const lessonId = ref(id)
 	const openGame = vi.fn()
-	const r = useLessonRunner({ lessonId: () => lessonId.value, playback: usePlayback(ref(null)), createGame: () => ({ id: 'lg_test' }), openGame })
+	const r = useLessonRunner({
+		lessonId: () => lessonId.value,
+		playback: usePlayback(ref(null)),
+		createGame: () => ({ id: 'lg_test' }),
+		openGame,
+	})
 	return { r, lessonId, openGame }
 }
 

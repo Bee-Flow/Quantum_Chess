@@ -45,7 +45,13 @@ function setup(answers, { strength = 'balanced', persona = 'professor', record =
 	const opp = useLlmOpponent({ record: rec, persona: personaById(persona), source: 'personal', strength }, {
 		candidates: async () => CANDS,
 		requestAiMove,
-		waitForAiTask: async () => ({ status: 'done', kind: 'move', move: 'e7-e5', comment: 'Queued answer', mood: 'happy' }),
+		waitForAiTask: async () => ({
+			status: 'done',
+			kind: 'move',
+			move: 'e7-e5',
+			comment: 'Queued answer',
+			mood: 'happy',
+		}),
 		cancelAiTask: async () => ({}),
 	})
 	return { opp, bodies, rec }
@@ -53,7 +59,12 @@ function setup(answers, { strength = 'balanced', persona = 'professor', record =
 
 describe('useLlmOpponent', () => {
 	it('uses the real API when a dependency is passed as undefined (as useLocalGame does)', async () => {
-		apiRequestAiMove.mockResolvedValueOnce({ status: 'done', move: 'e7-e5', comment: 'From the API', mood: 'happy' })
+		apiRequestAiMove.mockResolvedValueOnce({
+			status: 'done',
+			move: 'e7-e5',
+			comment: 'From the API',
+			mood: 'happy',
+		})
 		const rec = { ai: { answerMode: 'code', fallbackPlies: [], chat: [] } }
 		const opp = useLlmOpponent({ record: rec, persona: personaById('professor'), source: 'personal' }, {
 			candidates: async () => CANDS,
@@ -70,7 +81,13 @@ describe('useLlmOpponent', () => {
 		const { opp, bodies } = setup([{ status: 'done', move: 'e7-e5', comment: 'Classic!', mood: 'confident' }])
 		const r = await opp.chooseMove(state)
 		expect(r).toEqual({ code: 'e7-e5', by: 'ai', comment: 'Classic!', mood: 'confident' })
-		expect(bodies[0]).toMatchObject({ persona: 'professor', color: 'b', feedback: null, answerMode: 'code', candidates: CANDS })
+		expect(bodies[0]).toMatchObject({
+			persona: 'professor',
+			color: 'b',
+			feedback: null,
+			answerMode: 'code',
+			candidates: CANDS,
+		})
 	})
 
 	it('accepts lenient input through findMove', async () => {
@@ -101,7 +118,10 @@ describe('useLlmOpponent', () => {
 	})
 
 	it('falls back to the best ✓ candidate with the style bonus and a canned line', async () => {
-		const { opp, rec } = setup([{ status: 'done', move: 'zz' }, { status: 'done', move: 'zz' }], { persona: 'superposa' })
+		const { opp, rec } = setup(
+			[{ status: 'done', move: 'zz' }, { status: 'done', move: 'zz' }],
+			{ persona: 'superposa' },
+		)
 		const r = await opp.chooseMove(state)
 		// Madame Superposa likes splits: 0.51 + 0.03 beats 0.52
 		expect(r).toMatchObject({ code: 'b8-a6|c6', by: 'ai-fallback', mood: 'thinking' })
@@ -111,7 +131,14 @@ describe('useLlmOpponent', () => {
 
 	it('switches to index mode after 3 fallbacks within 5 AI moves', async () => {
 		const rec = { ai: { answerMode: 'code', fallbackPlies: [1, 3], chat: [] } }
-		const { opp, bodies } = setup([{ status: 'done', move: 'zz' }, { status: 'done', move: 'zz' }, { status: 'done', pick: 2, comment: 'two' }], { record: rec })
+		const { opp, bodies } = setup(
+			[
+				{ status: 'done', move: 'zz' },
+				{ status: 'done', move: 'zz' },
+				{ status: 'done', pick: 2, comment: 'two' },
+			],
+			{ record: rec },
+		)
 		await opp.chooseMove(state)
 		expect(rec.ai.answerMode).toBe('index')
 		expect(opp.answerMode.value).toBe('index')

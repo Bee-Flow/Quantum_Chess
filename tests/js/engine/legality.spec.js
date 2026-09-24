@@ -17,18 +17,50 @@ const START = E.initialState()
 describe('the legal move list', () => {
 	it('move order example', () => {
 		const s = S('4k3/8/8/8/8/8/8/4K1N1 w - - 0 1')
-		expect(E.legalCodes(s)).toEqual(['e1-d1', 'e1-f1', 'e1-d2', 'e1-e2', 'e1-f2', 'g1-e2', 'g1-f3', 'g1-h3', 'g1-e2|f3', 'g1-e2|h3', 'g1-f3|h3'])
+		expect(E.legalCodes(s)).toEqual([
+			'e1-d1',
+			'e1-f1',
+			'e1-d2',
+			'e1-e2',
+			'e1-f2',
+			'g1-e2',
+			'g1-f3',
+			'g1-h3',
+			'g1-e2|f3',
+			'g1-e2|h3',
+			'g1-f3|h3',
+		])
 	})
 
 	it('LegalMove shape and key order', () => {
 		const s = S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6'])
 		const m = E.findMove(s, 'c1-h6')
-		expect(Object.keys(m)).toEqual(['type', 'from', 'to', 'code', 'piece', 'resolution', 'measured', 'fallback', 'capture', 'happenWeight', 'outcomes', 'successProbability'])
+		expect(Object.keys(m)).toEqual([
+			'type',
+			'from',
+			'to',
+			'code',
+			'piece',
+			'resolution',
+			'measured',
+			'fallback',
+			'capture',
+			'happenWeight',
+			'outcomes',
+			'successProbability',
+		])
 		const p = E.findMove(S('7k/4P1n1/8/8/8/8/8/K7 w - - 0 1', ['g7-e8|f5']), 'e7-e8=R')
 		expect(Object.keys(p).slice(0, 5)).toEqual(['type', 'from', 'to', 'promo', 'code'])
 		expect(p.promo).toBe('r')
 		const split = E.findMove(START, 'g1-f3|h3')
-		expect(split).toMatchObject({ resolution: 'quantum', measured: false, capture: false, happenWeight: T, outcomes: [], successProbability: 1 })
+		expect(split).toMatchObject({
+			resolution: 'quantum',
+			measured: false,
+			capture: false,
+			happenWeight: T,
+			outcomes: [],
+			successProbability: 1,
+		})
 		const castle = E.findMove(S('4k3/8/8/8/8/8/8/4K2R w K - 0 1'), 'O-O')
 		expect(castle).toMatchObject({ code: 'e1-g1', resolution: 'certain', outcomes: [], happenWeight: T })
 	})

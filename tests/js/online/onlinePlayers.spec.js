@@ -43,18 +43,42 @@ describe('seats', () => {
 
 describe('player cards and result', () => {
 	it('tells whose move it is and how much time is left', () => {
-		const g = { status: 'active', white: ALICE, black: BOB, turn: 'w', deadlineAt: 1000 + 18 * 3600, ratings: { w: { rating: 1500, provisional: true } } }
+		const g = {
+			status: 'active',
+			white: ALICE,
+			black: BOB,
+			turn: 'w',
+			deadlineAt: 1000 + 18 * 3600,
+			ratings: { w: { rating: 1500, provisional: true } },
+		}
 		const names = { w: 'Alice', b: 'Bob' }
 		const white = onlinePlayerInfo(g, 'w', { viewer, names, myColor: 'w', now: 1000 })
-		expect(white).toMatchObject({ kind: 'user', userId: 'alice', rating: 1500, provisional: true, statusText: '● Your move · 18 h left' })
+		expect(white).toMatchObject({
+			kind: 'user',
+			userId: 'alice',
+			rating: 1500,
+			provisional: true,
+			statusText: '● Your move · 18 h left',
+		})
 		expect(onlinePlayerInfo(g, 'b', { viewer, names, myColor: 'w', now: 1000 }).statusText).toBe('')
-		expect(onlinePlayerInfo({ ...g, turn: 'b' }, 'b', { viewer, names, myColor: 'w', now: 1000 }).statusText).toBe('● Bob to move · 18 h left')
-		expect(onlinePlayerInfo({ ...g, status: 'pending' }, 'w', { viewer, names, myColor: 'w', now: 1000 }).statusText).toBe('Not started yet')
+		expect(onlinePlayerInfo({ ...g, turn: 'b' }, 'b', { viewer, names, myColor: 'w', now: 1000 }).statusText)
+			.toBe('● Bob to move · 18 h left')
+		expect(onlinePlayerInfo(
+			{ ...g, status: 'pending' },
+			'w',
+			{ viewer, names, myColor: 'w', now: 1000 },
+		).statusText).toBe('Not started yet')
 	})
 
 	it('takes the result from the server', () => {
-		expect(onlineResult({ status: 'finished', result: '0-1', resultReason: 'resignation', winner: 'b' })).toEqual({ result: '0-1', reason: 'resignation', winner: 'b', source: 'server' })
-		expect(onlineResult({ status: 'aborted' })).toEqual({ result: '*', reason: 'aborted', winner: null, source: 'server' })
+		expect(onlineResult({ status: 'finished', result: '0-1', resultReason: 'resignation', winner: 'b' }))
+			.toEqual({ result: '0-1', reason: 'resignation', winner: 'b', source: 'server' })
+		expect(onlineResult({ status: 'aborted' })).toEqual({
+			result: '*',
+			reason: 'aborted',
+			winner: null,
+			source: 'server',
+		})
 		expect(onlineResult({ status: 'active' })).toBeNull()
 	})
 })

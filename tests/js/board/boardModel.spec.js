@@ -87,7 +87,10 @@ describe('roll display', () => {
 	it('splits the outcome ring by weight in key order', () => {
 		const m = E.findMove(ROLL, 'c1-h6')
 		const segs = ringSegments(m.outcomes)
-		expect(segs.map((x) => [x.key, x.start, x.length, x.tone])).toEqual([['move', 0, 0.5, 'move'], ['capture', 0.5, 0.5, 'capture']])
+		expect(segs.map((x) => [x.key, x.start, x.length, x.tone])).toEqual([
+			['move', 0, 0.5, 'move'],
+			['capture', 0.5, 0.5, 'capture'],
+		])
 	})
 })
 

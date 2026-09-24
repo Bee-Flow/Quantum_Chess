@@ -72,7 +72,15 @@ describe('validateState accepts valid states', () => {
 
 describe('validateState rejects broken invariants', () => {
 	const cases = {
-		'not an object': [[null, 'shape'], [undefined, 'shape'], [42, 'shape'], [[], 'shape'], ['{', 'shape'], ['"x"', 'shape'], [() => 1, 'shape']],
+		'not an object': [
+			[null, 'shape'],
+			[undefined, 'shape'],
+			[42, 'shape'],
+			[[], 'shape'],
+			['{', 'shape'],
+			['"x"', 'shape'],
+			[() => 1, 'shape'],
+		],
 	}
 	for (const [name, list] of Object.entries(cases)) {
 		it(name, () => {
@@ -124,8 +132,17 @@ describe('validateState rejects broken invariants', () => {
 		['I2 captured out of range', (s) => (s.captured = [...s.captured.slice(1), 32]), 'I2'],
 		['I2 captured live piece', (s) => (s.captured = [...s.captured, 2]), 'I2'],
 		['I2 live piece missing', (s) => (s.captured = s.captured.slice(1)), 'I2'],
-		['I2 piece twice', (s) => (s.worlds[0][0] = 'C' + s.worlds[0][0].slice(1, 7) + 'C' + s.worlds[0][0].slice(8)), 'I2'],
-		['I3 pawn on rank 1', (s) => (s.worlds[0][0] = s.worlds[0][0].slice(0, 7) + 'I' + s.worlds[0][0].slice(8)) && (s.captured = s.captured.filter((x) => x !== 8)), 'I3'],
+		[
+			'I2 piece twice',
+			(s) => (s.worlds[0][0] = 'C' + s.worlds[0][0].slice(1, 7) + 'C' + s.worlds[0][0].slice(8)),
+			'I2',
+		],
+		[
+			'I3 pawn on rank 1',
+			(s) => (s.worlds[0][0] = s.worlds[0][0].slice(0, 7) + 'I' + s.worlds[0][0].slice(8))
+				&& (s.captured = s.captured.filter((x) => x !== 8)),
+			'I3',
+		],
 		['I9 castling without king and rook', (s) => (s.castling = 'K'), 'I9'],
 		['I10 ep without a pawn', (s) => (s.ep = 'e3'), 'I10'],
 		['I10 ep wrong rank', (s) => (s.ep = 'e6'), 'I10'],
@@ -218,7 +235,29 @@ describe('validateState never throws', () => {
 	it('random mutations of valid states', () => {
 		const rng = E.seededRng(2024)
 		const pool = [E.initialState(), base(), ghosty, S('3qk3/8/8/8/8/8/8/3QK3 w - - 0 1', ['d1-d4|h5', 'd8-a5|d5'])]
-		const values = [null, undefined, 0, -1, 1, 1.5, T, T + 1, '', 'w', '-', 'e3', 'K', [], [[]], {}, { result: '1-0' }, NaN, Infinity, true, 'x'.repeat(64)]
+		const values = [
+			null,
+			undefined,
+			0,
+			-1,
+			1,
+			1.5,
+			T,
+			T + 1,
+			'',
+			'w',
+			'-',
+			'e3',
+			'K',
+			[],
+			[[]],
+			{},
+			{ result: '1-0' },
+			NaN,
+			Infinity,
+			true,
+			'x'.repeat(64),
+		]
 		let accepted = 0
 		for (let i = 0; i < 4000; i++) {
 			const s = JSON.parse(JSON.stringify(pool[i % pool.length]))

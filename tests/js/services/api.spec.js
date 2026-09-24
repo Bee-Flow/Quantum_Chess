@@ -46,7 +46,11 @@ describe('api.js', () => {
 	it('builds URLs, verbs and bodies', async () => {
 		next = { game: { id: 7 } }
 		expect(await api.createGame({ opponent: 'bob', color: 'r' })).toEqual({ id: 7 })
-		expect(calls[0]).toMatchObject({ method: 'post', url: '/index.php/apps/quantumchess/api/games', data: { opponent: 'bob', color: 'r' } })
+		expect(calls[0]).toMatchObject({
+			method: 'post',
+			url: '/index.php/apps/quantumchess/api/games',
+			data: { opponent: 'bob', color: 'r' },
+		})
 
 		next = { game: { id: 7, moves: [] } }
 		await api.getGame(7)
@@ -58,15 +62,26 @@ describe('api.js', () => {
 
 		next = { game: {} }
 		await api.sendMove(7, { code: 'e2-e4', ply: 0, clientId: 'abcdefgh', thinkMs: 10 })
-		expect(calls[3]).toMatchObject({ method: 'post', url: '/index.php/apps/quantumchess/api/games/7/moves', data: { code: 'e2-e4', ply: 0, clientId: 'abcdefgh', thinkMs: 10 } })
+		expect(calls[3]).toMatchObject({
+			method: 'post',
+			url: '/index.php/apps/quantumchess/api/games/7/moves',
+			data: { code: 'e2-e4', ply: 0, clientId: 'abcdefgh', thinkMs: 10 },
+		})
 
 		next = { game: {} }
 		await api.drawAction(7, 'offer')
-		expect(calls[4]).toMatchObject({ url: '/index.php/apps/quantumchess/api/games/7/draw', data: { action: 'offer' } })
+		expect(calls[4]).toMatchObject({
+			url: '/index.php/apps/quantumchess/api/games/7/draw',
+			data: { action: 'offer' },
+		})
 
 		next = { preferences: { v: 1, sound: false } }
 		expect(await api.savePreferences({ v: 1, sound: false })).toEqual({ v: 1, sound: false })
-		expect(calls[5]).toMatchObject({ method: 'put', url: '/index.php/apps/quantumchess/api/settings/preferences', data: { preferences: { v: 1, sound: false } } })
+		expect(calls[5]).toMatchObject({
+			method: 'put',
+			url: '/index.php/apps/quantumchess/api/settings/preferences',
+			data: { preferences: { v: 1, sound: false } },
+		})
 
 		next = { local: {} }
 		await api.recordLocalResult({ opponent: 'engine', level: 2, result: 'win', color: 'w' })
@@ -74,7 +89,11 @@ describe('api.js', () => {
 
 		next = { status: 'pending', taskId: 12 }
 		await api.requestAiMove({ persona: 'q7' })
-		expect(calls[7]).toMatchObject({ method: 'post', url: '/index.php/apps/quantumchess/api/ai/move', data: { persona: 'q7' } })
+		expect(calls[7]).toMatchObject({
+			method: 'post',
+			url: '/index.php/apps/quantumchess/api/ai/move',
+			data: { persona: 'q7' },
+		})
 
 		next = { status: 'cancelled' }
 		await api.cancelAiTask(12)
@@ -92,17 +111,32 @@ describe('api.js', () => {
 
 	it('maps errors to ApiError with Retry-After', async () => {
 		const err = new Error('Request failed')
-		err.response = { status: 429, data: { error: 'ai_rate_limited', message: 'Slow down' }, headers: { 'retry-after': '30' } }
+		err.response = {
+			status: 429,
+			data: { error: 'ai_rate_limited', message: 'Slow down' },
+			headers: { 'retry-after': '30' },
+		}
 		next = err
 		const e = await api.requestAiMove({}).catch((x) => x)
 		expect(e).toBeInstanceOf(api.ApiError)
-		expect(e).toMatchObject({ name: 'ApiError', status: 429, code: 'ai_rate_limited', retryAfter: 30, message: 'Slow down' })
+		expect(e).toMatchObject({
+			name: 'ApiError',
+			status: 429,
+			code: 'ai_rate_limited',
+			retryAfter: 30,
+			message: 'Slow down',
+		})
 		expect(e.data).toEqual({ error: 'ai_rate_limited', message: 'Slow down' })
 
 		const plain = new Error('boom')
 		plain.response = { status: 502, data: '<html>', headers: {} }
 		next = plain
-		expect(await api.getLobby().catch((x) => x)).toMatchObject({ status: 502, code: 'http_502', data: null, retryAfter: null })
+		expect(await api.getLobby().catch((x) => x)).toMatchObject({
+			status: 502,
+			code: 'http_502',
+			data: null,
+			retryAfter: null,
+		})
 
 		const net = new Error('Network Error')
 		net.code = 'ERR_NETWORK'
@@ -128,7 +162,11 @@ describe('api.js', () => {
 
 	it('removes the current user from user searches', async () => {
 		globalThis.OC = { getCurrentUser: () => ({ uid: 'admin' }) }
-		next = { status: 200, headers: {}, data: { ocs: { data: [{ id: 'admin', label: 'Alice' }, { id: 'bob', label: 'Bob', subline: 'x' }] } } }
+		next = {
+			status: 200,
+			headers: {},
+			data: { ocs: { data: [{ id: 'admin', label: 'Alice' }, { id: 'bob', label: 'Bob', subline: 'x' }] } },
+		}
 		expect(await api.searchUsers('b')).toEqual([{ userId: 'bob', displayName: 'Bob', subline: 'x', status: null }])
 		expect(calls[0].url).toBe('/ocs/v2.php/core/autocomplete/get')
 		delete globalThis.OC

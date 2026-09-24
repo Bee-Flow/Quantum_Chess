@@ -13,7 +13,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useGameReview } from '../../../src/review/composables/useGameReview.js'
 
 vi.mock('../../../src/ai/client.js', () => ({ analyzeGame: vi.fn(), ENGINE_VERSION: 'test' }))
-vi.mock('../../../src/services/api.js', () => ({ getGame: vi.fn(), saveTrainerProgress: vi.fn(async (doc) => doc), getTrainerProgress: vi.fn(async () => ({})) }))
+vi.mock('../../../src/services/api.js', () => ({
+	getGame: vi.fn(),
+	saveTrainerProgress: vi.fn(async (doc) => doc),
+	getTrainerProgress: vi.fn(async () => ({})),
+}))
 
 const RECORD = {
 	id: 'lg_review',
@@ -31,7 +35,17 @@ const RECORD = {
  * @return {object[]}
  */
 function plies() {
-	return RECORD.moves.map((m, i) => ({ ply: i, color: i % 2 ? 'b' : 'w', code: m.code, bestCode: m.code, EBefore: 0.5, bestE: 0.5, playedE: 0.5, realisedE: 0.5, outcomes: null }))
+	return RECORD.moves.map((m, i) => ({
+		ply: i,
+		color: i % 2 ? 'b' : 'w',
+		code: m.code,
+		bestCode: m.code,
+		EBefore: 0.5,
+		bestE: 0.5,
+		playedE: 0.5,
+		realisedE: 0.5,
+		outcomes: null,
+	}))
 }
 
 beforeEach(() => {
@@ -48,7 +62,10 @@ describe('useGameReview', () => {
 		await running.start()
 		expect(running.error.value).toBe('Available after the game.')
 
-		const broken = useGameReview({ source: 'online', id: 'g2' }, { getGame: async () => Promise.reject(new Error('404')) })
+		const broken = useGameReview(
+			{ source: 'online', id: 'g2' },
+			{ getGame: async () => Promise.reject(new Error('404')) },
+		)
 		await broken.start()
 		expect(broken.error.value).toBe('The game could not be loaded.')
 	})
@@ -66,7 +83,10 @@ describe('useGameReview', () => {
 		expect(r.entries.value.map((e) => e.code)).toEqual(['g1-f3|h3', 'e7-e5'])
 		expect(r.resultLine.value).toContain(' · ')
 		await vi.waitFor(() => expect(r.analysing.value).toBe(false))
-		expect(analyzeGame).toHaveBeenCalledWith({ startState: null, moves: RECORD.moves }, expect.objectContaining({ msPerPly: 400, level: 4 }))
+		expect(analyzeGame).toHaveBeenCalledWith(
+			{ startState: null, moves: RECORD.moves },
+			expect.objectContaining({ msPerPly: 400, level: 4 }),
+		)
 		expect(r.plies.value).toHaveLength(2)
 
 		r.go(99)

@@ -85,7 +85,10 @@ describe('W2 a solid piece attacks a ghost', () => {
 
 	it('with the knight split g4-e3|h6 the lane can be blocked: miss/capture', () => {
 		const s = S('4k3/8/8/8/6n1/8/8/2B1K3 w - - 0 1', ['g4-e3|h6'])
-		expect(E.findMove(s, 'c1-h6').outcomes).toEqual([{ key: 'miss', weight: 8388608 }, { key: 'capture', weight: 8388608 }])
+		expect(E.findMove(s, 'c1-h6').outcomes).toEqual([
+			{ key: 'miss', weight: 8388608 },
+			{ key: 'capture', weight: 8388608 },
+		])
 	})
 })
 
@@ -208,7 +211,10 @@ describe('W6 converging capture and certain danger', () => {
 	})
 
 	it('h5-h8 is a 50/50 shot', () => {
-		expect(E.findMove(s, 'h5-h8').outcomes).toEqual([{ key: 'miss', weight: 8388608 }, { key: 'capture', weight: 8388608 }])
+		expect(E.findMove(s, 'h5-h8').outcomes).toEqual([
+			{ key: 'miss', weight: 8388608 },
+			{ key: 'capture', weight: 8388608 },
+		])
 		const miss = play(s, 'h5-h8', { u: 100 })
 		expect(locOf(miss, 1)).toEqual({ d4: T })
 		expect(miss.result).toBe(null)
@@ -231,7 +237,10 @@ describe('W7 largest-remainder rescale after a missed pawn capture', () => {
 	})
 
 	it('d3-e4 misses (u = 3000000) and rescales to (11184811, 5592405)', () => {
-		expect(E.findMove(s, 'd3-e4').outcomes).toEqual([{ key: 'miss', weight: 12582912 }, { key: 'capture', weight: 4194304 }])
+		expect(E.findMove(s, 'd3-e4').outcomes).toEqual([
+			{ key: 'miss', weight: 12582912 },
+			{ key: 'capture', weight: 4194304 },
+		])
 		const r = E.applyMove(s, 'd3-e4', { u: 3000000 })
 		expect(W(r.state)).toEqual([
 			['............A......I...........................h............a...', 11184811],
@@ -286,7 +295,10 @@ describe('W9 a pawn probe, a double push and en passant', () => {
 	const s = S('4k3/8/8/8/3p2n1/8/4P3/4K3 w - - 0 1', ['g4-e3|h6'])
 
 	it('e2-e4 outcomes', () => {
-		expect(E.findMove(s, 'e2-e4').outcomes).toEqual([{ key: 'miss', weight: 8388608 }, { key: 'move', weight: 8388608 }])
+		expect(E.findMove(s, 'e2-e4').outcomes).toEqual([
+			{ key: 'miss', weight: 8388608 },
+			{ key: 'move', weight: 8388608 },
+		])
 	})
 
 	it('miss keeps the pawn home', () => {
@@ -357,20 +369,27 @@ describe('W11 randomness vectors', () => {
 		const json = E.serializeState(r.state)
 		expect(json).toBe('{"v":1,"types":"kqrrbbnnppppppppkqrrbbnnpppppppp","worlds":[["....A..........................................E............a...",16777216]],"turn":"b","castling":"-","ep":"-","halfmove":0,"fullmove":1,"ply":1,"captured":[1,2,3,5,6,7,8,9,10,11,12,13,14,15,17,18,19,20,21,22,24,25,26,27,28,29,30,31,23],"history":["15ec044c3e248721"],"result":null}')
 		expect(E.sha256hex(json)).toBe('b4b4d83ee34de58f4039ea6b4a6ffe08c84f95a850b2396bc18f0d23ed6234eb')
-		expect(E.chainNext(c0, 0, 'c1-h6', 8388608, 'capture', r.state)).toBe('23c84483be0638e3765cec8a1f46c3ed84d01806ad05c3598ebd9355fa8d6608')
-		expect(E.chainNext(c0, 0, 'c1-h6', 8388608, 'capture', json)).toBe('23c84483be0638e3765cec8a1f46c3ed84d01806ad05c3598ebd9355fa8d6608')
+		expect(E.chainNext(c0, 0, 'c1-h6', 8388608, 'capture', r.state))
+			.toBe('23c84483be0638e3765cec8a1f46c3ed84d01806ad05c3598ebd9355fa8d6608')
+		expect(E.chainNext(c0, 0, 'c1-h6', 8388608, 'capture', json))
+			.toBe('23c84483be0638e3765cec8a1f46c3ed84d01806ad05c3598ebd9355fa8d6608')
 	})
 
 	it('roll display vectors', () => {
 		const w2 = [{ key: 'move', weight: 8388608 }, { key: 'capture', weight: 8388608 }]
-		const w3 = [{ key: 'miss', weight: 8388608 }, { key: 'move', weight: 4194304 }, { key: 'capture', weight: 4194304 }]
+		const w3 = [
+			{ key: 'miss', weight: 8388608 },
+			{ key: 'move', weight: 4194304 },
+			{ key: 'capture', weight: 4194304 },
+		]
 		const thirds = [{ key: 'miss', weight: 11184811 }, { key: 'capture', weight: 5592405 }]
 		expect(E.rollDisplay({ key: 'move', u: 6227703, outcomes: w2 }))
 			.toBe('Moved [0.0000, 0.5000) · Captured [0.5000, 1.0000) · rolled 0.3712 → Moved')
 		expect(E.rollDisplay({ key: 'move', u: 8388607, outcomes: w2 }))
 			.toBe('Moved [0.0000, 0.5000) · Captured [0.5000, 1.0000) · rolled 0.4999 → Moved')
-		expect(E.rollDisplay({ key: 'move', u: 10368000, outcomes: w3 }))
-			.toBe('Missed [0.0000, 0.5000) · Moved [0.5000, 0.7500) · Captured [0.7500, 1.0000) · rolled 0.6179 → Moved')
+		const moved
+			= 'Missed [0.0000, 0.5000) · Moved [0.5000, 0.7500) · Captured [0.7500, 1.0000) · rolled 0.6179 → Moved'
+		expect(E.rollDisplay({ key: 'move', u: 10368000, outcomes: w3 })).toBe(moved)
 		expect(E.rollDisplay({ key: 'miss', u: 11184810, outcomes: thirds }))
 			.toBe('Missed [0.00000000, 0.66666668) · Captured [0.66666668, 1.00000000) · rolled 0.66666662 → Missed')
 		expect(E.rollDisplay({ key: 'capture', u: 11184811, outcomes: thirds }))
@@ -486,7 +505,36 @@ describe('W17 setup vectors', () => {
 		const s = S('4k3/8/8/8/8/8/8/2QQK3 w - - 0 1')
 		expect(W(s)).toEqual([['..IBA.......................................................a...', T]])
 		expect(s.types).toBe('kqrrbbnnqpppppppkqrrbbnnpppppppp')
-		expect(s.captured).toEqual([2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31])
+		expect(s.captured).toEqual([
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			9,
+			10,
+			11,
+			12,
+			13,
+			14,
+			15,
+			17,
+			18,
+			19,
+			20,
+			21,
+			22,
+			23,
+			24,
+			25,
+			26,
+			27,
+			28,
+			29,
+			30,
+			31,
+		])
 		expect(H(s)).toBe('3a386523ce53fad7')
 	})
 
@@ -500,7 +548,8 @@ describe('W17 setup vectors', () => {
 	})
 
 	it('rolled prelude move without an outcome', () => {
-		expect(() => S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6'])).toThrowError(expect.objectContaining({ code: 'prelude_needs_outcome' }))
+		expect(() => S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6']))
+			.toThrowError(expect.objectContaining({ code: 'prelude_needs_outcome' }))
 		const s = S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6@capture'])
 		expect(locOf(s, 4)).toEqual({ h6: T })
 	})

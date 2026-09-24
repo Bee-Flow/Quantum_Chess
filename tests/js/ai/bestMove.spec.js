@@ -48,8 +48,10 @@ describe('bestMove: always-on rules', () => {
 	})
 
 	it('level 5 uses the exact solver in small positions (P02, P05: unique forced wins)', () => {
-		expect(bestMove(S('7k/6pp/8/8/8/3Q4/8/1K6 w - - 0 1', ['d3-d1|d5']), { level: 5, seed: 1, ...FAST }).code).toBe('d1|d5-d8')
-		expect(bestMove(S('R6k/1n4pp/8/8/8/8/2K5/8 w - - 0 1', ['b7-c5|d8']), { level: 5, seed: 1, ...FAST }).code).toBe('a8-d8')
+		expect(bestMove(S('7k/6pp/8/8/8/3Q4/8/1K6 w - - 0 1', ['d3-d1|d5']), { level: 5, seed: 1, ...FAST }).code)
+			.toBe('d1|d5-d8')
+		expect(bestMove(S('R6k/1n4pp/8/8/8/8/2K5/8 w - - 0 1', ['b7-c5|d8']), { level: 5, seed: 1, ...FAST }).code)
+			.toBe('a8-d8')
 	})
 
 	it('plays only legal moves in 200 random positions at every level', () => {
@@ -167,7 +169,10 @@ describe('pickMove: level noise', () => {
 		for (let i = 0; i < 20; i++) {
 			expect(pickMove(scored, LEVELS[4], E.seededRng(i)).code).toBe('a')
 		}
-		const tie = [{ code: 'x', value: 0.5, resolution: 'certain' }, { code: 'y', value: 0.4995, resolution: 'certain' }]
+		const tie = [
+			{ code: 'x', value: 0.5, resolution: 'certain' },
+			{ code: 'y', value: 0.4995, resolution: 'certain' },
+		]
 		const picks = new Set()
 		for (let i = 0; i < 40; i++) {
 			picks.add(pickMove(tie, LEVELS[4], E.seededRng(i)).code)

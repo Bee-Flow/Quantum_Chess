@@ -82,7 +82,11 @@ describe('edge cases 1–20', () => {
 
 	it('#8 ghost against ghost: three outcomes', () => {
 		const s = S('4k3/8/3b4/8/8/8/8/4K1N1 w - - 0 1', ['g1-f3|h3', 'd6-c7|e5'])
-		expect(outs(s, 'f3-e5').map((o) => [o.key, o.weight])).toEqual([['miss', 8388608], ['move', 4194304], ['capture', 4194304]])
+		expect(outs(s, 'f3-e5').map((o) => [o.key, o.weight])).toEqual([
+			['miss', 8388608],
+			['move', 4194304],
+			['capture', 4194304],
+		])
 	})
 
 	it('#9 own ghost possibly on the target: in M, move means it is elsewhere', () => {
@@ -370,7 +374,8 @@ describe('edge cases 41–60', () => {
 	})
 
 	it('#49 a king captures a king', () => {
-		expect(play(S('8/8/8/8/8/8/3k4/4K3 w - - 0 1'), 'e1-d2').result).toEqual({ result: '1-0', reason: 'king_captured' })
+		expect(play(S('8/8/8/8/8/8/3k4/4K3 w - - 0 1'), 'e1-d2').result)
+			.toEqual({ result: '1-0', reason: 'king_captured' })
 	})
 
 	it('#50 castling with a possibly occupied square: castle_blocked', () => {
@@ -426,7 +431,8 @@ describe('edge cases 41–60', () => {
 	})
 
 	it('#57 bare kings, not adjacent: draw', () => {
-		expect(play(S('4k3/8/8/8/8/8/3n4/4K3 w - - 0 1'), 'e1-d2').result).toEqual({ result: '1/2-1/2', reason: 'bare_kings' })
+		expect(play(S('4k3/8/8/8/8/8/3n4/4K3 w - - 0 1'), 'e1-d2').result)
+			.toEqual({ result: '1/2-1/2', reason: 'bare_kings' })
 	})
 
 	it('#58 a king capture on ply 1200 is king_captured', () => {
@@ -462,7 +468,8 @@ describe('edge cases 61–86', () => {
 	it('#61 a finished game', () => {
 		const done = play(W14, 'a1-a8')
 		expect(E.generateMoves(done)).toEqual([])
-		expect(() => E.applyMove(done, 'g8-f8')).toThrowError(expect.objectContaining({ name: 'IllegalMoveError', code: 'game_over' }))
+		expect(() => E.applyMove(done, 'g8-f8'))
+			.toThrowError(expect.objectContaining({ name: 'IllegalMoveError', code: 'game_over' }))
 		expect(E.hasAnyLegalMove(done)).toBe(false)
 		expect(E.findMove(done, 'g8-f8')).toBe(null)
 	})
@@ -476,7 +483,8 @@ describe('edge cases 61–86', () => {
 	})
 
 	it('#64 a forced outcome that is not an outcome', () => {
-		expect(() => E.applyMove(W2, 'c1-h6', { outcome: 'miss' })).toThrowError(expect.objectContaining({ name: 'EngineArgumentError' }))
+		expect(() => E.applyMove(W2, 'c1-h6', { outcome: 'miss' }))
+			.toThrowError(expect.objectContaining({ name: 'EngineArgumentError' }))
 		expect(() => E.applyMove(W6, 'd4|h5-h8', { outcome: 'miss' })).not.toThrow()
 		expect(() => E.applyMove(START, 'e2-e4', { outcome: 'bogus', u: -5, rng: 7 })).not.toThrow()
 	})
@@ -493,9 +501,12 @@ describe('edge cases 61–86', () => {
 	})
 
 	it('#67 a rolled prelude move needs @key', () => {
-		expect(() => S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6'])).toThrowError(expect.objectContaining({ code: 'prelude_needs_outcome' }))
-		expect(() => S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6@miss'])).toThrowError(expect.objectContaining({ code: 'prelude_bad_outcome' }))
-		expect(() => S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6@move'])).toThrowError(expect.objectContaining({ code: 'prelude_outcome_unused' }))
+		expect(() => S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6']))
+			.toThrowError(expect.objectContaining({ code: 'prelude_needs_outcome' }))
+		expect(() => S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6', 'c1-h6@miss']))
+			.toThrowError(expect.objectContaining({ code: 'prelude_bad_outcome' }))
+		expect(() => S('4k1n1/8/8/8/8/8/8/2B1K3 w - - 0 1', ['g8-f6|h6@move']))
+			.toThrowError(expect.objectContaining({ code: 'prelude_outcome_unused' }))
 	})
 
 	it('#68 prelude moves run with ep "-"; the FEN ep survives', () => {
@@ -526,7 +537,8 @@ describe('edge cases 61–86', () => {
 		const c0 = E.chainStart(42, 'alice', 'bob', 1790000000)
 		const r = E.applyMove(START, 'e2-e4')
 		const json = E.serializeState(r.state)
-		expect(E.chainNext(c0, 0, 'e2-e4', null, null, r.state)).toBe(E.sha256hex(c0 + '|0|e2-e4|-|-|' + E.sha256hex(json)))
+		expect(E.chainNext(c0, 0, 'e2-e4', null, null, r.state))
+			.toBe(E.sha256hex(c0 + '|0|e2-e4|-|-|' + E.sha256hex(json)))
 		const f = E.applyMove(W2, 'c1-h6', { outcome: 'capture' })
 		expect(f.measurement.u).toBe(null)
 		expect(E.chainNext(c0, 0, 'c1-h6', f.measurement.u, f.measurement.key, f.state))
@@ -573,7 +585,12 @@ describe('edge cases 61–86', () => {
 	it('#79 annotated notation parses', () => {
 		expect(E.parseMoveCode('Qd4|h5xh8 #')).toEqual({ type: 'merge', from: [27, 39], to: [63], letter: 'Q' })
 		expect(E.parseMoveCode('?Na4 {c4 50%}')).toEqual({ type: 'measure', from: [24], to: [], letter: 'N' })
-		expect(E.parseMoveCode('Nf3xe5 {capture 25%} #')).toEqual({ type: 'standard', from: [21], to: [36], letter: 'N' })
+		expect(E.parseMoveCode('Nf3xe5 {capture 25%} #')).toEqual({
+			type: 'standard',
+			from: [21],
+			to: [36],
+			letter: 'N',
+		})
 		expect(E.parseMoveCode('N?a4')).toBe(null)
 	})
 
@@ -605,7 +622,8 @@ describe('edge cases 61–86', () => {
 		expect(r.result).toBe(null)
 		expect(E.validateState(r).ok).toBe(true)
 		expect(play(r, 'd2-e1').result).toEqual({ result: '0-1', reason: 'king_captured' })
-		expect(play(S('8/8/8/8/k7/8/8/4K2R w - - 99 1'), 'h1-h2').result).toEqual({ result: '1/2-1/2', reason: 'fifty_moves' })
+		expect(play(S('8/8/8/8/k7/8/8/4K2R w - - 99 1'), 'h1-h2').result)
+			.toEqual({ result: '1/2-1/2', reason: 'fifty_moves' })
 		let p = S('4r2k/8/8/8/8/8/8/1N2K3 b - - 0 1')
 		const seq = ['h8-g8', 'b1-c3', 'g8-h8', 'c3-b1', 'h8-g8', 'b1-c3', 'g8-h8', 'c3-b1']
 		for (const c of seq) {

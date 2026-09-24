@@ -59,7 +59,21 @@ describe('quality labels', () => {
 	})
 
 	it('grades a PlyAnalysis', () => {
-		const ply = { ply: 3, color: 'b', code: 'e7-e5', forced: false, EBefore: 0.5, bestCode: 'd7-d5', bestE: 0.5, secondBestE: 0.52, bestClassicalE: 0.5, playedE: 0.66, outcomes: null, realisedE: 0.66, allowsKingShot: false }
+		const ply = {
+			ply: 3,
+			color: 'b',
+			code: 'e7-e5',
+			forced: false,
+			EBefore: 0.5,
+			bestCode: 'd7-d5',
+			bestE: 0.5,
+			secondBestE: 0.52,
+			bestClassicalE: 0.5,
+			playedE: 0.66,
+			outcomes: null,
+			realisedE: 0.66,
+			allowsKingShot: false,
+		}
 		expect(qualityOfPly(ply).label).toBe('mistake')
 	})
 })

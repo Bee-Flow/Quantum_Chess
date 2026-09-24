@@ -116,7 +116,11 @@ describe('worker entry (src/ai/worker.js)', () => {
 
 	it('answers every job type with result or error messages', async () => {
 		send({ id: 1, type: 'solve', payload: { state: POS.w14(), options: { goal: 'forced' } } })
-		send({ id: 2, type: 'bestMove', payload: { state: POS.w6(), options: { level: 3, seed: 1, deterministic: true, nodeBudget: 500 } } })
+		send({
+			id: 2,
+			type: 'bestMove',
+			payload: { state: POS.w6(), options: { level: 3, seed: 1, deterministic: true, nodeBudget: 500 } },
+		})
 		send({ id: 3, type: 'analyze', payload: { state: 'not a state', options: {} } })
 		await until(() => resultOf(1) && resultOf(2) && resultOf(3))
 		expect(resultOf(1)).toMatchObject({ type: 'result', payload: { accepted: ['a1-a8'], value: 1 } })
@@ -125,7 +129,11 @@ describe('worker entry (src/ai/worker.js)', () => {
 	})
 
 	it('sends progress for iterative searches and drops cancelled jobs', async () => {
-		send({ id: 10, type: 'bestMove', payload: { state: POS.start(), options: { level: 3, seed: 2, deterministic: true, nodeBudget: 2000 } } })
+		send({
+			id: 10,
+			type: 'bestMove',
+			payload: { state: POS.start(), options: { level: 3, seed: 2, deterministic: true, nodeBudget: 2000 } },
+		})
 		send({ id: 11, type: 'evaluateMove', payload: { state: POS.start(), code: 'e2-e4', options: QUICK } })
 		send({ id: 11, type: 'cancel', payload: { id: 11 } })
 		send({ id: 12, type: 'nonsense', payload: {} })
@@ -136,8 +144,17 @@ describe('worker entry (src/ai/worker.js)', () => {
 	})
 
 	it('stops a running game analysis between plies on cancel', async () => {
-		const moves = [{ code: 'g1-f3', u: null }, { code: 'g8-f6', u: null }, { code: 'b1-c3', u: null }, { code: 'b8-c6', u: null }]
-		send({ id: 20, type: 'analyzeGame', payload: { record: { startState: null, moves }, options: { msPerPly: 1e9, nodeBudget: 800 } } })
+		const moves = [
+			{ code: 'g1-f3', u: null },
+			{ code: 'g8-f6', u: null },
+			{ code: 'b1-c3', u: null },
+			{ code: 'b8-c6', u: null },
+		]
+		send({
+			id: 20,
+			type: 'analyzeGame',
+			payload: { record: { startState: null, moves }, options: { msPerPly: 1e9, nodeBudget: 800 } },
+		})
 		await until(() => posted.some((m) => m.id === 20 && m.type === 'progress'))
 		send({ id: 21, type: 'cancel', payload: { id: 20 } })
 		await new Promise((resolve) => setTimeout(resolve, 300))
@@ -146,7 +163,15 @@ describe('worker entry (src/ai/worker.js)', () => {
 	})
 
 	it('knows the job types of the protocol', () => {
-		expect(JOB_TYPES).toEqual(['bestMove', 'analyze', 'evaluateMove', 'candidates', 'solve', 'analyzeGame', 'benchmark'])
+		expect(JOB_TYPES).toEqual([
+			'bestMove',
+			'analyze',
+			'evaluateMove',
+			'candidates',
+			'solve',
+			'analyzeGame',
+			'benchmark',
+		])
 	})
 })
 
@@ -161,7 +186,13 @@ describe('client (src/ai/client.js) with a fake Worker', () => {
 
 	it('plays a legal computer move and reports "Thinking… depth n"', async () => {
 		const depths = []
-		const r = await client.bestMove(POS.middlegame(), { level: 3, rng: E.seededRng(1), fast: true, onProgress: (p) => depths.push(p.depth), ...QUICK })
+		const r = await client.bestMove(POS.middlegame(), {
+			level: 3,
+			rng: E.seededRng(1),
+			fast: true,
+			onProgress: (p) => depths.push(p.depth),
+			...QUICK,
+		})
 		expect(E.isLegal(POS.middlegame(), r.code)).toBe(true)
 		expect(r.displayMs).toBe(0)
 		expect(depths[0]).toBe(1)
@@ -184,7 +215,10 @@ describe('client (src/ai/client.js) with a fake Worker', () => {
 		expect(cands[0]).toMatchObject({ code: 'd4|h5-h8', E: 1, ok: true })
 		expect(sol.accepted).toEqual(['a1-a8'])
 		const plies = []
-		const g = await client.analyzeGame({ startState: POS.w2(), moves: [{ code: 'c1-h6', u: 1 }, { code: 'e8-e7', u: null }] }, { msPerPly: 100, nodeBudget: 800, onProgress: (p) => plies.push(p) })
+		const g = await client.analyzeGame(
+			{ startState: POS.w2(), moves: [{ code: 'c1-h6', u: 1 }, { code: 'e8-e7', u: null }] },
+			{ msPerPly: 100, nodeBudget: 800, onProgress: (p) => plies.push(p) },
+		)
 		expect(g.plies).toHaveLength(2)
 		expect(plies.map((p) => p.code)).toEqual(['c1-h6', 'e8-e7'])
 	})
@@ -192,7 +226,12 @@ describe('client (src/ai/client.js) with a fake Worker', () => {
 	it('rejects with AbortError and stops the worker when the signal fires', async () => {
 		const ac = new AbortController()
 		const before = FakeWorker.instances.length
-		const p = client.analyze(POS.middlegame(), { timeMs: 20000, signal: ac.signal, channel: null, onProgress: () => ac.abort() })
+		const p = client.analyze(POS.middlegame(), {
+			timeMs: 20000,
+			signal: ac.signal,
+			channel: null,
+			onProgress: () => ac.abort(),
+		})
 		await expect(p).rejects.toMatchObject({ name: 'AbortError' })
 		expect(FakeWorker.instances.at(-1).terminated).toBe(true)
 		// The next job gets a fresh worker.
@@ -201,11 +240,15 @@ describe('client (src/ai/client.js) with a fake Worker', () => {
 		expect(FakeWorker.instances.length).toBeGreaterThan(before)
 		const done = new AbortController()
 		done.abort()
-		await expect(client.solve(POS.w14(), { goal: 'forced', signal: done.signal })).rejects.toMatchObject({ name: 'AbortError' })
+		await expect(client.solve(POS.w14(), { goal: 'forced', signal: done.signal }))
+			.rejects.toMatchObject({ name: 'AbortError' })
 	})
 
 	it('supersedes older coach analyses and runs the computer\'s move first', async () => {
-		const blocker = client.analyzeGame({ startState: null, moves: [{ code: 'e2-e4', u: null }] }, { msPerPly: 150, nodeBudget: 600 })
+		const blocker = client.analyzeGame(
+			{ startState: null, moves: [{ code: 'e2-e4', u: null }] },
+			{ msPerPly: 150, nodeBudget: 600 },
+		)
 		const first = client.analyze(POS.start(), QUICK)
 		const second = client.analyze(POS.middlegame(), QUICK)
 		const move = client.bestMove(POS.w6(), { level: 2, seed: 3, deterministic: true })
@@ -220,7 +263,8 @@ describe('client (src/ai/client.js) with a fake Worker', () => {
 	})
 
 	it('propagates engine errors and cancels everything on cancelAll', async () => {
-		await expect(client.evaluateMove(POS.start(), 'e2-e5', QUICK)).rejects.toMatchObject({ name: 'IllegalMoveError' })
+		await expect(client.evaluateMove(POS.start(), 'e2-e5', QUICK))
+			.rejects.toMatchObject({ name: 'IllegalMoveError' })
 		const a = client.analyze(POS.middlegame(), { timeMs: 20000, channel: null })
 		const b = client.analyze(POS.middlegame(), { timeMs: 20000, channel: null })
 		client.cancelAll()
@@ -246,7 +290,10 @@ describe('client fallbacks', () => {
 	it('moves to the main thread when the worker fails to load', async () => {
 		client.setWorkerFactory(() => {
 			const w = new FakeWorker()
-			w.postMessage = () => setTimeout(() => w.onerror({ message: 'Failed to load module script', preventDefault() {} }), 0)
+			w.postMessage = () => setTimeout(
+				() => w.onerror({ message: 'Failed to load module script', preventDefault() {} }),
+				0,
+			)
 			return w
 		})
 		const r = await client.solve(POS.w14(), { goal: 'forced' })

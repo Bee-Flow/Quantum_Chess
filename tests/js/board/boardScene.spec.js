@@ -44,7 +44,15 @@ function geometry(orientation = 'w') {
 }
 
 const PREFS = { showPercentages: true, ghostStyle: 'fade', pieceSet: 'cburnett', probabilityFormat: 'percent' }
-const IDLE = { focus: null, drag: null, returning: null, shaking: null, hoverSquare: null, anim: { pops: [], sourceDim: null, crossfade: false }, prefs: PREFS }
+const IDLE = {
+	focus: null,
+	drag: null,
+	returning: null,
+	shaking: null,
+	hoverSquare: null,
+	anim: { pops: [], sourceDim: null, crossfade: false },
+	prefs: PREFS,
+}
 
 describe('pieces and badges', () => {
 	const ghost = S('4k3/8/8/8/8/8/8/4K1N1 w - - 0 1', ['g1-f3|h3'])
@@ -63,7 +71,11 @@ describe('pieces and badges', () => {
 	it('lifts the hovered piece and follows a drag', () => {
 		const items = pieceItems(E.initialState())
 		const g1 = items.find((p) => p.square === sq('g1'))
-		const pieces = pieceSprites(items, geometry(), { ...IDLE, hoverSquare: sq('g1'), drag: { key: g1.key, dragging: true, touch: false, x: 100, y: 100 } })
+		const pieces = pieceSprites(items, geometry(), {
+			...IDLE,
+			hoverSquare: sq('g1'),
+			drag: { key: g1.key, dragging: true, touch: false, x: 100, y: 100 },
+		})
 		const dragged = pieces.find((p) => p.key === g1.key)
 		expect(dragged.classes['qc-piece--hover']).toBe(true)
 		expect(dragged.style).toEqual({ transform: 'translate(75px, 75px) scale(1.1)', zIndex: 30 })
@@ -99,7 +111,14 @@ describe('shapes', () => {
 	})
 
 	it('sizes the ring segments by weight and fills the settled one', () => {
-		const ring = rollRing({ square: sq('e4'), settled: 'capture', segments: [{ key: 'miss', start: 0, length: 0.5 }, { key: 'capture', start: 0.5, length: 0.5 }] }, geometry())
+		const ring = rollRing(
+			{
+				square: sq('e4'),
+				settled: 'capture',
+				segments: [{ key: 'miss', start: 0, length: 0.5 }, { key: 'capture', start: 0.5, length: 0.5 }],
+			},
+			geometry(),
+		)
 		expect(ring.segments[1].style.strokeDasharray).toBe(`${RING_C} ${RING_C}`)
 		expect(rollRing(null, geometry())).toBeNull()
 	})
@@ -126,7 +145,8 @@ describe('grid and floating interface', () => {
 		expect(a1.classes['qc-sq--dark']).toBe(true)
 		expect(boardCell(sq('e2'), geometry(), scene).classes['qc-sq--selected']).toBe(true)
 		expect(boardCell(sq('e4'), geometry(), scene).classes['qc-sq--hl-hint']).toBe(true)
-		expect(boardCell(sq('e4'), geometry('b'), { ...scene, coordinates: 'all' })).toMatchObject({ rank: '', file: '', name: 'e4' })
+		expect(boardCell(sq('e4'), geometry('b'), { ...scene, coordinates: 'all' }))
+			.toMatchObject({ rank: '', file: '', name: 'e4' })
 	})
 
 	it('opens the preview card below a square on the top rows and above it elsewhere', () => {

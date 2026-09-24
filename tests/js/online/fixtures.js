@@ -8,7 +8,15 @@
  * server does, so the client checks run against real engine data.
  */
 
-import { applyMove, chainNext, chainStart, initialState, moveNotation, positionHash, serializeState } from '../../../src/engine/index.js'
+import {
+	applyMove,
+	chainNext,
+	chainStart,
+	initialState,
+	moveNotation,
+	positionHash,
+	serializeState,
+} from '../../../src/engine/index.js'
 
 export const ALICE = { userId: 'alice', displayName: 'Alice' }
 export const BOB = { userId: 'bob', displayName: 'Bob' }

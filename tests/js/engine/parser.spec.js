@@ -117,11 +117,16 @@ describe('canonical codes', () => {
 	})
 
 	it('every generated code is canonical and parses back to its move', () => {
-		for (const s of [START, S('4k3/8/1n6/8/8/8/8/R3K3 b - - 0 1'), S('7k/4P1n1/8/8/8/8/8/K7 w - - 0 1', ['g7-e8|f5'])]) {
+		for (const s of [
+			START,
+			S('4k3/8/1n6/8/8/8/8/R3K3 b - - 0 1'),
+			S('7k/4P1n1/8/8/8/8/8/K7 w - - 0 1', ['g7-e8|f5']),
+		]) {
 			for (const m of E.generateMoves(s)) {
 				expect(E.moveCode(m)).toBe(m.code)
 				const p = E.parseMoveCode(m.code)
-				expect({ type: p.type, from: p.from, to: p.to, promo: p.promo }).toEqual({ type: m.type, from: m.from, to: m.to, promo: m.promo })
+				expect({ type: p.type, from: p.from, to: p.to, promo: p.promo })
+					.toEqual({ type: m.type, from: m.from, to: m.to, promo: m.promo })
 				expect(E.findMove(s, m.code)).toBe(m)
 			}
 		}

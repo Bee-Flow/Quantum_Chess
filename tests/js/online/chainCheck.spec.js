@@ -33,7 +33,10 @@ describe('chain check', () => {
 
 	it('finds an edited roll', () => {
 		const game = makeGame(LINE)
-		const edited = { ...game, moves: game.moves.map((m, i) => (i === 2 ? { ...m, measurement: { ...m.measurement, u: 1 } } : m)) }
+		const edited = {
+			...game,
+			moves: game.moves.map((m, i) => (i === 2 ? { ...m, measurement: { ...m.measurement, u: 1 } } : m)),
+		}
 		const r = verifyGame(edited)
 		expect(r.status).toBe('altered')
 		expect(r.alteredPly).toBe(2)

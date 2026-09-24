@@ -87,7 +87,10 @@ describe('local games', () => {
 			ids.push(rec.id)
 		}
 		// make ordering deterministic: game 0 is the oldest, game 3 is finished
-		const index = JSON.parse(localStorage.getItem(INDEX_KEY)).map((e) => ({ ...e, updatedAt: 1000 + ids.indexOf(e.id) }))
+		const index = JSON.parse(localStorage.getItem(INDEX_KEY)).map((e) => ({
+			...e,
+			updatedAt: 1000 + ids.indexOf(e.id),
+		}))
 		localStorage.setItem(INDEX_KEY, JSON.stringify(index))
 		const extra = createLocalGame({ mode: 'local', players: {} })
 		const left = listLocalGames().map((e) => e.id)

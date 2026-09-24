@@ -58,7 +58,8 @@ function naiveTrapped(state) {
 	if (state.result !== null || moves.length === 0) {
 		return false
 	}
-	return moves.every((m) => E.outcomesForSearch(state, m).every((o) => o.state.result === null && E.kingDanger(o.state, state.turn) === T))
+	return moves.every((m) => E.outcomesForSearch(state, m)
+		.every((o) => o.state.result === null && E.kingDanger(o.state, state.turn) === T))
 }
 
 /**
@@ -87,7 +88,17 @@ function naiveRisk(state, move) {
  */
 function playouts({ seed, games, maxPlies, policy, heavyEvery = 0 }) {
 	const rng = E.seededRng(seed)
-	const count = { plies: 0, rolled: 0, splits: 0, merges: 0, measures: 0, fallbacks: 0, results: {}, trappedChecks: 0, dangerChecks: 0 }
+	const count = {
+		plies: 0,
+		rolled: 0,
+		splits: 0,
+		merges: 0,
+		measures: 0,
+		fallbacks: 0,
+		results: {},
+		trappedChecks: 0,
+		dangerChecks: 0,
+	}
 	for (let g = 0; g < games; g++) {
 		let s = START_POSITIONS[g % START_POSITIONS.length]()
 		for (let p = 0; p < maxPlies && s.result === null; p++) {
@@ -103,7 +114,10 @@ function playouts({ seed, games, maxPlies, policy, heavyEvery = 0 }) {
 			check(JSON.stringify(s) === beforeJson, 'input mutated' + where)
 			const again = E.applyMove(JSON.parse(beforeJson), m.code, { u })
 			check(JSON.stringify(again.state) === afterJson, 'not deterministic' + where)
-			check(JSON.stringify(again.measurement) === JSON.stringify(r.measurement), 'record not deterministic' + where)
+			check(
+				JSON.stringify(again.measurement) === JSON.stringify(r.measurement),
+				'record not deterministic' + where,
+			)
 			// I1–I12 and canonical bytes
 			const v = E.validateState(JSON.parse(afterJson))
 			check(v.ok, 'invalid' + where + ': ' + v.error + ' ' + v.message)
@@ -118,7 +132,10 @@ function playouts({ seed, games, maxPlies, policy, heavyEvery = 0 }) {
 			if (m.resolution === 'rolled') {
 				count.rolled++
 				const rec = r.measurement
-				check(rec.u === u && rec.key === E.keyForU(m.outcomes, u) && rec.fallback === m.fallback, 'record' + where)
+				check(
+					rec.u === u && rec.key === E.keyForU(m.outcomes, u) && rec.fallback === m.fallback,
+					'record' + where,
+				)
 				check(JSON.stringify(rec.outcomes) === JSON.stringify(m.outcomes), 'record outcomes' + where)
 				const o = E.getOutcomes(s, m).find((x) => x.key === rec.key)
 				check(JSON.stringify(o.state) === afterJson, 'getOutcomes differs from applyMove' + where)
@@ -134,9 +151,18 @@ function playouts({ seed, games, maxPlies, policy, heavyEvery = 0 }) {
 			// notation round trip
 			const text = E.moveNotation(s, m, r.measurement, r.state)
 			check(E.findMove(s, text) === m, 'notation does not parse back' + where + ': ' + text)
-			check(text.endsWith(' #') === (r.state.result !== null && ['king_captured', 'king_trapped'].includes(r.state.result.reason)), 'mark' + where)
+			check(
+				text.endsWith(' #')
+				=== (r.state.result !== null && ['king_captured', 'king_trapped'].includes(r.state.result.reason)),
+				'mark' + where,
+			)
 			// cross-checks against naive definitions on a sample
-			if (heavyEvery > 0 && count.plies % heavyEvery === 0 && r.state.captured.indexOf(0) < 0 && r.state.captured.indexOf(16) < 0) {
+			if (
+				heavyEvery > 0
+				&& count.plies % heavyEvery === 0
+				&& r.state.captured.indexOf(0) < 0
+				&& r.state.captured.indexOf(16) < 0
+			) {
 				for (const c of ['w', 'b']) {
 					check(E.kingDanger(r.state, c) === naiveDanger(r.state, c), 'kingDanger differs' + where)
 				}
@@ -144,7 +170,10 @@ function playouts({ seed, games, maxPlies, policy, heavyEvery = 0 }) {
 				if (r.state.result === null) {
 					check(E.kingTrapped(r.state) === naiveTrapped(r.state), 'kingTrapped differs' + where)
 					for (const lm of E.generateMoves(r.state).slice(0, 80)) {
-						check(Math.abs(E.moveRisk(r.state, lm) - naiveRisk(r.state, lm)) < 1e-12, 'moveRisk differs for ' + lm.code + where)
+						check(
+							Math.abs(E.moveRisk(r.state, lm) - naiveRisk(r.state, lm)) < 1e-12,
+							'moveRisk differs for ' + lm.code + where,
+						)
 					}
 					count.trappedChecks++
 				}

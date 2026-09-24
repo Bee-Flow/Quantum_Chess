@@ -10,11 +10,29 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { budget, findMove, generateMoves, getOutcomes, moveRisk, pieceLocations, squareIndex, T, validateState } from '../../../src/engine/index.js'
+import {
+	budget,
+	findMove,
+	generateMoves,
+	getOutcomes,
+	moveRisk,
+	pieceLocations,
+	squareIndex,
+	T,
+	validateState,
+} from '../../../src/engine/index.js'
 import { LESSONS } from '../../../src/trainer/lessons/index.js'
 import { check } from '../../../src/trainer/predicates.js'
 import { PUZZLES } from '../../../src/trainer/puzzles/index.js'
-import { lessonOutcome, movesForModes, playMove, scriptedReply, stepState, winChance, wonBy } from '../../../src/trainer/runner.js'
+import {
+	lessonOutcome,
+	movesForModes,
+	playMove,
+	scriptedReply,
+	stepState,
+	winChance,
+	wonBy,
+} from '../../../src/trainer/runner.js'
 
 /**
  * The opponent's best chance to win at once after each outcome of a move, weighted.
@@ -43,7 +61,19 @@ const sorted = (a) => [...a].sort()
 
 describe('lessons', () => {
 	it('has eleven lessons in order with titles and goals', () => {
-		expect(LESSONS.map((l) => l.id)).toEqual(['L01', 'L02', 'L03', 'L04', 'L05', 'L06', 'L07', 'L08', 'L09', 'L10', 'L11'])
+		expect(LESSONS.map((l) => l.id)).toEqual([
+			'L01',
+			'L02',
+			'L03',
+			'L04',
+			'L05',
+			'L06',
+			'L07',
+			'L08',
+			'L09',
+			'L10',
+			'L11',
+		])
 		for (const l of LESSONS) {
 			expect(l.title()).toBeTruthy()
 			expect(l.goal()).toBeTruthy()
@@ -101,7 +131,8 @@ describe('lessons', () => {
 				const wrong = allowed.filter((m) => !codes.includes(m.code))
 				if (step.accepted && wrong.length) {
 					const m = wrong[0]
-					expect(check(step.success, before, m, playMove(before, m.code, lessonOutcome(m, step.roll)).state)).toBe(false)
+					expect(check(step.success, before, m, playMove(before, m.code, lessonOutcome(m, step.roll)).state))
+						.toBe(false)
 				}
 				const first = findMove(before, codes[0])
 				current = playMove(before, first.code, lessonOutcome(first, step.roll)).state
@@ -140,8 +171,18 @@ describe('lessons', () => {
 	it('L3.2: merging on b5 is safe, on b1 the bishop captures', () => {
 		const s = stepState(LESSONS[2].steps[1], null)
 		const knight = pieceLocations(s).findIndex((l) => l.some((x) => x.square === squareIndex('a3')))
-		expect(check({ captureRisk: { id: knight, max: 0 } }, s, findMove(s, 'a3|c3-b5'), playMove(s, 'a3|c3-b5').state)).toBe(true)
-		expect(check({ captureRisk: { id: knight, max: 0.5 } }, s, findMove(s, 'a3|c3-b1'), playMove(s, 'a3|c3-b1').state)).toBe(false)
+		expect(check(
+			{ captureRisk: { id: knight, max: 0 } },
+			s,
+			findMove(s, 'a3|c3-b5'),
+			playMove(s, 'a3|c3-b5').state,
+		)).toBe(true)
+		expect(check(
+			{ captureRisk: { id: knight, max: 0.5 } },
+			s,
+			findMove(s, 'a3|c3-b1'),
+			playMove(s, 'a3|c3-b1').state,
+		)).toBe(false)
 	})
 
 	it('L3.3: only the converging capture is certain', () => {
@@ -152,7 +193,8 @@ describe('lessons', () => {
 	})
 
 	it('L4 and L6: the quoted odds', () => {
-		const pctOf = (s, code) => Object.fromEntries(findMove(s, code).outcomes.map((o) => [o.key, (100 * o.weight) / T]))
+		const pctOf = (s, code) => Object.fromEntries(findMove(s, code).outcomes
+			.map((o) => [o.key, (100 * o.weight) / T]))
 		expect(pctOf(stepState(LESSONS[3].steps[0], null), 'd1-d5')).toEqual({ move: 50, capture: 50 })
 		expect(pctOf(stepState(LESSONS[3].steps[1], null), 'e4-d5')).toEqual({ miss: 50, capture: 50 })
 		expect(pctOf(stepState(LESSONS[5].steps[0], null), 'f3-e5')).toEqual({ miss: 50, move: 25, capture: 25 })
@@ -189,7 +231,19 @@ describe('lessons', () => {
 
 describe('puzzles', () => {
 	it('has the eleven puzzles', () => {
-		expect(PUZZLES.map((p) => p.id)).toEqual(['P01', 'P02', 'P03', 'P04', 'P05', 'P06', 'P07', 'P08', 'P09', 'P10', 'P11'])
+		expect(PUZZLES.map((p) => p.id)).toEqual([
+			'P01',
+			'P02',
+			'P03',
+			'P04',
+			'P05',
+			'P06',
+			'P07',
+			'P08',
+			'P09',
+			'P10',
+			'P11',
+		])
 	})
 
 	for (const p of PUZZLES) {
