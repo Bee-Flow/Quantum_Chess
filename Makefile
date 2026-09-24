@@ -6,7 +6,8 @@
 #   make                    list the targets
 #   make build              install JS dependencies (npm ci, only when needed) and build js/
 #   make test               JS unit tests (Vitest) and PHP unit tests (PHPUnit)
-#   make lint               ESLint, comment references, php -l, php-cs-fixer, Psalm, info.xml schema, SPDX headers
+#   make lint               ESLint, comment references, line length, php -l, php-cs-fixer, Psalm, info.xml schema,
+#                           SPDX headers
 #   make appstore           build/artifacts/quantumchess.tar.gz with runtime files only
 #   make sign KEY=… CERT=…  code-sign the package with occ and write the tarball signature
 #   make e2e                Playwright end-to-end tests against a running Nextcloud
@@ -47,7 +48,7 @@ SPDX_GLOBS := '*.php' '*.js' '*.mjs' '*.cjs' '*.ts' '*.vue' '*.scss' '*.yml' '*.
 SPDX_EXCLUDE := ^(js|assets|vendor|node_modules|l10n|build|tests/fixtures)/
 
 .DEFAULT_GOAL := help
-.PHONY: help build dev test test-js test-php lint lint-js lint-refs lint-php cs psalm lint-xml lint-spdx appstore sign \
+.PHONY: help build dev test test-js test-php lint lint-js lint-refs lint-lines lint-php cs psalm lint-xml lint-spdx appstore sign \
 	check-runtime-deps version-check e2e l10n-pot l10n clean distclean
 
 help: ## List the targets
@@ -82,13 +83,16 @@ test-js: node_modules/.package-lock.json ## Run the Vitest unit tests
 test-php: vendor/autoload.php ## Run the PHPUnit unit tests
 	$(COMPOSER) run test:unit
 
-lint: lint-js lint-refs lint-php cs psalm lint-xml lint-spdx ## Run every linter and static check
+lint: lint-js lint-refs lint-lines lint-php cs psalm lint-xml lint-spdx ## Run every linter and static check
 
 lint-js: node_modules/.package-lock.json ## ESLint (fails on warnings too)
 	$(NPM) run lint
 
 lint-refs: ## Check doc paths, Markdown links and planning references in comments
 	$(NPM) run lint:refs
+
+lint-lines: ## Check that no line of code is longer than the max_line_length of .editorconfig
+	$(NPM) run lint:lines
 
 lint-php: ## php -l on every PHP file
 	$(COMPOSER) run lint
