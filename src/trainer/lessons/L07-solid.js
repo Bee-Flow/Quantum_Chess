@@ -21,10 +21,17 @@ export default {
 			prompt: () => t('quantumchess', 'Push the pawn to e5.'),
 			success: { moveIs: ['e4-e5'] },
 			accepted: ['e4-e5'],
-			hints: [() => t('quantumchess', 'Part of the knight is on e5.'), { highlight: 'e4' }, { arrow: ['e4', 'e5'] }],
+			hints: [
+				() => t('quantumchess', 'Part of the knight is on e5.'),
+				{ highlight: 'e4' },
+				{ arrow: ['e4', 'e5'] },
+			],
 			roll: ['miss', 'move'],
 			branches: {
-				miss: () => t('quantumchess', 'Missed: a pawn never captures straight ahead, so the knight was on e5 and your pawn stayed.'),
+				miss: () => t(
+					'quantumchess',
+					'Missed: a pawn never captures straight ahead, so the knight was on e5 and your pawn stayed.',
+				),
 				move: () => t('quantumchess', 'Moved: e5 was empty, and the knight is certainly on b4.'),
 			},
 			fail: () => t('quantumchess', 'Push the e-pawn one square.'),
@@ -35,9 +42,16 @@ export default {
 			prompt: () => t('quantumchess', 'Promote with 100 % certainty.'),
 			success: { moveIs: ['b7-a8=Q', 'b7-a8=R', 'b7-a8=B', 'b7-a8=N'] },
 			accepted: ['b7-a8=Q', 'b7-a8=R', 'b7-a8=B', 'b7-a8=N'],
-			hints: [() => t('quantumchess', 'Pushing to b8 is a roll.'), () => t('quantumchess', 'Capturing a solid piece is certain.'), { arrow: ['b7', 'a8'] }],
+			hints: [
+				() => t('quantumchess', 'Pushing to b8 is a roll.'),
+				() => t('quantumchess', 'Capturing a solid piece is certain.'),
+				{ arrow: ['b7', 'a8'] },
+			],
 			done: () => t('quantumchess', 'The knight on a8 was solid, so the capture and the promotion were certain.'),
-			fail: () => t('quantumchess', 'That was a roll: part of the rook might stand on b8. Capture the solid knight instead.'),
+			fail: () => t(
+				'quantumchess',
+				'That was a roll: part of the rook might stand on b8. Capture the solid knight instead.',
+			),
 		},
 		{
 			type: 'explain',
@@ -54,7 +68,10 @@ export default {
 				() => t('quantumchess', 'No: the right was lost when the rook left h1.'),
 			],
 			correct: 1,
-			explanation: () => t('quantumchess', 'As in chess, a rook that moved loses its castling right, even if it comes back.'),
+			explanation: () => t(
+				'quantumchess',
+				'As in chess, a rook that moved loses its castling right, even if it comes back.',
+			),
 		},
 	],
 }

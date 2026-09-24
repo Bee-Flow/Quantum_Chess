@@ -29,7 +29,8 @@ const FEN_PIECES = 'kqrbnp'
  * Parse the FEN fields. Accepts 4 to 6 fields (halfmove and fullmove default to 0 and 1).
  *
  * @param {string} fen FEN text
- * @return {{pieces: Array<Array<{sq: number, type: string}>>, turn: string, flags: string, ep: string, halfmove: number, fullmove: number}}
+ * @return {{pieces: Array<Array<{sq: number, type: string}>>, turn: string, flags: string, ep: string,
+ *   halfmove: number, fullmove: number}}
  */
 export function parseFen(fen) {
 	if (typeof fen !== 'string') {
@@ -205,7 +206,8 @@ function preludeItem(item) {
  *   `@key` for a rolled move) applied with A1–A8, then turn/halfmove/fullmove/ep from the FEN, castling = FEN flags ∩
  *   the state-based condition, ply 0, history [hash], and validateState.
  *
- * @param {{state?: EngineState, fen?: string, prelude?: Array<string|{code: string, outcome?: string}>}} spec setup spec
+ * @param {{state?: EngineState, fen?: string, prelude?: Array<string|{code: string, outcome?: string}>}} spec setup
+ *   spec
  * @return {EngineState} state
  * @throws {SetupError} with one of the setup error codes
  */
@@ -357,5 +359,6 @@ export function certainFen(state) {
 		}
 		rows.push(row)
 	}
-	return rows.join('/') + ' ' + state.turn + ' ' + state.castling + ' ' + state.ep + ' ' + state.halfmove + ' ' + state.fullmove
+	return rows.join('/') + ' ' + state.turn + ' ' + state.castling + ' ' + state.ep + ' ' + state.halfmove
+		+ ' ' + state.fullmove
 }

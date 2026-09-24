@@ -269,7 +269,8 @@ export function* bestMoveTask(state, options = {}, ctx = NO_SLICE) {
 	const deterministic = Boolean(options.deterministic)
 	const searcher = new Searcher(state, {
 		level,
-		timeMs: options.timeMs ?? (deterministic ? Infinity : Math.max(level.timeMs / 4, level.timeMs - (now() - start))),
+		timeMs: options.timeMs
+			?? (deterministic ? Infinity : Math.max(level.timeMs / 4, level.timeMs - (now() - start))),
 		maxMs: deterministic ? undefined : level.maxMs,
 		nodeBudget: options.nodeBudget ?? (deterministic ? level.nodeBudget : Infinity),
 		rootMoves: pool.map((m) => m.code),

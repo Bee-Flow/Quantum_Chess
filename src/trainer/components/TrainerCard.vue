@@ -9,7 +9,11 @@
 		<div class="qc-trainer-card__text">
 			<h3>{{ t('quantumchess', 'Trainer') }}</h3>
 			<p v-if="upcoming">
-				{{ t('quantumchess', 'Continue: Lesson {n} · {title}', { n: upcoming.order, title: upcoming.title() }) }}
+				{{ t(
+					'quantumchess',
+					'Continue: Lesson {n} · {title}',
+					{ n: upcoming.order, title: upcoming.title() },
+				) }}
 			</p>
 			<p v-else-if="puzzle">
 				{{ t('quantumchess', 'Next puzzle: {name}', { name: puzzle.name() }) }}
@@ -17,9 +21,17 @@
 			<p v-else>
 				{{ t('quantumchess', 'Every lesson and puzzle done. Well played!') }}
 			</p>
-			<NcProgressBar :value="Math.round((100 * doneCount) / LESSONS.length)" :aria-label="t('quantumchess', 'Lessons done')" />
+			<NcProgressBar
+				:value="Math.round((100 * doneCount) / LESSONS.length)"
+				:aria-label="t('quantumchess', 'Lessons done')" />
 			<p class="qc-trainer-card__meta">
-				{{ n('quantumchess', '{done} of {total} lesson done', '{done} of {total} lessons done', doneCount, { done: doneCount, total: LESSONS.length }) }}
+				{{ n(
+					'quantumchess',
+					'{done} of {total} lesson done',
+					'{done} of {total} lessons done',
+					doneCount,
+					{ done: doneCount, total: LESSONS.length },
+				) }}
 			</p>
 		</div>
 		<NcButton variant="primary" :to="target">

@@ -24,15 +24,24 @@ export default {
 		},
 		{
 			type: 'quiz',
-			setup: { fen: '4k3/8/6n1/8/8/8/8/1NBQK2R w - - 0 1', prelude: ['b1-a3|c3', 'c1-d2|e3', 'd1-b3|a4', 'g6-f4|h4'] },
+			setup: {
+				fen: '4k3/8/6n1/8/8/8/8/1NBQK2R w - - 0 1',
+				prelude: ['b1-a3|c3', 'c1-d2|e3', 'd1-b3|a4', 'g6-f4|h4'],
+			},
 			question: () => t('quantumchess', 'Split is greyed out, and h1-h8 says "Roll (budget full)". Why?'),
 			answers: [
-				() => t('quantumchess', 'My budget is 8/8, so anything that would add a way to stand is rolled instead.'),
+				() => t(
+					'quantumchess',
+					'My budget is 8/8, so anything that would add a way to stand is rolled instead.',
+				),
 				() => t('quantumchess', 'The black knight blocks the h-file.'),
 				() => t('quantumchess', 'Rooks cannot split.'),
 			],
 			correct: 0,
-			explanation: () => t('quantumchess', 'Three ghosts fill the budget. A move that would create a fourth one is rolled instead.'),
+			explanation: () => t(
+				'quantumchess',
+				'Three ghosts fill the budget. A move that would create a fourth one is rolled instead.',
+			),
 		},
 		{
 			type: 'task',

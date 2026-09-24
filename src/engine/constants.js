@@ -6,7 +6,8 @@
 /**
  * Rules constants (§1). Changing any of them requires a new rules version.
  *
- * PHP twin: lib/Engine/Internal/Tables.php and the constants of lib/Engine/Engine.php. Section numbers (§) refer to docs/engine-rules.md.
+ * PHP twin: lib/Engine/Internal/Tables.php and the constants of lib/Engine/Engine.php. Section numbers (§) refer to
+ * docs/engine-rules.md.
  */
 
 /** Rules version, stored as `v` in every state. */
@@ -95,10 +96,46 @@ export const START_HASH = '80c209d9560802c2'
  * Castling table (§4.6): flag → king id, king from/to, rook id, rook from/to, squares that must be empty.
  */
 export const CASTLING = Object.freeze({
-	K: Object.freeze({ flag: 'K', king: 0, from: 4, to: 6, rook: 3, rookFrom: 7, rookTo: 5, empty: Object.freeze([5, 6]) }),
-	Q: Object.freeze({ flag: 'Q', king: 0, from: 4, to: 2, rook: 2, rookFrom: 0, rookTo: 3, empty: Object.freeze([1, 2, 3]) }),
-	k: Object.freeze({ flag: 'k', king: 16, from: 60, to: 62, rook: 19, rookFrom: 63, rookTo: 61, empty: Object.freeze([61, 62]) }),
-	q: Object.freeze({ flag: 'q', king: 16, from: 60, to: 58, rook: 18, rookFrom: 56, rookTo: 59, empty: Object.freeze([57, 58, 59]) }),
+	K: Object.freeze({
+		flag: 'K',
+		king: 0,
+		from: 4,
+		to: 6,
+		rook: 3,
+		rookFrom: 7,
+		rookTo: 5,
+		empty: Object.freeze([5, 6]),
+	}),
+	Q: Object.freeze({
+		flag: 'Q',
+		king: 0,
+		from: 4,
+		to: 2,
+		rook: 2,
+		rookFrom: 0,
+		rookTo: 3,
+		empty: Object.freeze([1, 2, 3]),
+	}),
+	k: Object.freeze({
+		flag: 'k',
+		king: 16,
+		from: 60,
+		to: 62,
+		rook: 19,
+		rookFrom: 63,
+		rookTo: 61,
+		empty: Object.freeze([61, 62]),
+	}),
+	q: Object.freeze({
+		flag: 'q',
+		king: 16,
+		from: 60,
+		to: 58,
+		rook: 18,
+		rookFrom: 56,
+		rookTo: 59,
+		empty: Object.freeze([57, 58, 59]),
+	}),
 })
 
 /** Castling flags in canonical order. */

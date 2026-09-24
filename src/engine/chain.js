@@ -6,7 +6,8 @@
 /**
  * Game record integrity chain (§9.4) and the local roll memo identity (§9.3).
  *
- * PHP twin: the chain functions of lib/Engine/Engine.php (`chainStart`, `chainNext`, `rollIdentity`). Section numbers (§) refer to docs/engine-rules.md.
+ * PHP twin: the chain functions of lib/Engine/Engine.php (`chainStart`, `chainNext`, `rollIdentity`). Section numbers
+ * (§) refer to docs/engine-rules.md.
  */
 
 import { positionHash } from './hash.js'

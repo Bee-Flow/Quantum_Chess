@@ -398,13 +398,18 @@ export function bestMove(state, options = {}) {
  * same `channel` (default `'coach'`; `null` for none) cancels this one.
  *
  * @param {EngineState} state position
- * @param {object} [options] `{timeMs = 600, multiPv = 3, include = [], fogPlies = 2, level?, signal?, onProgress?, channel?}`
+ * @param {object} [options]
+ *   `{timeMs = 600, multiPv = 3, include = [], fogPlies = 2, level?, signal?, onProgress?, channel?}`
  * @return {Promise<object>}
  */
 export function analyze(state, options = {}) {
 	const { timeMs = 600, multiPv = 3, include = [], fogPlies = 2, level, nodeBudget } = options
 	const channel = options.channel === undefined ? 'coach' : options.channel
-	return submit('analyze', { state, options: { timeMs, multiPv, include, fogPlies, level, nodeBudget } }, { ...options, channel })
+	return submit(
+		'analyze',
+		{ state, options: { timeMs, multiPv, include, fogPlies, level, nodeBudget } },
+		{ ...options, channel },
+	)
 }
 
 /**

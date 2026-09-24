@@ -5,7 +5,16 @@
 
 <!-- Up to three stars (earned ones filled). -->
 <template>
-	<span class="qc-stars" role="img" :aria-label="n('quantumchess', '{count} star of {max}', '{count} stars of {max}', stars, { count: stars, max })">
+	<span
+		class="qc-stars"
+		role="img"
+		:aria-label="n(
+			'quantumchess',
+			'{count} star of {max}',
+			'{count} stars of {max}',
+			stars,
+			{ count: stars, max },
+		)">
 		<span
 			v-for="i in max"
 			:key="i"

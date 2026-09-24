@@ -24,7 +24,13 @@ export function joinOr(names) {
 	if (names.length <= 1) {
 		return names[0] ?? ''
 	}
-	return t('quantumchess', '{list} or {last}', { list: names.slice(0, -1).join(', '), last: names[names.length - 1] }, undefined, TEXT)
+	return t(
+		'quantumchess',
+		'{list} or {last}',
+		{ list: names.slice(0, -1).join(', '), last: names[names.length - 1] },
+		undefined,
+		TEXT,
+	)
 }
 
 /**
@@ -37,7 +43,13 @@ function joinAnd(items) {
 	if (items.length <= 1) {
 		return items[0] ?? ''
 	}
-	return t('quantumchess', '{list} and {last}', { list: items.slice(0, -1).join(', '), last: items[items.length - 1] }, undefined, TEXT)
+	return t(
+		'quantumchess',
+		'{list} and {last}',
+		{ list: items.slice(0, -1).join(', '), last: items[items.length - 1] },
+		undefined,
+		TEXT,
+	)
 }
 
 /**
@@ -81,7 +93,13 @@ function sentence(ctx, P) {
 		text = pov === 'mover'
 			? t('quantumchess', 'Measured: your {piece} is on {square} · {p}', vars, undefined, TEXT)
 			: t('quantumchess', '{name} measured their {piece}: it\'s on {square} · {p}', vars, undefined, TEXT)
-		const settled = ex.settled.map((s) => t('quantumchess', '{piece} settled on {square} with it.', { piece: P(s.piece), square: sq(s.square) }, undefined, TEXT))
+		const settled = ex.settled.map((s) => t(
+			'quantumchess',
+			'{piece} settled on {square} with it.',
+			{ piece: P(s.piece), square: sq(s.square) },
+			undefined,
+			TEXT,
+		))
 		return [text, ...settled].join(' ')
 	}
 
@@ -112,11 +130,29 @@ function sentence(ctx, P) {
 			vars.target = P(tp)
 			vars.where = whereOf(ex.targetPieceAfter)
 			if (pov === 'mover') {
-				text = t('quantumchess', 'Moved: {square} was empty, the {target} is on {where}. {piece} is now on {square} · {p}', vars, undefined, TEXT)
+				text = t(
+					'quantumchess',
+					'Moved: {square} was empty, the {target} is on {where}. {piece} is now on {square} · {p}',
+					vars,
+					undefined,
+					TEXT,
+				)
 			} else if (colorOfId(tp) === viewer) {
-				text = t('quantumchess', '{name}\'s {piece} found {square} empty: your {target} is on {where} · {p}', vars, undefined, TEXT)
+				text = t(
+					'quantumchess',
+					'{name}\'s {piece} found {square} empty: your {target} is on {where} · {p}',
+					vars,
+					undefined,
+					TEXT,
+				)
 			} else {
-				text = t('quantumchess', '{name}\'s {piece} found {square} empty: the {target} is on {where} · {p}', vars, undefined, TEXT)
+				text = t(
+					'quantumchess',
+					'{name}\'s {piece} found {square} empty: the {target} is on {where} · {p}',
+					vars,
+					undefined,
+					TEXT,
+				)
 			}
 		} else {
 			text = pov === 'mover'
@@ -131,8 +167,20 @@ function sentence(ctx, P) {
 		switch (ex.cause) {
 			case 'absent':
 				text = pov === 'mover'
-					? t('quantumchess', 'Missed: your {piece} wasn\'t on {from}; it\'s on {where} · {p}', vars, undefined, TEXT)
-					: t('quantumchess', '{name}\'s {piece} was on {where}, not {from}. Nothing moved · {p}', vars, undefined, TEXT)
+					? t(
+							'quantumchess',
+							'Missed: your {piece} wasn\'t on {from}; it\'s on {where} · {p}',
+							vars,
+							undefined,
+							TEXT,
+						)
+					: t(
+							'quantumchess',
+							'{name}\'s {piece} was on {where}, not {from}. Nothing moved · {p}',
+							vars,
+							undefined,
+							TEXT,
+						)
 				break
 			case 'blocked': {
 				const b = ex.blockers[0]
@@ -141,12 +189,30 @@ function sentence(ctx, P) {
 				vars.from = stays ? sq(after[0].square) : fromText
 				if (pov === 'mover') {
 					text = stays
-						? t('quantumchess', 'Missed: {blocker} was in the way. {piece} stays on {from} · {p}', vars, undefined, TEXT)
+						? t(
+								'quantumchess',
+								'Missed: {blocker} was in the way. {piece} stays on {from} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
 						: t('quantumchess', 'Missed: {blocker} was in the way · {p}', vars, undefined, TEXT)
 				} else {
 					text = colorOfId(b.piece) === viewer
-						? t('quantumchess', '{name}\'s {piece} was blocked by your {blocker} · {p}', vars, undefined, TEXT)
-						: t('quantumchess', '{name}\'s {piece} was blocked by {name}\'s own {blocker} · {p}', vars, undefined, TEXT)
+						? t(
+								'quantumchess',
+								'{name}\'s {piece} was blocked by your {blocker} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
+						: t(
+								'quantumchess',
+								'{name}\'s {piece} was blocked by {name}\'s own {blocker} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
 				}
 				break
 			}
@@ -155,8 +221,20 @@ function sentence(ctx, P) {
 				mentioned.add(occ)
 				vars.occupant = P(occ)
 				text = pov === 'mover'
-					? t('quantumchess', 'Missed: your {occupant} was on {square}, so the {piece} couldn\'t land there · {p}', vars, undefined, TEXT)
-					: t('quantumchess', '{name}\'s {piece} was stopped by {name}\'s own {occupant} · {p}', vars, undefined, TEXT)
+					? t(
+							'quantumchess',
+							'Missed: your {occupant} was on {square}, so the {piece} couldn\'t land there · {p}',
+							vars,
+							undefined,
+							TEXT,
+						)
+					: t(
+							'quantumchess',
+							'{name}\'s {piece} was stopped by {name}\'s own {occupant} · {p}',
+							vars,
+							undefined,
+							TEXT,
+						)
 				break
 			}
 			case 'occupied': {
@@ -164,11 +242,29 @@ function sentence(ctx, P) {
 				mentioned.add(occ)
 				vars.occupant = P(occ)
 				if (pov === 'mover') {
-					text = t('quantumchess', 'Missed: {square} was occupied by {occupant}. {piece} stays on {from} · {p}', vars, undefined, TEXT)
+					text = t(
+						'quantumchess',
+						'Missed: {square} was occupied by {occupant}. {piece} stays on {from} · {p}',
+						vars,
+						undefined,
+						TEXT,
+					)
 				} else {
 					text = colorOfId(occ) === viewer
-						? t('quantumchess', '{name}\'s pawn found your {occupant} on {square} · {p}', vars, undefined, TEXT)
-						: t('quantumchess', '{name}\'s pawn found {name}\'s own {occupant} on {square} · {p}', vars, undefined, TEXT)
+						? t(
+								'quantumchess',
+								'{name}\'s pawn found your {occupant} on {square} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
+						: t(
+								'quantumchess',
+								'{name}\'s pawn found {name}\'s own {occupant} on {square} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
 				}
 				break
 			}
@@ -180,19 +276,49 @@ function sentence(ctx, P) {
 					vars.target = P(tp)
 					vars.where = whereOf(ex.targetPieceAfter)
 					text = pov === 'mover'
-						? t('quantumchess', 'Missed: {square} was empty, the {target} is on {where}. {piece} stays on {from} · {p}', vars, undefined, TEXT)
-						: t('quantumchess', '{name}\'s pawn found {square} empty: your {target} is on {where} · {p}', vars, undefined, TEXT)
+						? t(
+								'quantumchess',
+								'Missed: {square} was empty, the {target} is on {where}. {piece} stays on {from} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
+						: t(
+								'quantumchess',
+								'{name}\'s pawn found {square} empty: your {target} is on {where} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
 				} else {
 					text = pov === 'mover'
-						? t('quantumchess', 'Missed: there was nothing to capture on {square} · {p}', vars, undefined, TEXT)
-						: t('quantumchess', '{name}\'s pawn found nothing to capture on {square} · {p}', vars, undefined, TEXT)
+						? t(
+								'quantumchess',
+								'Missed: there was nothing to capture on {square} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
+						: t(
+								'quantumchess',
+								'{name}\'s pawn found nothing to capture on {square} · {p}',
+								vars,
+								undefined,
+								TEXT,
+							)
 				}
 			}
 		}
 	}
 	const settled = ex.settled
 		.filter((s) => !mentioned.has(s.piece))
-		.map((s) => t('quantumchess', '{piece} settled on {square}.', { piece: P(s.piece), square: sq(s.square) }, undefined, TEXT))
+		.map((s) => t(
+			'quantumchess',
+			'{piece} settled on {square}.',
+			{ piece: P(s.piece), square: sq(s.square) },
+			undefined,
+			TEXT,
+		))
 	if (lm.fallback && pov === 'mover') {
 		text = t('quantumchess', 'Rolled because your budget was full.') + ' ' + text
 	}
@@ -218,7 +344,8 @@ function sentence(ctx, P) {
  * @param {'mover'|'opponent'} [input.pov] point of view
  * @param {{mover?: string, opponent?: string}} [input.names] display names
  * @param {'percent'|'fraction'} [input.format] probability format
- * @return {null|{glyph: string, text: string, rarity: string|null, speech: string, key: string, weight: number, probability: number, tone: 'capture'|'neutral'}}
+ * @return {null|{glyph: string, text: string, rarity: string|null, speech: string, key: string, weight: number,
+ *   probability: number, tone: 'capture'|'neutral'}}
  */
 export function resultSentence({ before, move, measurement, pov = 'mover', names = {}, format = 'percent' }) {
 	if (!measurement) {
@@ -250,7 +377,13 @@ export function resultSentence({ before, move, measurement, pov = 'mover', names
 	const capture = measurement.outcomes.find((o) => o.key === 'capture')
 	let rarity = null
 	if (pov === 'mover' && key !== 'capture' && capture && capture.weight / T >= 0.8) {
-		rarity = t('quantumchess', 'Unlucky: that capture was {q} likely.', { q: formatProbability(capture.weight, { format, weight: true }) }, undefined, TEXT)
+		rarity = t(
+			'quantumchess',
+			'Unlucky: that capture was {q} likely.',
+			{ q: formatProbability(capture.weight, { format, weight: true }) },
+			undefined,
+			TEXT,
+		)
 	} else if (probability <= 0.2) {
 		rarity = t('quantumchess', 'A 1-in-{n} result.', { n: Math.round(1 / probability) }, undefined, TEXT)
 	}
@@ -298,20 +431,52 @@ export function moveSentence({ before, after, move, measurement = null, pov = 'm
 	const piece = capitalize(pieceName(before.types[lm.piece], color))
 	const sq = squareName
 	const locs = pieceLocations(after)[lm.piece]
-	const spread = locs.map((l) => t('quantumchess', '{square} {percent}', { square: sq(l.square), percent: spokenPercent(l.weight) }, undefined, TEXT))
+	const spread = locs.map((l) => t(
+		'quantumchess',
+		'{square} {percent}',
+		{ square: sq(l.square), percent: spokenPercent(l.weight) },
+		undefined,
+		TEXT,
+	))
 	if (lm.type === 'split') {
 		const even = locs.length === 2 && locs[0].weight === locs[1].weight
 		return even
-			? t('quantumchess', '{piece} splits from {from} to {a} and {b}, 50 percent each.', { piece, from: sq(lm.from[0]), a: sq(lm.to[0]), b: sq(lm.to[1]) }, undefined, TEXT)
-			: t('quantumchess', '{piece} splits from {from} to {a} and {b}: {spread}.', { piece, from: sq(lm.from[0]), a: sq(lm.to[0]), b: sq(lm.to[1]), spread: joinAnd(spread) }, undefined, TEXT)
+			? t(
+					'quantumchess',
+					'{piece} splits from {from} to {a} and {b}, 50 percent each.',
+					{ piece, from: sq(lm.from[0]), a: sq(lm.to[0]), b: sq(lm.to[1]) },
+					undefined,
+					TEXT,
+				)
+			: t(
+					'quantumchess',
+					'{piece} splits from {from} to {a} and {b}: {spread}.',
+					{ piece, from: sq(lm.from[0]), a: sq(lm.to[0]), b: sq(lm.to[1]), spread: joinAnd(spread) },
+					undefined,
+					TEXT,
+				)
 	}
 	if (lm.type === 'merge') {
-		const text = t('quantumchess', '{piece} merges from {a} and {b} to {to}.', { piece, a: sq(lm.from[0]), b: sq(lm.from[1]), to: sq(lm.to[0]) }, undefined, TEXT)
+		const text = t(
+			'quantumchess',
+			'{piece} merges from {a} and {b} to {to}.',
+			{ piece, a: sq(lm.from[0]), b: sq(lm.from[1]), to: sq(lm.to[0]) },
+			undefined,
+			TEXT,
+		)
 		const captured = after.captured.filter((id) => !before.captured.includes(id))
 		const extra = captured.length > 0
-			? ' ' + t('quantumchess', 'It captures the {target}.', { target: pieceName(before.types[captured[0]], colorOfId(captured[0])) }, undefined, TEXT)
+			? ' ' + t(
+				'quantumchess',
+				'It captures the {target}.',
+				{ target: pieceName(before.types[captured[0]], colorOfId(captured[0])) },
+				undefined,
+				TEXT,
+			)
 			: ''
-		return locs.length > 1 ? text + extra + ' ' + t('quantumchess', 'Now {spread}.', { spread: joinAnd(spread) }, undefined, TEXT) : text + extra
+		return locs.length > 1
+			? text + extra + ' ' + t('quantumchess', 'Now {spread}.', { spread: joinAnd(spread) }, undefined, TEXT)
+			: text + extra
 	}
 	const from = lm.from[0]
 	const to = lm.to[0]
@@ -322,8 +487,20 @@ export function moveSentence({ before, after, move, measurement = null, pov = 'm
 	}
 	const captured = after.captured.filter((id) => !before.captured.includes(id))
 	let text = captured.length > 0
-		? t('quantumchess', '{piece} takes {target} on {square}.', { piece, target: pieceName(before.types[captured[0]], colorOfId(captured[0])), square: sq(to) }, undefined, TEXT)
-		: t('quantumchess', '{piece} moves from {from} to {to}.', { piece, from: sq(from), to: sq(to) }, undefined, TEXT)
+		? t(
+				'quantumchess',
+				'{piece} takes {target} on {square}.',
+				{ piece, target: pieceName(before.types[captured[0]], colorOfId(captured[0])), square: sq(to) },
+				undefined,
+				TEXT,
+			)
+		: t(
+				'quantumchess',
+				'{piece} moves from {from} to {to}.',
+				{ piece, from: sq(from), to: sq(to) },
+				undefined,
+				TEXT,
+			)
 	if (lm.promo) {
 		text += ' ' + t('quantumchess', 'It promotes to a {type}.', { type: pieceTypeName(lm.promo) }, undefined, TEXT)
 	}

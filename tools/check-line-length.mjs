@@ -27,8 +27,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const CODE = /\.(php|js|mjs|cjs|vue|scss|css|ya?ml)$/
 /** Built, vendored and generated files, whose .editorconfig sections unset the limit. */
 const SKIPPED = /^(js|assets|vendor|node_modules|l10n|build|tests\/fixtures\/engine)\//
-/** String literals (single, double or back quotes, on one line) and URLs. */
-const LITERAL = /'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`|https?:\/\/\S+/g
+/** String literals (single, double or back quotes, on one line) and URLs, with the punctuation that closes them. */
+const LITERAL = /('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`|https?:\/\/\S+)[,;)\]}]*/g
 
 /**
  * @param {string} key a property of the `[*]` section of .editorconfig
@@ -62,7 +62,8 @@ function width(text) {
 
 /**
  * @param {string} text a line longer than the limit
- * @return {boolean} it holds a literal too long for a line of its own at this indentation
+ * @return {boolean} it holds a literal too long for a line of its own at this indentation, with its closing
+ *   punctuation (a trailing comma, a closing parenthesis)
  */
 function unbreakable(text) {
 	const indent = width(text.match(/^\s*/)[0])

@@ -17,8 +17,14 @@ export default {
 	accepted: ['e7-f8=Q', 'e7-f8=R'],
 	value: null,
 	traps: [
-		{ code: 'e7-e8=Q', value: null, text: () => t('quantumchess', 'The knight may be on e8, so the push rolls. Even when it moves, the bishop on f8 shields the king.') },
+		{ code: 'e7-e8=Q', value: null, text: () => t(
+			'quantumchess',
+			'The knight may be on e8, so the push rolls. Even when it moves, the bishop on f8 shields the king.',
+		) },
 	],
 	nudge: () => t('quantumchess', 'Which promotion square holds a solid piece?'),
-	idea: () => t('quantumchess', 'Capturing the solid bishop promotes for certain, and the new piece covers g8 and h8.'),
+	idea: () => t(
+		'quantumchess',
+		'Capturing the solid bishop promotes for certain, and the new piece covers g8 and h8.',
+	),
 }

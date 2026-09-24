@@ -181,7 +181,8 @@ export function resolveMove(a, input) {
 function codeOfNormalized(a, mv, X) {
 	switch (mv.type) {
 		case 'standard':
-			return SQUARE_NAMES[mv.from[0]] + '-' + SQUARE_NAMES[mv.to[0]] + (mv.promo === null ? '' : '=' + mv.promo.toUpperCase())
+			return SQUARE_NAMES[mv.from[0]] + '-' + SQUARE_NAMES[mv.to[0]]
+				+ (mv.promo === null ? '' : '=' + mv.promo.toUpperCase())
 		case 'split':
 			return SQUARE_NAMES[mv.from[0]] + '-' + SQUARE_NAMES[mv.to[0]] + '|' + SQUARE_NAMES[mv.to[1]]
 		case 'merge':

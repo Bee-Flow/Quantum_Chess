@@ -59,7 +59,8 @@ const PREDICATES = {
 	pieceSolid: (id, { after }) => (pieceLocations(after)[id] ?? []).length === 1,
 	captureRisk: ({ id, max }, { after }) => captureChance(after, id) <= max + 1e-9,
 	kingRisk: (max, { before, move }) => moveRisk(before, move.code) <= max + 1e-9,
-	gameWon: (_, { before, after }) => Boolean(after.result) && after.result.result === (before.turn === 'w' ? '1-0' : '0-1'),
+	gameWon: (_, { before, after }) => Boolean(after.result)
+		&& after.result.result === (before.turn === 'w' ? '1-0' : '0-1'),
 	all: (list, ctx) => list.every((p) => check(p, ctx.before, ctx.move, ctx.after)),
 	any: (list, ctx) => list.some((p) => check(p, ctx.before, ctx.move, ctx.after)),
 }

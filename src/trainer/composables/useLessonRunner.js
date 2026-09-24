@@ -69,7 +69,9 @@ export function useLessonRunner({ lessonId, playback, createGame, openGame }) {
 		...arrowsOf(step.value?.type === 'explain' ? step.value.arrows : []),
 		...arrowsOf(shownHints.value.filter((h) => h.arrow).map((h) => h.arrow)),
 	])
-	const highlights = computed(() => shownHints.value.filter((h) => h.highlight).map((h) => ({ square: squareIndex(h.highlight), kind: 'hint' })))
+	const highlights = computed(() => shownHints.value
+		.filter((h) => h.highlight)
+		.map((h) => ({ square: squareIndex(h.highlight), kind: 'hint' })))
 
 	/** Reveal the next hint tier. */
 	function nextHint() {
@@ -263,7 +265,11 @@ export function useLessonRunner({ lessonId, playback, createGame, openGame }) {
 			return
 		}
 		phase.value = 'busy'
-		const res = await playback.play(m.code, { outcome: lessonOutcome(m, s.roll), actor: 'opponent', lessonRoll: true })
+		const res = await playback.play(m.code, {
+			outcome: lessonOutcome(m, s.roll),
+			actor: 'opponent',
+			lessonRoll: true,
+		})
 		const key = res.measurement?.key ?? null
 		played.value = res.measurement ? { before: res.before, move: res.move, key } : null
 		message.value = { type: 'info', text: branchText(key) ?? '' }

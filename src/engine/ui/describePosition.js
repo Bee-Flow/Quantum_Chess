@@ -39,14 +39,21 @@ function sidePieces(state, color) {
 			ids.push(id)
 		}
 	}
-	ids.sort((a, b) => TYPE_ORDER.indexOf(state.types[a]) - TYPE_ORDER.indexOf(state.types[b]) || locs[a][0].square - locs[b][0].square)
+	ids.sort((a, b) => TYPE_ORDER.indexOf(state.types[a]) - TYPE_ORDER.indexOf(state.types[b])
+		|| locs[a][0].square - locs[b][0].square)
 	const items = []
 	const pawns = []
 	for (const id of ids) {
 		const type = state.types[id]
 		const where = locs[id].length === 1
 			? squareName(locs[id][0].square)
-			: locs[id].map((l) => t('quantumchess', '{square} {percent}', { square: squareName(l.square), percent: percent(l.weight) }, undefined, TEXT))
+			: locs[id].map((l) => t(
+					'quantumchess',
+					'{square} {percent}',
+					{ square: squareName(l.square), percent: percent(l.weight) },
+					undefined,
+					TEXT,
+				))
 					.join(' ' + t('quantumchess', 'or') + ' ')
 		if (type === 'p') {
 			pawns.push(where)
@@ -55,7 +62,14 @@ function sidePieces(state, color) {
 		}
 	}
 	if (pawns.length > 0) {
-		items.push(n('quantumchess', 'pawn {squares}', 'pawns {squares}', pawns.length, { squares: pawns.join(', ') }, TEXT))
+		items.push(n(
+			'quantumchess',
+			'pawn {squares}',
+			'pawns {squares}',
+			pawns.length,
+			{ squares: pawns.join(', ') },
+			TEXT,
+		))
 	}
 	return items.join('; ')
 }
@@ -70,17 +84,41 @@ function sidePieces(state, color) {
  */
 export function describePosition(state, { orientation = 'w' } = {}) {
 	const order = orientation === 'b' ? ['b', 'w'] : ['w', 'b']
-	const parts = order.map((c) => t('quantumchess', '{color}: {pieces}.', { color: colorName(c), pieces: sidePieces(state, c) }, undefined, TEXT))
+	const parts = order.map((c) => t(
+		'quantumchess',
+		'{color}: {pieces}.',
+		{ color: colorName(c), pieces: sidePieces(state, c) },
+		undefined,
+		TEXT,
+	))
 	const worlds = worldCount(state)
 	// TRANSLATORS: "possibility" is one complete chessboard that could be the real one (see the glossary)
 	parts.push(n('quantumchess', '%n possibility.', '%n possibilities.', worlds))
-	parts.push(t('quantumchess', 'Budget White {w} of 8, Black {b} of 8.', { w: budget(state, 'w'), b: budget(state, 'b') }, undefined, TEXT))
+	parts.push(t(
+		'quantumchess',
+		'Budget White {w} of 8, Black {b} of 8.',
+		{ w: budget(state, 'w'), b: budget(state, 'b') },
+		undefined,
+		TEXT,
+	))
 	for (const c of order) {
 		const danger = kingDanger(state, c)
 		if (danger > 0) {
 			parts.push(danger >= T
-				? t('quantumchess', '{color} king can be captured for certain.', { color: colorName(c) }, undefined, TEXT)
-				: t('quantumchess', '{color} king danger {percent}.', { color: colorName(c), percent: percent(danger) }, undefined, TEXT))
+				? t(
+						'quantumchess',
+						'{color} king can be captured for certain.',
+						{ color: colorName(c) },
+						undefined,
+						TEXT,
+					)
+				: t(
+						'quantumchess',
+						'{color} king danger {percent}.',
+						{ color: colorName(c), percent: percent(danger) },
+						undefined,
+						TEXT,
+					))
 		}
 	}
 	if (state.result !== null) {

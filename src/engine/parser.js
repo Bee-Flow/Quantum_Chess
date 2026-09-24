@@ -22,7 +22,8 @@ export function moveCode(move) {
 	const to = move.to
 	switch (move.type) {
 		case 'standard':
-			return SQUARE_NAMES[from[0]] + '-' + SQUARE_NAMES[to[0]] + (move.promo ? '=' + move.promo.toUpperCase() : '')
+			return SQUARE_NAMES[from[0]] + '-' + SQUARE_NAMES[to[0]]
+				+ (move.promo ? '=' + move.promo.toUpperCase() : '')
 		case 'split': {
 			const a = Math.min(to[0], to[1])
 			const b = Math.max(to[0], to[1])

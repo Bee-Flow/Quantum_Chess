@@ -185,7 +185,12 @@ export function* analyzeTask(state, options = {}, ctx = NO_SLICE) {
 	const best = searcher.root
 		.filter((e) => e.value !== null)
 		.slice(0, multiPv)
-		.map((e) => ({ code: e.code, E: searcher.toWhite(cleanValue(e.value)), pv: searcher.pv(e), resolution: e.move.resolution }))
+		.map((e) => ({
+			code: e.code,
+			E: searcher.toWhite(cleanValue(e.value)),
+			pv: searcher.pv(e),
+			resolution: e.move.resolution,
+		}))
 	const included = (options.include || []).map((code) => {
 		const canonical = includeMap.get(code)
 		const e = canonical ? byCode.get(canonical) : undefined
@@ -194,7 +199,16 @@ export function* analyzeTask(state, options = {}, ctx = NO_SLICE) {
 	const fog = fogBand(searcher, E, options.fogPlies ?? 2)
 	const mate = mateOf(state, E)
 	const ended = (options.now || (() => performance.now()))()
-	return { E, fog, mate, best, included, depth: res.depth, nodes: searcher.nodes, timeMs: Math.round(ended - started) }
+	return {
+		E,
+		fog,
+		mate,
+		best,
+		included,
+		depth: res.depth,
+		nodes: searcher.nodes,
+		timeMs: Math.round(ended - started),
+	}
 }
 
 /**

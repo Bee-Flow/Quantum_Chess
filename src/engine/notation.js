@@ -59,7 +59,8 @@ export function moveNotation(stateBefore, move, measurement = null, stateAfter =
 			if (rec.castle !== null) {
 				head = rec.t > rec.f ? 'O-O' : 'O-O-O'
 			} else {
-				head = letter + SQUARE_NAMES[rec.f] + sep + SQUARE_NAMES[rec.t] + (rec.promo === null ? '' : '=' + rec.promo.toUpperCase())
+				head = letter + SQUARE_NAMES[rec.f] + sep + SQUARE_NAMES[rec.t]
+					+ (rec.promo === null ? '' : '=' + rec.promo.toUpperCase())
 			}
 			break
 		case 'split':
@@ -80,6 +81,7 @@ export function moveNotation(stateBefore, move, measurement = null, stateAfter =
 	if (after === undefined || after === null) {
 		after = applyRecord(a, rec, rec.resolution === 'rolled' ? key : rec.resolution, true, true).state
 	}
-	const won = after.result !== null && (after.result.reason === 'king_captured' || after.result.reason === 'king_trapped')
+	const won = after.result !== null
+		&& (after.result.reason === 'king_captured' || after.result.reason === 'king_trapped')
 	return head + suffix + (won ? ' #' : '')
 }

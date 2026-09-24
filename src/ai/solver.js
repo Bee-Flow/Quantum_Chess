@@ -83,7 +83,8 @@ export function pliesFor(goal, horizon, opponentFirst) {
  *
  * @param {EngineState} state engine state
  * @param {object} [options] `{goal = 'forced', horizon = 1, side = state.turn, nodeLimit = 200000, plies?}`
- * @return {{value: number, moves: Array<{code: string, value: number}>, accepted: string[], exact: boolean, nodes: number, plies: number}}
+ * @return {{value: number, moves: Array<{code: string, value: number}>, accepted: string[], exact: boolean,
+ *   nodes: number, plies: number}}
  */
 export function solve(state, options = {}) {
 	const goal = options.goal ?? 'forced'

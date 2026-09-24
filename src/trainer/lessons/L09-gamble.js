@@ -21,12 +21,22 @@ export default {
 			prompt: () => t('quantumchess', 'The queen is 50 % on d5 and 50 % on h5. Go for it, and think about what happens if the roll goes against you.'),
 			success: { moveIs: ['e4-d5', 'f4-d5'] },
 			accepted: ['e4-d5', 'f4-d5'],
-			hints: [() => t('quantumchess', 'All shots at the queen are 50 %. Which one is safe when it fails?'), { highlight: 'e4' }, { arrow: ['e4', 'd5'] }],
+			hints: [
+				() => t('quantumchess', 'All shots at the queen are 50 %. Which one is safe when it fails?'),
+				{ highlight: 'e4' },
+				{ arrow: ['e4', 'd5'] },
+			],
 			roll: ['miss', 'move', 'capture'],
 			failReply: { engine: 3 },
 			branches: {
-				miss: () => t('quantumchess', 'Missed: the pawn stays safe on e4, and the queen is certainly on h5. A good gamble: nothing lost.'),
-				move: () => t('quantumchess', 'Moved: your knight lands on d5, protected by your pawn, and the queen is certainly on h5.'),
+				miss: () => t(
+					'quantumchess',
+					'Missed: the pawn stays safe on e4, and the queen is certainly on h5. A good gamble: nothing lost.',
+				),
+				move: () => t(
+					'quantumchess',
+					'Moved: your knight lands on d5, protected by your pawn, and the queen is certainly on h5.',
+				),
 				capture: () => t('quantumchess', 'Captured: the queen is gone.'),
 			},
 			fail: () => t('quantumchess', 'All three are 50 % shots. The difference is what happens when the roll goes against you: a knight that moves to h5 is lost to the queen, which is then certainly on d5.'),

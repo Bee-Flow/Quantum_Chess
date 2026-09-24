@@ -22,7 +22,15 @@ import { syncTask } from './tasks.js'
 /** @typedef {import('./tasks.js').SliceContext} SliceContext */
 
 /** Job types of the worker protocol (besides `cancel`). */
-export const JOB_TYPES = Object.freeze(['bestMove', 'analyze', 'evaluateMove', 'candidates', 'solve', 'analyzeGame', 'benchmark'])
+export const JOB_TYPES = Object.freeze([
+	'bestMove',
+	'analyze',
+	'evaluateMove',
+	'candidates',
+	'solve',
+	'analyzeGame',
+	'benchmark',
+])
 
 /**
  * A validated canonical copy of a state from a message.
@@ -69,7 +77,11 @@ export function createTask(type, payload, ctx) {
 		case 'analyzeGame': {
 			const record = p.record || {}
 			const start = record.startState ? stateOf(record.startState) : null
-			return analyzeGameTask({ startState: start, moves: record.moves || [] }, { ...options, onProgress: progress }, ctx)
+			return analyzeGameTask(
+				{ startState: start, moves: record.moves || [] },
+				{ ...options, onProgress: progress },
+				ctx,
+			)
 		}
 		case 'benchmark':
 			return benchmarkTask(ctx)

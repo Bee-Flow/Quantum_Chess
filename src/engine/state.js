@@ -6,7 +6,8 @@
 /**
  * State construction, canonical serialisation (§2.5, §2.6) and strict validation (§2.7).
  *
- * PHP twin: the state methods of lib/Engine/Engine.php and lib/Engine/Internal/StateValidator.php. Section numbers (§) refer to docs/engine-rules.md.
+ * PHP twin: the state methods of lib/Engine/Engine.php and lib/Engine/Internal/StateValidator.php. Section numbers (§)
+ * refer to docs/engine-rules.md.
  */
 
 import { analyze, projection } from './analysis.js'
@@ -30,7 +31,20 @@ import { idOfCode, letterCodeOf } from './squares.js'
 /** @typedef {import('./types.js').GameResult} GameResult */
 /** @typedef {import('./types.js').ValidationResult} ValidationResult */
 
-const STATE_KEYS = ['v', 'types', 'worlds', 'turn', 'castling', 'ep', 'halfmove', 'fullmove', 'ply', 'captured', 'history', 'result']
+const STATE_KEYS = [
+	'v',
+	'types',
+	'worlds',
+	'turn',
+	'castling',
+	'ep',
+	'halfmove',
+	'fullmove',
+	'ply',
+	'captured',
+	'history',
+	'result',
+]
 const HEX16 = /^[0-9a-f]{16}$/
 const CASTLING_RE = /^(?:-|K?Q?k?q?)$/
 const SQUARE_RE = /^[a-h][1-8]$/

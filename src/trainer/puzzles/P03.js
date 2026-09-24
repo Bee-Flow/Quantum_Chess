@@ -17,7 +17,10 @@ export default {
 	accepted: ['g6|f7-h8', 'f7-h8'],
 	value: null,
 	traps: [
-		{ code: 'g6-h8', value: 50, text: () => t('quantumchess', '50 %: a miss leaves the f7 knight blocking your bishop.') },
+		{ code: 'g6-h8', value: 50, text: () => t(
+			'quantumchess',
+			'50 %: a miss leaves the f7 knight blocking your bishop.',
+		) },
 		{ code: 'c4-f7', value: 50, text: () => t('quantumchess', 'A 50 % shot.') },
 		{ code: '?g6', value: 50, text: () => t('quantumchess', 'A 50 % measurement.') },
 	],

@@ -13,7 +13,10 @@ export default {
 	group: 'essentials',
 	minutes: 2,
 	title: () => t('quantumchess', 'Land = roll'),
-	goal: () => t('quantumchess', 'Landing on a square that might hold a piece rolls. Even a miss tells you something.'),
+	goal: () => t(
+		'quantumchess',
+		'Landing on a square that might hold a piece rolls. Even a miss tells you something.',
+	),
 	steps: [
 		{
 			type: 'task',
@@ -21,7 +24,11 @@ export default {
 			prompt: () => t('quantumchess', 'Attack the knight on d5.'),
 			success: { moveIs: ['d1-d5'] },
 			accepted: ['d1-d5'],
-			hints: [() => t('quantumchess', 'The rook can reach d5 along the open file.'), { highlight: 'd1' }, { arrow: ['d1', 'd5'] }],
+			hints: [
+				() => t('quantumchess', 'The rook can reach d5 along the open file.'),
+				{ highlight: 'd1' },
+				{ arrow: ['d1', 'd5'] },
+			],
 			roll: ['capture', 'move'],
 			branches: {
 				capture: () => t('quantumchess', 'Captured: the knight was on d5.'),
@@ -38,7 +45,10 @@ export default {
 			hints: [() => t('quantumchess', 'Pawns capture diagonally.'), { highlight: 'e4' }, { arrow: ['e4', 'd5'] }],
 			roll: ['miss', 'capture'],
 			branches: {
-				miss: () => t('quantumchess', 'Nothing moved, but now you know: the bishop is on b7. Knowledge is worth a move.'),
+				miss: () => t(
+					'quantumchess',
+					'Nothing moved, but now you know: the bishop is on b7. Knowledge is worth a move.',
+				),
 				capture: () => t('quantumchess', 'Captured: the bishop was on d5.'),
 			},
 			fail: () => t('quantumchess', 'Try a pawn capture on d5.'),
@@ -52,7 +62,10 @@ export default {
 				() => t('quantumchess', 'The rook becomes a ghost.'),
 			],
 			correct: 1,
-			explanation: () => t('quantumchess', 'A solid piece with a certainly clear path never wastes its move: it captures or it lands.'),
+			explanation: () => t(
+				'quantumchess',
+				'A solid piece with a certainly clear path never wastes its move: it captures or it lands.',
+			),
 		},
 	],
 }

@@ -90,7 +90,12 @@ export function splitTargets(state, from) {
 				reason = pool.length > 0 ? pool[0][0] : 'split_target_occupied'
 			}
 		}
-		out.targets.push({ square: t, legal: e.partners.length > 0, reason, partners: e.partners.sort((x, y) => x - y) })
+		out.targets.push({
+			square: t,
+			legal: e.partners.length > 0,
+			reason,
+			partners: e.partners.sort((x, y) => x - y),
+		})
 	}
 	return out
 }
