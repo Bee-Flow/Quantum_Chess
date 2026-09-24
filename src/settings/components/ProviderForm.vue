@@ -103,7 +103,13 @@
 			:type="result.ok ? 'success' : 'error'"
 			role="status">
 			{{ result.ok
-				? n('quantumchess', 'Connected. The server offers {count} chat model.', 'Connected. The server offers {count} chat models.', result.modelCount ?? 0, { count: result.modelCount ?? 0 })
+				? n(
+					'quantumchess',
+					'Connected. The server offers {count} chat model.',
+					'Connected. The server offers {count} chat models.',
+					result.modelCount ?? 0,
+					{ count: result.modelCount ?? 0 },
+				)
 				: connectionError(result.code) }}
 		</NcNoteCard>
 	</div>
@@ -165,7 +171,9 @@ const presetOption = computed({
 		}
 		draft.preset = option.id
 		const next = preset.value
-		draft.baseUrl = next?.local && props.scope === 'personal' ? (props.localAllowlist[0] ?? '') : (next?.baseUrl ?? '')
+		draft.baseUrl = next?.local && props.scope === 'personal'
+			? (props.localAllowlist[0] ?? '')
+			: (next?.baseUrl ?? '')
 		draft.model = next?.suggestedModels?.[0] ?? null
 		loadedModels.value = []
 		result.value = null
@@ -182,21 +190,30 @@ const modelOptions = computed(() => {
 
 const baseUrl = computed(() => preset.value?.fixedUrl ? preset.value.baseUrl : (draft.baseUrl ?? '').trim())
 // The server drops the saved key when the service or its address changes (it is never sent anywhere else).
-const endpointChanged = computed(() => !props.provider || props.provider.preset !== draft.preset || props.provider.baseUrl !== baseUrl.value)
-const keyLabel = computed(() => props.keyInfo.hasKey ? t('quantumchess', 'Replace API key') : t('quantumchess', 'API key'))
+const endpointChanged = computed(() => !props.provider
+	|| props.provider.preset !== draft.preset
+	|| props.provider.baseUrl !== baseUrl.value)
+const keyLabel = computed(() => props.keyInfo.hasKey
+	? t('quantumchess', 'Replace API key')
+	: t('quantumchess', 'API key'))
 const keyHelp = computed(() => {
 	if (props.keyInfo.keyUnreadable) {
 		return t('quantumchess', 'Your saved key can\'t be read any more. Please enter it again.')
 	}
 	if (props.keyInfo.hasKey && endpointChanged.value) {
-		return t('quantumchess', 'The saved key is only sent to the saved address. Enter the key again for this service.')
+		return t(
+			'quantumchess',
+			'The saved key is only sent to the saved address. Enter the key again for this service.',
+		)
 	}
 	if (props.keyInfo.hasKey) {
 		return props.keyInfo.keyHint
 			? t('quantumchess', 'Saved key ends in …{hint}. Leave empty to keep it.', { hint: props.keyInfo.keyHint })
 			: t('quantumchess', 'A key is saved. Leave empty to keep it.')
 	}
-	return preset.value?.keyRequired ? t('quantumchess', 'Required for this service.') : t('quantumchess', 'Optional for this service.')
+	return preset.value?.keyRequired
+		? t('quantumchess', 'Required for this service.')
+		: t('quantumchess', 'Optional for this service.')
 })
 
 const canTest = computed(() => preset.value !== null && baseUrl.value !== '')
@@ -204,7 +221,12 @@ const canSave = computed(() => canTest.value && typeof draft.model === 'string' 
 
 /** The provider object of the draft. */
 function current() {
-	const provider = { preset: draft.preset, kind: preset.value?.kind ?? 'openai', baseUrl: baseUrl.value, model: (draft.model ?? '').trim() }
+	const provider = {
+		preset: draft.preset,
+		kind: preset.value?.kind ?? 'openai',
+		baseUrl: baseUrl.value,
+		model: (draft.model ?? '').trim(),
+	}
 	if (props.scope === 'shared') {
 		provider.label = draft.label.trim()
 	}
@@ -228,7 +250,10 @@ async function test() {
 		result.value = res
 		loadedModels.value = res.ok ? (res.models ?? []) : []
 	} catch (error) {
-		result.value = { ok: false, code: error?.code === 'url_not_allowed' ? 'url_not_allowed' : (error?.data?.upstream ?? 'bad_response') }
+		result.value = {
+			ok: false,
+			code: error?.code === 'url_not_allowed' ? 'url_not_allowed' : (error?.data?.upstream ?? 'bad_response'),
+		}
 	} finally {
 		testing.value = false
 	}

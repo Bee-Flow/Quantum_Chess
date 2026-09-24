@@ -72,7 +72,12 @@ const moverColor = computed(() => props.stateBefore?.turn ?? props.color)
 
 const parsed = computed(() => {
 	const m = /^(.*?)(?: \{(\S+) (\d+)%\})?( #)?$/.exec(notationText.value) ?? []
-	return { head: m[1] ?? notationText.value, key: m[2] ?? null, percent: m[3] === undefined ? null : Number(m[3]), mate: Boolean(m[4]) }
+	return {
+		head: m[1] ?? notationText.value,
+		key: m[2] ?? null,
+		percent: m[3] === undefined ? null : Number(m[3]),
+		mate: Boolean(m[4]),
+	}
 })
 
 const parts = computed(() => {

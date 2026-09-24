@@ -64,7 +64,9 @@
 							<NcIconSvgWrapper :path="mdiChevronLeft" />
 						</template>
 					</NcButton>
-					<span class="qc-review__ply">{{ t('quantumchess', 'Move {n} of {total}', { n: ply, total: game.moves.length }) }}</span>
+					<span class="qc-review__ply">{{
+						t('quantumchess', 'Move {n} of {total}', { n: ply, total: game.moves.length })
+					}}</span>
 					<NcButton
 						:aria-label="t('quantumchess', 'Next move')"
 						:disabled="ply === game.moves.length"
@@ -74,7 +76,10 @@
 							<NcIconSvgWrapper :path="mdiChevronRight" />
 						</template>
 					</NcButton>
-					<NcButton :aria-label="t('quantumchess', 'End')" :disabled="ply === game.moves.length" @click="go(game.moves.length)">
+					<NcButton
+						:aria-label="t('quantumchess', 'End')"
+						:disabled="ply === game.moves.length"
+						@click="go(game.moves.length)">
 						<template #icon>
 							<NcIconSvgWrapper :path="mdiPageLast" />
 						</template>
@@ -94,8 +99,16 @@
 
 			<aside class="qc-review__side">
 				<section v-if="analysing" class="qc-review__progress" aria-live="polite">
-					<p>{{ t('quantumchess', 'Analysing the game … {done} of {total} moves', { done: plies.length, total: game.moves.length }) }}</p>
-					<NcProgressBar :value="Math.round((100 * plies.length) / Math.max(1, game.moves.length))" :aria-label="t('quantumchess', 'Analysis progress')" />
+					<p>
+						{{ t(
+							'quantumchess',
+							'Analysing the game … {done} of {total} moves',
+							{ done: plies.length, total: game.moves.length },
+						) }}
+					</p>
+					<NcProgressBar
+						:value="Math.round((100 * plies.length) / Math.max(1, game.moves.length))"
+						:aria-label="t('quantumchess', 'Analysis progress')" />
 				</section>
 				<NcNoteCard v-if="analysisError" type="warning">
 					{{ t('quantumchess', 'The analysis could not finish. The graph shows the moves analysed so far.') }}

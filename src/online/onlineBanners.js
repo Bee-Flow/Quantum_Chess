@@ -27,9 +27,19 @@ import { t } from '@nextcloud/l10n'
 export function onlineBanners({ altered, unverifiable, pendingPhase, connection }, { retry, undo, reload }) {
 	const list = []
 	if (altered) {
-		list.push({ id: 'altered', type: 'error', text: t('quantumchess', 'Game history was altered on the server'), actions: [] })
+		list.push({
+			id: 'altered',
+			type: 'error',
+			text: t('quantumchess', 'Game history was altered on the server'),
+			actions: [],
+		})
 	} else if (unverifiable) {
-		list.push({ id: 'unverifiable', type: 'info', text: t('quantumchess', 'Can’t be verified: a player’s account was deleted'), actions: [] })
+		list.push({
+			id: 'unverifiable',
+			type: 'info',
+			text: t('quantumchess', 'Can’t be verified: a player’s account was deleted'),
+			actions: [],
+		})
 	}
 	if (pendingPhase === 'failed') {
 		list.push({
@@ -43,11 +53,26 @@ export function onlineBanners({ altered, unverifiable, pendingPhase, connection 
 		})
 	}
 	if (connection === 'expired') {
-		list.push({ id: 'connection', type: 'error', text: t('quantumchess', 'Your session expired. Reload the page.'), actions: [{ label: t('quantumchess', 'Reload'), handler: reload }] })
+		list.push({
+			id: 'connection',
+			type: 'error',
+			text: t('quantumchess', 'Your session expired. Reload the page.'),
+			actions: [{ label: t('quantumchess', 'Reload'), handler: reload }],
+		})
 	} else if (connection === 'maintenance') {
-		list.push({ id: 'connection', type: 'warning', text: t('quantumchess', 'Nextcloud is in maintenance mode'), actions: [] })
+		list.push({
+			id: 'connection',
+			type: 'warning',
+			text: t('quantumchess', 'Nextcloud is in maintenance mode'),
+			actions: [],
+		})
 	} else if (connection === 'retrying' || connection === 'offline' || pendingPhase === 'retrying') {
-		list.push({ id: 'connection', type: 'warning', text: t('quantumchess', 'Connection lost, retrying…'), actions: [] })
+		list.push({
+			id: 'connection',
+			type: 'warning',
+			text: t('quantumchess', 'Connection lost, retrying…'),
+			actions: [],
+		})
 	}
 	return list
 }

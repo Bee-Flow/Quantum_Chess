@@ -20,7 +20,9 @@
 					:size="32"
 					disableMenu />
 				<router-link class="qc-recent__main" :to="`/game/${r.game.id}`">
-					<span class="qc-recent__name">{{ t('quantumchess', 'vs {name}', { name: r.other?.displayName ?? '' }) }}</span>
+					<span class="qc-recent__name">{{
+						t('quantumchess', 'vs {name}', { name: r.other?.displayName ?? '' })
+					}}</span>
 					<span class="qc-recent__result">
 						<strong :class="'qc-recent__outcome--' + r.outcome.outcome">{{ r.outcome.text }}</strong>
 						<span v-if="r.outcome.delta" class="qc-recent__delta">{{ r.outcome.delta }}</span>

@@ -30,7 +30,11 @@ export function moveRows(moves, firstNumber = 1) {
 		if (last) {
 			number++
 		}
-		rows.push({ number, w: entry.color === 'w' ? { entry, index } : null, b: entry.color === 'b' ? { entry, index } : null })
+		rows.push({
+			number,
+			w: entry.color === 'w' ? { entry, index } : null,
+			b: entry.color === 'b' ? { entry, index } : null,
+		})
 	})
 	return rows
 }

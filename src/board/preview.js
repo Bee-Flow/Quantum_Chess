@@ -60,10 +60,22 @@ function missLine(state, move, ex) {
 	const piece = figurine(state.types[move.piece], colorOfId(move.piece))
 	switch (ex.cause) {
 		case 'absent':
-			return t('quantumchess', 'Missed: your {piece} isn\'t on {from} in these possibilities.', { piece, from: joinOr(move.from.map(squareName)) }, undefined, TEXT)
+			return t(
+				'quantumchess',
+				'Missed: your {piece} isn\'t on {from} in these possibilities.',
+				{ piece, from: joinOr(move.from.map(squareName)) },
+				undefined,
+				TEXT,
+			)
 		case 'blocked': {
 			const b = ex.blockers[0]
-			return t('quantumchess', 'Missed: {blocker} may be in the way.', { blocker: figSq(state, b.piece, b.square) }, undefined, TEXT)
+			return t(
+				'quantumchess',
+				'Missed: {blocker} may be in the way.',
+				{ blocker: figSq(state, b.piece, b.square) },
+				undefined,
+				TEXT,
+			)
 		}
 		case 'own_piece':
 			return t('quantumchess', 'Missed: your own {occupant} may be on {square}.', {
@@ -76,7 +88,13 @@ function missLine(state, move, ex) {
 				square: squareName(move.to[0]),
 			}, undefined, TEXT)
 		default:
-			return t('quantumchess', 'Missed: there may be nothing to capture on {square}.', { square: squareName(move.to[0]) }, undefined, TEXT)
+			return t(
+				'quantumchess',
+				'Missed: there may be nothing to capture on {square}.',
+				{ square: squareName(move.to[0]) },
+				undefined,
+				TEXT,
+			)
 	}
 }
 
@@ -88,7 +106,9 @@ function missLine(state, move, ex) {
  * @return {string}
  */
 function spread(locs, format) {
-	return locs.map((l) => squareName(l.square) + ' ' + formatProbability(l.weight, { format, weight: true })).join(' · ')
+	return locs
+		.map((l) => squareName(l.square) + ' ' + formatProbability(l.weight, { format, weight: true }))
+		.join(' · ')
 }
 
 /**
@@ -210,7 +230,13 @@ export function movePreview(state, move, { format = 'percent', physics = false }
 
 	const risk = riskOf(state, move)
 	const riskText = risk > 0
-		? t('quantumchess', 'Your king could then be captured: {p}', { p: formatProbability(risk * T, { format, weight: true }) }, undefined, TEXT)
+		? t(
+				'quantumchess',
+				'Your king could then be captured: {p}',
+				{ p: formatProbability(risk * T, { format, weight: true }) },
+				undefined,
+				TEXT,
+			)
 		: null
 
 	// The what-if view is useful when a ghost is involved: the moving piece's part, or a ghost on the target.

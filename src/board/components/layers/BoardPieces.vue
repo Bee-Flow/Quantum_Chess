@@ -89,7 +89,10 @@ function onEnter(el, done) {
 	let a
 	if (origin !== undefined) {
 		const from = geo.value.pixelOf(origin)
-		a = el.animate([{ transform: `translate(${from.x}px, ${from.y}px)` }, { transform: el.style.transform }], { duration: d, easing: 'cubic-bezier(.2,.8,.2,1)' })
+		a = el.animate(
+			[{ transform: `translate(${from.x}px, ${from.y}px)` }, { transform: el.style.transform }],
+			{ duration: d, easing: 'cubic-bezier(.2,.8,.2,1)' },
+		)
 	} else {
 		a = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: Math.min(d, 200), easing: 'ease-out' })
 	}

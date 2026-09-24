@@ -96,7 +96,11 @@ const ticks = computed(() => {
 })
 const label = computed(() => {
 	const h = props.history
-	return t('quantumchess', 'Rating after each rated game, from {first} to {last}', { first: h[0]?.rating ?? '', last: h[h.length - 1]?.rating ?? '' })
+	return t(
+		'quantumchess',
+		'Rating after each rated game, from {first} to {last}',
+		{ first: h[0]?.rating ?? '', last: h[h.length - 1]?.rating ?? '' },
+	)
 })
 </script>
 

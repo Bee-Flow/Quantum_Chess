@@ -149,7 +149,10 @@ export function useOnlineReplay({ game, me, animate, eventNames }) {
 		states.length = 0
 		states.push(...checked.states)
 		startState.value = full.startState ?? null
-		moves.value = checked.steps.map((step, i) => toEntry(full.moves[i], { move: step.move, measurement: step.measurement }))
+		moves.value = checked.steps.map((step, i) => toEntry(full.moves[i], {
+			move: step.move,
+			measurement: step.measurement,
+		}))
 		state.value = states[states.length - 1]
 		const last = checked.steps[checked.steps.length - 1]
 		confirmedLast = last ? { move: last.move, key: last.measurement?.key ?? null } : null

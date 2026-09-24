@@ -87,7 +87,13 @@ export function useGameReview({ source, id }, deps = {}) {
 		const mover = s.before.turn
 		const other = otherColor(mover)
 		const pov = g.viewer === null || mover === g.viewer ? 'mover' : 'opponent'
-		return resultSentence({ before: s.before, move: s.move, measurement: s.measurement, pov, names: { mover: g.names[mover], opponent: g.names[other] } })?.text ?? ''
+		return resultSentence({
+			before: s.before,
+			move: s.move,
+			measurement: s.measurement,
+			pov,
+			names: { mover: g.names[mover], opponent: g.names[other] },
+		})?.text ?? ''
 	})
 	const resultLine = computed(() => {
 		const r = game.value?.result
@@ -96,12 +102,17 @@ export function useGameReview({ source, id }, deps = {}) {
 		}
 		const g = game.value
 		const extra = r.reason === 'king_captured' && g.moves.length
-			? kingCaptureContext({ code: g.moves[g.moves.length - 1].code, measurement: g.steps[g.steps.length - 1].measurement })
+			? kingCaptureContext({
+					code: g.moves[g.moves.length - 1].code,
+					measurement: g.steps[g.steps.length - 1].measurement,
+				})
 			: {}
 		const text = resultText(r.result, r.reason, g.names, extra)
 		return `${text.title} · ${text.reason}`
 	})
-	const quantumFlags = computed(() => (game.value ? game.value.steps.map((s) => isQuantumMove(s.move, s.before.types[s.move.piece])) : []))
+	const quantumFlags = computed(() => (game.value
+		? game.value.steps.map((s) => isQuantumMove(s.move, s.before.types[s.move.piece]))
+		: []))
 	const moments = computed(() => keyMoments(plies.value))
 	const currentQuality = computed(() => {
 		const p = plies.value[ply.value - 1]

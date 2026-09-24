@@ -80,7 +80,11 @@ const emit = defineEmits(['rematch', 'nextLevel', 'newGame', 'review'])
 const controller = useLocalGame(props.id, {
 	onError: (e) => {
 		if (e?.name === 'ApiError') {
-			showError(t('quantumchess', 'The AI could not answer: {reason}. The built-in engine played instead.', { reason: e.message || e.code }))
+			showError(t(
+				'quantumchess',
+				'The AI could not answer: {reason}. The built-in engine played instead.',
+				{ reason: e.message || e.code },
+			))
 		}
 	},
 })

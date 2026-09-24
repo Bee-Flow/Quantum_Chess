@@ -8,7 +8,9 @@
 	<section class="qc-moments" :aria-label="t('quantumchess', 'Key moments')">
 		<h3>{{ t('quantumchess', 'Key moments') }}</h3>
 		<p v-if="!moments.length" class="qc-moments__empty">
-			{{ done ? t('quantumchess', 'A clean game: no big mistakes and no big swings of luck.') : t('quantumchess', 'Key moments appear when the analysis is done.') }}
+			{{ done
+				? t('quantumchess', 'A clean game: no big mistakes and no big swings of luck.')
+				: t('quantumchess', 'Key moments appear when the analysis is done.') }}
 		</p>
 		<ol v-else class="qc-moments__list">
 			<li
@@ -21,12 +23,24 @@
 					<strong>{{ moveLabel(m) }}</strong>
 					<span v-if="m.kind === 'error'">
 						<QualityBadge :label="m.label" />
-						{{ t('quantumchess', '{pp} % worse than {best}', { pp: Math.round(m.deltaPp), best: m.bestCode }) }}
+						{{ t(
+							'quantumchess',
+							'{pp} % worse than {best}',
+							{ pp: Math.round(m.deltaPp), best: m.bestCode },
+						) }}
 					</span>
 					<span v-else>
 						{{ m.luckPp > 0
-							? t('quantumchess', '🎲 A lucky roll: +{pp} % for {name}', { pp: Math.round(m.luckPp), name: names[m.color] })
-							: t('quantumchess', '🎲 An unlucky roll: −{pp} % for {name}', { pp: Math.round(-m.luckPp), name: names[m.color] }) }}
+							? t(
+								'quantumchess',
+								'🎲 A lucky roll: +{pp} % for {name}',
+								{ pp: Math.round(m.luckPp), name: names[m.color] },
+							)
+							: t(
+								'quantumchess',
+								'🎲 An unlucky roll: −{pp} % for {name}',
+								{ pp: Math.round(-m.luckPp), name: names[m.color] },
+							) }}
 					</span>
 				</div>
 				<NcButton size="small" @click="emit('show', m)">

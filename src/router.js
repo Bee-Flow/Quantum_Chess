@@ -20,10 +20,18 @@ export function buildRoutes() {
 	return [
 		{ path: '/', name: 'home', component: HomeView },
 		{ path: '/new', name: 'new-game', component: HomeView },
-		{ path: '/play/:mode(computer|ai|local)/:id?', name: 'local-game', component: () => import('./views/LocalGameView.vue') },
+		{
+			path: '/play/:mode(computer|ai|local)/:id?',
+			name: 'local-game',
+			component: () => import('./views/LocalGameView.vue'),
+		},
 		{ path: '/rules', name: 'rules', component: () => import('./views/RulesView.vue') },
 		{ path: '/game/:id(\\d+)', name: 'online-game', component: () => import('./views/OnlineGameView.vue') },
-		{ path: '/review/:source(local|online)/:id', name: 'review', component: () => import('./views/ReviewView.vue') },
+		{
+			path: '/review/:source(local|online)/:id',
+			name: 'review',
+			component: () => import('./views/ReviewView.vue'),
+		},
 		{ path: '/trainer', name: 'trainer', component: () => import('./views/TrainerHomeView.vue') },
 		{ path: '/trainer/lesson/:id', name: 'lesson', component: () => import('./views/LessonView.vue') },
 		{ path: '/trainer/puzzle/:id', name: 'puzzle', component: () => import('./views/PuzzleView.vue') },

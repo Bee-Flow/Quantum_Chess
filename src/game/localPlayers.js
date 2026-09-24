@@ -50,9 +50,14 @@ export function localGameTitle(game) {
 		return t('quantumchess', 'vs {name}', { name: level?.name ?? t('quantumchess', 'Computer') })
 	}
 	if (game.mode === 'ai') {
-		return t('quantumchess', 'vs {name}', { name: personaById(other?.persona)?.name ?? t('quantumchess', 'AI opponent') })
+		return t('quantumchess', 'vs {name}', {
+			name: personaById(other?.persona)?.name ?? t('quantumchess', 'AI opponent'),
+		})
 	}
-	return t('quantumchess', '{white} vs {black}', { white: p.w?.name || t('quantumchess', 'White'), black: p.b?.name || t('quantumchess', 'Black') })
+	return t('quantumchess', '{white} vs {black}', {
+		white: p.w?.name || t('quantumchess', 'White'),
+		black: p.b?.name || t('quantumchess', 'Black'),
+	})
 }
 
 /**
@@ -72,7 +77,12 @@ export function localPlayerInfo(record, color, { name, comment, persona, engine,
 	const p = record.players?.[color] ?? {}
 	const base = { color, name, comment }
 	if (p.kind === 'engine') {
-		return { ...base, kind: 'engine', level: p.level, thinking: engine.thinking ? { depth: engine.depth, since: engine.since } : null }
+		return {
+			...base,
+			kind: 'engine',
+			level: p.level,
+			thinking: engine.thinking ? { depth: engine.depth, since: engine.since } : null,
+		}
 	}
 	if (p.kind === 'ai') {
 		return {

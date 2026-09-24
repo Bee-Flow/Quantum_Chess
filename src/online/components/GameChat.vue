@@ -69,7 +69,10 @@
 			</div>
 			<form class="qc-chat__form" @submit.prevent="send">
 				<NcEmojiPicker @select="addEmoji">
-					<NcButton variant="tertiary" :aria-label="t('quantumchess', 'Insert emoji')" :title="t('quantumchess', 'Insert emoji')">
+					<NcButton
+						variant="tertiary"
+						:aria-label="t('quantumchess', 'Insert emoji')"
+						:title="t('quantumchess', 'Insert emoji')">
 						<template #icon>
 							<NcIconSvgWrapper :path="mdiEmoticonOutline" />
 						</template>

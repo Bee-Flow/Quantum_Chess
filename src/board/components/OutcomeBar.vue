@@ -16,7 +16,10 @@
 			:class="['qc-outcome-bar__seg--' + seg.tone, { 'qc-outcome-bar__seg--realised': realised === seg.key, 'qc-outcome-bar__seg--dim': realised !== null && realised !== seg.key }]"
 			:style="{ flexGrow: seg.weight }"
 			:title="seg.text">
-			<span v-if="seg.share >= minLabelShare" class="qc-outcome-bar__text" aria-hidden="true">{{ seg.text }}</span>
+			<span
+				v-if="seg.share >= minLabelShare"
+				class="qc-outcome-bar__text"
+				aria-hidden="true">{{ seg.text }}</span>
 		</div>
 	</div>
 </template>
@@ -38,7 +41,9 @@ const props = defineProps({
 const segments = computed(() => {
 	const total = props.outcomes.reduce((s, o) => s + o.weight, 0) || 1
 	return props.outcomes.map((o, i) => {
-		const tone = o.key === 'capture' ? 'capture' : (o.key === 'move' || o.key === 'miss' ? o.key : (i % 2 === 0 ? 'move' : 'miss'))
+		const tone = o.key === 'capture'
+			? 'capture'
+			: (o.key === 'move' || o.key === 'miss' ? o.key : (i % 2 === 0 ? 'move' : 'miss'))
 		const p = formatProbability(o.weight, { format: boardPrefs.probabilityFormat, weight: true })
 		return {
 			key: o.key,

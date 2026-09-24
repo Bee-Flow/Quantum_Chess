@@ -23,7 +23,8 @@ import { splitTargetsOf } from '../input/targets.js'
  * @param {import('./useBoardSelection.js').BoardSelection} context.selection the selection state
  * @param {import('./useMoveFlow.js').MoveFlow} context.flow the move flow
  * @param {(code: string, square: number|null) => object} context.reject reports an illegal attempt
- * @return {{activate: (square: number, opts?: {shift?: boolean}) => string, drop: (from: number, to: number) => string}}
+ * @return {{activate: (square: number, opts?: {shift?: boolean}) => string,
+ *   drop: (from: number, to: number) => string}}
  */
 export function useSquareActivation({ st, canInteract, selection: sel, flow, reject }) {
 	const { mode, selection, splitFirst, mergeSources, targetAt, ownPiece, partsOf, isGhostPart } = sel
@@ -220,7 +221,9 @@ export function useSquareActivation({ st, canInteract, selection: sel, flow, rej
 		}
 		const target = targetAt(to)
 		if (target === null || target.disabled) {
-			const code = target?.code ?? whyIllegal(st.value, { type: 'standard', from: [from], to: [to] }) ?? 'unreachable'
+			const code = target?.code
+				?? whyIllegal(st.value, { type: 'standard', from: [from], to: [to] })
+				?? 'unreachable'
 			reject(code, to)
 			return 'illegal'
 		}

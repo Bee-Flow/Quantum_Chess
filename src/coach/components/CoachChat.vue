@@ -160,14 +160,26 @@ function body(question) {
 		analysis: a
 			? {
 					E: a.E,
-					best: (a.best ?? []).slice(0, 3).map((b) => ({ code: b.code, E: b.E, line: (b.pv ?? [b.code]).slice(0, 6) })),
+					best: (a.best ?? []).slice(0, 3).map((b) => ({
+						code: b.code,
+						E: b.E,
+						line: (b.pv ?? [b.code]).slice(0, 6),
+					})),
 					threats: props.threats.slice(0, 8).map((x) => x.slice(0, 120)),
 					lastMove: props.lastMove,
 				}
 			: null,
-		context: { kind: props.context.kind, title: props.context.title?.slice(0, 200), goal: props.context.goal?.slice(0, 200), ply: props.context.ply },
+		context: {
+			kind: props.context.kind,
+			title: props.context.title?.slice(0, 200),
+			goal: props.context.goal?.slice(0, 200),
+			ply: props.context.ply,
+		},
 		player: { color: props.playerColor, skill: props.skill },
-		chat: messages.value.slice(-4).map((m) => ({ role: m.role === 'user' ? 'user' : 'coach', text: m.text.slice(0, 600) })),
+		chat: messages.value.slice(-4).map((m) => ({
+			role: m.role === 'user' ? 'user' : 'coach',
+			text: m.text.slice(0, 600),
+		})),
 		question,
 	}
 }
@@ -180,7 +192,10 @@ function body(question) {
  */
 async function answer(text, fallback = false) {
 	const shown = truncateAnswer(text)
-	messages.value = [...messages.value, { role: 'coach', text: shown, fallback, chips: moveChips(shown, toRaw(props.state)) }]
+	messages.value = [
+		...messages.value,
+		{ role: 'coach', text: shown, fallback, chips: moveChips(shown, toRaw(props.state)) },
+	]
 	await nextTick()
 	if (list.value) {
 		list.value.scrollTop = list.value.scrollHeight

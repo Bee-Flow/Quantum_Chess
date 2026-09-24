@@ -25,7 +25,10 @@
 				</h2>
 				<ul class="qc-home__cards">
 					<li v-for="g in continueGames" :key="g.id">
-						<router-link class="qc-home__card" :to="`/play/${g.mode}/${g.id}`" :data-test="'continue-' + g.mode">
+						<router-link
+							class="qc-home__card"
+							:to="`/play/${g.mode}/${g.id}`"
+							:data-test="'continue-' + g.mode">
 							<MiniBoard
 								:state="g.state"
 								:size="120"
@@ -69,7 +72,10 @@
 					{{ t('quantumchess', 'New to Quantum Chess?') }}
 				</h2>
 				<div class="qc-home__rules-body">
-					<MiniBoard :state="splitDemo" :size="120" :label="t('quantumchess', 'A knight split between f3 and h3')" />
+					<MiniBoard
+						:state="splitDemo"
+						:size="120"
+						:label="t('quantumchess', 'A knight split between f3 and h3')" />
 					<p>
 						{{ t('quantumchess', 'It is chess, but a piece can be in two places at once until something finds out where it really is.') }}
 						<router-link :to="{ name: 'rules' }">
@@ -130,7 +136,9 @@ const continueGames = computed(() => localIndex
 
 const isEmpty = computed(() => {
 	const l = lobbyState.lobby.value
-	const online = l ? ['yourTurn', 'waiting', 'invitations', 'outgoing', 'recent'].some((k) => (l[k] ?? []).length > 0) : false
+	const online = l
+		? ['yourTurn', 'waiting', 'invitations', 'outgoing', 'recent'].some((k) => (l[k] ?? []).length > 0)
+		: false
 	return localIndex.length === 0 && !online
 })
 </script>

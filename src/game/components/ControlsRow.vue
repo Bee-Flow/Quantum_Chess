@@ -39,13 +39,19 @@
 					</template>
 					{{ t('quantumchess', 'Flip the board') }}
 				</NcActionButton>
-				<NcActionCheckbox :modelValue="preferences.showPercentages" @update:modelValue="setPreference('showPercentages', $event)">
+				<NcActionCheckbox
+					:modelValue="preferences.showPercentages"
+					@update:modelValue="setPreference('showPercentages', $event)">
 					{{ t('quantumchess', 'Percentages') }}
 				</NcActionCheckbox>
-				<NcActionCheckbox :modelValue="preferences.coordinates !== 'off'" @update:modelValue="setPreference('coordinates', $event ? 'inside' : 'off')">
+				<NcActionCheckbox
+					:modelValue="preferences.coordinates !== 'off'"
+					@update:modelValue="setPreference('coordinates', $event ? 'inside' : 'off')">
 					{{ t('quantumchess', 'Coordinates') }}
 				</NcActionCheckbox>
-				<NcActionCheckbox :modelValue="preferences.linkThreads === 'always'" @update:modelValue="setPreference('linkThreads', $event ? 'always' : 'selection')">
+				<NcActionCheckbox
+					:modelValue="preferences.linkThreads === 'always'"
+					@update:modelValue="setPreference('linkThreads', $event ? 'always' : 'selection')">
 					{{ t('quantumchess', 'Always show link threads') }}
 				</NcActionCheckbox>
 				<NcActionButton closeAfterClick @click="emit('settings')">

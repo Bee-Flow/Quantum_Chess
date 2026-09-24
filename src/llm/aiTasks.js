@@ -33,7 +33,12 @@ export async function waitForAiTask(taskId, { signal, onTick } = {}) {
 			return body
 		}
 		if (body?.status === 'error') {
-			throw new ApiError({ status: 502, code: 'upstream', data: { upstream: body.error ?? null }, message: body.message ?? '' })
+			throw new ApiError({
+				status: 502,
+				code: 'upstream',
+				data: { upstream: body.error ?? null },
+				message: body.message ?? '',
+			})
 		}
 		onTick?.({ attempt, elapsedMs: Date.now() - started })
 	}

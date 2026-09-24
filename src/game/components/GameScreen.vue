@@ -17,7 +17,9 @@
 		:style="{ '--qc-board-px': boardPx + 'px' }">
 		<div class="qc-game__column">
 			<div v-if="historyPly !== null || banners.length || $slots.banners" class="qc-game__banners">
-				<GameBanner v-if="historyPly !== null" :text="t('quantumchess', 'Viewing move {n} of {total}', { n: historyPly, total: moves.length })">
+				<GameBanner
+					v-if="historyPly !== null"
+					:text="t('quantumchess', 'Viewing move {n} of {total}', { n: historyPly, total: moves.length })">
 					<NcButton size="small" data-test="back-to-live" @click="historyPly = null">
 						{{ t('quantumchess', 'Back to live (L)') }}
 					</NcButton>
@@ -290,7 +292,12 @@ function selectPly(n) {
 // --- Board wiring ---
 const boardInteractive = computed(() => c.interactive.value && historyPly.value === null)
 const boardMoves = computed(() => (historyPly.value === null ? c.legalMoves.value : []))
-const input = useBoardInput({ state: c.state, legalMoves: boardMoves, movableColor: c.movableColor, interactive: boardInteractive })
+const input = useBoardInput({
+	state: c.state,
+	legalMoves: boardMoves,
+	movableColor: c.movableColor,
+	interactive: boardInteractive,
+})
 const history = computed(() => Array.from({ length: moves.value.length }, (_, i) => c.stateAt(i)))
 const lastMove = computed(() => {
 	if (c.lastMove?.value !== undefined) {

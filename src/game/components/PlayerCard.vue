@@ -19,7 +19,10 @@
 				:displayName="player.name"
 				:size="avatarSize"
 				:disableMenu="!player.userId" />
-			<span v-else-if="player.kind === 'engine'" class="qc-player__disc qc-player__disc--engine" :style="discStyle">
+			<span
+				v-else-if="player.kind === 'engine'"
+				class="qc-player__disc qc-player__disc--engine"
+				:style="discStyle">
 				<NcIconSvgWrapper :path="mdiRobotOutline" :size="Math.round(avatarSize * 0.6)" />
 				<span class="qc-player__level">{{ player.level }}</span>
 			</span>
@@ -42,13 +45,18 @@
 					class="qc-player__swatch"
 					:class="'qc-player__swatch--' + player.color"
 					role="img"
-					:aria-label="player.color === 'w' ? t('quantumchess', 'plays White') : t('quantumchess', 'plays Black')" />
+					:aria-label="player.color === 'w'
+						? t('quantumchess', 'plays White')
+						: t('quantumchess', 'plays Black')" />
 				<span v-if="ratingText" class="qc-player__rating">{{ ratingText }}</span>
 				<span v-if="player.sourceLabel && !compact" class="qc-player__source">{{ player.sourceLabel }}</span>
 			</div>
 			<div class="qc-player__line qc-player__line--details">
 				<BudgetPips :used="budgetUsed" :color="player.color" :state="state" />
-				<span v-if="captured.length || materialLead > 0" class="qc-player__captured" :aria-label="capturedLabel">
+				<span
+					v-if="captured.length || materialLead > 0"
+					class="qc-player__captured"
+					:aria-label="capturedLabel">
 					<PieceIcon
 						v-for="(c, i) in captured"
 						:key="i"
@@ -63,7 +71,10 @@
 		</div>
 
 		<div class="qc-player__status" aria-live="polite">
-			<span v-if="statusText" class="qc-player__status-text" :class="{ 'qc-player__status-text--turn': active && !player.thinking }">{{ statusText }}</span>
+			<span
+				v-if="statusText"
+				class="qc-player__status-text"
+				:class="{ 'qc-player__status-text--turn': active && !player.thinking }">{{ statusText }}</span>
 			<slot name="status" />
 		</div>
 
@@ -157,7 +168,9 @@ const statusText = computed(() => {
 	}
 	if (p.thinking) {
 		if (p.kind === 'engine') {
-			return p.thinking.depth ? t('quantumchess', 'Thinking… depth {depth}', { depth: p.thinking.depth }) : t('quantumchess', 'Thinking…')
+			return p.thinking.depth
+				? t('quantumchess', 'Thinking… depth {depth}', { depth: p.thinking.depth })
+				: t('quantumchess', 'Thinking…')
 		}
 		if (p.queued && (p.elapsedMs ?? 0) >= 3000) {
 			return t('quantumchess', 'Queued in your Nextcloud AI…')
@@ -171,7 +184,9 @@ const statusText = computed(() => {
 	if (!props.active) {
 		return ''
 	}
-	return props.isMe ? '● ' + t('quantumchess', 'Your move') : '● ' + t('quantumchess', '{name} to move', { name: p.name })
+	return props.isMe
+		? '● ' + t('quantumchess', 'Your move')
+		: '● ' + t('quantumchess', '{name} to move', { name: p.name })
 })
 
 // The comment bubble shows for 6 s.

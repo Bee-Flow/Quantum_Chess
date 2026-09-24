@@ -15,8 +15,8 @@
 
 	// Quantum UI outside the board (chips, log, split pipe)
 	--qc-quantum: #6b3fd4;
-	// Rings, threads and outlines on the board: board colours do not follow the theme. The violet is deep enough to keep
-	// a contrast of 3:1 against both square colours of every theme (tests/js/board/contrast.spec.js checks it).
+	// Rings, threads and outlines on the board: board colours do not follow the theme. The violet is deep enough to
+	// keep a contrast of 3:1 against both square colours of every theme (tests/js/board/contrast.spec.js checks it).
 	--qc-quantum-board: #3f1ca0;
 	--qc-quantum-halo: rgb(255 255 255 / 0.75);
 

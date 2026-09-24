@@ -124,7 +124,10 @@ export function useLlmOpponent({ record, persona, source, model = null, strength
 	 * @return {Promise<object>} {ok, code?, comment?, mood?, answer?, reason?}
 	 */
 	async function attempt(state, cands, body, feedback, signal) {
-		let res = await d.requestAiMove({ ...body, feedback, answerMode: answerMode.value }, { signal, timeout: DIRECT_TIMEOUT_MS })
+		let res = await d.requestAiMove(
+			{ ...body, feedback, answerMode: answerMode.value },
+			{ signal, timeout: DIRECT_TIMEOUT_MS },
+		)
 		if (res?.status === 'pending' && res.taskId) {
 			queued.value = true
 			current.taskId = res.taskId
@@ -151,7 +154,12 @@ export function useLlmOpponent({ record, persona, source, model = null, strength
 				return { ok: false, answer: legal.code, reason: 'not_recommended' }
 			}
 		}
-		return { ok: true, code: legal.code, comment: typeof res.comment === 'string' ? res.comment.slice(0, 200) : '', mood: res.mood ?? null }
+		return {
+			ok: true,
+			code: legal.code,
+			comment: typeof res.comment === 'string' ? res.comment.slice(0, 200) : '',
+			mood: res.mood ?? null,
+		}
 	}
 
 	/**
@@ -194,7 +202,11 @@ export function useLlmOpponent({ record, persona, source, model = null, strength
 			}
 		}, 250)
 		try {
-			const cands = await (await candidatesFn())(state, { strength, tolerance: persona.tolerance, signal: inner.signal })
+			const cands = await (await candidatesFn())(state, {
+				strength,
+				tolerance: persona.tolerance,
+				signal: inner.signal,
+			})
 			if (cands.length === 0) {
 				throw new Error('no candidates')
 			}
@@ -216,7 +228,13 @@ export function useLlmOpponent({ record, persona, source, model = null, strength
 				if (first.ok) {
 					return { code: first.code, by: 'ai', comment: first.comment, mood: first.mood }
 				}
-				const second = await attempt(state, cands, body, { answer: first.answer, reason: first.reason }, inner.signal)
+				const second = await attempt(
+					state,
+					cands,
+					body,
+					{ answer: first.answer, reason: first.reason },
+					inner.signal,
+				)
 				if (second.ok) {
 					return { code: second.code, by: 'ai', comment: second.comment, mood: second.mood }
 				}
@@ -231,7 +249,13 @@ export function useLlmOpponent({ record, persona, source, model = null, strength
 			}
 			const fb = fallbackCandidate(state, cands, persona)
 			noteFallback(state.ply)
-			return { code: fb.code, by: 'ai-fallback', comment: cannedLine(persona, 'fallback'), mood: 'thinking', ...(error ? { error } : {}) }
+			return {
+				code: fb.code,
+				by: 'ai-fallback',
+				comment: cannedLine(persona, 'fallback'),
+				mood: 'thinking',
+				...(error ? { error } : {}),
+			}
 		} finally {
 			clearInterval(ticker)
 			signal?.removeEventListener('abort', onOuter)
@@ -267,5 +291,15 @@ export function useLlmOpponent({ record, persona, source, model = null, strength
 		record.ai.chat = [...(record.ai.chat ?? []), { from: 'me', text: clean, ply }]
 	}
 
-	return { thinking, queued, elapsedMs, canLetEngineMove, letEngineMove, cancel: letEngineMove, answerMode, say, chooseMove }
+	return {
+		thinking,
+		queued,
+		elapsedMs,
+		canLetEngineMove,
+		letEngineMove,
+		cancel: letEngineMove,
+		answerMode,
+		say,
+		chooseMove,
+	}
 }

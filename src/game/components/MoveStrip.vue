@@ -10,9 +10,13 @@
 			<button
 				type="button"
 				class="qc-strip__move"
-				:class="{ 'qc-strip__move--current': currentPly === null ? i === moves.length - 1 : i === currentPly - 1 }"
+				:class="{
+					'qc-strip__move--current': currentPly === null ? i === moves.length - 1 : i === currentPly - 1,
+				}"
 				@click="emit('selectPly', i + 1)">
-				<span v-if="m.color === 'w' || i === 0" class="qc-strip__number">{{ Math.floor(m.ply / 2) + 1 }}{{ m.color === 'w' ? '.' : '…' }}</span>
+				<span
+					v-if="m.color === 'w' || i === 0"
+					class="qc-strip__number">{{ Math.floor(m.ply / 2) + 1 }}{{ m.color === 'w' ? '.' : '…' }}</span>
 				<NotationText :notation="m.notation" :color="m.color" />
 			</button>
 		</li>

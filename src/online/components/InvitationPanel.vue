@@ -61,7 +61,9 @@
 						{{ t('quantumchess', 'Copy link') }}
 					</NcButton>
 					<NcButton :disabled="busy" data-test="cancel" @click="run(controller.cancel)">
-						{{ mode === 'own-open' ? t('quantumchess', 'Cancel the challenge') : t('quantumchess', 'Cancel the invitation') }}
+						{{ mode === 'own-open'
+							? t('quantumchess', 'Cancel the challenge')
+							: t('quantumchess', 'Cancel the invitation') }}
 					</NcButton>
 				</template>
 				<template v-else>
@@ -140,7 +142,13 @@ const title = computed(() => {
 const expiry = computed(() => {
 	const now = Date.now() / 1000
 	const s = (g.value.expiresAt ?? now) - now
-	return s > 0 ? new Date(g.value.expiresAt * 1000).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : formatRelative(g.value.expiresAt, now)
+	return s > 0
+		? new Date(g.value.expiresAt * 1000).toLocaleString([], {
+				weekday: 'short',
+				hour: '2-digit',
+				minute: '2-digit',
+			})
+		: formatRelative(g.value.expiresAt, now)
 })
 
 /** Copy the share link of the open challenge. */

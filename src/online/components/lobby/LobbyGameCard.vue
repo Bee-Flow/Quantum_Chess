@@ -19,7 +19,10 @@
 				:pieces="game.preview"
 				:size="boardSize"
 				:orientation="game.myColor ?? 'w'" />
-			<span v-else class="qc-lobby-card__placeholder" :style="{ width: boardSize + 'px', height: boardSize + 'px' }">
+			<span
+				v-else
+				class="qc-lobby-card__placeholder"
+				:style="{ width: boardSize + 'px', height: boardSize + 'px' }">
 				<NcAvatar
 					v-if="other?.userId"
 					:user="other.userId"
@@ -41,9 +44,15 @@
 			</router-link>
 			<span class="qc-lobby-card__line">{{ line }}</span>
 			<span class="qc-lobby-card__badges">
-				<span v-if="game.rated || game.ratedRequested" class="qc-lobby-card__badge">{{ t('quantumchess', 'Rated') }}</span>
-				<span class="qc-lobby-card__badge qc-lobby-card__badge--plain" :title="timeControlText(game.timeControl)">
-					<NcIconSvgWrapper :path="game.timeControl === 'corr:none' ? mdiInfinity : mdiTimerSandComplete" :size="14" />
+				<span
+					v-if="game.rated || game.ratedRequested"
+					class="qc-lobby-card__badge">{{ t('quantumchess', 'Rated') }}</span>
+				<span
+					class="qc-lobby-card__badge qc-lobby-card__badge--plain"
+					:title="timeControlText(game.timeControl)">
+					<NcIconSvgWrapper
+						:path="game.timeControl === 'corr:none' ? mdiInfinity : mdiTimerSandComplete"
+						:size="14" />
 					{{ timeControlText(game.timeControl) }}
 				</span>
 			</span>
@@ -108,12 +117,24 @@ const line = computed(() => {
 	}
 	if (props.kind === 'outgoing') {
 		return g.expiresAt
-			? t('quantumchess', 'Waiting for an answer · expires {when}', { when: new Date(g.expiresAt * 1000).toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) })
+			? t(
+					'quantumchess',
+					'Waiting for an answer · expires {when}',
+					{
+						when: new Date(g.expiresAt * 1000).toLocaleDateString([], {
+							weekday: 'short',
+							day: 'numeric',
+							month: 'short',
+						}),
+					},
+				)
 			: t('quantumchess', 'Waiting for an answer')
 	}
 	if (props.kind === 'waiting') {
 		const moved = g.lastMoveAt ? formatRelative(g.lastMoveAt, props.now) : ''
-		return moved ? `${progressText(g, props.now)} · ${t('quantumchess', 'you moved {when}', { when: moved })}` : progressText(g, props.now)
+		return moved
+			? `${progressText(g, props.now)} · ${t('quantumchess', 'you moved {when}', { when: moved })}`
+			: progressText(g, props.now)
 	}
 	return progressText(g, props.now)
 })

@@ -34,7 +34,9 @@ export function reviewGame({ source, id, local, online }) {
 	let result
 	if (local) {
 		startState = local.startState ?? null
-		moves = local.moves.map((m) => (Number.isInteger(m.u) ? { code: m.code, u: m.u } : { code: m.code, u: null, ...(m.key ? { outcome: m.key } : {}) }))
+		moves = local.moves.map((m) => (Number.isInteger(m.u)
+			? { code: m.code, u: m.u }
+			: { code: m.code, u: null, ...(m.key ? { outcome: m.key } : {}) }))
 		names = { w: localPlayerName(local, 'w'), b: localPlayerName(local, 'b') }
 		viewer = local.humanColor ?? null
 		result = local.result ?? null
@@ -42,9 +44,14 @@ export function reviewGame({ source, id, local, online }) {
 		startState = online.startState ?? null
 		moves = online.moves.map((m) => {
 			const u = m.measurement?.u
-			return Number.isInteger(u) ? { code: m.code, u } : { code: m.code, u: null, ...(m.measurement?.key ? { outcome: m.measurement.key } : {}) }
+			return Number.isInteger(u)
+				? { code: m.code, u }
+				: { code: m.code, u: null, ...(m.measurement?.key ? { outcome: m.measurement.key } : {}) }
 		})
-		names = { w: online.white?.displayName ?? t('quantumchess', 'White'), b: online.black?.displayName ?? t('quantumchess', 'Black') }
+		names = {
+			w: online.white?.displayName ?? t('quantumchess', 'White'),
+			b: online.black?.displayName ?? t('quantumchess', 'Black'),
+		}
 		viewer = online.black?.userId && online.black.userId === currentUser.uid ? 'b' : 'w'
 		result = online.result ? { result: online.result, reason: online.resultReason ?? null } : null
 	}
@@ -52,7 +59,11 @@ export function reviewGame({ source, id, local, online }) {
 	const steps = []
 	for (const m of moves) {
 		const before = states[states.length - 1]
-		const res = applyMove(before, m.code, Number.isInteger(m.u) ? { u: m.u } : (m.outcome ? { outcome: m.outcome } : {}))
+		const res = applyMove(
+			before,
+			m.code,
+			Number.isInteger(m.u) ? { u: m.u } : (m.outcome ? { outcome: m.outcome } : {}),
+		)
 		steps.push({ before, after: res.state, move: res.move, measurement: res.measurement })
 		states.push(res.state)
 	}

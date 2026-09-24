@@ -50,7 +50,10 @@
 
 			<NcSettingsSection
 				:name="t('quantumchess', 'AI opponent and coach')"
-				:description="t('quantumchess', 'AI opponents and the AI coach use a language model. Choose which one they use.')">
+				:description="t(
+					'quantumchess',
+					'AI opponents and the AI coach use a language model. Choose which one they use.',
+				)">
 				<fieldset class="qc-settings__group">
 					<legend class="qc-settings__legend">
 						{{ t('quantumchess', 'Default AI source') }}
@@ -120,7 +123,12 @@ import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcSettingsSection from '@nextcloud/vue/components/NcSettingsSection'
 import ProviderForm from './ProviderForm.vue'
-import { getMultiplayerSettings, getPersonalSettings, saveMultiplayerSettings, savePersonalSettings } from '../../services/api.js'
+import {
+	getMultiplayerSettings,
+	getPersonalSettings,
+	saveMultiplayerSettings,
+	savePersonalSettings,
+} from '../../services/api.js'
 import { errorText, privacyList, sourceReason } from '../messages.js'
 
 const loading = ref(true)

@@ -12,7 +12,15 @@
 
 import { t } from '@nextcloud/l10n'
 import { computed, reactive, ref, shallowRef } from 'vue'
-import { applyMove, findMove, gameResult, generateMoves, initialState, otherColor, serializeState } from '../../engine/index.js'
+import {
+	applyMove,
+	findMove,
+	gameResult,
+	generateMoves,
+	initialState,
+	otherColor,
+	serializeState,
+} from '../../engine/index.js'
 import { personaById } from '../../llm/personas.js'
 import { recordLocalResult } from '../../services/api.js'
 import { preferences } from '../../services/preferences.js'
@@ -55,7 +63,15 @@ export function useLocalGame(id, deps = {}) {
 	const record = shallowRef(loadLocalGame(id))
 	const loading = ref(false)
 	const error = ref(record.value ? null : new Error(t('quantumchess', 'This game is not on this device any more.')))
-	const rec = record.value ?? { mode: 'local', moves: [], players: { w: {}, b: {} }, humanColor: null, options: {}, ai: {}, rolls: {} }
+	const rec = record.value ?? {
+		mode: 'local',
+		moves: [],
+		players: { w: {}, b: {} },
+		humanColor: null,
+		options: {},
+		ai: {},
+		rolls: {},
+	}
 	const kind = rec.mode
 	const startState = shallowRef(rec.startState ?? null)
 	const states = [rec.startState ?? initialState()]
@@ -112,14 +128,21 @@ export function useLocalGame(id, deps = {}) {
 	const names = computed(() => ({ w: localPlayerName(rec, 'w', persona), b: localPlayerName(rec, 'b', persona) }))
 
 	const players = computed(() => {
-		const info = (color) => localPlayerInfo(rec, color, { name: names.value[color], comment: comments[color], persona, engine, llm })
+		const info = (color) => localPlayerInfo(rec, color, {
+			name: names.value[color],
+			comment: comments[color],
+			persona,
+			engine,
+			llm,
+		})
 		return { w: info('w'), b: info('b') }
 	})
 
 	const humanMoves = computed(() => moves.value.filter((m) => m.by === 'human').length)
 	const can = computed(() => ({
 		...NO_CAPABILITIES,
-		undo: !animating.value && recordResult.value === null && (kind === 'local' ? moves.value.length > 0 : humanMoves.value > 0),
+		undo: !animating.value && recordResult.value === null
+			&& (kind === 'local' ? moves.value.length > 0 : humanMoves.value > 0),
 		resign: result.value === null && !animating.value,
 		rematch: result.value !== null,
 		chat: kind === 'ai',

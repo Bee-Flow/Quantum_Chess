@@ -30,7 +30,10 @@
 		<template v-else-if="stats">
 			<NcNoteCard v-if="stats.online?.askListing" type="info" data-test="ask-listing">
 				<p class="qc-stats__ask">
-					{{ t('quantumchess', 'Show yourself on the leaderboard? Others will see your name, avatar, rating and record.') }}
+					{{ t(
+						'quantumchess',
+						'Show yourself on the leaderboard? Others will see your name, avatar, rating and record.',
+					) }}
 				</p>
 				<div class="qc-stats__ask-actions">
 					<NcButton :disabled="saving" @click="setListed(false)">
@@ -49,7 +52,10 @@
 				<dl class="qc-stats__tiles">
 					<div class="qc-stats__tile">
 						<dt>{{ t('quantumchess', 'Rating') }}</dt>
-						<dd :title="online.provisional ? t('quantumchess', 'Provisional rating: fewer than 10 rated games') : ''">
+						<dd
+							:title="online.provisional
+								? t('quantumchess', 'Provisional rating: fewer than 10 rated games')
+								: ''">
 							{{ formatRating(online.rating, online.provisional) }}
 						</dd>
 					</div>
@@ -117,7 +123,12 @@
 					</tbody>
 				</table>
 				<p class="qc-stats__note">
-					{{ n('quantumchess', 'Pass & play: %n game', 'Pass & play: %n games', stats.local?.hotseat?.games ?? 0) }}
+					{{ n(
+						'quantumchess',
+						'Pass & play: %n game',
+						'Pass & play: %n games',
+						stats.local?.hotseat?.games ?? 0,
+					) }}
 				</p>
 			</section>
 		</template>
@@ -152,7 +163,11 @@ const localRows = computed(() => {
 	const local = stats.value?.local ?? {}
 	const rows = LEVELS.map((level, i) => {
 		const r = local.engine?.[String(i + 1)] ?? { w: 0, l: 0, d: 0 }
-		return { key: 'e' + (i + 1), name: t('quantumchess', 'Level {n}: {name}', { n: i + 1, name: level.name }), ...r }
+		return {
+			key: 'e' + (i + 1),
+			name: t('quantumchess', 'Level {n}: {name}', { n: i + 1, name: level.name }),
+			...r,
+		}
 	})
 	for (const [id, r] of Object.entries(local.llm ?? {})) {
 		rows.push({ key: 'p' + id, name: personaById(id)?.name ?? id, ...r })
@@ -164,7 +179,10 @@ const localRows = computed(() => {
 async function load() {
 	loading.value = true
 	try {
-		const [s, b] = await Promise.all([getStats(), multiplayer ? getLeaderboard({ group: group.value }).catch(() => null) : null])
+		const [s, b] = await Promise.all([
+			getStats(),
+			multiplayer ? getLeaderboard({ group: group.value }).catch(() => null) : null,
+		])
 		stats.value = s
 		board.value = b
 		error.value = null

@@ -108,7 +108,10 @@
 					:cy="mk.y - 0.24"
 					r="0.13"
 					class="qc-mk-disc" />
-				<path :d="mdiLinkVariant" :transform="`translate(${mk.x + 0.15} ${mk.y - 0.33}) scale(0.0075)`" class="qc-mk-glyph" />
+				<path
+					:d="mdiLinkVariant"
+					:transform="`translate(${mk.x + 0.15} ${mk.y - 0.33}) scale(0.0075)`"
+					class="qc-mk-glyph" />
 			</template>
 			<template v-else-if="mk.kind === 'roll' || mk.kind === 'roll-budget'">
 				<circle
@@ -187,7 +190,10 @@
 					:cy="mk.y + 0.24"
 					r="0.15"
 					class="qc-mk-disc" />
-				<path :d="mdiCallMerge" :transform="`translate(${mk.x + 0.14} ${mk.y + 0.14}) scale(0.0085)`" class="qc-mk-glyph" />
+				<path
+					:d="mdiCallMerge"
+					:transform="`translate(${mk.x + 0.14} ${mk.y + 0.14}) scale(0.0085)`"
+					class="qc-mk-glyph" />
 			</template>
 			<template v-else-if="mk.kind === 'measure'">
 				<circle

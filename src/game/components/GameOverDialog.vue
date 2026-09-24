@@ -56,7 +56,9 @@
 				{{ t('quantumchess', 'New game') }}
 			</NcButton>
 			<NcButton :variant="primary === 'review' ? 'primary' : 'secondary'" @click="emit('review')">
-				{{ primary === 'review' ? t('quantumchess', 'Review with the coach') : t('quantumchess', 'Review game') }}
+				{{ primary === 'review'
+					? t('quantumchess', 'Review with the coach')
+					: t('quantumchess', 'Review game') }}
 			</NcButton>
 			<NcButton
 				v-if="nextLevel"
@@ -65,8 +67,13 @@
 				@click="emit('nextLevel')">
 				{{ t('quantumchess', 'Play level {n} ({name})', { n: nextLevel.level, name: nextLevel.name }) }}
 			</NcButton>
-			<NcButton :variant="primary === 'rematch' ? 'primary' : 'secondary'" data-test="rematch" @click="emit('rematch')">
-				{{ rematchState === 'pending' ? t('quantumchess', 'Rematch requested ✓') : t('quantumchess', 'Rematch') }}
+			<NcButton
+				:variant="primary === 'rematch' ? 'primary' : 'secondary'"
+				data-test="rematch"
+				@click="emit('rematch')">
+				{{ rematchState === 'pending'
+					? t('quantumchess', 'Rematch requested ✓')
+					: t('quantumchess', 'Rematch') }}
 			</NcButton>
 		</template>
 		<ConfettiFx v-if="celebrate" />
@@ -131,8 +138,14 @@ const headline = computed(() => {
 	return outcome.value === 'win' ? t('quantumchess', 'You won!') : t('quantumchess', 'You lost')
 })
 
-const reasonText = computed(() => reasonCopy(props.result.reason, { winner: props.result.winner, names: names.value, ...props.extra }))
-const score = computed(() => (props.result.winner === null ? '½ – ½' : (props.result.winner === 'w' ? '1 – 0' : '0 – 1')))
+const reasonText = computed(() => reasonCopy(props.result.reason, {
+	winner: props.result.winner,
+	names: names.value,
+	...props.extra,
+}))
+const score = computed(() => (props.result.winner === null
+	? '½ – ½'
+	: (props.result.winner === 'w' ? '1 – 0' : '0 – 1')))
 
 const ratingLine = computed(() => {
 	if (!props.ratingChange || !props.myColor) {
@@ -143,7 +156,11 @@ const ratingLine = computed(() => {
 	if (typeof d !== 'number' || typeof before !== 'number') {
 		return ''
 	}
-	return t('quantumchess', 'Rating {before} → {after} ({delta})', { before: before - d, after: before, delta: (d >= 0 ? '+' : '') + d })
+	return t(
+		'quantumchess',
+		'Rating {before} → {after} ({delta})',
+		{ before: before - d, after: before, delta: (d >= 0 ? '+' : '') + d },
+	)
 })
 
 const nextLevel = computed(() => {

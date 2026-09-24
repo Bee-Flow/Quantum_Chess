@@ -79,7 +79,12 @@ export function useBoardSelection({ st, moves, movable, canInteract }) {
 			return []
 		}
 		return moveTargets(
-			{ mode: mode.value, selection: selection.value, splitFirst: splitFirst.value, mergeSources: mergeSources.value },
+			{
+				mode: mode.value,
+				selection: selection.value,
+				splitFirst: splitFirst.value,
+				mergeSources: mergeSources.value,
+			},
 			{ state: st.value, byType: byType.value, locations: locations.value, occupant, partsOf, measureMove },
 		)
 	})

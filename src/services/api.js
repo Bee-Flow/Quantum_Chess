@@ -104,7 +104,8 @@ import { generateOcsUrl, generateUrl } from '@nextcloud/router'
  * A complete online game: a GameLive plus the start position, every move and the recent chat
  * (docs/development/api.md, "GameFull").
  *
- * @typedef {GameLive & {startState: import('../engine/types.js').EngineState|null, moves: MoveDTO[], chat: ChatDTO[]}} GameFull
+ * @typedef {GameLive & {startState: import('../engine/types.js').EngineState|null, moves: MoveDTO[],
+ *   chat: ChatDTO[]}} GameFull
  */
 
 /**
@@ -504,7 +505,9 @@ export const getTrainerProgress = async () => (await request('get', '/trainer/pr
  * @param {object} doc progress document
  * @return {Promise<object>} the merged document
  */
-export const saveTrainerProgress = async (doc) => (await request('put', '/trainer/progress', { data: { progress: doc } }))?.progress ?? {}
+export async function saveTrainerProgress(doc) {
+	return (await request('put', '/trainer/progress', { data: { progress: doc } }))?.progress ?? {}
+}
 
 /**
  * Store the in-app preferences.
@@ -512,7 +515,9 @@ export const saveTrainerProgress = async (doc) => (await request('put', '/traine
  * @param {object} prefs the whole preferences document
  * @return {Promise<object>} the stored document
  */
-export const savePreferences = async (prefs) => (await request('put', '/settings/preferences', { data: { preferences: prefs } }))?.preferences ?? prefs
+export async function savePreferences(prefs) {
+	return (await request('put', '/settings/preferences', { data: { preferences: prefs } }))?.preferences ?? prefs
+}
 
 // --- LLM opponents and the coach chat --------------------------------------------------------------------------------
 
@@ -538,7 +543,9 @@ export const getAiModels = (source) => request('get', '/ai/models', { params: { 
  * @param {{signal?: AbortSignal, timeout?: number}} [options] cancellation and timeout
  * @return {Promise<object>} {status: 'done', …} or {status: 'pending', taskId}
  */
-export const requestAiMove = (body, { signal, timeout } = {}) => request('post', '/ai/move', { data: body, signal, timeout })
+export function requestAiMove(body, { signal, timeout } = {}) {
+	return request('post', '/ai/move', { data: body, signal, timeout })
+}
 
 /**
  * Ask the LLM coach a question about a position.
@@ -547,7 +554,9 @@ export const requestAiMove = (body, { signal, timeout } = {}) => request('post',
  * @param {{signal?: AbortSignal, timeout?: number}} [options] cancellation and timeout
  * @return {Promise<object>} {status: 'done', …} or {status: 'pending', taskId}
  */
-export const requestCoach = (body, { signal, timeout } = {}) => request('post', '/ai/coach', { data: body, signal, timeout })
+export function requestCoach(body, { signal, timeout } = {}) {
+	return request('post', '/ai/coach', { data: body, signal, timeout })
+}
 
 /**
  * The state of a Nextcloud Assistant task.

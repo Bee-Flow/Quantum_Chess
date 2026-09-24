@@ -27,13 +27,31 @@ export function keyMoments(plies) {
 			.filter((r) => r.p.color === color && !r.p.forced && r.q.deltaPp >= MIN_ERROR_PP)
 			.sort((a, b) => b.q.deltaPp - a.q.deltaPp)
 			.slice(0, 3)
-			.map((r) => ({ ply: r.p.ply, kind: 'error', color, code: r.p.code, bestCode: r.p.bestCode, label: r.q.label, deltaPp: r.q.deltaPp, luckPp: r.q.luckPp })))
+			.map((r) => ({
+				ply: r.p.ply,
+				kind: 'error',
+				color,
+				code: r.p.code,
+				bestCode: r.p.bestCode,
+				label: r.q.label,
+				deltaPp: r.q.deltaPp,
+				luckPp: r.q.luckPp,
+			})))
 	}
 	const luck = rows
 		.filter((r) => Math.abs(r.q.luckPp) >= MIN_LUCK_PP)
 		.sort((a, b) => Math.abs(b.q.luckPp) - Math.abs(a.q.luckPp))
 		.slice(0, 2)
-		.map((r) => ({ ply: r.p.ply, kind: 'luck', color: r.p.color, code: r.p.code, bestCode: r.p.bestCode, label: r.q.luck ?? '', deltaPp: r.q.deltaPp, luckPp: r.q.luckPp }))
+		.map((r) => ({
+			ply: r.p.ply,
+			kind: 'luck',
+			color: r.p.color,
+			code: r.p.code,
+			bestCode: r.p.bestCode,
+			label: r.q.luck ?? '',
+			deltaPp: r.q.deltaPp,
+			luckPp: r.q.luckPp,
+		}))
 	const seen = new Set()
 	return [...errors, ...luck]
 		.sort((a, b) => a.ply - b.ply || (a.kind === 'error' ? -1 : 1))

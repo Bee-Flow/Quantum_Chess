@@ -73,7 +73,9 @@ export const SAVE_DELAY_MS = 500
 export function mergePreferences(stored) {
 	const out = {}
 	for (const [key, value] of Object.entries(PREFERENCE_DEFAULTS)) {
-		out[key] = Array.isArray(value) ? [...value] : (value !== null && typeof value === 'object' ? { ...value } : value)
+		out[key] = Array.isArray(value)
+			? [...value]
+			: (value !== null && typeof value === 'object' ? { ...value } : value)
 	}
 	if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
 		for (const [key, value] of Object.entries(stored)) {

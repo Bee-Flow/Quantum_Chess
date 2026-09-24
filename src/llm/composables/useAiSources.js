@@ -45,13 +45,21 @@ export function unavailableText(reason) {
 		case 'not_configured': return t('quantumchess', 'The AI provider is not configured yet.')
 		case 'no_key': return t('quantumchess', 'Add your own API key in the personal settings.')
 		case 'cap_reached': return t('quantumchess', 'Today’s AI limit is reached.')
-		default: return t('quantumchess', 'No AI source is available. An administrator can set one up in the Quantum Chess admin settings.')
+		default: return t(
+			'quantumchess',
+			'No AI source is available. An administrator can set one up in the Quantum Chess admin settings.',
+		)
 	}
 }
 
 const summary = features.ai ?? {}
 const acked = ref(Array.isArray(summary.noticeAcked) ? [...summary.noticeAcked] : [])
-const sources = ref(SOURCE_IDS.map((id) => ({ id, label: sourceLabel(id), available: summary[id] === true, reason: summary[id] === true ? null : 'not_configured' })))
+const sources = ref(SOURCE_IDS.map((id) => ({
+	id,
+	label: sourceLabel(id),
+	available: summary[id] === true,
+	reason: summary[id] === true ? null : 'not_configured',
+})))
 const defaultSource = ref(summary.default ?? null)
 const privacyNotice = ref('')
 let loaded = null

@@ -67,7 +67,10 @@ const speedEffective = computed(() => resolveAnimationSpeed(read('animationSpeed
 
 Object.defineProperty(boardPrefs, 'confirmMovesEffective', { enumerable: true, get: () => confirmEffective.value })
 Object.defineProperty(boardPrefs, 'animationSpeedEffective', { enumerable: true, get: () => speedEffective.value })
-Object.defineProperty(boardPrefs, 'speedFactor', { enumerable: true, get: () => SPEED_FACTORS[speedEffective.value] ?? 1 })
+Object.defineProperty(boardPrefs, 'speedFactor', {
+	enumerable: true,
+	get: () => SPEED_FACTORS[speedEffective.value] ?? 1,
+})
 Object.freeze(boardPrefs)
 
 /**

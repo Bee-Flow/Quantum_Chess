@@ -60,7 +60,9 @@
 			<span><i class="qc-graph__key qc-graph__key--inaccuracy" />{{ t('quantumchess', 'Inaccuracy') }}</span>
 			<span><i class="qc-graph__key qc-graph__key--mistake" />{{ t('quantumchess', 'Mistake') }}</span>
 			<span><i class="qc-graph__key qc-graph__key--blunder" />{{ t('quantumchess', 'Blunder') }}</span>
-			<span><i class="qc-graph__key qc-graph__key--roll" />{{ t('quantumchess', 'Roll: expected → result') }}</span>
+			<span><i class="qc-graph__key qc-graph__key--roll" />{{
+				t('quantumchess', 'Roll: expected → result')
+			}}</span>
 		</figcaption>
 	</figure>
 </template>
@@ -123,7 +125,9 @@ const rolls = computed(() => props.plies
 const dots = computed(() => props.plies
 	.map((p, i) => {
 		const label = qualityOfPly(p, props.quantum[i]).label
-		return ['inaccuracy', 'mistake', 'blunder', 'brilliant'].includes(label) ? { x: xOf(i + 1), y: yOf(p.realisedE), label } : null
+		return ['inaccuracy', 'mistake', 'blunder', 'brilliant'].includes(label)
+			? { x: xOf(i + 1), y: yOf(p.realisedE), label }
+			: null
 	})
 	.filter(Boolean))
 

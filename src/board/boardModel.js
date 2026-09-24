@@ -190,7 +190,8 @@ export function revealArrow(before, move, measurement) {
 		const to = ex.pieceAfter[0].square
 		return move.from.includes(to) && move.from.length === 1 ? null : { from: move.from[0], to }
 	}
-	if (measurement.key !== 'capture' && ex.targetPiece !== null && ex.targetPieceAfter.length === 1 && move.to.length === 1) {
+	if (measurement.key !== 'capture' && ex.targetPiece !== null && ex.targetPieceAfter.length === 1
+		&& move.to.length === 1) {
 		const to = ex.targetPieceAfter[0].square
 		return to === move.to[0] ? null : { from: move.to[0], to }
 	}
@@ -222,7 +223,9 @@ export function ringSegments(outcomes) {
 			key: o.key,
 			start,
 			length,
-			tone: o.key === 'capture' ? 'capture' : (o.key === 'move' ? 'move' : (o.key === 'miss' ? 'miss' : (i % 2 === 0 ? 'move' : 'miss'))),
+			tone: o.key === 'capture'
+				? 'capture'
+				: (o.key === 'move' ? 'move' : (o.key === 'miss' ? 'miss' : (i % 2 === 0 ? 'move' : 'miss'))),
 		}
 		start += length
 		return seg
@@ -257,7 +260,8 @@ export function travelPlan(before, after, move, { skipMover = false } = {}) {
 		let from
 		if (id === move.piece) {
 			from = move.type === 'merge'
-				? move.from.slice().sort((x, y) => (lb[id].find((l) => l.square === y)?.weight ?? 0) - (lb[id].find((l) => l.square === x)?.weight ?? 0))[0]
+				? move.from.slice().sort((x, y) => (lb[id].find((l) => l.square === y)?.weight ?? 0)
+					- (lb[id].find((l) => l.square === x)?.weight ?? 0))[0]
 				: move.from[0]
 		} else if (b.length > 0) {
 			from = lb[id].slice().sort((x, y) => y.weight - x.weight)[0].square

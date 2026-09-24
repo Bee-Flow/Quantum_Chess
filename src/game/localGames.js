@@ -92,7 +92,13 @@ function prune(index) {
 export function saveLocalGame(record) {
 	record.updatedAt = nowSeconds()
 	writeJson(RECORD_PREFIX + record.id, record)
-	const entry = { id: record.id, mode: record.mode, updatedAt: record.updatedAt, result: record.result ?? null, players: record.players }
+	const entry = {
+		id: record.id,
+		mode: record.mode,
+		updatedAt: record.updatedAt,
+		result: record.result ?? null,
+		players: record.players,
+	}
 	const index = listLocalGames().filter((e) => e.id !== record.id)
 	index.push(entry)
 	writeJson(INDEX_KEY, prune(index))

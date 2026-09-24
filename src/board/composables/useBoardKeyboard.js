@@ -34,7 +34,18 @@ const NAVIGATION_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Hom
  * @param {(text: string) => void} options.announce say something in the live region
  * @return {object} {focusSquare, hasFocus, keyboardPreview, onKeydown, onFocusIn, onFocusOut, onCellFocus, moveFocus}
  */
-export function useBoardKeyboard({ state, shown, orientation, hotkeys, input, anim, frame, focusCell, activate, announce }) {
+export function useBoardKeyboard({
+	state,
+	shown,
+	orientation,
+	hotkeys,
+	input,
+	anim,
+	frame,
+	focusCell,
+	activate,
+	announce,
+}) {
 	/** The square that holds the tab stop. */
 	const focusSquare = ref(defaultFocus())
 	/** The focus is inside the board. */
@@ -111,7 +122,8 @@ export function useBoardKeyboard({ state, shown, orientation, hotkeys, input, an
 			if (input.value.whatIf !== null) {
 				input.value.setWhatIf(null)
 			} else {
-				const s = [focusSquare.value, input.value.selection].find((x) => x !== null && input.value.isGhostPart(x))
+				const s = [focusSquare.value, input.value.selection]
+					.find((x) => x !== null && input.value.isGhostPart(x))
 				input.value.setWhatIf(s ?? null)
 			}
 			return true

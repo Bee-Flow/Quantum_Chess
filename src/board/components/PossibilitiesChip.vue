@@ -27,7 +27,12 @@
 		<!-- focusable, so the popover's focus trap has a tabbable node (the mini-boards are pictures) -->
 		<div class="qc-poss" tabindex="0">
 			<p class="qc-poss__title">
-				{{ n('quantumchess', 'This position could be %n chessboard:', 'This position could be %n different chessboards:', count) }}
+				{{ n(
+					'quantumchess',
+					'This position could be %n chessboard:',
+					'This position could be %n different chessboards:',
+					count,
+				) }}
 			</p>
 			<ul class="qc-poss__list">
 				<li v-for="item in list.items" :key="item.index" class="qc-poss__item">
@@ -37,7 +42,9 @@
 						:orientation="orientation"
 						:highlights="list.differing"
 						:label="t('quantumchess', 'Possibility with {p}', { p: item.text })" />
-					<span class="qc-poss__bar" aria-hidden="true"><span :style="{ width: Math.max(4, item.probability * 100) + '%' }" /></span>
+					<span class="qc-poss__bar" aria-hidden="true">
+						<span :style="{ width: Math.max(4, item.probability * 100) + '%' }" />
+					</span>
 					<span class="qc-poss__p">{{ item.text }}</span>
 				</li>
 			</ul>

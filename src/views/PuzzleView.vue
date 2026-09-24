@@ -53,7 +53,9 @@
 
 			<section class="qc-puzzle__card" aria-live="polite" data-test="puzzle-card">
 				<p class="qc-puzzle__prompt">
-					{{ puzzle.side === 'w' ? t('quantumchess', 'White to move.') : t('quantumchess', 'Black to move.') }}
+					{{ puzzle.side === 'w'
+						? t('quantumchess', 'White to move.')
+						: t('quantumchess', 'Black to move.') }}
 					{{ goalText }}
 				</p>
 				<NcNoteCard
@@ -88,8 +90,13 @@
 						@click="reset">
 						{{ t('quantumchess', 'Try again') }}
 					</NcButton>
-					<NcButton v-if="phase === 'solved' && otherKeys.length" data-test="replay-other" @click="toggleOther">
-						{{ otherIndex + 1 < otherKeys.length ? t('quantumchess', 'Replay the other result') : t('quantumchess', 'Back to what happened') }}
+					<NcButton
+						v-if="phase === 'solved' && otherKeys.length"
+						data-test="replay-other"
+						@click="toggleOther">
+						{{ otherIndex + 1 < otherKeys.length
+							? t('quantumchess', 'Replay the other result')
+							: t('quantumchess', 'Back to what happened') }}
 					</NcButton>
 					<NcButton
 						v-if="phase === 'solved' && next"

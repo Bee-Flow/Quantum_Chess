@@ -113,11 +113,17 @@ const hint = computed(() => {
 			if (i.selection === null) {
 				return t('quantumchess', 'Choose a knight, bishop, rook or queen to split.')
 			}
-			return i.splitFirst === null ? t('quantumchess', 'Choose the first square.') : t('quantumchess', 'Choose the second square.')
+			return i.splitFirst === null
+				? t('quantumchess', 'Choose the first square.')
+				: t('quantumchess', 'Choose the second square.')
 		case 'merge':
-			return i.mergeSources.length < 2 ? t('quantumchess', 'Choose two parts of a ghost.') : t('quantumchess', 'Choose where to merge.')
+			return i.mergeSources.length < 2
+				? t('quantumchess', 'Choose two parts of a ghost.')
+				: t('quantumchess', 'Choose where to merge.')
 		case 'measure':
-			return i.selection === null ? t('quantumchess', 'Choose a ghost to measure.') : t('quantumchess', 'Click a part again to measure.')
+			return i.selection === null
+				? t('quantumchess', 'Choose a ghost to measure.')
+				: t('quantumchess', 'Click a part again to measure.')
 		default:
 			return ''
 	}
