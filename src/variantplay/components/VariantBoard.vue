@@ -6,7 +6,10 @@
 <!--
   The board of every chess variant, drawn in SVG from the variant's layout: square cells, hexagons, the intersections of
   xiangqi, and several boards side by side or in a grid (3D, 4D, bughouse, the multiverse). Ghost parts are faded and
-  show their percentage. Squares that the viewer cannot see (fog of war, Kriegspiel) are covered.
+  show their percentage. Squares that the viewer cannot see are covered by fog (darker, hatched, keeping their light or
+  dark shade), or, with the variant's `hiddenStyle: 'plain'` (Kriegspiel), look like ordinary empty squares.
+  `layout.lines` are drawn under the cells (the xiangqi grid), `layout.outlines` above them (the hill of King of the
+  Hill). A `layout.focus` ({ x, y, zoom, key }) zooms in on a point; the board recentres only when its key changes.
 -->
 <template>
 	<div class="qc-vboard-wrap">
@@ -52,6 +55,19 @@
 					color-interpolation-filters="sRGB">
 					<feColorMatrix type="matrix" :values="tint.matrix" />
 				</filter>
+				<pattern
+					:id="hatchId"
+					patternUnits="userSpaceOnUse"
+					width="0.18"
+					height="0.18"
+					patternTransform="rotate(45)">
+					<line
+						x1="0"
+						y1="0"
+						x2="0"
+						y2="0.18"
+						class="qc-vboard__hatch-line" />
+				</pattern>
 			</defs>
 			<rect
 				v-for="(a, i) in areas"
@@ -110,6 +126,28 @@
 					:cy="c.cy"
 					:r="c.w * 0.45"
 					class="qc-vboard__shape qc-vboard__shape--point" />
+				<template v-if="c.fog">
+					<rect
+						v-if="c.shape === 'rect'"
+						:x="c.cx - c.w / 2"
+						:y="c.cy - c.h / 2"
+						:width="c.w"
+						:height="c.h"
+						:fill="`url(#${hatchId})`"
+						class="qc-vboard__hatch" />
+					<polygon
+						v-else-if="c.shape === 'hex'"
+						:points="hexPoints(c)"
+						:fill="`url(#${hatchId})`"
+						class="qc-vboard__hatch" />
+					<circle
+						v-else
+						:cx="c.cx"
+						:cy="c.cy"
+						:r="c.w * 0.45"
+						:fill="`url(#${hatchId})`"
+						class="qc-vboard__hatch" />
+				</template>
 				<circle
 					v-if="marks[c.sq]?.includes('target')"
 					:cx="c.cx"
@@ -125,6 +163,14 @@
 						:spin="pc.spin" />
 				</g>
 			</g>
+			<line
+				v-for="(l, i) in outlines"
+				:key="'o' + i"
+				:x1="l.x1"
+				:y1="l.y1"
+				:x2="l.x2"
+				:y2="l.y2"
+				class="qc-vboard__outline" />
 			<text
 				v-for="(l, i) in labels"
 				:key="'t' + i"
@@ -169,6 +215,7 @@ const props = defineProps({
 const emit = defineEmits(['square'])
 
 const uid = 'vb' + Math.floor(Math.random() * 1e9).toString(36)
+const hatchId = 'qc-hatch-' + uid
 
 const theme = computed(() => resolveBoardTheme(boardPrefs.boardTheme, { highContrast: isHighContrast() }))
 const topo = computed(() => props.variant.layoutOf ? props.variant.layoutOf(props.state) : props.variant.topology)
@@ -215,8 +262,21 @@ function setZoom(z) {
 	}
 }
 
-// the layout may ask to start zoomed in on a point (the present of the multiverse)
-watch(() => topo.value.layout.focus, (focus) => {
+/**
+ * The identity of a focus: its `key` when it has one, else its point and zoom. A layout may return a new but equal
+ * focus object on every state (the multiverse does), which must not undo the player's own zoom and pan.
+ *
+ * @param {object|null|undefined} focus the layout's focus
+ * @return {string|null}
+ */
+function focusKey(focus) {
+	return focus ? (focus.key ?? JSON.stringify([focus.x, focus.y, focus.zoom])) : null
+}
+
+// the layout may ask to start zoomed in on a point (the present of the multiverse, the home boards of 4D chess): at
+// once, and again only when the focus really changes
+watch(() => focusKey(topo.value.layout.focus), () => {
+	const focus = topo.value.layout.focus
 	if (focus && zoomable.value) {
 		const [x, y] = rot(focus.x, focus.y)
 		centre.value = { x, y }
@@ -339,6 +399,9 @@ const tints = computed(() => props.variant.sides.map((s, i) => {
 
 const view = computed(() => boardView(props.state, topo.value.size))
 
+/** Hidden squares look like ordinary squares (`hiddenStyle: 'plain'`) instead of fog. */
+const plain = computed(() => props.variant.hiddenStyle === 'plain')
+
 const cells = computed(() => {
 	const V = props.variant
 	return topo.value.cells.map((c) => {
@@ -348,7 +411,7 @@ const cells = computed(() => {
 		const h = turned.value ? c.w : c.h
 		const size = Math.min(w, h) * (c.shape === 'hex' ? 0.84 : c.shape === 'point' ? 0.9 : 0.92)
 		const hiddenHere = props.hidden?.has(c.sq) ?? false
-		const occupants = view.value[c.sq].filter((o) => !hiddenHere || o.side === props.viewer)
+		const occupants = (view.value[c.sq] ?? []).filter((o) => !hiddenHere || o.side === props.viewer)
 		const shown = occupants.slice(0, 2)
 		const pieces = shown.map((o, k) => {
 			const small = shown.length > 1
@@ -364,17 +427,27 @@ const cells = computed(() => {
 				name: typeName(V, o.type),
 			}
 		})
-		return { ...c, cx, cy, w, h, size, pieces, hidden: hiddenHere, name: topo.value.names[c.sq] }
+		const fog = hiddenHere && !plain.value
+		return { ...c, cx, cy, w, h, size, pieces, hidden: hiddenHere, fog, name: topo.value.names[c.sq] }
 	})
 })
 
 const boards = computed(() => (topo.value.layout.boards ?? []).map(rotRect))
 const areas = computed(() => (topo.value.layout.areas ?? []).map(rotRect))
-const lines = computed(() => (topo.value.layout.lines ?? []).map((l) => {
+/**
+ * Rotate a line segment.
+ *
+ * @param {object} l segment `{ x1, y1, x2, y2 }`
+ * @return {object}
+ */
+function rotLine(l) {
 	const [x1, y1] = rot(l.x1, l.y1)
 	const [x2, y2] = rot(l.x2, l.y2)
 	return { x1, y1, x2, y2 }
-}))
+}
+
+const lines = computed(() => (topo.value.layout.lines ?? []).map(rotLine))
+const outlines = computed(() => (topo.value.layout.outlines ?? []).map(rotLine))
 const labels = computed(() => (topo.value.layout.labels ?? []).map((l) => {
 	const [x, y] = rot(l.x, l.y)
 	return { ...l, x, y }
@@ -408,7 +481,7 @@ function cellClasses(c) {
 	for (const m of props.marks[c.sq] ?? []) {
 		out.push('qc-vboard__cell--' + m)
 	}
-	if (c.hidden) {
+	if (c.fog) {
 		out.push('qc-vboard__cell--fog')
 	}
 	return out
@@ -529,7 +602,39 @@ function cellLabel(c) {
 }
 
 .qc-vboard__cell--fog .qc-vboard__shape {
-	fill: color-mix(in srgb, var(--qc-sq-dark) 45%, #4b4f58);
+	fill: color-mix(in srgb, var(--qc-sq-light) 40%, #5b6472);
+}
+
+.qc-vboard__cell--fog.qc-vboard__cell--dark .qc-vboard__shape,
+.qc-vboard__cell--fog.qc-vboard__cell--hilldark .qc-vboard__shape {
+	fill: color-mix(in srgb, var(--qc-sq-dark) 40%, #5b6472);
+}
+
+.qc-vboard__cell--fog .qc-vboard__shape--point {
+	fill: color-mix(in srgb, transparent 40%, #5b6472);
+}
+
+.qc-vboard__hatch {
+	pointer-events: none;
+}
+
+.qc-vboard__hatch-line {
+	stroke: #ffffff;
+	stroke-opacity: 0.2;
+	stroke-width: 0.05;
+}
+
+// near-black: at least 5 : 1 against the light and dark squares of every board theme
+.qc-vboard__outline {
+	stroke: #1b1b1b;
+	stroke-width: 0.05;
+	stroke-linecap: round;
+	pointer-events: none;
+}
+
+[data-board-theme='contrast'] .qc-vboard__outline {
+	stroke: #000000;
+	stroke-width: 0.07;
 }
 
 .qc-vboard__dot {

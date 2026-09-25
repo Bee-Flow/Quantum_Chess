@@ -4,7 +4,10 @@
  */
 
 /**
- * The texts of variant games: outcome labels, follow-up rolls, results and the rules shared by every variant.
+ * The texts of variant games: outcome labels, follow-up rolls, results, the lines a variant adds to a move record,
+ * option values, move codes and the rules shared by every variant. A variant may add its own texts with the optional
+ * hooks `noteText(note)`, `reasonText(reason)`, `infoText(record, viewer)` and `codeText(code)`, and describe option
+ * values with `options[i].describe(value)`.
  */
 
 import { n, t } from '@nextcloud/l10n'
@@ -28,17 +31,19 @@ export function percent(p) {
 }
 
 /**
- * The label of an outcome key.
+ * The label of an outcome key. A drop (a code with `@`) reads "Dropped", and its miss says why.
  *
  * @param {string} key miss, move, capture, split, gone or a square name
+ * @param {string} [code] the move code
  * @return {string}
  */
-export function outcomeText(key) {
+export function outcomeText(key, code = '') {
+	const drop = typeof code === 'string' && code.includes('@')
 	switch (key) {
 		case 'miss':
-			return t('quantumchess', 'Missed')
+			return drop ? t('quantumchess', 'Missed: the square was taken') : t('quantumchess', 'Missed')
 		case 'move':
-			return t('quantumchess', 'Moved')
+			return drop ? t('quantumchess', 'Dropped') : t('quantumchess', 'Moved')
 		case 'capture':
 			return t('quantumchess', 'Captured')
 		case 'split':
@@ -51,13 +56,18 @@ export function outcomeText(key) {
 }
 
 /**
- * The label of a follow-up roll note (`solid:…` or `end:…`).
+ * The label of a follow-up roll note (`solid:…` or `end:…`). The variant's own `noteText(note)` is asked first (for
+ * example a three-check counter roll); a string from it wins.
  *
  * @param {object} V variant
  * @param {string} note note
  * @return {string}
  */
 export function noteText(V, note) {
+	const own = V.noteText ? V.noteText(note) : null
+	if (typeof own === 'string' && own) {
+		return own
+	}
 	if (note.startsWith('solid:')) {
 		return t('quantumchess', 'A piece that is always solid was settled')
 	}
@@ -94,6 +104,8 @@ export function reasonText(V, reason) {
 			return t('quantumchess', 'the move limit')
 		case 'noMoves':
 			return t('quantumchess', 'no legal move')
+		case 'bareKings':
+			return t('quantumchess', 'only the two kings are left')
 		default:
 			return reason
 	}
@@ -142,7 +154,89 @@ export function sharedRules() {
 			'Kings and pawns (and the pieces the variant names) are always solid: their moves are settled at once.',
 		),
 		t('quantumchess', 'Measure: spend your turn to find out where one of your ghosts really is.'),
+		t(
+			'quantumchess',
+			'Castling and en passant are only possible when they are possible in every possibility, and they are never rolled.',
+		),
 		t('quantumchess', 'If the game might be over in some possibilities but not in others, a roll decides.'),
 		t('quantumchess', 'Each side has a budget of 8 possible arrangements of its pieces.'),
 	]
+}
+
+/**
+ * The lines a move record adds to the move list and the last-move box: the variant's own lines
+ * (`infoText(record, viewer)`: announcements, "Blue is out", a check mark) and one line per side that could not move
+ * and sat out.
+ *
+ * @param {object} V variant
+ * @param {object} record history record
+ * @param {number} viewer the side whose view is shown
+ * @return {string[]}
+ */
+export function recordLines(V, record, viewer) {
+	const out = []
+	const own = V.infoText ? V.infoText(record, viewer) : null
+	if (Array.isArray(own)) {
+		out.push(...own.filter((line) => typeof line === 'string' && line))
+	}
+	for (const side of record.skipped ?? []) {
+		out.push(t('quantumchess', '{side} cannot move and sits out', { side: sideName(V, side) }))
+	}
+	return out
+}
+
+/**
+ * The value of a game option for display: the option's own `describe(value)` when it has one, the label of the
+ * choice, yes / no, or the number.
+ *
+ * @param {object} option option declaration
+ * @param {string|number|boolean} value the value
+ * @return {string}
+ */
+export function optionValueText(option, value) {
+	const own = option.describe ? option.describe(value) : null
+	if (typeof own === 'string' && own) {
+		return own
+	}
+	if (option.type === 'choice') {
+		const choice = option.values?.find((c) => c.id === value)
+		if (choice) {
+			return typeof choice.label === 'function' ? choice.label() : String(choice.label)
+		}
+	}
+	if (option.type === 'boolean') {
+		return value ? t('quantumchess', 'Yes') : t('quantumchess', 'No')
+	}
+	return String(value)
+}
+
+/**
+ * One line per option of a game: "Start position (0–959): RNBQKBNR".
+ *
+ * @param {object} V variant
+ * @param {object} options the option values of the game
+ * @return {string[]}
+ */
+export function optionLines(V, options = {}) {
+	return (V.options ?? []).map((o) => t('quantumchess', '{option}: {value}', {
+		option: typeof o.label === 'function' ? o.label() : String(o.label ?? o.id),
+		value: optionValueText(o, options[o.id] ?? o.default),
+	}))
+}
+
+/**
+ * A move code for the move list: the variant's own `codeText(code)` first; otherwise a drop of a one-letter piece
+ * type is written with a capital letter (`p@e4` → `P@e4`) and every other code as stored.
+ *
+ * @param {object} V variant
+ * @param {string} code move code
+ * @return {string}
+ */
+export function codeText(V, code) {
+	const own = V.codeText ? V.codeText(code) : null
+	if (typeof own === 'string' && own) {
+		return own
+	}
+	const m = /^([a-z])@(.+)$/.exec(code)
+	return m ? m[1].toUpperCase() + '@' + m[2] : code
 }

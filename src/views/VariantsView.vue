@@ -5,7 +5,8 @@
 
 <!--
   The chess variants (route /variants): the catalogue by category, the variant games on this device, and the New game
-  dialog of a variant (opponent, level, side and the variant's options).
+  dialog of a variant (opponent, level, side and the variant's options; an option may describe its value, for example
+  the back rank of a Chess960 start position).
 -->
 <template>
 	<div class="qc-variants">
@@ -148,6 +149,13 @@
 							{{ t('quantumchess', 'Random') }}
 						</NcButton>
 					</div>
+					<p
+						v-if="describeOption(o)"
+						class="qc-variants__describe"
+						aria-live="polite"
+						:data-test="'option-describe-' + o.id">
+						{{ describeOption(o) }}
+					</p>
 				</fieldset>
 				<NcCheckboxRadioSwitch
 					v-if="setup.opponent === 'local' && !setup.variant.hidden"
@@ -215,6 +223,25 @@ function randomInt(min, max) {
 }
 
 /**
+ * The option's own description of the value chosen in the dialog (`describe(value)`), or an empty string.
+ *
+ * @param {object} o option declaration
+ * @return {string}
+ */
+function describeOption(o) {
+	if (!o.describe || !setup.value) {
+		return ''
+	}
+	const raw = setup.value.options[o.id]
+	const value = o.type === 'number' ? Number.parseInt(raw, 10) : raw
+	if (o.type === 'number' && !(Number.isInteger(value) && value >= o.min && value <= o.max)) {
+		return ''
+	}
+	const text = o.describe(value)
+	return typeof text === 'string' ? text : ''
+}
+
+/**
  * Open the New game dialog of a variant.
  *
  * @param {object} entry catalogue entry
@@ -236,7 +263,8 @@ async function openSetup(entry) {
 			? String(o.random ? randomInt(o.min, o.max) : o.default)
 			: o.default
 	}
-	if (setup.value?.entry === entry) {
+	// the dialog is still open for this variant (compare ids: the ref holds a reactive copy of the entry)
+	if (setup.value?.entry.id === entry.id) {
 		setup.value = { ...setup.value, variant: V, options }
 	}
 }
@@ -403,6 +431,11 @@ function remove(id) {
 	display: flex;
 	align-items: flex-end;
 	gap: 8px;
+}
+
+.qc-variants__describe {
+	margin: 4px 0 0;
+	color: var(--color-text-maxcontrast);
 }
 
 .qc-variants__buttons {

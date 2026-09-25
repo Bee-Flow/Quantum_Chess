@@ -12,11 +12,13 @@
 import { t } from '@nextcloud/l10n'
 import {
 	castlingMoves,
+	clearEnPassant,
 	orthodoxAfterMove,
 	orthodoxTypes,
 	pawnExtras,
 	standardBoard,
 	standardSetup,
+	unifyCastling,
 } from './orthodox.js'
 
 /** The sides of a two-sided game. */
@@ -34,10 +36,11 @@ export function whiteBlack() {
  * @param {string} [opts.back] back rank from file a (default rnbqkbnr)
  * @param {boolean} [opts.royalKing] whether the king is royal (default true)
  * @param {string[]} [opts.promoteTo] promotion choices
+ * @param {object} [opts.boardOpts] options for `standardBoard` and `rectTopology` (`shade`, `layout`, ...)
  * @return {object}
  */
-export function orthodoxSpec({ back = 'rnbqkbnr', royalKing = true, promoteTo } = {}) {
-	const board = standardBoard(8, 8)
+export function orthodoxSpec({ back = 'rnbqkbnr', royalKing = true, promoteTo, boardOpts } = {}) {
+	const board = standardBoard(8, 8, boardOpts)
 	const spec = {
 		sides: whiteBlack(),
 		topology: board.topology,
@@ -54,6 +57,14 @@ export function orthodoxSpec({ back = 'rnbqkbnr', royalKing = true, promoteTo } 
 		},
 		afterMove(next, m) {
 			orthodoxAfterMove(spec, next, m)
+		},
+		// A world where the move did not happen (or a Measure turn) still ends the one-ply en passant right.
+		applyMiss(b) {
+			return clearEnPassant(b)
+		},
+		// A castling right is kept only while every world has it (king and rook 100 % on their squares).
+		unifyWorlds(bs) {
+			return unifyCastling(bs)
 		},
 	}
 	// defineVariant completes this object in place, so the hooks above see the finished variant (orient, enemies)

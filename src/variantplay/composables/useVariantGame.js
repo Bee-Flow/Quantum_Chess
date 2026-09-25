@@ -5,8 +5,13 @@
 
 /**
  * One variant game on this device: loading and saving the record, the move modes (Move, Split, Merge, Measure, drops),
- * the confirmation of moves that roll, promotions, the computer's turns, undo, and the hand-over curtain of the
- * hidden-information variants in pass & play.
+ * the confirmation of moves that roll, promotions, the computer's turns, undo, and the hand-over of the
+ * hidden-information variants in pass & play (first "Your move" with the mover's view, then the curtain).
+ *
+ * Hidden information: the Split, Merge and Measure modes choose their squares on `V.ownView(state, viewer)` when the
+ * variant has one (the board as the player knows it), but every attempt is decided on the real state. With
+ * `V.umpire` an attempt is binding (no odds preview) and the results show no odds. While a hidden game runs there is
+ * no undo and no danger line.
  */
 
 import { computed, markRaw, ref, shallowRef } from 'vue'
@@ -17,13 +22,15 @@ import {
 	legalMoves,
 	loadVariant,
 	mergesFrom,
+	mustCapture,
 	outcomes,
-	parseCode,
 	pieceLocations,
 	royalDanger,
 	splitCode,
 	splitTargets,
 } from '../../variants/index.js'
+import { lastMoveSquares, sidePieceAt } from '../marks.js'
+import { needsConfirmation, refusalKind, resignResult } from '../panel.js'
 import { loadVariantGame, saveVariantGame } from '../variantGames.js'
 
 /**
@@ -56,6 +63,10 @@ export function useVariantGame(id) {
 	const thinking = ref(false)
 	const notice = ref(null)
 	const curtain = ref(false)
+	/** Step 1 of the hidden hand-over: `{ side, code, key }` of the move just played, shown with the mover's view. */
+	const handover = ref(null)
+	/** The codes the umpire refused since the turn began (Kriegspiel); not saved. */
+	const refused = ref([])
 	const flipped = ref(false)
 	let controller = null
 
@@ -64,10 +75,16 @@ export function useVariantGame(id) {
 	const isHumanTurn = computed(() => Boolean(state.value && !state.value.result
 		&& players.value[state.value.turn]?.kind === 'human'))
 
-	/** The side whose view is shown: the only human, or in pass & play the side to move. */
+	/**
+	 * The side whose view is shown: the only human, or in pass & play the side to move (the mover until the device is
+	 * passed, in hidden games).
+	 */
 	const viewer = computed(() => {
 		if (!state.value) {
 			return 0
+		}
+		if (handover.value) {
+			return handover.value.side
 		}
 		if (humanSides.value.length === 1) {
 			return humanSides.value[0]
@@ -102,6 +119,26 @@ export function useVariantGame(id) {
 	})
 
 	const moves = computed(() => (V.value && state.value ? candidateMoves(V.value, state.value) : []))
+
+	/** Whether a hidden-information game is running (no undo, no danger line, the other budgets unknown). */
+	const secret = computed(() => Boolean(V.value?.hidden && state.value && !state.value.result))
+
+	/**
+	 * The state as the viewer knows it (`V.ownView`), computed once per state and viewer: it rebuilds every world, and
+	 * the move tables are cached per state object. Without the hook, the real state.
+	 */
+	const own = computed(() => {
+		if (!V.value || !state.value) {
+			return null
+		}
+		return V.value.ownView && !state.value.result ? V.value.ownView(state.value, viewer.value) : state.value
+	})
+
+	/** Whether the side to move must capture (compulsory capture): Split and Measure are not allowed then. */
+	const compulsory = computed(() => Boolean(V.value && state.value && mustCapture(V.value, state.value)))
+
+	const canUndo = computed(() => Boolean(record.value?.moves.length && !thinking.value && !secret.value
+		&& !handover.value))
 
 	/** Clear the selection and every half-made move. */
 	function clearSelection() {
@@ -139,24 +176,29 @@ export function useVariantGame(id) {
 			return
 		}
 		const index = res.outcomes.indexOf(res.branch)
-		lastRoll.value = res.outcomes.length > 1 || res.branch.rolled
+		const mover = state.value.turn
+		// with an umpire every own move gets the same result box: whether it rolled is hidden information
+		lastRoll.value = res.outcomes.length > 1 || res.branch.rolled || V.value.umpire
 			? {
 					code,
-					side: state.value.turn,
+					side: mover,
 					key: res.branch.key,
 					notes: res.branch.notes,
 					p: res.branch.weight / 16777216,
+					rolled: res.branch.rolled,
 				}
 			: null
 		pending.value = null
 		notice.value = null
+		refused.value = []
 		clearSelection()
 		commit(res.state, [...record.value.moves, { code, i: index }])
-		afterChange()
+		afterChange({ side: mover, code, key: res.branch.key })
 	}
 
 	/**
-	 * Try a move: illegal moves get a notice (the umpire's "no" in Kriegspiel), rolled moves wait for confirmation.
+	 * Try a move on the real state: a refused attempt gets a notice (the umpire's "no" when the player could not know
+	 * it), a move that rolls waits for confirmation, except with an umpire, where an attempt is binding.
 	 *
 	 * @param {string} code move code
 	 */
@@ -164,10 +206,14 @@ export function useVariantGame(id) {
 		const outs = outcomes(V.value, state.value, code)
 		clearSelection()
 		if (!outs) {
-			notice.value = { kind: 'illegal', code }
+			const kind = refusalKind(V.value, own.value, code)
+			notice.value = { kind, code }
+			if (V.value.umpire && !refused.value.includes(code)) {
+				refused.value = [...refused.value, code]
+			}
 			return
 		}
-		if (outs.length > 1) {
+		if (needsConfirmation(V.value, outs)) {
 			pending.value = { code, outcomes: outs }
 			return
 		}
@@ -193,15 +239,15 @@ export function useVariantGame(id) {
 	 * @param {number} sq square
 	 */
 	function click(sq) {
-		if (!isHumanTurn.value || curtain.value || pending.value || thinking.value) {
+		if (!isHumanTurn.value || curtain.value || handover.value || pending.value || thinking.value) {
 			return
 		}
 		notice.value = null
 		const Vv = V.value
-		const s = state.value
 		if (mode.value === 'measure') {
 			const code = '?' + Vv.topology.names[sq]
-			if (legalMoves(Vv, s).some((m) => m.type === 'measure' && pieceAt(m.from[0]) === pieceAt(sq))) {
+			const id = pieceAt(sq)
+			if (id >= 0 && legalMoves(Vv, own.value).some((m) => m.type === 'measure' && pieceAt(m.from[0]) === id)) {
 				attempt(code)
 			} else {
 				notice.value = { kind: 'noMeasure' }
@@ -249,18 +295,14 @@ export function useVariantGame(id) {
 	}
 
 	/**
-	 * The id of the side to move's piece on a square in the first world where one stands there.
+	 * The id of the side to move's piece on a square in the first world where one stands there (on the own view), or
+	 * -1. Enemy pieces are never returned, so a selection cannot mark the parts of an enemy ghost.
 	 *
 	 * @param {number} sq square
 	 * @return {number}
 	 */
 	function pieceAt(sq) {
-		for (const { b } of state.value.worlds) {
-			if (b.board[sq] >= 0) {
-				return b.board[sq]
-			}
-		}
-		return -1
+		return sidePieceAt(own.value, sq, state.value.turn)
 	}
 
 	/**
@@ -271,14 +313,14 @@ export function useVariantGame(id) {
 	function clickSplit(sq) {
 		const [f, t1] = sel.value
 		if (f === undefined) {
-			if (splitTargets(V.value, state.value, sq).length >= 2) {
+			if (splitTargets(V.value, own.value, sq).length >= 2) {
 				sel.value = [sq]
 			} else {
 				notice.value = { kind: 'noSplit' }
 			}
 			return
 		}
-		const targets = splitTargets(V.value, state.value, f)
+		const targets = splitTargets(V.value, own.value, f)
 		if (sq === f || !targets.includes(sq)) {
 			clearSelection()
 			return
@@ -302,14 +344,14 @@ export function useVariantGame(id) {
 	function clickMerge(sq) {
 		const [f1, f2] = sel.value
 		if (f1 === undefined) {
-			if (mergesFrom(V.value, state.value, sq).length) {
+			if (mergesFrom(V.value, own.value, sq).length) {
 				sel.value = [sq]
 			} else {
 				notice.value = { kind: 'noMerge' }
 			}
 			return
 		}
-		const list = mergesFrom(V.value, state.value, f1)
+		const list = mergesFrom(V.value, own.value, f1)
 		if (f2 === undefined) {
 			if (list.some((m) => m.from.includes(sq) && sq !== f1)) {
 				sel.value = [f1, sq]
@@ -332,7 +374,7 @@ export function useVariantGame(id) {
 	 * @param {string} type piece type
 	 */
 	function chooseDrop(type) {
-		if (!isHumanTurn.value) {
+		if (!isHumanTurn.value || handover.value) {
 			return
 		}
 		mode.value = 'move'
@@ -346,6 +388,9 @@ export function useVariantGame(id) {
 	 * @param {string} m move, split, merge or measure
 	 */
 	function setMode(m) {
+		if (compulsory.value && (m === 'split' || m === 'measure')) {
+			return
+		}
 		mode.value = m
 		clearSelection()
 		notice.value = null
@@ -363,11 +408,7 @@ export function useVariantGame(id) {
 		}
 		const last = state.value.history[state.value.history.length - 1]
 		if (last && !(V.value.hidden && last.side !== viewer.value)) {
-			const mv = parseCode(V.value, last.code)
-			const sample = mv?.type === 'move'
-				? legalFromHistory(last.code)
-				: mv
-			for (const s of [...(sample?.from ?? []), ...(sample?.to ?? [])]) {
+			for (const s of lastMoveSquares(V.value, last)) {
 				add(s, 'last')
 			}
 		}
@@ -377,14 +418,14 @@ export function useVariantGame(id) {
 		if (sel.value.length && mode.value !== 'split') {
 			const id = pieceAt(sel.value[0])
 			if (id >= 0) {
-				for (const l of pieceLocations(state.value, id)) {
+				for (const l of pieceLocations(own.value, id)) {
 					if (l.sq >= 0 && !sel.value.includes(l.sq)) {
 						add(l.sq, 'part')
 					}
 				}
 			}
 		}
-		if (!isHumanTurn.value) {
+		if (!isHumanTurn.value || handover.value) {
 			return out
 		}
 		if (dropType.value) {
@@ -400,13 +441,13 @@ export function useVariantGame(id) {
 				}
 			}
 		} else if (mode.value === 'split' && sel.value.length) {
-			for (const t of splitTargets(V.value, state.value, sel.value[0])) {
+			for (const t of splitTargets(V.value, own.value, sel.value[0])) {
 				if (!sel.value.includes(t)) {
 					add(t, 'target')
 				}
 			}
 		} else if (mode.value === 'merge' && sel.value.length) {
-			const list = mergesFrom(V.value, state.value, sel.value[0])
+			const list = mergesFrom(V.value, own.value, sel.value[0])
 			if (sel.value.length === 1) {
 				for (const m of list) {
 					for (const f of m.from) {
@@ -426,44 +467,46 @@ export function useVariantGame(id) {
 		return out
 	})
 
-	/**
-	 * From and to squares of an ordinary move code, as far as the code tells them.
-	 *
-	 * @param {string} code move code
-	 * @return {{from: number[], to: number[]}|null}
-	 */
-	function legalFromHistory(code) {
-		const topo = V.value.topology
-		const at = code.indexOf('@')
-		if (at >= 0) {
-			return { from: [], to: [topo.byName(code.slice(at + 1))] }
-		}
-		const [a, b] = code.split('=')[0].split('-')
-		if (b === undefined) {
-			return null
-		}
-		return { from: [topo.byName(a)], to: [topo.byName(b)] }
-	}
-
+	/** The chance that the viewer's king can be taken; never computed while a hidden game runs (it would leak). */
 	const danger = computed(() => {
-		if (!V.value || !state.value || state.value.result) {
+		if (!V.value || !state.value || state.value.result || secret.value) {
 			return 0
 		}
 		return royalDanger(V.value, state.value, viewer.value)
 	})
 
-	/** Continue after a move: the hand-over curtain, the computer's turn. */
-	function afterChange() {
+	/**
+	 * Continue after a move: the hand-over of hidden pass & play (first the mover's "Your move" box, then the
+	 * curtain), or the computer's turn.
+	 *
+	 * @param {object} [played] the move just played by a player: `{ side, code, key }`
+	 */
+	function afterChange(played = null) {
 		const s = state.value
 		if (!s || s.result) {
 			return
+		}
+		if (compulsory.value && (mode.value === 'split' || mode.value === 'measure')) {
+			mode.value = 'move'
 		}
 		const p = players.value[s.turn]
 		if (p?.kind === 'computer') {
 			runComputer()
 		} else if (V.value.hidden && humanSides.value.length > 1) {
-			curtain.value = true
+			if (played && players.value[played.side]?.kind === 'human') {
+				handover.value = played
+			} else {
+				curtain.value = true
+			}
 		}
+	}
+
+	/** Step 2 of the hidden hand-over: the mover passes the device, the curtain covers the board. */
+	function passDevice() {
+		handover.value = null
+		refused.value = []
+		lastRoll.value = null
+		curtain.value = true
 	}
 
 	/** Let the computer play the side to move. */
@@ -489,7 +532,7 @@ export function useVariantGame(id) {
 
 	/** Take back the last move of the human (and the computer's answers after it). */
 	function undo() {
-		if (!record.value?.moves.length || thinking.value) {
+		if (!canUndo.value) {
 			return
 		}
 		const list = record.value.moves.slice()
@@ -523,15 +566,11 @@ export function useVariantGame(id) {
 	/** Resign for the side to move (or the only human). */
 	function resign() {
 		const s = state.value
-		if (!s || s.result) {
+		if (!s || s.result || handover.value || curtain.value) {
 			return
 		}
 		const loser = humanSides.value.length === 1 ? humanSides.value[0] : s.turn
-		const Vv = V.value
-		const winners = Vv.sides.map((x, i) => i).filter((i) => Vv.enemies(loser, i))
-		const result = winners.length === 1
-			? { winner: winners[0], reason: 'resign' }
-			: { winner: null, winners, reason: 'resign' }
+		const result = resignResult(V.value, s, loser)
 		controller?.abort()
 		thinking.value = false
 		commit({ ...s, result }, record.value.moves)
@@ -569,6 +608,8 @@ export function useVariantGame(id) {
 		thinking,
 		notice,
 		curtain,
+		handover,
+		refused,
 		flipped,
 		players,
 		humanSides,
@@ -577,6 +618,10 @@ export function useVariantGame(id) {
 		rotation,
 		hidden,
 		moves,
+		own,
+		secret,
+		compulsory,
+		canUndo,
 		marks,
 		danger,
 		load,
@@ -589,6 +634,7 @@ export function useVariantGame(id) {
 		chooseDrop,
 		undo,
 		resign,
+		passDevice,
 		clearSelection,
 	}
 }

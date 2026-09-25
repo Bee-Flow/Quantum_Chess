@@ -8,7 +8,42 @@
  * and the board use: defaults for everything a variant may leave out, normalised piece types and per-variant caches.
  *
  * A declaration has at least `id`, `category`, `sides`, `topology`, `types` and `setup(options, rng)`. The optional
- * hooks are documented in docs/development/architecture.md (section "Chess variants").
+ * hooks are documented in docs/development/architecture.md (section "Chess variants"). The quantum layer
+ * (quantum.js) also reads these optional fields and hooks:
+ *
+ * - `applyMiss(b, action, side, info) -> world`: a world in which the played action did not take effect (an idle
+ *   world: the move, split or merge missed there, every world of a Measure, every world of a skipped turn). `action`
+ *   is `{ type: 'move', code, key, sample }`, `{ type: 'split', code, id, from: [f], to: [t1, t2] }`,
+ *   `{ type: 'merge', code, id, from: [f1, f2], to: [t] }`, `{ type: 'measure', code, id, from: [s], to: [] }` or
+ *   `{ type: 'pass', code: null, from: [], to: [] }`; `side` is the side whose turn it was (for a pass the skipped
+ *   side). `info.hit` is decided before the solid and game-end rolls: it is true for the idle worlds of an unrolled
+ *   move or merge (pass = link) and of every split; it is false for the Missed group of a rolled move or merge
+ *   (including the roll that replaces a link over the budget), for every world of a Measure and for a pass. So a final
+ *   outcome that a settling roll labels Missed can still have been built with `hit` true. The hook must be pure: it
+ *   returns the world itself when nothing changes and never mutates it (per-ply bookkeeping such as the en passant
+ *   square). When a link would break the budget, the hook first runs with `hit` true, that result is discarded, and
+ *   it runs again with `hit` false on the same world; it also runs in the computer player's search. Default: idle
+ *   worlds stay unchanged. `orthodoxSpec()` brings `applyMiss: clearEnPassant` (one en passant square in `x.ep` and
+ *   `x.epVictim`); a variant whose `x.ep` has another shape (bughouse: one per board) replaces it.
+ * - `unifyWorlds(bs, mover) -> bs`: the worlds of the chosen outcome, with state-level bookkeeping made identical in
+ *   every world (castling rights); same length and order, unchanged worlds by reference, never mutating, and only
+ *   data that neither the solid pieces nor `worldResult` read. `orthodoxSpec()` brings `unifyWorlds: unifyCastling`.
+ * - `budgetRule(b, side) -> { sides?, limit? }`: the sides that share one quantum budget and its limit (defaults: the
+ *   side alone and 8), read on the first world; must be cheap and must never lower a limit during a game.
+ * - `recordInfo(prev, code, branch, next) -> object | null`: JSON data stored as `info` on the history record (null
+ *   stores nothing). Called once per played move at the end of `stateAfter`, after the result, `stateResult`,
+ *   `noMoves` and any sit-out: `next.turn` is the side really to move, and the record (`next.history.at(-1)`) already
+ *   has `skipped`. Never called in light mode (the computer player's search). `branch.worlds` are the worlds of the
+ *   chosen outcome before `unifyWorlds`.
+ * - `solidExtra(b) -> string`: the variant's own solid structure (three-check: the check counters). Worlds that
+ *   differ in it are settled by the solid roll, like solid pieces; the roll's note is `'solid:' + solidExtra(b)`.
+ * - `compulsoryCapture` (default false): when some legal move might capture, only such moves are legal (no splits,
+ *   no measurements, only merges that might capture).
+ * - `passWhenStuck` (default false; true or a function of the new state): a side without a legal move sits out and
+ *   the next side that can move is to move, instead of the `noMoves` result.
+ * - type flag `resetsQuiet` (default: solid and not royal): moving a piece of this type resets the quiet counter.
+ * - move field `certain` (default true for the kinds `castle` and `ep`): a certain move is legal only when every
+ *   world generates it as a certain move, so it never rolls, never links and is never a split or merge path.
  */
 
 import { normaliseType } from './world.js'
@@ -51,6 +86,8 @@ export function defineVariant(spec) {
 		hidden: spec.hidden ?? false,
 		maxPly: spec.maxPly ?? 600,
 		quietPlies: spec.quietPlies ?? 100,
+		compulsoryCapture: spec.compulsoryCapture ?? false,
+		passWhenStuck: spec.passWhenStuck ?? false,
 		types,
 		orient: spec.orient ?? defaultOrient,
 		enemies: spec.enemies ?? ((a, b) => a !== b),
@@ -60,6 +97,9 @@ export function defineVariant(spec) {
 	V.sideCount = V.sides.length
 	V.solidTypes = new Set(Object.keys(types).filter((t) => types[t].solid || types[t].royal))
 	V.royalTypes = new Set(Object.keys(types).filter((t) => types[t].royal))
+	// the types whose moves reset the quiet counter (pawns by default)
+	V.quietTypes = new Set(Object.keys(types)
+		.filter((t) => types[t].resetsQuiet ?? (types[t].solid && !types[t].royal)))
 	return V
 }
 

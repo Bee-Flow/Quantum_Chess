@@ -8,11 +8,17 @@
  * It works for every variant through the quantum layer; a variant may add its own terms with `evaluate(world, side)`
  * (King of the Hill rewards a central king, Antichess reverses material, ...).
  *
+ * Optional hooks read here: `aiView(state, side)` (the position as a side with hidden information sees it),
+ * `evaluate(world, side)`, `materialSign`, and `replySide(state, me)`: whose answer the normal and hard levels look at
+ * after one of my moves (default the side to move next; `null` for no answer; bughouse answers with the opponent on
+ * the same board). When it is `me` (a turn of several moves, as in the multiverse before Submit), the search takes my
+ * best continuation instead.
+ *
  * The search yields to the browser every few milliseconds, so the board stays responsive while the computer thinks.
  */
 
-import { branches, legalMoves, splitsFrom, stateAfter, T } from './quantum.js'
-import { HAND } from './world.js'
+import { branches, isCertain, legalMoves, splitCode, splitTargets, stateAfter, T, worldResult } from './quantum.js'
+import { applyClassical, generate, HAND } from './world.js'
 
 /**
  * The levels: how deep the computer looks, how much noise it adds (in centipawns) and how long it may think.
@@ -138,7 +144,7 @@ function candidates(V, state, splitCount, rng) {
 		}
 		const pool = []
 		for (const f of froms) {
-			pool.push(...splitsFromLimited(V, state, f))
+			pool.push(...aiSplits(V, state, f, rng))
 		}
 		for (let i = 0; i < splitCount && pool.length; i++) {
 			const k = Math.floor(rng() * pool.length)
@@ -149,28 +155,90 @@ function candidates(V, state, splitCount, rng) {
 }
 
 /**
- * A handful of splits of the piece on `f` (the full list grows quadratically with the number of targets).
+ * The quiet moves of piece `X` from `f` in a world, by target square (the moves a split applies in that world).
+ *
+ * @param {object} V variant
+ * @param {object} b world
+ * @param {number} side side to move
+ * @param {number} X piece id
+ * @param {number} f from square
+ * @return {Map<number, object>}
+ */
+function quietMoves(V, b, side, X, f) {
+	const out = new Map()
+	for (const m of generate(V, b, side).values()) {
+		if (m.id === X && m.from === f && m.capture < 0 && !m.promo && !m.drop && !isCertain(m) && !out.has(m.to)) {
+			out.set(m.to, m)
+		}
+	}
+	return out
+}
+
+/**
+ * The splits the computer considers for the piece on `f`. The full list grows quadratically with the number of
+ * targets (a queen in the middle of an 8 × 8 board has 351 pairs, a Raumschach queen more than a thousand), so only
+ * the best `max` targets are paired: ranked by the value of the first world where the piece stands on `f` after its
+ * quiet move to the target, ties broken at random (a quiet move changes the value only through `V.evaluate`, so a
+ * fixed order would always pick the same corner). Of the at most `max * (max - 1) / 2` pairs, the legal ones are
+ * kept, at most `max`. The list for human players (`splitsFrom`) stays complete.
  *
  * @param {object} V variant
  * @param {object} state state
  * @param {number} f from square
- * @return {string[]}
+ * @param {() => number} rng random numbers (the search's)
+ * @param {number} [max] how many targets, and how many splits at most
+ * @return {string[]} split codes
  */
-function splitsFromLimited(V, state, f) {
-	return splitsFrom(V, state, f).slice(0, 6).map((m) => m.code)
+export function aiSplits(V, state, f, rng, max = 6) {
+	const targets = splitTargets(V, state, f)
+	if (targets.length < 2) {
+		return []
+	}
+	const side = state.turn
+	const X = state.worlds.find(({ b }) => b.board[f] >= 0).b.board[f]
+	// the value of each target in the first world where the piece stands on f and has that quiet move
+	const values = new Map()
+	for (const { b } of state.worlds) {
+		if (values.size === targets.length) {
+			break
+		}
+		if (b.board[f] !== X) {
+			continue
+		}
+		for (const [t, m] of quietMoves(V, b, side, X, f)) {
+			if (!values.has(t) && targets.includes(t)) {
+				values.set(t, worldValue(V, applyClassical(V, b, m), side))
+			}
+		}
+	}
+	const ranked = targets.map((t) => ({ t, value: values.get(t) ?? -Infinity, tie: rng() }))
+	ranked.sort((a, b) => b.value - a.value || a.tie - b.tie)
+	const best = ranked.slice(0, max).map((e) => e.t)
+	const out = []
+	for (let i = 0; i < best.length && out.length < max; i++) {
+		for (let j = i + 1; j < best.length && out.length < max; j++) {
+			const code = splitCode(V, f, best[i], best[j])
+			if (branches(V, state, code)) {
+				out.push(code)
+			}
+		}
+	}
+	return out
 }
 
 /**
- * Whether a move might capture something (tried first, and the only replies of the normal level).
+ * Whether a move might force the game: some outcome captures something or ends the game (the moves tried first, and
+ * the only replies the normal level looks at). A Missed outcome keeps the old world, so it ends nothing.
  *
  * @param {object} V variant
  * @param {object} state state
  * @param {string} code move code
  * @return {boolean}
  */
-function mightCapture(V, state, code) {
+export function mightForce(V, state, code) {
 	const list = branches(V, state, code)
-	return Boolean(list && list.some((b) => b.captures.length > 0))
+	return Boolean(list && list.some((br) => br.captures.length > 0
+		|| worldResult(V, br.worlds[0].b, state.turn) !== null))
 }
 
 /**
@@ -208,8 +276,8 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
 	const started = Date.now()
 	let lastBreath = started
 	const deadline = started + L.timeMs
-	const captures = moves.filter((c) => mightCapture(V, state, c))
-	const ordered = [...captures, ...moves.filter((c) => !captures.includes(c))]
+	const forcing = moves.filter((c) => mightForce(V, state, c))
+	const ordered = [...forcing, ...moves.filter((c) => !forcing.includes(c))]
 	let best = null
 	let bestValue = -Infinity
 	for (const code of ordered) {
@@ -242,7 +310,11 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
 }
 
 /**
- * The value for `me` after the next side answers with its best move (captures only below the hard level).
+ * The value for `me` after the replying side answers with its best move (captures and game-ending moves only below
+ * the hard level). The replying side is `V.replySide(s, me)`, by default the side to move next: `null` means no
+ * answer (the value of `s`); another side than the one to move is searched on a copy of `s` with that side to move;
+ * `me` itself (a turn of several moves) means my best continuation, since "the best answer for `them`" is then the
+ * best for me.
  *
  * @param {object} V variant
  * @param {object} s state after my move
@@ -251,10 +323,14 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
  * @return {number}
  */
 function replyValue(V, s, me, L) {
-	const them = s.turn
-	let codes = legalMoves(V, s).map((m) => m.code)
+	const them = V.replySide ? V.replySide(s, me) : s.turn
+	if (them === null || them === undefined) {
+		return evaluateState(V, s, me)
+	}
+	const r = them === s.turn ? s : { ...s, turn: them }
+	let codes = legalMoves(V, r).map((m) => m.code)
 	if (!L.fullReply) {
-		codes = codes.filter((c) => mightCapture(V, s, c))
+		codes = codes.filter((c) => mightForce(V, r, c))
 	}
 	if (!codes.length) {
 		return evaluateState(V, s, me)
@@ -264,12 +340,12 @@ function replyValue(V, s, me, L) {
 	for (const c of codes) {
 		let mine = 0
 		let theirs = 0
-		const list = branches(V, s, c)
+		const list = branches(V, r, c)
 		if (!list) {
 			continue
 		}
 		for (const br of list) {
-			const n = stateAfter(V, s, c, br, list, { light: true })
+			const n = stateAfter(V, r, c, br, list, { light: true })
 			mine += (br.weight / T) * evaluateState(V, n, me)
 			theirs += (br.weight / T) * evaluateState(V, n, them)
 		}

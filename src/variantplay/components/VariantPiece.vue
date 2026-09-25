@@ -5,7 +5,8 @@
 
 <!--
   One piece of a variant board, drawn in SVG user units around (0, 0): a cburnett sprite or a text token (round, shogi
-  pentagon or xiangqi disc). A ghost part is faded and carries its percentage.
+  pentagon or xiangqi disc). A promoted sprite piece carries a small red disc with a white "+" at its top right. A ghost
+  part is faded and carries its percentage.
 -->
 <template>
 	<g class="qc-vpiece" :opacity="opacity">
@@ -17,6 +18,17 @@
 				:width="size"
 				:height="size"
 				:filter="glyph.tint ? `url(#${tintId})` : undefined" />
+			<g
+				v-if="glyph.promoted"
+				class="qc-vpiece__promoted"
+				:transform="`translate(${size * 0.33}, ${-size * 0.33})`">
+				<circle :r="size * 0.11" fill="#b71c1c" />
+				<path
+					:d="plusPath"
+					stroke="#ffffff"
+					:stroke-width="size * 0.035"
+					stroke-linecap="round" />
+			</g>
 		</template>
 		<template v-else>
 			<polygon
@@ -87,6 +99,10 @@ const fontSize = computed(() => {
 	const len = [...(props.glyph.text ?? '')].length
 	return props.size * (len <= 1 ? 0.5 : len === 2 ? 0.36 : 0.26)
 })
+const plusPath = computed(() => {
+	const a = props.size * 0.06
+	return `M ${-a} 0 H ${a} M 0 ${-a} V ${a}`
+})
 const pentagon = computed(() => {
 	const s = props.size
 	return [
@@ -105,6 +121,10 @@ const pentagon = computed(() => {
 	font-weight: bold;
 	pointer-events: none;
 	user-select: none;
+}
+
+.qc-vpiece__promoted {
+	pointer-events: none;
 }
 
 .qc-vpiece__badge rect {

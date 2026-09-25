@@ -410,10 +410,10 @@ instead, which is JavaScript only. The player-facing rules are in [`docs/variant
 | `catalog.js` | Names, summaries and categories of the variants, cheap to import on every page |
 | `core/topology.js` | Boards as squares with integer coordinates in any number of dimensions, their names and their drawing (square, hexagon or intersection cells, several boards) |
 | `core/world.js` | One **world**: an ordinary position (piece list, board, the variant's extra state). Movement descriptors (leap, ride, hop, lame leaper, oriented vectors, regions), move generation and application |
-| `core/orthodox.js`, `core/orthodoxVariant.js` | The orthodox pieces, castling (including Chess960), double steps, en passant and promotion, and a ready-made 8 × 8 declaration |
-| `core/variant.js` | `defineVariant()`: the defaults and caches of a variant declaration |
-| `core/quantum.js` | The quantum layer: weighted worlds (integer weights summing to 2^24), split, merge, measure, "land = roll, pass = link", the budget, the solid roll and the game-end roll. `branches()` lists every outcome of a move with its weight; playing a move samples one |
-| `core/ai.js` | The computer player of the variants: expectimax over the outcomes of each roll, with a reply search at the higher levels |
+| `core/orthodox.js`, `core/orthodoxVariant.js` | The orthodox pieces, castling (including Chess960, along a rank or a file), double steps, en passant and promotion on any board shape, the bookkeeping that keeps the en passant square and the castling rights the same in every world, and a ready-made 8 × 8 declaration |
+| `core/variant.js` | `defineVariant()`: the defaults and caches of a variant declaration; its header states the contract of every optional hook the quantum layer reads |
+| `core/quantum.js` | The quantum layer: weighted worlds (integer weights summing to 2^24), split, merge, measure, "land = roll, pass = link", certain moves, the budget, the solid roll and the game-end roll. `branches()` lists every outcome of a move with its weight; playing a move samples one |
+| `core/ai.js` | The computer player of the variants: expectimax over the outcomes of each roll, with a reply search at the higher levels (the variant may choose the replying side) |
 | `<id>.js` | One module per variant: its board, pieces, setup, special moves and win conditions, declared through hooks (`extraMoves`, `afterMove`, `worldResult`, `visibility`, ...) |
 
 A variant only describes ordinary chess in one world. The quantum layer plays each move in every world at once, and
@@ -421,11 +421,31 @@ two generic checks make every rule quantum without variant code: the **solid rol
 solid pieces in one place, and the **game-end roll** settles a result that holds in only some worlds (a third check,
 an explosion, a king on the hill). Hidden-information variants add `visibility()` and the moves a player may try.
 
+A few rules of [`docs/rules.md`](../rules.md) look at every world at once, and the layer handles them for every
+variant. Castling and en passant are **certain moves** (`isCertain`): a key that some world generates as a certain
+move is legal only when every world generates it as one, so it never rolls; a castling right is lost as soon as the
+king or that rook is not 100 % on its start square. A world in which the played action did not take effect (it
+missed there, a Measure, a turn skipped by a player who cannot move) is an **idle world**. Idle worlds pass through
+the variant's `applyMiss` hook, so per-ply bookkeeping such as the en passant square expires there too, and the worlds
+of the chosen outcome pass through its `unifyWorlds` hook, which makes facts about the whole state, such as castling
+rights, the same in every world. `orthodoxSpec()` brings both hooks. Every hook is optional, and without it the layer
+keeps its plain behaviour:
+
+| Concern | Hooks and fields |
+|---|---|
+| One world | `extraMoves`, `filterMoves`, `afterMove`, `onCapture`, `generate` and `apply` (a different world shape), `measured`; the move field `certain` (default true for castling and en passant) and the type flag `resetsQuiet` (default: solid, not royal) |
+| Across the worlds | `applyMiss(b, action, side, info)`, `unifyWorlds(bs, mover)`, `solidExtra(b)` (variant structure settled by the solid roll, like solid pieces), `budgetRule(b, side)` (team budgets, per-player limits), `compulsoryCapture` |
+| Results and turns | `worldResult`, `stateResult`, `noMoves`, `isOut`, `nextSide`, `passWhenStuck` (a side without a move sits out), `recordInfo` (variant data on a history record) |
+| Hidden information | `hidden`, `visibility`, `candidateMoves`, `ownView`, `hiddenStyle`, `umpire` |
+| Computer player | `evaluate`, `materialSign`, `aiView`, `replySide` |
+| Board and texts | `layoutOf`, `actions`, `sideInfo`, `noteText`, `infoText`, `codeText`, `reasonText`, `resignResult`, `handOrder`, `options[i].describe` |
+
 `src/variantplay/` holds the UI: `VariantBoard.vue` draws any layout in SVG, `useVariantGame` runs a game (move
 modes, the confirmation of rolled moves, the computer's turns, undo with a roll memo, the hand-over curtain of the
-hidden-information variants), and `variantGames.js` stores the games in the browser. The variant tests are in
-`tests/js/variants/`; `fuzz.spec.js` plays random games in every variant and checks the invariants of the quantum
-layer after every move.
+hidden-information variants), `texts.js`, `panel.js` and `marks.js` are the pure helpers behind the texts, the side
+panel and the square marks (they read the variant's text and panel hooks), and `variantGames.js` stores the games in
+the browser. The variant tests are in `tests/js/variants/`; `fuzz.spec.js` plays random games in every variant and
+checks the invariants of the quantum layer after every move.
 
 ## 6. Data flow
 

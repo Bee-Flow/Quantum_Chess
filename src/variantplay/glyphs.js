@@ -7,7 +7,7 @@
  * How the pieces of the variants are drawn. A piece type declares a glyph:
  *
  * - `{ sprite: 'k' }`: a piece of the cburnett set (the orthodox pieces). Sides whose colour is not white or black
- *   (four-player chess) get the white piece tinted in their colour;
+ *   (four-player chess) get the white piece tinted in their colour; `promoted: true` adds a small red "+" marker;
  * - `{ text, shape }`: a character or short text on a token: `circle` (a round token in the side's colour),
  *   `shogi` (a wooden pentagon that points at the opponent) or `xiangqi` (a round wooden disc). `text` may be a
  *   function of the side (xiangqi writes several pieces differently for Red and Black).
@@ -49,7 +49,8 @@ export function darkTextOn(hex) {
 }
 
 /**
- * How to draw a piece: `{ kind: 'sprite', symbol, tint }` or `{ kind: 'text', text, shape, fill, ink }`.
+ * How to draw a piece: `{ kind: 'sprite', symbol, tint, promoted? }` or `{ kind: 'text', text, shape, fill, ink }`.
+ * A sprite glyph with `promoted: true` (a promoted pawn in the drop variants, `+q`) carries a small red "+" marker.
  *
  * @param {object} V variant
  * @param {string} type piece type
@@ -63,7 +64,11 @@ export function glyphOf(V, type, side) {
 	if (g.sprite) {
 		const color = sd.color === 'black' ? 'b' : 'w'
 		const tint = sd.color === 'white' || sd.color === 'black' ? null : sideFill(sd)
-		return { kind: 'sprite', symbol: 'qc-piece-cburnett-' + color + g.sprite.toUpperCase(), tint }
+		const out = { kind: 'sprite', symbol: 'qc-piece-cburnett-' + color + g.sprite.toUpperCase(), tint }
+		if (g.promoted) {
+			out.promoted = true
+		}
+		return out
 	}
 	const text = typeof g.text === 'function' ? g.text(side) : g.text
 	if (g.shape === 'shogi') {

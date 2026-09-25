@@ -29,13 +29,17 @@ export const HAND = -2
  * @typedef {object} ClassicalMove
  * @property {string} key the move's code, the same in every world (`e2-e4`, `e7-e8=q`, `n@f3`, `O-O`)
  * @property {number} from from square (-1 for a drop)
- * @property {number} to target square
+ * @property {number} to target square; for `kind: 'castle'` the square the player clicks (the king's destination,
+ *   or the rook's square in Chess960), while `extra.kingTo` is where the king lands
  * @property {number} id the moving (or dropped) piece in this world
  * @property {number} capture the captured piece in this world, or -1
  * @property {string|null} promo type the piece turns into
  * @property {string|null} drop dropped type
  * @property {string} kind normal, drop, castle, ep, double or a variant-specific kind
- * @property {object} [extra] variant-specific data (the rook of a castling move, ...)
+ * @property {boolean} [certain] legal only when it is generated, as a certain move, in every world, and then never
+ *   rolled; default true for the kinds `castle` and `ep`, false otherwise
+ * @property {object} [extra] variant-specific data: for castling `extra.rook` (`{ id, to }`, the rook and its
+ *   destination) and `extra.kingTo` (the king's destination, default `to`)
  */
 
 /**
@@ -473,22 +477,41 @@ export function applyClassical(V, w, m) {
 	if (m.capture >= 0) {
 		capturePiece(V, next, m.capture, m)
 	}
-	placePiece(next, m.id, m.to)
+	if (m.extra?.rook) {
+		placeCastling(next, m)
+	} else {
+		placePiece(next, m.id, m.to)
+	}
 	if (m.promo) {
 		next.ty[m.id] = m.promo
-	}
-	if (m.extra?.rook) {
-		const { id, to } = m.extra.rook
-		if (next.board[to] !== -1 && next.board[to] !== id) {
-			throw new Error('castling rook target occupied')
-		}
-		placePiece(next, id, to)
-		next.board[m.to] = m.id
 	}
 	if (V.afterMove) {
 		V.afterMove(next, m, w)
 	}
 	return next
+}
+
+/**
+ * Place the king and the rook of a castling move: both are lifted off the board first, then the king goes to
+ * `extra.kingTo` (default `to`) and the rook to `extra.rook.to`. This covers orthodox castling and every Chess960
+ * shape: the king onto the rook's square, the swap, the king or the rook staying where it is.
+ *
+ * @param {object} next mutable world
+ * @param {ClassicalMove} m the castling move
+ */
+function placeCastling(next, m) {
+	const rook = m.extra.rook
+	const kingTo = m.extra.kingTo ?? m.to
+	placePiece(next, m.id, OFF)
+	placePiece(next, rook.id, OFF)
+	if (next.board[kingTo] !== -1) {
+		throw new Error('castling king target occupied')
+	}
+	if (next.board[rook.to] !== -1 || rook.to === kingTo) {
+		throw new Error('castling rook target occupied')
+	}
+	placePiece(next, m.id, kingTo)
+	placePiece(next, rook.id, rook.to)
 }
 
 /**
@@ -515,11 +538,17 @@ export function capturePiece(V, next, victim, m) {
  * @param {object} w world
  * @param {number} side attacking side
  * @param {number} target square
+ * @param {object} [opts] options
+ * @param {boolean} [opts.royal] `false` leaves out attackers of a royal type (Three-check: a king gives no check)
  * @return {boolean}
  */
-export function attacks(V, w, side, target) {
+export function attacks(V, w, side, target, opts = {}) {
+	const skipRoyal = opts.royal === false
 	for (let id = 0; id < w.sq.length; id++) {
 		if (w.sd[id] !== side || w.sq[id] < 0) {
+			continue
+		}
+		if (skipRoyal && V.types[w.ty[id]]?.royal) {
 			continue
 		}
 		for (const line of linesOf(V, w.ty[id], side, w.sq[id])) {
@@ -604,8 +633,9 @@ export function hasRoyal(V, w, side) {
  * @param {object} w world
  * @param {number} side attacking side
  * @param {number} victim attacked side
+ * @param {object} [opts] options passed on to `attacks` (`royal: false` leaves out royal attackers)
  * @return {boolean}
  */
-export function givesCheck(V, w, side, victim) {
-	return royalSquares(V, w, victim).some((s) => attacks(V, w, side, s))
+export function givesCheck(V, w, side, victim, opts = {}) {
+	return royalSquares(V, w, victim).some((s) => attacks(V, w, side, s, opts))
 }
