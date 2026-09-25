@@ -675,8 +675,12 @@ describe('crazyhouse: computer player and random games', () => {
 		expect(V.evaluate(s.worlds[0].b, 1)).toBeCloseTo(-0.2 * (220 + 420), 5)
 		let z = play(V, s, 'n@f7')
 		z = play(V, z, 'a7-a6')
+		expect(play(V, z, 'f7-h8').result).toEqual({ winner: 0, reason: 'king' })
 		for (const L of LEVELS) {
-			expect(await chooseMove(V, z, { level: L.id, rng: seededRng(5) })).toBe('f7-h8')
+			// it takes the king, or wins as surely by a move the king cannot escape (a queen drop on the back rank)
+			const code = await chooseMove(V, z, { level: L.id, rng: seededRng(5) })
+			expect(branches(V, z, code), L.id + ' ' + code).toHaveLength(1)
+			expect(play(V, z, code).result?.winner, L.id + ' ' + code).toBe(0)
 		}
 		// a middlegame with pieces in both hands (many drops) at the hard level
 		let m = newGame(V)

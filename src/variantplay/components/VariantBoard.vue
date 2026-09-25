@@ -7,7 +7,8 @@
   The board of every chess variant, drawn in SVG from the variant's layout: square cells, hexagons, the intersections of
   xiangqi, and several boards side by side or in a grid (3D, 4D, bughouse, the multiverse). Ghost parts are faded and
   show their percentage. Squares that the viewer cannot see are covered by fog (darker, hatched, keeping their light or
-  dark shade), or, with the variant's `hiddenStyle: 'plain'` (Kriegspiel), look like ordinary empty squares.
+  dark shade), or, with the variant's `hiddenStyle: 'plain'` (Kriegspiel), look like ordinary empty squares. Such a
+  square never names what stands there (only the viewer's own pieces) and takes keyboard focus only as a move target.
   `layout.lines` are drawn under the cells (the xiangqi grid), `layout.outlines` above them (the hill of King of the
   Hill). A `layout.focus` ({ x, y, zoom, key }) zooms in on a point; the board recentres only when its key changes.
 -->
@@ -106,7 +107,7 @@
 				class="qc-vboard__cell"
 				:class="cellClasses(c)"
 				role="button"
-				:tabindex="focusable.has(c.sq) ? 0 : -1"
+				:tabindex="tabIndex(c)"
 				:aria-label="cellLabel(c)"
 				:data-square="c.name"
 				@click="emit('square', c.sq)"
@@ -191,7 +192,7 @@ import VariantPiece from './VariantPiece.vue'
 import { boardPrefs } from '../../board/boardPreferences.js'
 import { isHighContrast, resolveBoardTheme } from '../../board/boardThemes.js'
 import { boardView } from '../../variants/index.js'
-import { glyphOf, sideFill, typeName } from '../glyphs.js'
+import { glyphOf, pieceSpin, sideFill, typeName } from '../glyphs.js'
 
 const props = defineProps({
 	/** The variant */
@@ -415,7 +416,6 @@ const cells = computed(() => {
 		const shown = occupants.slice(0, 2)
 		const pieces = shown.map((o, k) => {
 			const small = shown.length > 1
-			const sideAngle = V.sides[o.side].rotate ?? (o.side === 0 ? 0 : 180)
 			return {
 				glyph: glyphOf(V, o.type, o.side),
 				side: o.side,
@@ -423,7 +423,7 @@ const cells = computed(() => {
 				size: small ? size * 0.62 : size,
 				dx: small ? (k === 0 ? -size * 0.2 : size * 0.2) : 0,
 				dy: small ? (k === 0 ? -size * 0.2 : size * 0.2) : 0,
-				spin: (sideAngle + props.rotation) % 360,
+				spin: pieceSpin(V, o.side, props.rotation),
 				name: typeName(V, o.type),
 			}
 		})
@@ -485,6 +485,18 @@ function cellClasses(c) {
 		out.push('qc-vboard__cell--fog')
 	}
 	return out
+}
+
+/**
+ * The tab index of a cell: 0 for a square the keyboard may reach (`focusable`), -1 otherwise. A square the viewer
+ * cannot see is reachable only as a marked move target, never as a square where a piece is picked up, so the tab order
+ * never tells where a hidden piece stands.
+ *
+ * @param {object} c cell
+ * @return {number}
+ */
+function tabIndex(c) {
+	return props.focusable.has(c.sq) && (!c.hidden || props.marks[c.sq]?.includes('target')) ? 0 : -1
 }
 
 /**

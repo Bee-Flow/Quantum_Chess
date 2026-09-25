@@ -31,6 +31,15 @@
  *   escape rule below builds its outcomes without this hook). `orthodoxSpec()` brings `unifyWorlds: unifyCastling`.
  * - `budgetRule(b, side) -> { sides?, limit? }`: the sides that share one quantum budget and its limit (defaults: the
  *   side alone and 8), read on the first world; must be cheap and must never lower a limit during a game.
+ * - `allowQuantum(state, action) -> boolean`: the variant may forbid a split, merge or measurement that the generic
+ *   rules allow. `action` is `{ type: 'split', from: [f], to: [t1, t2] }` (targets in ascending order),
+ *   `{ type: 'merge', from: [f1, f2], to: [t] }` (parts in ascending order; `to` is empty when a pair of parts is
+ *   checked without a target, for the merge marks) or `{ type: 'measure', from: [s], to: [] }` (one part of the
+ *   piece). A forbidden action is illegal everywhere: in the legal moves, the outcomes, the merge danger and the
+ *   computer's candidates. With the hook, the legal moves list one measurement per allowed part of a superposed piece
+ *   (without it, one from the first part). Must be cheap and depend only on the state. Default: everything allowed.
+ *   The multiverse keeps both halves of a split on one board, merges on one board and measurements on boards the side
+ *   to move may play.
  * - `recordInfo(prev, code, branch, next) -> object | null`: JSON data stored as `info` on the history record (null
  *   stores nothing). Called once per played move at the end of `stateAfter`, after the result, `stateResult`,
  *   `noMoves` and any sit-out: `next.turn` is the side really to move, and the record (`next.history.at(-1)`) already

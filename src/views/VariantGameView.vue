@@ -14,7 +14,11 @@
   device; the curtain then covers the board and the whole side panel. Split is greyed out while the budget of the
   player to move is full, and the shared rules leave castling and en passant out when the variant has neither
   (`specialMoves: false`). During the hand-over the mode tooltips, the compulsory line and the keyboard focus say
-  nothing about the opponent.
+  nothing about the opponent, and in a hidden game the keyboard reaches only the squares of the player to move (never
+  a square that player cannot see, unless it is the target of a try built from what the player knows). The roll
+  preview and the roll result say when an outcome ends the game ("The game ends: …") unless a roll note already does
+  (the preview not while a hidden game runs, see useVariantGame), and the pieces in hand and in the promotion choice
+  are turned like their side's pieces on the board (shogi).
 -->
 <template>
 	<div class="qc-vgame">
@@ -208,7 +212,10 @@
 								width="30"
 								height="30"
 								aria-hidden="true">
-								<VariantPiece :glyph="glyphOf(V, p.type, h.side)" :size="0.95" />
+								<VariantPiece
+									:glyph="glyphOf(V, p.type, h.side)"
+									:size="0.95"
+									:spin="pieceSpin(V, h.side, game.rotation.value)" />
 							</svg>
 							<span>{{ p.min === p.max ? p.max : p.min + '–' + p.max }}</span>
 						</button>
@@ -231,7 +238,8 @@
 									aria-hidden="true">
 									<VariantPiece
 										:glyph="glyphOf(V, m.promo ?? pieceTypeAt(m.from), state.turn)"
-										:size="0.95" />
+										:size="0.95"
+										:spin="pieceSpin(V, state.turn, game.rotation.value)" />
 								</svg>
 							</template>
 						</NcButton>
@@ -244,6 +252,9 @@
 						<li v-for="(o, i) in game.pending.value.outcomes" :key="i">
 							<strong>{{ percent(o.p) }}</strong> {{ outcomeText(o.key, game.pending.value.code) }}
 							<small v-for="nt in o.notes" :key="nt"> · {{ noteText(V, nt) }}</small>
+							<small v-if="endText(V, o.result, o.notes)" class="qc-vgame__ends">
+								· {{ endText(V, o.result, o.notes) }}
+							</small>
 						</li>
 					</ul>
 					<div class="qc-vgame__choices">
@@ -273,6 +284,9 @@
 							{{ noteText(V, nt) }}
 						</p>
 					</template>
+					<p v-if="rollEnds" class="qc-vgame__note qc-vgame__ends">
+						{{ rollEnds }}
+					</p>
 				</section>
 
 				<section v-if="report.length" class="qc-vgame__box qc-vgame__box--report" aria-live="polite">
@@ -333,10 +347,12 @@ import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import VariantBoard from '../variantplay/components/VariantBoard.vue'
 import VariantPiece from '../variantplay/components/VariantPiece.vue'
 import { useVariantGame } from '../variantplay/composables/useVariantGame.js'
-import { glyphOf, sideFill, typeName } from '../variantplay/glyphs.js'
+import { glyphOf, pieceSpin, sideFill, typeName } from '../variantplay/glyphs.js'
+import { focusSquares } from '../variantplay/marks.js'
 import { budgetPips, recordsSince, sideInfoOf, sortHand } from '../variantplay/panel.js'
 import {
 	codeText,
+	endText,
 	noteText,
 	optionLines,
 	outcomeText,
@@ -362,12 +378,12 @@ const variantRules = computed(() => (V.value?.rules ? V.value.rules() : []))
 const allSquares = computed(() => new Set(Array.from({ length: V.value?.topology.size ?? 0 }, (_, i) => i)))
 
 /**
- * Whether the player to move looks at the panel: a human's turn, and not the hidden hand-over, in which the mover still
- * looks at it while the opponent is to move (nor the curtain). Only then do the mode tooltips and the compulsory line
- * speak about the side to move.
+ * Whether the player to move looks at the board and the panel (`boardInteractive` in marks.js): a human's turn, not
+ * the hidden hand-over, in which the mover still looks while the opponent is to move, nor the curtain, and in a hidden
+ * game the viewer is the side to move. Only then do the mode tooltips and the compulsory line speak about the side to
+ * move, and only then does the keyboard reach any square.
  */
-const moverLooks = computed(() => Boolean(state.value && !state.value.result && game.isHumanTurn.value
-	&& !game.handover.value && !game.curtain.value))
+const moverLooks = computed(() => game.interactive.value)
 
 /** Whether the player to move must capture (compulsory capture, as in Antichess). */
 const compulsory = computed(() => moverLooks.value && game.compulsory.value)
@@ -442,40 +458,14 @@ const hands = computed(() => {
 })
 
 /**
- * The squares the keyboard can reach: the from squares of the moves and the marked targets, only while the player to
- * move looks at the board (never the opponent's pieces during the hidden hand-over or a computer's turn). A from
- * square the viewer cannot see is left out unless the viewer's own piece may stand there; the targets are marked from
- * the viewer's own moves (in Kriegspiel on the board as the viewer knows it, where every other square is hidden).
+ * The squares the keyboard can reach (`focusSquares` in marks.js): only while the player to move looks at the board
+ * (never during the hidden hand-over, behind the curtain or on a computer's turn), the from squares of the viewer's
+ * moves that the viewer can see and the marked targets. A target on a square the viewer cannot see exists only when
+ * the variant builds the viewer's attempts from what the viewer knows (Kriegspiel's tries).
  */
-const focusable = computed(() => {
-	const out = new Set()
-	if (!moverLooks.value) {
-		return out
-	}
-	const hidden = game.hidden.value
-	for (const m of game.moves.value) {
-		if (m.from >= 0 && (!hidden?.has(m.from) || ownPieceMaybe(m.from))) {
-			out.add(m.from)
-		}
-	}
-	for (const [sq, list] of Object.entries(game.marks.value)) {
-		if (list.includes('target')) {
-			out.add(Number(sq))
-		}
-	}
-	return out
-})
-
-/**
- * Whether the viewer's own piece may stand on a square (in some world).
- *
- * @param {number} sq square
- * @return {boolean}
- */
-function ownPieceMaybe(sq) {
-	const viewer = game.viewer.value
-	return state.value.worlds.some(({ b }) => b.board[sq] >= 0 && b.sd[b.board[sq]] === viewer)
-}
+const focusable = computed(() => (moverLooks.value
+	? focusSquares(game.moves.value, game.marks.value, game.hidden.value)
+	: new Set()))
 
 const boardLabel = computed(() => (entry.value
 	? t('quantumchess', 'Board of {variant}', { variant: entry.value.name() })
@@ -484,6 +474,15 @@ const boardLabel = computed(() => (entry.value
 /** Hide the last roll of the opponent in hidden-information variants (only what the umpire says is shown). */
 const hideLast = computed(() => V.value?.hidden && game.lastRoll.value
 	&& game.lastRoll.value.side !== game.viewer.value)
+
+/**
+ * The line of the roll box that says the move ended the game, when no roll note says so (with an umpire, the notes are
+ * not shown).
+ */
+const rollEnds = computed(() => {
+	const roll = game.lastRoll.value
+	return roll ? endText(V.value, roll.result, V.value?.umpire ? [] : roll.notes) : ''
+})
 
 /** The roll box: not for the opponent's hidden roll, and not twice beside the "Your move" box of an umpire game. */
 const showRoll = computed(() => Boolean(game.lastRoll.value && !hideLast.value

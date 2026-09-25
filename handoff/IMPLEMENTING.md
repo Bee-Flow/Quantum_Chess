@@ -34,9 +34,12 @@ truth; this guide summarises them):
   Variant modules import `isCertain(m)`, `budgetInfo(V, state, side)` and `mustCapture(V, state)` from it
   (`src/variants/index.js` exports the last two for the UI).
 - `src/variants/core/ai.js`: the computer player (optional hooks `evaluate`, `materialSign`, `aiView`, `replySide`;
-  exports `mightForce` and `aiSplits` for tests).
+  exports `mightForce` and `aiSplits` for tests). It sees the escape rule (section "Computer player" below).
 - `handoff/CORE-CHANGES.md` section 8 ("Follow-up pass"): what changed in the core after the first pass (the classic
-  end rules, merge and Measure fixes, the computer's time budget and hidden-information fallback, texts).
+  end rules, merge and Measure fixes, the computer's time budget and hidden-information fallback, texts); section 9
+  ("Third pass"): the computer sees the escape rule and looks a move deeper at the hard level, the outcomes of the
+  preview carry their game result, the board hides targets and focus in hidden games, and the escape check is faster
+  for splits.
 - `tests/js/variants/core.spec.js`, `core-quantum.spec.js`, `core-world.spec.js` + `tests/js/variants/helpers.js`
   (`stateOf`, `play`): how to write tests.
 - `src/variants/catalog.js`: names/summaries (already written for every variant; do not edit).
@@ -126,7 +129,7 @@ purpose, and say why in a code comment.
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `escapeRule` | classic | "Your king cannot escape" (docs/rules.md 5): after a move, the side to move has at least one legal action; every one of them (moves, splits, merges, measurements) leads only to outcomes where the game goes on and one of its royal pieces can be captured **for certain** by the side that moves next; and none of its actions might capture an enemy royal piece, with any chance. Then the mover wins at once: `{ winner: mover, reason: 'cannotEscape' }`. For certain means that one legal move key takes a royal piece in every world, or one merge does (a converging capture). A take counts the way the danger ring counts it: the royal piece is captured, or the side has no royal piece left afterwards (atomic's explosions). A key that is a certain move in some worlds and an ordinary move in others is not legal, so it does not count. An outcome that ends the game is an escape. A side without any legal action gets `noMoves` instead. The rule is never applied in the computer's search (light mode). |
+| `escapeRule` | classic | "Your king cannot escape" (docs/rules.md 5): after a move, the side to move has at least one legal action; every one of them (moves, splits, merges, measurements) leads only to outcomes where the game goes on and one of its royal pieces can be captured **for certain** by the side that moves next; and none of its actions might capture an enemy royal piece, with any chance. Then the mover wins at once: `{ winner: mover, reason: 'cannotEscape' }`. For certain means that one legal move key takes a royal piece in every world, or one merge does (a converging capture). A take counts the way the danger ring counts it: the royal piece is captured, or the side has no royal piece left afterwards (atomic's explosions). A key that is a certain move in some worlds and an ordinary move in others is not legal, so it does not count. An outcome that ends the game is an escape. A side without any legal action gets `noMoves` instead. The light states of the computer's search leave the rule out, but the computer applies it where it uses real states: the outcomes of its own candidate moves and the answers after which the side to move might be mated (section "Computer player"). |
 | `bareKingsDraw` | classic | A draw (`reason: 'bareKings'`, generic text "only the two kings are left") when only royal pieces stand on the board in every world and no hand holds a piece. It is checked after `worldResult`, `stateResult` and the escape rule. It needs every world, so a variant whose condition differs (decided world by world and settled by the game-end roll: atomic, makruk; or a four-player rule) keeps its own `worldResult` rule and sets this flag to false, so that the draw is not applied twice. "Only if the kings do not touch" needs no own rule in a two-player game: with solid kings that is what `drawsWait` gives (raumschach, hyper4d and hexagonal use the core flag) |
 | `drawsWait` | classic | The core's generic draws, the quiet-move draw and the bare-kings draw, wait while the side to move can capture an enemy royal piece for certain. A converging capture counts; a capture that is not legal does not, even at 100 % king danger. The move limit does not wait, and "no legal move" can never meet a certain capture. Draws that the variant returns itself (`worldResult`, `stateResult`, `noMoves`) are not affected: a variant draw that must wait checks this itself (makruk does). |
 | `specialMoves` | true | false when the variant has neither castling nor en passant. Only the UI reads it: the shared rules card then leaves out its castling and en passant sentence (L2). |
@@ -147,7 +150,11 @@ What the rules mean for your module:
   after it is built: `worldKey` is also remembered per world object.
 - **Cost.** In a normal position the first action tried is already an escape (well under 1 ms). Worst cases measured
   on trapped positions (`handoff/tmp/fix-core2/worst-after.txt`): 8 × 8 at 8 worlds 1.5–4.6 ms, 5 × 5 × 5 at 8
-  worlds about 9 ms, 4 × 4 × 4 × 4 at 8 worlds about 29 ms, 64 worlds up to about 140 ms (4D).
+  worlds about 9 ms, 4 × 4 × 4 × 4 at 8 worlds about 29 ms, 64 worlds up to about 140 ms (4D). Since the third pass
+  (CORE-CHANGES 9.2, U3) the splits of a piece are checked per target: the median of one real move on mate positions
+  with 8 worlds is about 7 ms on the hexagonal board, 10 ms on 5 × 5 × 5 and 37–50 ms in 4D, and 93 ms in 4D at 64
+  worlds (was 255). The rule also runs inside the computer's search now (section "Computer player"), so a slow
+  `generate`, `afterMove` or `applyMiss` means fewer candidates searched within a level's time.
 - **Hidden information.** The rule is decided on the real state, like the umpire who announces checkmate; the whole
   board is shown when the game ends.
 
@@ -186,8 +193,8 @@ rest are defaults):
 | `solidExtra(b) -> string` | the variant's own structure that must be the same in every world (three-check: the check counters; crazyhouse and shogi: the hands, as a guard; multiverse: the timelines). Worlds that differ in it are settled by the solid roll like solid pieces; the roll's note is `'solid:' + solidExtra(b)` |
 | `budgetRule(b, side) -> { sides?, limit? }` | the sides whose pieces share one quantum budget (default `[side]`; with several sides one arrangement counts all their pieces together) and its limit (default 8). Read on `state.worlds[0].b`, for the mover's split legality and the pass = link fallback. Must be cheap (read `b.x` or count kings, no generation) and must never lower a limit during a game. `budgetInfo(V, state, side)` returns `{ used, limit, sides }` (the pips, your tests). At `used >= limit` no split is possible: `splitsFrom` and the computer's `aiSplits` return nothing at once, and the UI greys out Split ("Budget full: merge or measure a piece first."). Bughouse: `{ sides: [side, (side + 2) % 4], limit: 8 }`; four-player FFA: `{ limit }` by the number of kings left |
 | `compulsoryCapture: true` | when some legal move key might capture (captures in at least one world), only such keys are legal, no split and no Measure, and only merges with a capturing outcome. `mustCapture(V, state)` tells; the UI says so and disables Split and Measure. A per-world rule, if any, stays in `filterMoves`. Default false |
-| `passWhenStuck: true \| (state) => boolean` | a side without a legal move sits out instead of the `noMoves` result: the next side that can move is to move, `ply` does not grow for the skipped sides, every world passes through `applyMiss` with `type: 'pass'` once per skipped side, the record gets `skipped: [sides]` and the move list shows "{side} cannot move and sits out". The function is called on the new state (the stuck side to move). If no side can move, `noMoves` applies as before. Not evaluated in the computer's search. Default false |
-| `recordInfo(prev, code, branch, next) -> object \| null` | JSON data stored as `info` on the history record (null stores nothing). Called once per played move at the end of `stateAfter`, after the result, `stateResult`, `noMoves` and any sit-out: `next.turn` is the side really to move and the record (`next.history.at(-1)`) already has `skipped`. `branch.worlds` are the worlds of the outcome before `unifyWorlds`. Never called in the computer's search; undo replays call it again, so keep it pure. Show it with `infoText` |
+| `passWhenStuck: true \| (state) => boolean` | a side without a legal move sits out instead of the `noMoves` result: the next side that can move is to move, `ply` does not grow for the skipped sides, every world passes through `applyMiss` with `type: 'pass'` once per skipped side, the record gets `skipped: [sides]` and the move list shows "{side} cannot move and sits out". The function is called on the new state (the stuck side to move). If no side can move, `noMoves` applies as before. Not evaluated on the light states of the computer's search, but on the real states it builds (the outcomes of its own candidates, answers that might mate, the hard level's third move). Default false |
+| `recordInfo(prev, code, branch, next) -> object \| null` | JSON data stored as `info` on the history record (null stores nothing). Called once per real state at the end of `stateAfter`, after the result, `stateResult`, `noMoves` and any sit-out: `next.turn` is the side really to move and the record (`next.history.at(-1)`) already has `skipped`. `branch.worlds` are the worlds of the outcome before `unifyWorlds`. Called for every played move, and also inside the computer's search wherever it builds real states (the outcomes of its own candidates, answers that might mate, the hard level's third move), never for its light states; undo replays call it again, so keep it pure and cheap. Show it with `infoText` |
 
 ### Computer player
 
@@ -195,19 +202,61 @@ rest are defaults):
 |---|---|
 | `evaluate(w, side)` | extra evaluation terms in centipawns (KOTH: king near the hill...). It also ranks the computer's split targets (only the best 6 targets per piece are paired, ties at random) |
 | `materialSign: -1` | the computer prefers LESS material (antichess) |
-| `aiView(state, side)` | the state as the computer sees it (hidden information). The computer plays the best move of its view that is legal on the real state. When none is, it tries what a player in its seat could attempt, shuffled with the search's random numbers, until `branches` accepts one: `candidateMoves(real)` (else the legal moves of the real state) plus the merges and measurements of `ownView(real, me)`. It returns null only when none of them is legal |
+| `aiView(state, side, level)` | the state as the computer sees it (hidden information). `level` is the id of the computer's level (`'easy'`, `'normal'` or `'hard'`), an optional third argument that a hook may ignore. The computer plays the best move of its view that is legal on the real state. When none is, it tries what a player in its seat could attempt, shuffled with the search's random numbers, until `branches` accepts one: `candidateMoves(real)` (else the legal moves of the real state) plus the merges and measurements of `ownView(real, me)`. It returns null only when none of them is legal |
 | `replySide(state, me) -> side \| null` | whose answer the normal and hard levels look at after the computer's move (`state` = after that move). Default `state.turn`. `null`: no answer; another side: its answers are searched on `{ ...state, turn: side }` (bughouse: `(s, me) => 3 - me`, the opponent on the same board); `me` (a turn of several moves): the computer's best continuation |
 
-The normal level looks only at answers that might capture or end the game (some outcome with a capture, or with a
-non-null `worldResult`), and the computer tries such moves first; a variant with its own goal (a hill, three checks)
-needs no extra code for that.
+The levels: easy judges the positions right after its own move (noise ±120 centipawns); normal also looks at the
+other side's forcing answers (noise ±25); hard looks at every answer, adds no noise and, with time left, looks a move
+deeper (below).
+
+**Forcing moves** (`mightForce`): the moves the computer tries first, the only answers the normal level looks at,
+and the hard level's third moves. A move is forcing when some outcome captures something, ends the game by
+`worldResult`, or, with `escapeRule`, leaves an enemy royal piece capturable for certain by the mover (a king danger
+of 100 %: what chess players call check) or might box it in (see below). Every outcome counts, a Missed one too: its
+worlds are unchanged, but the other side is to move there, and in antichess a side left without a move wins, in horde
+it draws. A variant with its own goal (a hill, three checks) needs no extra code for that. The normal level lets the
+answering side decline every forcing answer: the answering side's best value starts at the value of the position
+after the computer's move, as if it made a quiet move (horde: the computer takes a free knight although Black could
+block with a stalemating move).
+
+**The escape rule in the search.** The search judges most positions on light states (no escape rule, no "no legal
+move", no sit-out, no history record), with three exceptions:
+
+- The outcomes of the computer's own candidate moves are the real states of the game (`stateAfter` without light
+  mode), at every level: a move after which the enemy cannot escape scores as a win, a move whose outcome ends the game
+  against the computer as a loss. Only the quick judgement made when the time runs out before any candidate has a
+  value stays light.
+- After the computer's move or an answer, a side to move that can capture an enemy royal piece for certain counts as
+  having won one ply later (reason `king`), without a further search. The test is the core's `certainCapture`
+  (exported from quantum.js), behind a cheap filter in ai.js that looks only at captures and needs a move key or a
+  piece common to every world.
+- After an answer, when the side to move might be mated, the real state of that answer is used, so that the escape
+  rule decides whether the answer was a mate in one. "Might be mated": one of its royal pieces can be captured for
+  certain, or it might be boxed in (a quiet mate, the king not attacked: it has a royal piece, at most three other
+  pieces on the board and in hand, and no step of a royal piece that is proven safe). This also holds when the light
+  state would be drawn by the quiet-move or bare-kings rule, since a played move applies the escape rule first.
+
+So every level finds a mate in one (shogi's `g@1b`, horde's quiet `a4-c6`, atomic's quiet `f3-e5` after 1.Nf3 a6),
+and the normal and hard levels do not step into one. The hooks that real states run (`stateResult`, `noMoves`,
+`passWhenStuck`, `recordInfo`, and the world hooks of the escape rule) run inside the search too: keep them pure and
+cheap.
+
+**Ties and the hard level.** A level without noise (hard) adds a tiny random amount (`rng() * 1e-3` centipawns) to
+each value, so that exact ties are broken at random: it does not move one rook back and forth, and it opens with
+different moves for different seeds (the same move for the same seed). With time left after its two-move pass, in a
+variant of two sides and unless it has found a sure win, the hard level re-scores its best candidates (`deep: 8` in
+`LEVELS`) with a third move: after each answer of the other side, the computer's best forcing move or none. The
+candidates are taken in the order of their value (rounded to a centipawn, forcing moves first among equals) while the
+remaining budget, less a tenth of the level's time, lasts; the best candidate whose whole evaluation fitted is
+played, else the two-move choice stands. It finds a knight fork of king and rook, where the rook falls on the third
+move.
 
 The time budget of a level (easy 0.4 s, normal 1.5 s, hard 4 s) runs from the call of `chooseMove` and is also
 checked inside the evaluation of each candidate (before each outcome and each answer), so the computer keeps to it
 at 64 worlds too. When the time is spent before any candidate has a value, that candidate is judged by the positions
 right after it, without an answer, so there is always a move. A slow `evaluate` therefore means fewer candidates
-searched, not a late move. The computer's search never applies the escape rule (light mode); it sees the capture of
-the king one ply later.
+searched, not a late move. The escape checks of the real states cost time too: on 4D boards at 8 worlds and more,
+easy and normal now use their whole budget and search fewer candidates than before the third pass.
 
 ### Hidden information
 
@@ -218,6 +267,27 @@ the king one ply later.
 | `ownView(state, side) -> state` | the state as the side knows it; the Split, Merge and Measure modes choose their squares on it, every attempt is decided on the real state (a split, merge or Measure legal on the own view but not on the real state gets the umpire's "No") |
 | `hiddenStyle: 'fog' \| 'plain'` | how squares the viewer cannot see look (default `'fog'`; Kriegspiel: `'plain'`, a normal-looking board) |
 | `umpire: true` | an attempt is binding (no odds preview, no odds in the results), a refused attempt gets "the umpire says no" |
+
+What the board shows in a hidden game is generic (`src/variantplay/marks.js`, the composable and `VariantBoard`):
+
+- **Only for the player to move.** The board takes input and shows the selection, the move targets and keyboard
+  focus only while it is interactive (`boardInteractive`): the game goes on, a human is to move, neither the first
+  step of the hand-over nor the curtain is shown, and in a hidden game the viewer is the side to move. On the
+  computer's turn, during the hand-over and behind the curtain no square can be focused.
+- **Focus.** The keyboard reaches the from squares of the viewer's moves that the viewer can see, and the marked
+  targets (`focusSquares`). The board gives a square the viewer cannot see tabindex 0 only when it is a marked target,
+  and its label names only the viewer's own pieces.
+- **Targets on hidden squares.** A target on a square the viewer cannot see is marked only when it comes from what the
+  viewer knows (`blindTargetAllowed`): moves and drops from `candidateMoves`, Split and Merge targets from `ownView`.
+  Otherwise the targets come from the real state, so such a square gets no target mark (Dark chess). Kriegspiel sees
+  only the squares of its own pieces, so its move dots stand on hidden squares; they come from `candidateMoves`, which
+  is why `candidateMoves` and `ownView` must depend only on what the side to move knows.
+- **Tests** (`tests/js/variants/core-ui2.vue.spec.js`, on the real Kriegspiel and Dark chess modules, pass & play
+  and against the computer): the tab order, the labels, the classes and the dots are the same whatever stands on the
+  squares the viewer cannot see.
+- **Preview.** While a hidden game runs, the outcomes of the odds preview carry no `result` (whether an outcome ends
+  the game depends on hidden pieces, for example a quiet-move draw that waits for a certain capture); an umpire game
+  has no preview at all.
 
 ### Board and texts (UI)
 
@@ -378,6 +448,18 @@ built in, with no hook:
 - `squareView` / `boardView` treat squares beyond the board (layout display cells) as empty.
 - Drop outcomes read "Dropped" and "Missed: the piece stays in hand" (LEAD-DECISIONS L3: in shogi a drop also misses
   where a pawn drop would mate).
+- The odds preview says which outcome ends the game. `outcomes(V, state, code)` gives each outcome
+  `{ key, notes, p, captures, rolled }` and, only when that outcome ends the game, `result`: the result of the state
+  after it as the light `stateAfter` decides it (`worldResult`, the same in every world of the outcome after the
+  game-end roll, then `stateResult`, the bare-kings and quiet-move draws and the move limit). When a generic draw or
+  the move limit would end it, the escape rule is checked first, as for a played move, so the preview never shows a
+  draw where the move wins; otherwise "your king cannot escape" and "no legal move" are decided only when the move is
+  played. When the game goes on the field is left out (not `null`). The pending box and the roll box add "The game
+  ends: {result}" (`endText` in texts.js) unless an `end:` note of the game-end roll already says so; the roll box uses
+  the result of the played move, so it includes "the king could not escape". `unifyWorlds` and `stateResult` also run
+  for every outcome of the preview: keep them cheap. The hidden-information preview is in section "Hidden information".
+- The pieces in hand and the promotion choice are turned like their side's pieces on the board (`pieceSpin` in
+  glyphs.js: `sides[i].rotate` plus the board's rotation), so Gote's shogi pieces point down in Sente's view.
 - The classic end rules (section "Classic end rules"): "your king cannot escape", the bare-kings draw, and draws that
   wait for a certain royal capture.
 - Rolls of local games are remembered under `ply:positionHash:code` with a trailing promotion suffix stripped
@@ -437,7 +519,8 @@ recentres only when the focus changes (its `key`, or without a key its point and
 - Every user-visible text through `t('quantumchess', 'literal')` (literal strings only, placeholders `{name}`).
 - Run: `npx eslint --fix src/variants/<id>.js tests/js/variants/<id>.spec.js`, then `npx eslint ...` (0 problems),
   `node tools/check-line-length.mjs` (0 findings in your files), `npx vitest run tests/js/variants/<id>.spec.js`
-  and `npx vitest run tests/js/variants/fuzz.spec.js -t <id>` (random games must never throw or break an invariant).
+  and `npx vitest run tests/js/variants/fuzz.spec.js -t <id>` (random games must never throw or break an invariant;
+  options marked `random` get values drawn with the game's seed, so Chess960 plays random start positions).
 - Test the hooks you use: after every move of a few random games, the bookkeeping your `applyMiss` / `unifyWorlds`
   keeps (`x.ep`, `x.castle`) is identical in all worlds, and `budgetInfo(V, s, side).used <= limit` for every side.
 - Performance: `generate` runs in every world on every move; keep it allocation-light. A random game of 60 plies must

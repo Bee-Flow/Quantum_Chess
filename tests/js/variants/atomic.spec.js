@@ -880,9 +880,11 @@ describe('atomic: board and computer player', () => {
 		for (const level of LEVELS) {
 			for (const seed of [1, 2, 3]) {
 				const code = await chooseMove(V, s, { level: level.id, rng: seededRng(seed) })
-				// e5-f7 and e5-d7 both blow up the king on e8
+				// e5-f7 and e5-d7 both blow up the king on e8; after a quiet move Black cannot escape that blow-up, so
+				// the computer, which sees the escape rule, may also win at once that way
 				const result = applyMove(V, s, code, 0).state.result
-				expect(result, level.id + ': ' + code).toEqual({ winner: 0, reason: 'exploded' })
+				expect(result?.winner, level.id + ': ' + code).toBe(0)
+				expect(['exploded', 'cannotEscape'], level.id + ': ' + code).toContain(result.reason)
 			}
 		}
 	}, 20000)

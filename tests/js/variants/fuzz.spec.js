@@ -4,10 +4,10 @@
  */
 
 /**
- * Random games in every variant: ordinary moves, splits, merges and measurements with random outcomes. After every
- * move the invariants of the quantum layer must hold: the weights sum to T, the budget and the world bound hold,
- * solid pieces are in the same place in every world, every world is a consistent position, and a finished game has
- * no legal move.
+ * Random games in every variant: ordinary moves, splits, merges and measurements with random outcomes, and random
+ * values for the options marked random (the start position of Chess960). After every move the invariants of the
+ * quantum layer must hold: the weights sum to T, the budget and the world bound hold, solid pieces are in the same
+ * place in every world, every world is a consistent position, and a finished game has no legal move.
  */
 
 import { existsSync } from 'node:fs'
@@ -71,6 +71,32 @@ function checkInvariants(V, s) {
 }
 
 /**
+ * The options of a random game: every option marked `random` gets a value drawn with the game's seeded numbers (a
+ * whole number between its bounds, one of its choices, yes or no), every other option its default. So Chess960 plays
+ * random start positions, the same ones for the same seed.
+ *
+ * @param {object} V variant
+ * @param {() => number} rng random numbers
+ * @return {object}
+ */
+function randomOptions(V, rng) {
+	const given = {}
+	for (const o of V.options) {
+		if (!o.random) {
+			continue
+		}
+		if (o.type === 'number') {
+			given[o.id] = o.min + Math.floor(rng() * (o.max - o.min + 1))
+		} else if (o.type === 'choice') {
+			given[o.id] = o.values[Math.floor(rng() * o.values.length)].id
+		} else if (o.type === 'boolean') {
+			given[o.id] = rng() < 0.5
+		}
+	}
+	return optionValues(V, given)
+}
+
+/**
  * Play one random game.
  *
  * @param {object} V variant
@@ -78,7 +104,7 @@ function checkInvariants(V, s) {
  */
 function randomGame(V, seed) {
 	const rng = seededRng(seed)
-	let s = newGame(V, optionValues(V, {}), rng)
+	let s = newGame(V, randomOptions(V, rng), rng)
 	checkInvariants(V, s)
 	for (let ply = 0; ply < PLIES && !s.result; ply++) {
 		let codes = legalMoves(V, s).map((m) => m.code)
@@ -106,6 +132,32 @@ function randomGame(V, seed) {
 		checkInvariants(V, s)
 	}
 }
+
+describe('the options of a random game', () => {
+	it('draws the options marked random with the seed (Chess960 start positions)', async () => {
+		const V = await loadVariant('chess960')
+		const option = V.options.find((o) => o.random)
+		expect(option.id).toBe('position')
+		const draw = (seed) => randomOptions(V, seededRng(seed)).position
+		const seeds = [1, 2, 3, 4, 5, 6]
+		const positions = seeds.map(draw)
+		expect(seeds.map(draw)).toEqual(positions)
+		for (const p of positions) {
+			expect(Number.isInteger(p) && p >= option.min && p <= option.max).toBe(true)
+		}
+		expect(new Set(positions).size).toBeGreaterThan(3)
+		// the game starts from the drawn position
+		const s = newGame(V, randomOptions(V, seededRng(1)), seededRng(1))
+		expect(s.options.position).toBe(positions[0])
+		expect(s.worlds[0].b).toEqual(newGame(V, { position: positions[0] }).worlds[0].b)
+	})
+
+	it('keeps the defaults of the options that are not random', async () => {
+		const V = await loadVariant('fourplayer')
+		expect(V.options.some((o) => o.random)).toBe(false)
+		expect(randomOptions(V, seededRng(1))).toEqual(optionValues(V, {}))
+	})
+})
 
 describe('random games in every variant', () => {
 	for (const id of VARIANT_IDS) {

@@ -807,9 +807,12 @@ describe('horde: hooks for the computer and the board', () => {
 		}
 	})
 
-	// The normal level searches only forcing replies and assumes Black plays one, here the stalemating g7-e6, so it
-	// picks e4-e5. Needs the core change in ai.js replyValue: without fullReply, the replier may stand pat
-	// (bestForThem starts at evaluateState(V, s, them)). Then, in the position above,
-	// `chooseMove(V, s, { level: 'normal', rng: seededRng(1) })` returns 'e4-d5'.
-	it.todo('normal level: takes the free knight too (needs a stand-pat option in the core replyValue)')
+	it('normal level: takes the free knight too, since Black may decline the stalemating block', async () => {
+		// the normal level searches only forcing replies; the replier may also make a quiet move (stand pat), so the
+		// stalemating g7-e6 counts only if Black would rather draw than play on, and Black, far ahead, would not
+		const s = one(place('Pb2 Pe4 ke8 ra8 ng7 nd5 pb3'))
+		for (let seed = 1; seed <= 3; seed++) {
+			expect(await chooseMove(V, s, { level: 'normal', rng: seededRng(seed) }), 'seed ' + seed).toBe('e4-d5')
+		}
+	})
 })

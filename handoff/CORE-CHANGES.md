@@ -1144,3 +1144,178 @@ run, 68 variant tests failed on the committed core because they already expected
   `escapeRule`, `bareKingsDraw`, `drawsWait` and `specialMoves`.
 - `npm run lint:refs` reports one finding outside the core: `tests/js/variants/horde.spec.js:491` names
   `docs/horde.md`, which does not exist.
+
+---
+
+## 9. Third pass
+
+Status: implemented and verified, 2026-09-25, uncommitted on top of commit 61c4c15 (the core files are as committed
+in 868c94a). The requests came from the final reviews of the 19 variants (reports in `handoff/tmp/e-state/`, probes
+in `handoff/tmp/final-<variant>/`), and the lead decided every item (binding). Two packages: "ai"
+(`src/variants/core/ai.js`; tests `tests/js/variants/core-ai2.spec.js`) and "ui" (`src/variants/core/quantum.js`,
+`src/variantplay/**`, `src/views/VariantGameView.vue`, `tests/js/variants/fuzz.spec.js`; tests `core-ui2.spec.js`
+and `core-ui2.vue.spec.js`), then a verification and fix round. Scratch files: `handoff/tmp/ai-pkg/`,
+`handoff/tmp/ui2/`, `handoff/tmp/verify-core3-ui/`, `handoff/tmp/core3-ai/` and `handoff/tmp/core4-fix/`. The A and
+U items are numbered for this pass; they are not the U items of sections 2.3 and 8.3. For variant authors,
+`handoff/IMPLEMENTING.md` describes the result (sections "Classic end rules", "Computer player", "Hidden
+information" and "Quantum layer: what you get for free").
+
+### 9.1 Package "ai"
+
+- **A1 the computer sees the escape rule** (shogi, horde, atomic and xiangqi reports: it never played a "cannot
+  escape" win on purpose and could walk into one).
+  - (a) The outcomes of each candidate at the root are the real states (`stateAfter` without light mode), at every
+    level: a move after which the enemy cannot escape scores as a win, one whose outcome ends the game against the
+    mover as a loss. Only the quick judgement made when the time runs out before any candidate has a value stays
+    light.
+  - (b) After my move or an answer, a side to move that can capture an enemy royal piece for certain has won, one
+    ply later (`certainEnd`, reason `king`), without a further search. The test is the core's `certainCapture`, now
+    exported from quantum.js, behind a filter in ai.js (`certainTake`): the captures of each world (`capturesOf`: the
+    capture branches of the movement descriptors, walked as `pieceMoves` walks them, plus the captures of
+    `extraMoves`; remembered per world) must share a move key or a piece, and a shared key decides at once when the
+    variant has no `filterMoves`. The filter only rejects states that cannot be certain; without it the normal level
+    was up to about 10 times slower in 4D.
+  - (c) With the escape rule, `mightForce` counts an outcome that leaves an enemy royal piece capturable for certain
+    by the mover (a check) as forcing, so the normal level sees such answers and every level tries such moves first.
+  - Addition: (b) alone cannot see the other side mate me. After an answer that may leave the side to move mated (one
+    of its royal pieces capturable for certain, or `mayBeBoxed`), the search uses the answer's real state
+    (`answerState`); also when the light state is a quiet-move or bare-kings draw, since a played move applies the
+    escape rule first. `mayBeBoxed` covers quiet mates (the king not attacked, every move walks into a capture): the
+    side has a royal piece, at most three other pieces on the board and in hand, and no step of a royal piece that
+    `safeStep` proves safe (a quiet step onto a square empty in every world, the same move in every world, after
+    which no enemy capture takes a royal piece in any world). A move that might box the enemy in is forcing too.
+- **A2 ties** (koth report): a level without noise adds `rng() * 1e-3` to each value, so exact ties are broken at
+  random. Hard against hard no longer shuffles a rook back and forth; hard's first move varies by seed and repeats
+  for the same seed.
+- **A3 stand pat** (horde report): below the hard level the replying side's best value starts at
+  `evaluateState(V, s, them)`, so it may decline every forcing answer. The `it.todo` of `horde.spec.js` is now a real
+  test (the normal level takes the free knight, `e4-d5`); it fails without A3.
+- **A4** the `mightForce` comment: every outcome counts, a Missed one too (in antichess a side left without a move
+  wins, in horde it draws, and with the escape rule the side to move may be boxed in).
+- **A5** `aiView(state, side, level)`: the level id (`'easy'`, `'normal'` or `'hard'`) as a third argument. The
+  existing hooks (Kriegspiel, Dark chess, the multiverse) ignore it.
+- **Addition: a third move at the hard level** (`deep: 8` in `LEVELS`; `deepen`, `deepValue`, `myBest`). Once the
+  two-move pass is complete, in a variant of two sides, with more than one scored candidate and no sure win, the hard
+  level re-scores its best 8 candidates (by value rounded to a centipawn, forcing moves first among equals): after
+  each answer, my best forcing move or none. It uses the time left less a tenth of the level's budget, keeps a
+  re-scored move only when its whole evaluation fitted, and yields to the browser every 12 ms (`pacer`). The answers
+  are taken in the order of their two-move value, and the scan stops as soon as that value alone is no better for
+  the other side than the best answer found (a third move never lowers my value). It finds a knight fork of king and
+  rook with every seed.
+- **Variant tests that pinned the old behaviour** (L5; each now follows the rules):
+  - `atomic.spec.js` T1: a quiet move after which Black cannot escape the blow-up also wins at once; the test accepts
+    `exploded` or `cannotEscape`.
+  - `crazyhouse.spec.js` "takes a king it can take": the queen drop `q@d8` also wins at once; the test asserts a
+    certain immediate win instead of `f7-h8`.
+  - `threecheck.spec.js` T8: a first check (`d1-h5`) is now forcing by (c); a quiet move that is not forcing was
+    added.
+  - `core-ai-ui.spec.js`, two U3 tests: they pinned the tie order `e1-f1`; the check `d1-e2` is now tried first and
+    ties, so they assert "not `d1-d5`".
+
+### 9.2 Package "ui"
+
+- **U1 hidden information** (kriegspiel report). `src/variantplay/marks.js` gains three pure helpers:
+  `boardInteractive` (a human to move, no hand-over step, no curtain, and in a hidden variant the viewer to move),
+  `blindTargetAllowed` (a target on a square the viewer cannot see only from `candidateMoves` for moves and drops, or
+  from `ownView` for Split and Merge) and `focusSquares` (the visible from squares of the viewer's moves and the
+  marked targets). The composable's new `interactive` gates clicks, drops, the selection and the target marks; the
+  view's `moverLooks` and `focusable` use it; `VariantBoard` gives a hidden cell tabindex 0 only as a marked target
+  and names only the viewer's own pieces on it. A from square the viewer cannot see is no longer focusable at all
+  (before: when the viewer's own piece might stand there).
+  - Decision taken while building: "never a target mark on a square the viewer cannot see" is not applied literally
+    to Kriegspiel. Its visibility is only the squares of its own pieces, so the literal rule would remove every move
+    dot and make it unplayable by keyboard. Its targets come from `candidateMoves` and `ownView`, which use only the
+    viewer's own pieces, and the component tests check that the board is identical whatever stands on the hidden
+    squares. Dark chess never has such targets.
+- **U2 outcome results** (threecheck report). `outcomes()` adds `result` to an outcome that ends the game, as the
+  light `stateAfter` decides it (`buildState` with a new `preview` flag): `worldResult` (the same in every world
+  after the game-end roll), `stateResult`, the bare-kings and quiet-move draws and the move limit. When a generic draw
+  or the move limit would end it, the escape rule is checked first (fix round: a played move applies the escape rule
+  before them, so the preview showed a draw where the move wins); otherwise "cannot escape" and "no legal move" are
+  left to the played move. When the game goes on the field is left out rather than set to `null`, since existing
+  tests compare outcome objects exactly (`bughouse.spec.js`, `core-quantum.spec.js`). `endText(V, result, notes)` in
+  texts.js gives "The game ends: {result}" (an existing, translated string) unless an `end:` note with a result says
+  it already. The pending box shows it per outcome; the roll box shows it from the real result of the played move, so
+  also for "the king could not escape". In a running hidden game the pending outcomes carry no `result` (fix round:
+  whether an outcome ends the game depends on hidden pieces, for example a quiet-move draw that waits).
+- **U3 escape speed, exact** (hexagonal report: a mate on the hex board could freeze the app for up to 0.8 s).
+  `splitThreats` works out, once per target, the threats over the worlds of the split's quiet move to that target
+  (`commonThreats`, `keepThreats`). A pair of targets is skipped only when a threat key is common to both halves and
+  to the idle worlds, which are built with that split's own action (`applyMiss`): exactly when `splitTrapped` would
+  skip it by a certain key. Every other pair falls back to `splitTrapped`. The single moves never decide alone: a
+  split can escape where neither of its quiet moves does (each half blocks another line). `movesOnto(V, b, id, to)`
+  (exported) finds a piece's descriptor moves onto one square by following only the lines through it, in
+  `pieceMoves` order; `keyMove` and `mergeMove` use it. Median ms per real move, committed core and new core in the
+  same run (a machine loaded by other agents):
+
+| Position | Committed | New |
+|---|---|---|
+| hyper4d, 8 worlds, 7029 actions | 39 | 37 |
+| hyper4d, 8 worlds, 3844 actions | 53 | 50 |
+| hexagonal, 8 worlds, 1362 actions | 10 | 7 |
+| raumschach, 8 worlds, 809 actions | 20 | 10 |
+| hyper4d, 32 worlds | 135 | 86 |
+| hyper4d, 64 worlds | 255 | 93 |
+| raumschach, 64 worlds | 40 | 20 |
+
+  The target of under 150 ms at 8 worlds is met. The reported 0.8 s was not reproduced: the review's own probe
+  (`handoff/tmp/final-hexagonal/matecost.mjs`, 10 seeds) takes at most 51 ms on the committed core and 33 ms now.
+- **U4 five squares** (antichess and hexagonal reports): the classic engine allows it too (`docs/engine-rules.md`
+  7.5). After the same moves, the link `a1-a8` is one unrolled outcome with the rook on 5 squares, and the classic
+  engine refuses the matching split with `location_cap`. So the core is unchanged, and `docs/variants.md` item 8 now
+  says that a split never spreads a piece over more than 4 squares and that a blocked slide can add one more (in
+  commit 4ec4e9f). Two tests play the same moves in the variants core and in the classic engine: both link the rook
+  onto a fifth square (the same five squares and chances) and both refuse the split `a1-b1|c1`.
+- **U5 shogi spin**: `pieceSpin(V, side, rotation)` in glyphs.js (the side's `rotate` plus the board's rotation) is
+  used by the board, the hands and the promotion box, so Gote's pieces point down in Sente's view off the board too.
+- **U6 fuzz**: `randomOptions` in `fuzz.spec.js` draws seeded values for the options marked `random` (a whole number
+  within the bounds, a choice or a boolean), so the Chess960 fuzz games start from random, reproducible positions.
+
+### 9.3 Verification and measurements
+
+- **Escape rule (U3).** A brute-force oracle over every action and outcome (`handoff/tmp/verify-core3-ui/oracle.mjs`)
+  found no mismatch on random quantum positions with ghosts of both sides: 8,755 orthodox positions (191 mates),
+  2,082 hexagonal (54) and 1,935 raumschach (8). The tests add four positions where only a split escapes (idle worlds
+  and a three-line case included), mates on hexagonal, 5 × 5 × 5 and 4D compared with a plain search, a variant whose
+  `applyMiss` depends on the action, and `movesOnto` against `pieceMoves` in all 20 variants; three deliberately
+  broken copies of the code were each caught. Mates with a big army at 8 worlds took 6–10 ms (hexagonal), 8–12 ms
+  (raumschach) and 22–42 ms (4D) per real move, converging-capture mates at 8 worlds 5–28 ms.
+- **Certain captures (A1 b).** `certainTake` agreed with the core's `certainCapture` on about 2.2 million random
+  quantum states in 12 variants (145,364 of them certain), without a mismatch (`handoff/tmp/core3-ai/par-*.log`).
+- **Wins at once.** In positions with a move that wins in every outcome, found by random play in atomic, hexagonal,
+  horde, hyper4d, orthodox chess, raumschach, shogi and xiangqi (with several worlds too), every level found the win
+  with both seeds, within its budget (`handoff/tmp/core3-ai/wf*-*.log`).
+- **Strength.** Hard against normal, 20 games per variant with both colours (`handoff/tmp/core4-fix/final/`): in
+  orthodox chess hard won 18 and normal none (1 even and 1 with normal ahead at the ply limit); in atomic hard won 17
+  and normal 2 (1 with hard ahead). Kriegspiel and Dark chess games at every level stayed legal and within the budgets.
+- **Budgets.** On 8 × 8, 5 × 5 × 5, hexagonal and 4D positions of 4 to 64 worlds (`handoff/tmp/core4-fix/t-*.log`), no
+  search went more than 6 ms over its budget (at most easy 406, normal 1506, hard 4003 ms). The escape checks cost
+  time: in 4D at 8 worlds easy went from 32–58 ms to 124–194 ms, and from 24 worlds on it uses its whole 0.4 s, so it
+  searches fewer candidates there (normal and hard already used their whole budgets in 4D).
+
+### 9.4 Tests
+
+New: `core-ai2.spec.js` 15 tests (the shogi, horde and atomic probes at every level, a real outcome that loses, a
+mate in one found by hard with 5 of 5 seeds and by the other levels, no step into a mate in one, (b) with a pinned
+knight, (c), quiet mates found and not walked into, the third move and its budget at 64 worlds, the two A2 tests and
+A5), `core-ui2.spec.js` 16 (U1 helpers, U2, U3, U4, U5), `core-ui2.vue.spec.js` 9 (U1 on the real Kriegspiel and
+Dark chess modules, U2 boxes, U5), 2 in `fuzz.spec.js`, and the horde test that replaced the `it.todo`. The variant
+suite passes: 36 files, 1077 tests passed and 1 expected failure (an `it.fails` in `multiverse.spec.js`), counting
+the multiverse team's new files.
+
+### 9.5 Open for the lead
+
+- Commit `src/variants/core/ai.js` together with `src/variants/core/quantum.js`: ai.js imports `certainCapture`,
+  which only the new quantum.js exports.
+- The header of `src/variants/core/variant.js` is out of date on two points: `recordInfo` is "Never called in light
+  mode (the computer player's search)" and `escapeRule` applies "not in the computer player's search". Light states
+  still skip both, but the computer's search now also builds real states (root outcomes, answers that might mate, the
+  hard level's third move), where both run. `handoff/IMPLEMENTING.md` already says so.
+- `allowQuantum(state, action)` (quantum.js and the variant.js header, in the working tree) is the multiverse team's
+  generic hook, not part of this pass; `handoff/IMPLEMENTING.md` does not list it yet.
+- Responsiveness on the largest boards: the longest stretch without a yield to the browser grew. In 4D at 64 worlds
+  it reached 409–468 ms at the hard level (was 273–334 ms), and at 8 worlds 59–166 ms (was 36–45 ms); raumschach at
+  64 worlds reached 379 ms (`handoff/tmp/core3-ai/tm-hyper4d-base.log`, `handoff/tmp/core4-fix/t-*.log`).
+- U1: confirm the Kriegspiel exception (move dots on squares the viewer cannot see, built from its own pieces only).
+- `docs/variants.md` rule 9 still opens with "There is no check in Quantum Chess", while the shared rules card says
+  "Check does not limit your moves" (8.4) and the computer now treats a check as a forcing move.

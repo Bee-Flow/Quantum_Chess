@@ -395,7 +395,9 @@ describe('three-check: quantum', () => {
 		expect(o[1].result).toBeNull()
 		expect(o[1].pos).toEqual(['Kg1 Qd3 ke8'])
 		expect(mightForce(V, st(ghostQueen('d1', 'd3'), { checks: [2, 0] }), 'd1-h5')).toBe(true)
-		expect(mightForce(V, st(ghostQueen('d1', 'd3')), 'd1-h5')).toBe(false)
+		// a first check forces too: in the Moved outcome the king can be captured for certain (the escape rule)
+		expect(mightForce(V, st(ghostQueen('d1', 'd3')), 'd1-h5')).toBe(true)
+		expect(mightForce(V, st(ghostQueen('d1', 'd3')), 'g1-h1')).toBe(false)
 	})
 
 	it('settles a possible blocker when a certain move checks past it (T7)', () => {

@@ -83,6 +83,22 @@ export function noteText(V, note) {
 }
 
 /**
+ * The line that says an outcome ends the game ("The game ends: White wins (three checks)"), or '' when it does not or
+ * when one of its roll notes already says so (an `end:` note of the game-end roll with a result).
+ *
+ * @param {object} V variant
+ * @param {object|null|undefined} result the result after the outcome (`outcomes()`), or the game's result
+ * @param {string[]} [notes] the roll notes of the outcome
+ * @return {string}
+ */
+export function endText(V, result, notes = []) {
+	if (!result || notes.some((note) => note.startsWith('end:') && note !== 'end:null')) {
+		return ''
+	}
+	return t('quantumchess', 'The game ends: {result}', { result: resultText(V, result) })
+}
+
+/**
  * Why a game ended.
  *
  * @param {object} V variant

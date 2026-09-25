@@ -98,3 +98,18 @@ export function typeName(V, type) {
 	const n = V.types[type]?.name
 	return typeof n === 'function' ? n() : (n ?? type)
 }
+
+/**
+ * How far a piece of a side is turned, in degrees: its side's rotation (`sides[i].rotate`, by default 0 for the first
+ * side and 180 for the others) plus the board's, so that a shogi pentagon points at the opponent as the player sees
+ * the board, on the board and off it (hands, the promotion choice).
+ *
+ * @param {object} V variant
+ * @param {number} side side index
+ * @param {number} rotation the rotation of the board in degrees
+ * @return {number} 0 to 359
+ */
+export function pieceSpin(V, side, rotation) {
+	const own = V.sides[side]?.rotate ?? (side === 0 ? 0 : 180)
+	return (((own + rotation) % 360) + 360) % 360
+}

@@ -11,12 +11,18 @@
  * Hidden information: the Split, Merge and Measure modes choose their squares on `V.ownView(state, viewer)` when the
  * variant has one (the board as the player knows it), but every attempt is decided on the real state. With
  * `V.umpire` an attempt is binding (no odds preview) and the results show no odds. While a hidden game runs there is
- * no undo and no danger line.
+ * no undo and no danger line, and the odds preview does not say which outcome ends the game (it depends on hidden
+ * pieces).
  *
  * Split is not offered while the budget of the side to move is full (docs/rules.md 7.1), nor Split and Measure while a
  * capture is compulsory; in hidden pass & play the mode follows the next player's budget only once the device is
  * passed, so the mover never learns it. Rolls are remembered under `rollMemoKey` (rolls.js), so undo never rerolls a
  * result.
+ *
+ * The board takes input and shows the selection and the move targets only while it is `interactive` (marks.js
+ * `boardInteractive`): a human to move, no hand-over step, no curtain, and in a hidden game the viewer to move. A
+ * target on a square the viewer cannot see is shown only when it comes from what the viewer knows
+ * (`blindTargetAllowed`).
  */
 
 import { computed, markRaw, ref, shallowRef } from 'vue'
@@ -35,7 +41,7 @@ import {
 	splitCode,
 	splitTargets,
 } from '../../variants/index.js'
-import { lastMoveSquares, sidePieceAt } from '../marks.js'
+import { blindTargetAllowed, boardInteractive, lastMoveSquares, sidePieceAt } from '../marks.js'
 import { needsConfirmation, refusalKind, resignResult } from '../panel.js'
 import { rollMemoKey } from '../rolls.js'
 import { loadVariantGame, saveVariantGame } from '../variantGames.js'
@@ -126,6 +132,18 @@ export function useVariantGame(id) {
 	})
 
 	const moves = computed(() => (V.value && state.value ? candidateMoves(V.value, state.value) : []))
+
+	/**
+	 * Whether the board takes the viewer's input and shows the viewer's targets and keyboard focus
+	 * (`boardInteractive`): never during the hand-over, behind the curtain, on a computer's turn, or in a hidden game
+	 * while another side is to move.
+	 */
+	const interactive = computed(() => boardInteractive(V.value, state.value, {
+		humanTurn: isHumanTurn.value,
+		handover: Boolean(handover.value),
+		curtain: curtain.value,
+		viewer: viewer.value,
+	}))
 
 	/** Whether a hidden-information game is running (no undo, no danger line, the other budgets unknown). */
 	const secret = computed(() => Boolean(V.value?.hidden && state.value && !state.value.result))
@@ -225,6 +243,7 @@ export function useVariantGame(id) {
 					notes: res.branch.notes,
 					p: res.branch.weight / 16777216,
 					rolled: res.branch.rolled,
+					result: res.state.result,
 				}
 			: null
 		pending.value = null
@@ -236,8 +255,23 @@ export function useVariantGame(id) {
 	}
 
 	/**
+	 * An outcome of the preview without its game result.
+	 *
+	 * @param {object} o outcome (`outcomes`)
+	 * @return {object}
+	 */
+	function withoutResult(o) {
+		const out = { ...o }
+		delete out.result
+		return out
+	}
+
+	/**
 	 * Try a move on the real state: a refused attempt gets a notice (the umpire's "no" when the player could not know
-	 * it), a move that rolls waits for confirmation, except with an umpire, where an attempt is binding.
+	 * it), a move that rolls waits for confirmation, except with an umpire, where an attempt is binding. In a hidden
+	 * game the pending outcomes carry no `result`: whether an outcome ends the game depends on the whole real state
+	 * (a quiet draw waits while a hidden enemy piece can capture the mover's king for certain, and the quiet counter
+	 * counts the enemy's moves in the fog), which the player must not learn before committing to the move.
 	 *
 	 * @param {string} code move code
 	 */
@@ -253,7 +287,7 @@ export function useVariantGame(id) {
 			return
 		}
 		if (needsConfirmation(V.value, outs)) {
-			pending.value = { code, outcomes: outs }
+			pending.value = { code, outcomes: secret.value ? outs.map(withoutResult) : outs }
 			return
 		}
 		play(code)
@@ -278,7 +312,7 @@ export function useVariantGame(id) {
 	 * @param {number} sq square
 	 */
 	function click(sq) {
-		if (!isHumanTurn.value || curtain.value || handover.value || pending.value || thinking.value) {
+		if (!interactive.value || pending.value || thinking.value) {
 			return
 		}
 		notice.value = null
@@ -417,7 +451,7 @@ export function useVariantGame(id) {
 	 * @param {string} type piece type
 	 */
 	function chooseDrop(type) {
-		if (!isHumanTurn.value || handover.value) {
+		if (!interactive.value) {
 			return
 		}
 		mode.value = 'move'
@@ -455,6 +489,22 @@ export function useVariantGame(id) {
 				add(s, 'last')
 			}
 		}
+		// the selection and the targets belong to the viewer's own turn only
+		if (!interactive.value) {
+			return out
+		}
+		const blind = hidden.value
+		/**
+		 * Mark a move target, unless the viewer cannot see its square and the target comes from the real state.
+		 *
+		 * @param {number} sq square
+		 * @param {'move'|'drop'|'split'|'merge'} source where the target comes from
+		 */
+		const target = (sq, source) => {
+			if (!blind?.has(sq) || blindTargetAllowed(V.value, source)) {
+				add(sq, 'target')
+			}
+		}
 		for (const s of sel.value) {
 			add(s, sel.value[0] === s ? 'selected' : 'pick')
 		}
@@ -468,25 +518,22 @@ export function useVariantGame(id) {
 				}
 			}
 		}
-		if (!isHumanTurn.value || handover.value) {
-			return out
-		}
 		if (dropType.value) {
 			for (const m of moves.value) {
 				if (m.drop === dropType.value) {
-					add(m.to, 'target')
+					target(m.to, 'drop')
 				}
 			}
 		} else if (mode.value === 'move' && sel.value.length) {
 			for (const m of moves.value) {
 				if (m.from === sel.value[0]) {
-					add(m.to, 'target')
+					target(m.to, 'move')
 				}
 			}
 		} else if (mode.value === 'split' && sel.value.length && !blocked('split')) {
 			for (const t of splitTargets(V.value, own.value, sel.value[0])) {
 				if (!sel.value.includes(t)) {
-					add(t, 'target')
+					target(t, 'split')
 				}
 			}
 		} else if (mode.value === 'merge' && sel.value.length) {
@@ -495,14 +542,14 @@ export function useVariantGame(id) {
 				for (const m of list) {
 					for (const f of m.from) {
 						if (f !== sel.value[0]) {
-							add(f, 'target')
+							target(f, 'merge')
 						}
 					}
 				}
 			} else {
 				for (const m of list) {
 					if (m.from.includes(sel.value[1])) {
-						add(m.to[0], 'target')
+						target(m.to[0], 'merge')
 					}
 				}
 			}
@@ -665,6 +712,7 @@ export function useVariantGame(id) {
 		players,
 		humanSides,
 		isHumanTurn,
+		interactive,
 		viewer,
 		rotation,
 		hidden,
