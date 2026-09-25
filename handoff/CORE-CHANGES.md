@@ -7,6 +7,10 @@ makruk.md, shogi.md, xiangqi.md and the koth, raumschach and crazyhouse review e
 copies (`handoff/prototypes/zh/quantum_team.js`, `handoff/prototypes/fp/quantum_fp.js`) and the lead's binding
 decisions D1-D6 below.
 
+**Follow-up pass** (section 8, after the lead's decisions in `handoff/LEAD-DECISIONS.md`): the classic end rules are
+now in the core. That supersedes rows 30 (the missed-drop text), 40 (bare kings per variant) and 72 ("your king
+cannot escape" and the waiting draws rejected) of section 1, their entries in section 4, and the drop text of U7.
+
 Every item is generic and backwards compatible: a new hook is optional and its default keeps today's behaviour, except
 where today's behaviour is a bug (marked **bug fix**). All existing tests (`tests/js/variants/*`, the rest of
 `npm test`) must keep passing.
@@ -955,3 +959,188 @@ disjoint files after item 8.
 Open for the lead: Q13 is on by default (it refuses a multiverse `r0` + `r` merge, harmless); Q14 and Q7's
 converging captures change what players see (fewer rolls, higher danger numbers) as bug fixes against docs/rules.md;
 raumschach.md section 8.2, which it cites for C1 and C2, was not yet written at review time.
+
+---
+
+## 8. Follow-up pass
+
+Status: implemented and verified, 2026-09-25, uncommitted on top of commit cb833fd (the first pass). Two packages,
+"rules" (`src/variants/core/quantum.js`, `variant.js`; tests `tests/js/variants/core-rules.spec.js`) and "ui-ai"
+(`src/variants/core/ai.js`, `src/variantplay/**`, `src/views/VariantGameView.vue`; tests
+`tests/js/variants/core-ui-ai.spec.js` and `core-ui-ai.vue.spec.js`), then a verification of each and one fix pass
+(8.4), which also touched `src/variants/core/world.js`. The requests came from the spec reviews (section 8.2 of
+`handoff/research/<id>.md`) and the critics' scripts in `handoff/tmp/critic-*/`. The U items below are numbered for
+this pass; they are not the U1-U17 of section 2.3.
+
+### 8.1 Decisions
+
+The lead's binding decisions are in `handoff/LEAD-DECISIONS.md`:
+
+- **L1** the classic end rules of docs/rules.md 5 and 6 apply to every variant: "your king cannot escape", the
+  bare-kings draw, and draws that wait while the player to move can capture an enemy king for certain. A variant
+  opts out only where its own rules make the classic rule wrong, with a code comment. A variant that returns
+  `'bareKings'` from its own `worldResult` drops it for the core flag, unless its condition differs (then it keeps its
+  own and sets `bareKingsDraw: false`). The shared rules card explains capture-the-king and the escape rule, and a
+  variant card must not contradict it.
+- **L2** `specialMoves: false` in raumschach, hyper4d, shogi, xiangqi and makruk.
+- **L3** a missed drop reads "Missed: the piece stays in hand"; the roll memo key is `ply:positionHash:code` without a
+  trailing promotion suffix.
+- **L4** castling never rolls, and en passant is certain (as built in the first pass, Q2).
+- **L5** when a variant test fails because of L1-L4, the test changes, not the core.
+
+Decided while building:
+
+- R3 became a flag of its own, `drawsWait`, with the same default as `escapeRule`, so that four-seat variants can opt
+  in (bughouse and fourplayer do, and the multiverse's final spec does too).
+- Only the quiet-move and bare-kings draws wait. The move limit does not wait, and "no legal move" can never occur
+  together with a certain capture (docs/rules.md 6 names the bare-kings, repetition and 50-move draws; the variants
+  have no repetition draw, row 60).
+- A capture counts as certain only when it is legal: a key that is a certain move in some worlds and an ordinary move
+  in others (Q2) never counts, even at 100 % king danger. Only the side that moves next counts as the attacker (the
+  same answer as "any enemy" in two-player games).
+- The per-variant values of the flags are in `handoff/IMPLEMENTING.md`, section "Classic end rules".
+
+### 8.2 Package "rules"
+
+- **R1 "your king cannot escape"** (flag `escapeRule`, reason `cannotEscape`). After a move, not in light mode: the
+  side to move has at least one legal action, every action (moves, splits, merges, measurements) leads only to
+  outcomes where the game goes on with one of its royal pieces capturable for certain by the next side (one legal
+  move key or one merge takes it in every world, "takes" as `royalDanger` counts it), and no action might capture an
+  enemy royal piece. Then the mover wins at once. An outcome that ends the game is an escape; a side without any
+  legal action gets `noMoves`. Default true for exactly two sides, a royal type, no `compulsoryCapture`, no
+  `nextSide` and no `actions`.
+  - How it stays fast: the outcomes are built as the light `stateAfter` builds them, without `unifyWorlds`, so the
+    rule never recurses. Moves of the royal pieces and captures come first, splits last, and none at a full budget.
+    One search remembers each classical move's resulting world and the facts of each world, so a split's children
+    are worlds already met. A split is skipped without building its outcomes when one enemy move or merge takes the
+    king in every world it can lead to and no world ends the game. When the variant has no `generate` or
+    `filterMoves`, only the attacking piece's moves are generated.
+  - Checks: compared with a plain search over every action and outcome on random 4 × 4 to 8 × 8 positions in four
+    kinds of variant (plain, `filterMoves`, two kings per side, atomic explosions): no mismatch in over 200,000
+    outcomes. The verifier's independent oracle agreed on about 75,000 more states (castling, en passant,
+    `filterMoves`, `stateResult`, explosions). Four deliberate breakages of the code were each caught by the tests.
+  - Tests R1 a-l: the back-rank trap and a blocking piece (a); never in light mode or without the flag (b); every
+    kind of action at 8 worlds (c); a split that meets two threats half each escapes (d); an outcome that ends the
+    game escapes (e); a move or a ghost that might take the enemy king escapes (f); no legal action gives `noMoves`
+    (g); an escape in one outcome of a roll (h); before the quiet-move draw, and never when every answer reaches the
+    move limit (i); a smothered king with a big army at 8 worlds (j); the random comparison, seeded (k); the
+    converging-capture trap of 8.4 (l).
+- **R2 bare kings** (flag `bareKingsDraw`, reason `bareKings`): only royal pieces on the board in every world and no
+  piece in any hand. Checked after `worldResult`, `stateResult` and R1. chess960, raumschach, trid, threecheck,
+  hyper4d and hexagonal now use the core flag instead of their own copy. atomic and makruk keep their own rule,
+  decided world by world through the game-end roll, with `bareKingsDraw: false`; fourplayer keeps its FFA rule with
+  the flag off. Tests: the draw, every world and no piece in hand needed, agreement with a `worldResult` version.
+- **R3 draws wait** (flag `drawsWait`): the quiet-move and bare-kings draws wait while the side to move can capture an
+  enemy royal piece for certain; a converging capture counts. Tests: bare kings side by side, the quiet draw waits
+  only while the capture is certain, a converging capture (`d4|f4-e2`) makes it wait, an illegal capture does not,
+  the move limit does not wait.
+- **R4 atomic danger** (atomic.md 8.2, T24): `mergeDanger` weighs every merge whose target may hold a piece that the
+  merging side can capture, not only a royal piece. Tests: the atomic cases a-c, and brute-force equality on a
+  mini-atomic variant and on orthodox chess. The committed and the new core gave identical king danger on 9,368
+  values (1,807 above zero) over 60 orthodox games, and on 10,124 more in the verifier's soak.
+- **R5 faces over the target** (shogi.md 8.2, Q13): `perWorldMerge` and `mergeCandidates` refuse a merge when the piece
+  has more than one type over the worlds where it stands on `f1`, `f2` or the target. Test: types `s` and `+s`.
+- **R6 a merging piece absent from world 0**: `perWorldMerge` reads the type in a world where the piece stands on the
+  from square (a 5D twin threw before). Test.
+- **R7 makruk review bug**: `legalMoves` uses the piece's home squares (its squares where `ownPieceAt` is the piece),
+  skips the piece only when there is none, offers the Measure on the first and merges and splits from every one.
+  Tests: the Measure on the other square; only legal codes, splits from the other square too.
+- **R8 split budget**: `splitsFrom` (quantum.js) and `aiSplits` (ai.js) return `[]` at once when `budgetInfo` says the
+  budget is full; the result is the same as the full check. Tests in both test files.
+- **R9 `specialMoves`** (default true; false: neither castling nor en passant), documented in `variant.js` and read by
+  the UI only. Tests: the defaults of all four flags, and each opt-out.
+
+Contracts that became tighter (written in the `variant.js` header): `unifyWorlds` must not change anything the next
+move's captures depend on, because the escape search leaves it out; `generate`, `applyClassical` (with `afterMove`)
+and `applyMiss` must be pure functions of the world.
+
+### 8.3 Package "ui-ai"
+
+- **U1 Kriegspiel fallback** (kriegspiel.md 8.2): with `V.aiView`, when no candidate of the view is legal on the real
+  state, `chooseMove` tries `V.candidateMoves(real)` (else the legal moves of the real state) plus the merges and
+  measurements of `legalMoves(V, V.ownView(real, me))`, shuffled with the search rng, and plays the first code whose
+  `branches` is not null; null only when none is legal. Variants without `aiView` are unchanged. 4 tests.
+- **U2 deadline**: the level's budget runs from the call and is checked inside the evaluation of every candidate,
+  before each outcome and each reply, the first candidate included. When the time runs out before any candidate has
+  a value, that candidate is judged by the positions right after it, without the reply, so there is always a move.
+  4 tests. Measured at 36-64 worlds (easy / normal / hard, budgets 0.4 / 1.5 / 4 s): hyper4d went from up to 397 /
+  1679 / 4236 ms to at most 314 / 1501 / 4001 ms; raumschach, hexagonal and capablanca now stop at 1501 / 4001 ms.
+  Across all 20 variants no search goes more than 1 ms over its budget.
+- **U3 roll memo key** (docs/rules.md 8): `rollMemoKey(state, code)` in the new `src/variantplay/rolls.js` gives
+  `ply:positionHash:code`, the code without a trailing promotion suffix (`/=[^-|?@=\s]+$/`). The hash (FNV-1a-64)
+  covers `state.turn` and every world as its `worldKey` text and weight, in stored order. `rolls.js` has its own copy
+  of the `worldKey` text, since `src/variants/index.js` does not export it; a test keeps the two equal. Old keys
+  (`ply:code`) are simply not found. 4 unit tests and 3 composable tests.
+- **U4 missed drop**: "Missed: the piece stays in hand". The expectations in `core-ai-ui.spec.js` and
+  `crazyhouse.spec.js` follow it.
+- **U5 rules card**: `sharedRules(V)` leaves the castling and en passant sentence out when `V.specialMoves === false`.
+- **U6 full budget**: the composable's `budgetFull` (from `budgetInfo`) closes the Split mode: Split cannot be chosen,
+  a Split mode left over selects nothing, and after a move or an undo the mode falls back to Move. The button is greyed
+  out with the tooltip "Budget full: merge or measure a piece first." (already translated for the classic app).
+  3 tests, plus 3 for the hidden hand-over (8.4).
+- **U7 reason text**: `cannotEscape` reads "the king could not escape" ("White wins (the king could not escape)"); a
+  variant's own `reasonText` still comes first.
+- **Addition (L1)**: for a variant with royal pieces the shared card also says "Check does not limit your moves: you
+  win by capturing the enemy king, unless the variant has its own goal.", and with `escapeRule` "Your king cannot
+  escape: if every move you could make would leave your king to be captured for certain, you lose at once, unless one
+  of your moves could still capture the enemy king." 2 tests.
+
+### 8.4 Verification and fixes
+
+Each package was verified against its items with probes (`handoff/tmp/verify-core2-rules/`,
+`handoff/tmp/verify-core2-ui-ai/`); one fix pass (`handoff/tmp/fix-core2/`) then settled the findings:
+
+- **R1 was slow on converging-capture traps** (a White knight ghost on f7|g6 against a smothered h8 king): every Black
+  action ended in a merge threat that only the whole state could decide, about 50-70 ms on 8 × 8 at 8 worlds (the
+  target is 50 ms), 173 ms on 5 × 5 × 5 at 8 worlds, and the first report's worst cases had left this case out. Now
+  a merge threat is decided from single worlds (the merge move of each world is remembered), and `worldKey` is
+  remembered per world object (`world.js`). Test R1 l.
+- **U6 leaked the opponent's budget** in hidden pass & play: the Split tooltip and the mode switch showed whether the
+  next player's budget was full while the mover still looked at the panel. Now the mode follows the next player's
+  budget only behind the curtain, and the tooltips and the compulsory line speak only while the player to move looks.
+- **The keyboard focus** reached the opponent's hidden pieces during the hand-over; it now reaches only the squares
+  of the player to move, and a hidden from square only where the viewer's own piece may stand.
+- **The shared card** said "There is no check", beside three-check and Kriegspiel cards that are about checks; it now
+  says "Check does not limit your moves".
+
+The verifier's soaks, run again after the fix (long random orthodox games, and quantum-heavy games up to 48 worlds),
+kept every invariant,
+never threw, and ended in `king`, `cannotEscape`, `moveLimit`, `quiet` and `bareKings` results; the slowest single
+move was 3.2 ms.
+
+Time of one move with the escape rule on trapped positions after the fix (the same move without the rule takes
+0.1-7 ms; scripts `handoff/tmp/core-rules/worst.mjs`, `worst3d.mjs` and `handoff/tmp/fix-core2/worst-all.mjs`,
+results in `handoff/tmp/fix-core2/worst-after.txt`):
+
+| Board | 1 world | 8 worlds | 16 worlds | 64 worlds |
+|---|---|---|---|---|
+| 8 × 8, smothered king | 0.6 ms | 1.5 ms | 2.7 ms | 11 ms |
+| 8 × 8, converging-capture trap | – | 3.5-4.6 ms (was 49-72) | – | 16.5-30 ms (was 92-184) |
+| 5 × 5 × 5, raumschach trap | – | 8.8 ms (was 173) | 15 ms | – |
+| 5 × 5 × 5, big army | 2.5 ms | 7.7 ms | 13 ms | 52 ms |
+| 4 × 4 × 4 × 4, big army | 7 ms | 29 ms | 53 ms | 141 ms |
+
+The big-army cases at 16 worlds are stress tests (their budget is over 8, so normal play cannot reach them). In
+random games the average cost is 0.04-0.4 ms per move on 8 × 8 and up to 1.6 ms on 4D.
+
+### 8.5 Tests
+
+The core files (`tests/js/variants/core*.spec.js` and `VariantBoard.vue.spec.js`, 9 files) have 210 tests, all
+passing: 34 in `core-rules.spec.js`, 17 in `core-ui-ai.spec.js`, 11 in `core-ui-ai.vue.spec.js` and 33 in
+`core-ai-ui.spec.js`. The 19 variant spec files, `fuzz.spec.js` and `VariantBoard.vue.spec.js` pass on the final
+core (686 tests, the same before and after the fix pass, `handoff/tmp/fix-core2/after.json`). In the rules package's
+run, 68 variant tests failed on the committed core because they already expected the new rules.
+
+### 8.6 Open for the lead
+
+- The new texts are not yet in `translationfiles/templates`: run `node tools/l10n.mjs extract`.
+- The flag table of L1 says "keep" for atomic's bare-kings draw. The module keeps the draw as its own world-by-world
+  `worldResult` rule and sets `bareKingsDraw: false` (L1's exception clause). darkchess, which L1 does not list, sets
+  `bareKingsDraw: false` because its spec follows chess.com (bare kings are no draw). Both are commented in the
+  module; confirm or overrule.
+- Saved games replay by outcome index, and their roll memo keys are no longer found (a new roll where the old key
+  would have replayed one); the variants are unreleased, so no migration.
+- `docs/development/architecture.md` (section 5.6, see section 6) still lacks the new hooks, now including
+  `escapeRule`, `bareKingsDraw`, `drawsWait` and `specialMoves`.
+- `npm run lint:refs` reports one finding outside the core: `tests/js/variants/horde.spec.js:491` names
+  `docs/horde.md`, which does not exist.

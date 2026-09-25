@@ -15,9 +15,25 @@
  * best continuation instead.
  *
  * The search yields to the browser every few milliseconds, so the board stays responsive while the computer thinks.
+ * Its time budget (`LEVELS[i].timeMs`) runs from the call of `chooseMove` and is checked inside the evaluation of each
+ * candidate too (per outcome and per reply), so a move at 64 worlds on a large board keeps to it as well.
+ *
+ * With `aiView`, the computer plays the best move of its view that is legal on the real state. When none is, it tries
+ * what a player could attempt (`candidateMoves`, and the merges and measurements of its `ownView`) in random order,
+ * until the umpire accepts one.
  */
 
-import { branches, isCertain, legalMoves, splitCode, splitTargets, stateAfter, T, worldResult } from './quantum.js'
+import {
+	branches,
+	budgetInfo,
+	isCertain,
+	legalMoves,
+	splitCode,
+	splitTargets,
+	stateAfter,
+	T,
+	worldResult,
+} from './quantum.js'
 import { applyClassical, generate, HAND } from './world.js'
 
 /**
@@ -30,6 +46,41 @@ export const LEVELS = Object.freeze([
 ])
 
 const WIN = 100000
+
+/**
+ * Thrown by `SearchClock.check` inside the evaluation of a candidate when the time budget is spent.
+ */
+class OutOfTime extends Error {}
+
+/**
+ * The time budget of one search.
+ */
+class SearchClock {
+	/**
+	 * @param {number} timeMs how long the search may take from now, in milliseconds
+	 */
+	constructor(timeMs) {
+		this.deadline = Date.now() + timeMs
+	}
+
+	/**
+	 * Whether the time is spent.
+	 *
+	 * @return {boolean}
+	 */
+	up() {
+		return Date.now() > this.deadline
+	}
+
+	/**
+	 * Stop the evaluation of the current candidate (throw `OutOfTime`) when the time is spent.
+	 */
+	check() {
+		if (Date.now() > this.deadline) {
+			throw new OutOfTime('out of time')
+		}
+	}
+}
 
 /**
  * Whether a side counts as a winner of a finished game.
@@ -108,15 +159,17 @@ export function evaluateState(V, state, side) {
  * @param {object} state state
  * @param {string} code move code
  * @param {(s: object) => number} score value of a resulting state
+ * @param {SearchClock|null} clock the time budget (checked before each outcome), or null for no limit
  * @return {number|null}
  */
-function expected(V, state, code, score) {
+function expected(V, state, code, score, clock) {
 	const list = branches(V, state, code)
 	if (!list) {
 		return null
 	}
 	let v = 0
 	for (const br of list) {
+		clock?.check()
 		v += (br.weight / T) * score(stateAfter(V, state, code, br, list, { light: true }))
 	}
 	return v
@@ -129,9 +182,10 @@ function expected(V, state, code, score) {
  * @param {object} state state
  * @param {number} splitCount how many splits to consider
  * @param {() => number} rng random numbers
+ * @param {SearchClock} clock the time budget (no more split candidates once it is spent)
  * @return {string[]}
  */
-function candidates(V, state, splitCount, rng) {
+function candidates(V, state, splitCount, rng, clock) {
 	const out = legalMoves(V, state).map((m) => m.code)
 	if (splitCount > 0) {
 		const froms = new Set()
@@ -144,6 +198,9 @@ function candidates(V, state, splitCount, rng) {
 		}
 		const pool = []
 		for (const f of froms) {
+			if (clock.up()) {
+				break
+			}
 			pool.push(...aiSplits(V, state, f, rng))
 		}
 		for (let i = 0; i < splitCount && pool.length; i++) {
@@ -180,7 +237,8 @@ function quietMoves(V, b, side, X, f) {
  * the best `max` targets are paired: ranked by the value of the first world where the piece stands on `f` after its
  * quiet move to the target, ties broken at random (a quiet move changes the value only through `V.evaluate`, so a
  * fixed order would always pick the same corner). Of the at most `max * (max - 1) / 2` pairs, the legal ones are
- * kept, at most `max`. The list for human players (`splitsFrom`) stays complete.
+ * kept, at most `max`. The list for human players (`splitsFrom`) stays complete. A full budget allows no split at
+ * all, so then the list is empty at once.
  *
  * @param {object} V variant
  * @param {object} state state
@@ -190,6 +248,10 @@ function quietMoves(V, b, side, X, f) {
  * @return {string[]} split codes
  */
 export function aiSplits(V, state, f, rng, max = 6) {
+	const budget = budgetInfo(V, state, state.turn)
+	if (budget.used >= budget.limit) {
+		return []
+	}
 	const targets = splitTargets(V, state, f)
 	if (targets.length < 2) {
 		return []
@@ -251,7 +313,42 @@ function breathe() {
 }
 
 /**
- * Choose a move for the side to move.
+ * A move for a computer that searches a view of the position (`aiView`) when no move of its view is legal on the real
+ * state: the codes a player in its seat could attempt, in random order, until the umpire accepts one. They are the
+ * variant's `candidateMoves` of the real state (which depend only on the own pieces), else the legal moves, and the
+ * merges and measurements of the own view (`ownView`). Trying moves until one is accepted uses nothing but the
+ * umpire's answers, so it is fair.
+ *
+ * @param {object} V variant
+ * @param {object} real the real state
+ * @param {number} me the computer's side
+ * @param {() => number} rng random numbers (the search's)
+ * @return {string|null} the first accepted code, or null when none is legal
+ */
+function attemptUntilAccepted(V, real, me, rng) {
+	const codes = (V.candidateMoves ? V.candidateMoves(real) : legalMoves(V, real)).map((m) => m.code)
+	if (V.ownView) {
+		for (const m of legalMoves(V, V.ownView(real, me))) {
+			if (m.type === 'measure' || m.type === 'merge') {
+				codes.push(m.code)
+			}
+		}
+	}
+	const list = [...new Set(codes)]
+	for (let i = list.length - 1; i > 0; i--) {
+		const k = Math.floor(rng() * (i + 1))
+		const swap = list[i]
+		list[i] = list[k]
+		list[k] = swap
+	}
+	return list.find((code) => branches(V, real, code)) ?? null
+}
+
+/**
+ * Choose a move for the side to move. The level's time budget counts from this call; once it is spent, the search
+ * stops, also inside the evaluation of a candidate, and keeps the best move found so far. When the time is spent
+ * before any candidate has a value, the next candidate is judged by the positions right after it (no answer is
+ * searched), so there is always a move and the budget is kept at 64 worlds too.
  *
  * @param {object} V variant
  * @param {object} state state
@@ -263,36 +360,48 @@ function breathe() {
  */
 export async function chooseMove(V, state, { level = 'normal', rng = Math.random, signal } = {}) {
 	const L = LEVELS.find((l) => l.id === level) ?? LEVELS[1]
+	const clock = new SearchClock(L.timeMs)
 	const me = state.turn
 	// hidden-information variants: search the position as this side sees it, then keep the moves that are legal
 	const real = state
 	if (V.aiView) {
 		state = V.aiView(state, me)
 	}
-	const moves = candidates(V, state, L.splits, rng).filter((c) => real === state || branches(V, real, c))
+	const moves = candidates(V, state, L.splits, rng, clock).filter((c) => real === state || branches(V, real, c))
 	if (!moves.length) {
-		return null
+		return V.aiView ? attemptUntilAccepted(V, real, me, rng) : null
 	}
-	const started = Date.now()
-	let lastBreath = started
-	const deadline = started + L.timeMs
-	const forcing = moves.filter((c) => mightForce(V, state, c))
+	let lastBreath = Date.now()
+	// the moves that might force the game are tried first; once the time is spent, the rest keep their order
+	const forcing = moves.filter((c) => !clock.up() && mightForce(V, state, c))
 	const ordered = [...forcing, ...moves.filter((c) => !forcing.includes(c))]
+	const now = (s) => evaluateState(V, s, me)
+	const score = (s) => (!L.reply || s.result ? now(s) : replyValue(V, s, me, L, clock))
 	let best = null
 	let bestValue = -Infinity
 	for (const code of ordered) {
 		if (signal?.aborted) {
 			return null
 		}
-		if (Date.now() > deadline && best !== null) {
-			break
-		}
-		const value = expected(V, state, code, (s) => {
-			if (!L.reply || s.result) {
-				return evaluateState(V, s, me)
+		let late = clock.up()
+		let value = null
+		if (!late) {
+			try {
+				value = expected(V, state, code, score, clock)
+			} catch (e) {
+				if (!(e instanceof OutOfTime)) {
+					throw e
+				}
+				late = true
 			}
-			return replyValue(V, s, me, L)
-		})
+		}
+		if (late) {
+			if (best !== null) {
+				break
+			}
+			// no move has a value yet: judge this one quickly, without the answer
+			value = expected(V, state, code, now, null)
+		}
 		if (value === null) {
 			continue
 		}
@@ -320,9 +429,10 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
  * @param {object} s state after my move
  * @param {number} me my side
  * @param {object} L level
+ * @param {SearchClock} clock the time budget (checked before each reply)
  * @return {number}
  */
-function replyValue(V, s, me, L) {
+function replyValue(V, s, me, L, clock) {
 	const them = V.replySide ? V.replySide(s, me) : s.turn
 	if (them === null || them === undefined) {
 		return evaluateState(V, s, me)
@@ -330,7 +440,10 @@ function replyValue(V, s, me, L) {
 	const r = them === s.turn ? s : { ...s, turn: them }
 	let codes = legalMoves(V, r).map((m) => m.code)
 	if (!L.fullReply) {
-		codes = codes.filter((c) => mightForce(V, r, c))
+		codes = codes.filter((c) => {
+			clock.check()
+			return mightForce(V, r, c)
+		})
 	}
 	if (!codes.length) {
 		return evaluateState(V, s, me)
@@ -338,6 +451,7 @@ function replyValue(V, s, me, L) {
 	let worst = evaluateState(V, s, me)
 	let bestForThem = -Infinity
 	for (const c of codes) {
+		clock.check()
 		let mine = 0
 		let theirs = 0
 		const list = branches(V, r, c)

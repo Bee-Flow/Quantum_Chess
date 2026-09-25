@@ -287,7 +287,7 @@ describe('U7: texts', () => {
 
 	it('words the outcomes of a drop', () => {
 		expect(outcomeText('move', 'n@f3')).toBe('Dropped')
-		expect(outcomeText('miss', 'n@f3')).toBe('Missed: the square was taken')
+		expect(outcomeText('miss', 'n@f3')).toBe('Missed: the piece stays in hand')
 		expect(outcomeText('move', 'e2-e4')).toBe('Moved')
 		expect(outcomeText('miss')).toBe('Missed')
 		expect(outcomeText('capture', 'e4-d5')).toBe('Captured')

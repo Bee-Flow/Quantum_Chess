@@ -3,6 +3,9 @@
 Repo: /home/tom/Projects/Quantum_Chess/Quantum_Chess. Read these files before writing code (they are the source of
 truth; this guide summarises them):
 
+- `handoff/LEAD-DECISIONS.md`: the lead's binding decisions (L1-L5). They override the specs: where a spec says
+  "there is no 'your king cannot escape'" or "no waiting draws", the core now has both (section "Classic end rules"
+  below).
 - `handoff/research/<id>.md`: the spec of your variant (its section 3 lists the hooks). Section "Which new hooks each
   variant uses" below is the checklist of the core additions per variant.
 - `src/variants/core/topology.js`: `makeTopology`, `rectTopology(files, ranks, opts)`, `symmetric(vec, dims)`,
@@ -32,6 +35,8 @@ truth; this guide summarises them):
   (`src/variants/index.js` exports the last two for the UI).
 - `src/variants/core/ai.js`: the computer player (optional hooks `evaluate`, `materialSign`, `aiView`, `replySide`;
   exports `mightForce` and `aiSplits` for tests).
+- `handoff/CORE-CHANGES.md` section 8 ("Follow-up pass"): what changed in the core after the first pass (the classic
+  end rules, merge and Measure fixes, the computer's time budget and hidden-information fallback, texts).
 - `tests/js/variants/core.spec.js`, `core-quantum.spec.js`, `core-world.spec.js` + `tests/js/variants/helpers.js`
   (`stateOf`, `play`): how to write tests.
 - `src/variants/catalog.js`: names/summaries (already written for every variant; do not edit).
@@ -63,6 +68,13 @@ export default defineVariant(spec)
 Required fields: `id` (catalog id), `category` (as in catalog.js), `sides`, `topology`, `types`, `setup(options, rng)`
 (returns the classical start world; `rng()` in [0,1) for random setups), `rules()` (returns an array of 3–8 short
 translated sentences: what is special in this variant, the shared quantum rules are shown separately).
+
+The shared rules card (`sharedRules(V)` in `src/variantplay/texts.js`) already says: split, merge, land = roll and
+pass = link, solid pieces, Measure, castling and en passant (left out with `specialMoves: false`), the game-end roll,
+the budget of 8, and for a variant with royal pieces "Check does not limit your moves: you win by capturing the enemy
+king, unless the variant has its own goal." plus, with `escapeRule`, "Your king cannot escape: …". Your `rules()`
+must neither repeat nor contradict it (LEAD-DECISIONS L1): never write "there is no checkmate" or "you win only by
+capturing the king".
 
 A variant built on `orthodoxSpec()` extends it IN PLACE and never spreads it into a new object:
 
@@ -96,21 +108,83 @@ All optional, all called with the variant object already completed. A hook's def
 | `apply(w, m)` / `generate(w, side)` | replace the classical apply / generation completely (exotic worlds: the multiverse, trid's projected moves) |
 | `measured(sampleMove)` | force a classical move into the measured class (the multiverse's playable design: `() => true`) |
 | `drops: true` | show the hands in the UI |
-| `worldResult(w, mover)` | per-world result `{ winner: side, reason }`, `{ winner: null, winners: [..], reason }` or `{ winner: null, reason }` (draw), or null; `mover` is the side that just moved. Default: a side without royal pieces has lost (2 sides) |
+| `worldResult(w, mover)` | per-world result `{ winner: side, reason }`, `{ winner: null, winners: [..], reason }` or `{ winner: null, reason }` (draw), or null; `mover` is the side that just moved. Default: a side without royal pieces has lost (2 sides). Do not return `'bareKings'` while `bareKingsDraw` is on (see "Classic end rules") |
 | `stateResult(state)` | result from the whole state after a move (rarely needed) |
-| `noMoves(state)` | result when the side to move has no legal move (default draw 'noMoves'; xiangqi: loss; antichess: win) |
-| `reasonText(reason)` | translated text for your own reason codes (return null for unknown). Generic texts exist for `king`, `resign`, `quiet` (it says "50 moves": give your own if `quietPlies` is not 100), `moveLimit`, `noMoves`, `bareKings` ("only the two kings are left") |
+| `noMoves(state)` | result when the side to move has no legal move (default draw 'noMoves'; xiangqi: loss; antichess: win). A side whose every move leaves its king to be taken has moves: with `escapeRule` that game ends as `cannotEscape` first |
+| `reasonText(reason)` | translated text for your own reason codes (return null for unknown; it is asked before the generic texts). Generic texts exist for `king`, `resign`, `quiet` (it says "50 moves": give your own if `quietPlies` is not 100), `moveLimit`, `noMoves`, `bareKings` ("only the two kings are left"), `cannotEscape` ("the king could not escape") |
+| `escapeRule`, `bareKingsDraw`, `drawsWait`, `specialMoves` | declaration flags: the classic end rules and the castling / en passant sentence of the shared card. See "Classic end rules" below |
 | `isOut(w, side)` / `nextSide(w, side)` | multi-player turn order (four-player: eliminated players) |
 | `maxPly`, `quietPlies` | limits (defaults 600 and 100) |
+
+### Classic end rules
+
+docs/rules.md sections 5 and 6 apply to every variant (LEAD-DECISIONS L1). `defineVariant` fills in three flags for
+them, plus one for the rules card. The three rule flags default to true for a *classic* variant: exactly two sides,
+at least one royal type, no `compulsoryCapture`, and neither `nextSide` nor `actions` (one move per turn); otherwise
+they default to false. Set a flag to opt out, to opt in (`drawsWait` with four seats), or to state a default on
+purpose, and say why in a code comment.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `escapeRule` | classic | "Your king cannot escape" (docs/rules.md 5): after a move, the side to move has at least one legal action; every one of them (moves, splits, merges, measurements) leads only to outcomes where the game goes on and one of its royal pieces can be captured **for certain** by the side that moves next; and none of its actions might capture an enemy royal piece, with any chance. Then the mover wins at once: `{ winner: mover, reason: 'cannotEscape' }`. For certain means that one legal move key takes a royal piece in every world, or one merge does (a converging capture). A take counts the way the danger ring counts it: the royal piece is captured, or the side has no royal piece left afterwards (atomic's explosions). A key that is a certain move in some worlds and an ordinary move in others is not legal, so it does not count. An outcome that ends the game is an escape. A side without any legal action gets `noMoves` instead. The rule is never applied in the computer's search (light mode). |
+| `bareKingsDraw` | classic | A draw (`reason: 'bareKings'`, generic text "only the two kings are left") when only royal pieces stand on the board in every world and no hand holds a piece. It is checked after `worldResult`, `stateResult` and the escape rule. It needs every world, so a variant whose condition differs (decided world by world and settled by the game-end roll: atomic, makruk; or a four-player rule) keeps its own `worldResult` rule and sets this flag to false, so that the draw is not applied twice. "Only if the kings do not touch" needs no own rule in a two-player game: with solid kings that is what `drawsWait` gives (raumschach, hyper4d and hexagonal use the core flag) |
+| `drawsWait` | classic | The core's generic draws, the quiet-move draw and the bare-kings draw, wait while the side to move can capture an enemy royal piece for certain. A converging capture counts; a capture that is not legal does not, even at 100 % king danger. The move limit does not wait, and "no legal move" can never meet a certain capture. Draws that the variant returns itself (`worldResult`, `stateResult`, `noMoves`) are not affected: a variant draw that must wait checks this itself (makruk does). |
+| `specialMoves` | true | false when the variant has neither castling nor en passant. Only the UI reads it: the shared rules card then leaves out its castling and en passant sentence (L2). |
+
+After a move, `stateAfter` decides the result in this order: `worldResult` (with the game-end roll), `stateResult`,
+`escapeRule` (not in light mode), the generic draws (bare kings, then the quiet-move draw, both held back by
+`drawsWait`), the move limit, then no legal move (`passWhenStuck`, else `noMoves`), and finally `recordInfo`.
+
+What the rules mean for your module:
+
+- **Tests (L5).** A test position in which the side to move cannot escape now ends at once with `cannotEscape`, and a
+  quiet-move or bare-kings draw with the kings side by side waits. Fix the test position or the expectation, not the
+  core. Where your variant makes the rule special, add a test of it: a blow-up next to the king is a take (atomic), a
+  hill step is an escape (koth), the last White piece that Black might capture is an escape (horde).
+- **Pure world hooks.** The escape search builds the outcomes of every action as the light `stateAfter` does, but
+  without `unifyWorlds`. So `generate`, `applyClassical` (with `afterMove`) and `applyMiss` must be pure functions of
+  the world, and `unifyWorlds` must not change anything the captures of the next move depend on. Never change a world
+  after it is built: `worldKey` is also remembered per world object.
+- **Cost.** In a normal position the first action tried is already an escape (well under 1 ms). Worst cases measured
+  on trapped positions (`handoff/tmp/fix-core2/worst-after.txt`): 8 × 8 at 8 worlds 1.5–4.6 ms, 5 × 5 × 5 at 8
+  worlds about 9 ms, 4 × 4 × 4 × 4 at 8 worlds about 29 ms, 64 worlds up to about 140 ms (4D).
+- **Hidden information.** The rule is decided on the real state, like the umpire who announces checkmate; the whole
+  board is shown when the game ends.
+
+The flags per variant (LEAD-DECISIONS L1 and L2, and the modules as they stand; **bold** = written in the module, the
+rest are defaults):
+
+| Id | `escapeRule` | `bareKingsDraw` | `drawsWait` | `specialMoves` | Why |
+|---|---|---|---|---|---|
+| `raumschach` | on | on (no own rule) | on | **false** | no castling, no en passant (L2) |
+| `trid` | on | on | on | true | |
+| `hyper4d` | on | on (no own rule) | on | **false** | no castling, no en passant (L2) |
+| `multiverse` | false (off by default: `nextSide`, `actions`) | false | true | true | the values of the final spec (multiverse-final.md F18, written out there): the 5D stuck test takes the place of the escape rule, and kings can still take each other through time. The placeholder module is plain orthodox chess with the defaults until then |
+| `kriegspiel` | on | on | on | true | decided on the real board |
+| `darkchess` | on | **false** | on | true | bare kings are no draw, as on chess.com: the kings cannot see each other (darkchess.md) |
+| `chess960` | on | on (no own rule) | on | true | |
+| `atomic` | **true** | **false** | on | true | an explosion is a take for the escape test. The bare-kings draw stays as atomic's own `worldResult` rule, decided world by world (game-end roll, T14): L1's exception |
+| `crazyhouse` | on | on | on | true | the bare-kings draw never comes: captured pieces go to a hand |
+| `bughouse` | **false** (off by default: four seats) | **false** | **true** | true | a team wins, and the other board's moves come first; bare kings cannot happen |
+| `antichess` | **false** | **false** | **false** | true (en passant) | losing chess: kings are ordinary pieces (off by default already: no royal type, compulsory capture) |
+| `koth` | on | **false** | on | true | a bare king can still walk to the hill and win (L1) |
+| `threecheck` | on | on (no own rule) | on | true | its `worldResult` must not return `'bareKings'` too |
+| `horde` | on (Black's king) | **false** | on | true | White has no king; the horde wins by taking the king, Black by taking every White piece (L1) |
+| `hexagonal` | on | on (no own rule) | on | true (en passant) | |
+| `fourplayer` | **false** (off by default: four seats) | **false** | **true** | true | several players may capture, and a Teams game is won by a team; its own FFA bare-kings rule in `worldResult` |
+| `capablanca` | on | on | on | true | |
+| `shogi` | on | on (never reached: captures go to a hand) | on | **false** | no castling, no en passant (L2); the escape rule covers checkmate and stalemate |
+| `xiangqi` | on | on | on | **false** | no castling, no en passant (L2); its own `noAttackers` draw leaves the core's bare-kings draw only the case of facing generals, where it waits |
+| `makruk` | on | **false** | on | **false** | no castling, no en passant (L2); the bare-Khuns draw is its own `worldResult` rule, decided world by world, and its own draws wait themselves |
 
 ### Quantum layer
 
 | Field / hook | Meaning |
 |---|---|
 | `applyMiss(b, action, side, info) -> world` | per-ply bookkeeping in the worlds where the played action did not take effect (see "Idle worlds"). Default: those worlds stay unchanged. `orthodoxSpec()` brings `clearEnPassant` |
-| `unifyWorlds(bs, mover) -> bs` | state-level facts made identical in every world of the chosen outcome (see "State-level facts"). Default none. `orthodoxSpec()` brings `unifyCastling` |
+| `unifyWorlds(bs, mover) -> bs` | state-level facts made identical in every world of the chosen outcome (see "State-level facts"). Default none. `orthodoxSpec()` brings `unifyCastling`. It must not change anything the captures of the next move depend on: the escape rule builds outcomes without it |
 | `solidExtra(b) -> string` | the variant's own structure that must be the same in every world (three-check: the check counters; crazyhouse and shogi: the hands, as a guard; multiverse: the timelines). Worlds that differ in it are settled by the solid roll like solid pieces; the roll's note is `'solid:' + solidExtra(b)` |
-| `budgetRule(b, side) -> { sides?, limit? }` | the sides whose pieces share one quantum budget (default `[side]`; with several sides one arrangement counts all their pieces together) and its limit (default 8). Read on `state.worlds[0].b`, for the mover's split legality and the pass = link fallback. Must be cheap (read `b.x` or count kings, no generation) and must never lower a limit during a game. `budgetInfo(V, state, side)` returns `{ used, limit, sides }` (the pips, your tests). Bughouse: `{ sides: [side, (side + 2) % 4], limit: 8 }`; four-player FFA: `{ limit }` by the number of kings left |
+| `budgetRule(b, side) -> { sides?, limit? }` | the sides whose pieces share one quantum budget (default `[side]`; with several sides one arrangement counts all their pieces together) and its limit (default 8). Read on `state.worlds[0].b`, for the mover's split legality and the pass = link fallback. Must be cheap (read `b.x` or count kings, no generation) and must never lower a limit during a game. `budgetInfo(V, state, side)` returns `{ used, limit, sides }` (the pips, your tests). At `used >= limit` no split is possible: `splitsFrom` and the computer's `aiSplits` return nothing at once, and the UI greys out Split ("Budget full: merge or measure a piece first."). Bughouse: `{ sides: [side, (side + 2) % 4], limit: 8 }`; four-player FFA: `{ limit }` by the number of kings left |
 | `compulsoryCapture: true` | when some legal move key might capture (captures in at least one world), only such keys are legal, no split and no Measure, and only merges with a capturing outcome. `mustCapture(V, state)` tells; the UI says so and disables Split and Measure. A per-world rule, if any, stays in `filterMoves`. Default false |
 | `passWhenStuck: true \| (state) => boolean` | a side without a legal move sits out instead of the `noMoves` result: the next side that can move is to move, `ply` does not grow for the skipped sides, every world passes through `applyMiss` with `type: 'pass'` once per skipped side, the record gets `skipped: [sides]` and the move list shows "{side} cannot move and sits out". The function is called on the new state (the stuck side to move). If no side can move, `noMoves` applies as before. Not evaluated in the computer's search. Default false |
 | `recordInfo(prev, code, branch, next) -> object \| null` | JSON data stored as `info` on the history record (null stores nothing). Called once per played move at the end of `stateAfter`, after the result, `stateResult`, `noMoves` and any sit-out: `next.turn` is the side really to move and the record (`next.history.at(-1)`) already has `skipped`. `branch.worlds` are the worlds of the outcome before `unifyWorlds`. Never called in the computer's search; undo replays call it again, so keep it pure. Show it with `infoText` |
@@ -121,19 +195,26 @@ All optional, all called with the variant object already completed. A hook's def
 |---|---|
 | `evaluate(w, side)` | extra evaluation terms in centipawns (KOTH: king near the hill...). It also ranks the computer's split targets (only the best 6 targets per piece are paired, ties at random) |
 | `materialSign: -1` | the computer prefers LESS material (antichess) |
-| `aiView(state, side)` | the state as the computer sees it (hidden information) |
+| `aiView(state, side)` | the state as the computer sees it (hidden information). The computer plays the best move of its view that is legal on the real state. When none is, it tries what a player in its seat could attempt, shuffled with the search's random numbers, until `branches` accepts one: `candidateMoves(real)` (else the legal moves of the real state) plus the merges and measurements of `ownView(real, me)`. It returns null only when none of them is legal |
 | `replySide(state, me) -> side \| null` | whose answer the normal and hard levels look at after the computer's move (`state` = after that move). Default `state.turn`. `null`: no answer; another side: its answers are searched on `{ ...state, turn: side }` (bughouse: `(s, me) => 3 - me`, the opponent on the same board); `me` (a turn of several moves): the computer's best continuation |
 
 The normal level looks only at answers that might capture or end the game (some outcome with a capture, or with a
 non-null `worldResult`), and the computer tries such moves first; a variant with its own goal (a hill, three checks)
 needs no extra code for that.
 
+The time budget of a level (easy 0.4 s, normal 1.5 s, hard 4 s) runs from the call of `chooseMove` and is also
+checked inside the evaluation of each candidate (before each outcome and each answer), so the computer keeps to it
+at 64 worlds too. When the time is spent before any candidate has a value, that candidate is judged by the positions
+right after it, without an answer, so there is always a move. A slow `evaluate` therefore means fewer candidates
+searched, not a late move. The computer's search never applies the escape rule (light mode); it sees the capture of
+the king one ply later.
+
 ### Hidden information
 
 | Field / hook | Meaning |
 |---|---|
 | `hidden: true`, `visibility(state, side) -> Set<sq>` | squares the side can see. While the game runs: no undo, no danger line, the other sides' budgets show "?", a two-step hand-over in pass & play |
-| `candidateMoves(state)` | the moves a player may TRY in the UI (Kriegspiel: moves as if the enemy pieces were unknown). Each `{ code, type: 'move', from, to, promo, drop }` |
+| `candidateMoves(state)` | the moves a player may TRY in the UI (Kriegspiel: moves as if the enemy pieces were unknown). Each `{ code, type: 'move', from, to, promo, drop }`. The computer's fallback (see `aiView`) tries them too, so they must depend only on what the side to move knows |
 | `ownView(state, side) -> state` | the state as the side knows it; the Split, Merge and Measure modes choose their squares on it, every attempt is decided on the real state (a split, merge or Measure legal on the own view but not on the real state gets the umpire's "No") |
 | `hiddenStyle: 'fog' \| 'plain'` | how squares the viewer cannot see look (default `'fog'`; Kriegspiel: `'plain'`, a normal-looking board) |
 | `umpire: true` | an attempt is binding (no odds preview, no odds in the results), a refused attempt gets "the umpire says no" |
@@ -282,40 +363,56 @@ built in, with no hook:
 - The quiet counter resets only when a move really happened: a capture, a drop, or a move of a `resetsQuiet` type in a
   world that played it. Missed attempts, failed captures and measurements add 1.
 - The danger ring (`royalDanger`) counts captures of a royal piece, captures after which the side has no royal piece
-  left (explosions), and converging captures (a merge whose parts can take the king).
+  left (explosions), and converging captures (a merge whose parts can take the king). Every merge onto a square that
+  may hold a piece the merging side can capture is weighed, so a converging capture next to the king counts in
+  atomic too.
 - A part that moves onto another part of the same piece (same id and type) joins it without a landing roll.
-- Parts with different types (a promotion in some worlds only) cannot merge; Measure is still offered.
+- Parts with different types (a promotion in some worlds only) cannot merge: a merge is refused when the piece has
+  more than one type over the worlds where it stands on either part or on the target. Measure is still offered.
+- A superposed piece can be handled from each of its squares that no other piece may occupy: the Measure is offered
+  on the first of them, merges and splits from all of them. A part on a square that may also hold another piece
+  cannot be picked up, but the other parts still can.
+- A merging piece need not stand in the first world (a 5D twin): its type is read in a world where it stands on the
+  from square.
 - History records carry `from` / `to` squares (last-move marks for any code), `skipped` and `info`.
 - `squareView` / `boardView` treat squares beyond the board (layout display cells) as empty.
-- Drop outcomes read "Dropped" and "Missed: the square was taken".
+- Drop outcomes read "Dropped" and "Missed: the piece stays in hand" (LEAD-DECISIONS L3: in shogi a drop also misses
+  where a pawn drop would mate).
+- The classic end rules (section "Classic end rules"): "your king cannot escape", the bare-kings draw, and draws that
+  wait for a certain royal capture.
+- Rolls of local games are remembered under `ply:positionHash:code` with a trailing promotion suffix stripped
+  (`src/variantplay/rolls.js`, L3): undo followed by the same move in the same position replays the same roll,
+  whatever the pawn promotes to, and the same move in another position rolls anew. The hash covers the side to move
+  and every world (`worldKey` and weight, in stored order), so `x` must hold only JSON data.
 
 ## Which new hooks each variant uses
 
-From `handoff/CORE-CHANGES.md` (sections 2 and 5) and the specs. "Inherited" = keep `orthodoxSpec()`'s `applyMiss`
-and `unifyWorlds`; every variant gets the section above for free.
+From `handoff/CORE-CHANGES.md` (sections 2, 5 and 8) and the specs. "Inherited" = keep `orthodoxSpec()`'s `applyMiss`
+and `unifyWorlds`; every variant gets the section above for free. The flags of the classic end rules and
+`specialMoves` of each variant are in the table of section "Classic end rules".
 
 | Id | Built on | New hooks and helpers to use |
 |---|---|---|
-| `raumschach` | own spec | none (`x` stays `{}`, no castling, no en passant) |
+| `raumschach` | own spec | `specialMoves: false` (`x` stays `{}`, no castling, no en passant); no own `worldResult` (the core's bare-kings draw) |
 | `trid` | own spec, own `generate` | castling `kind: 'castle'`, en passant `kind: 'ep'`; `applyMiss: (b) => clearEnPassant(b)`; `unifyWorlds: (bs) => unifyCastling(bs)` with rights in the `x.castle` shape (else its own `unifyWorlds`) |
-| `hyper4d` | own spec | none (no castling, no en passant; reason `bareKings` has a generic text) |
+| `hyper4d` | own spec | `specialMoves: false` (no castling, no en passant); no own `worldResult` (the core's bare-kings draw) |
 | `multiverse` | own spec, `generate` / `apply` | per the final design. Playable design: none (idle worlds unchanged, `measured: () => true`, `solidExtra`, `actions`, `layout.focus` with a `key`). Faithful / quantum designs: `applyMiss` (`info.hit` is their "structural" flag), `recordInfo` + `infoText`, `replySide`, and `unifyWorlds` (faithful) or `budgetRule` (quantum). Castling and en passant on one board are certain moves |
 | `kriegspiel` | `orthodoxSpec()`, inherited | `hidden`, `hiddenStyle: 'plain'`, `umpire: true`, `ownView`, `recordInfo` (`{ announce }`) + `infoText` |
-| `darkchess` | `orthodoxSpec()`, inherited | `hidden` (fog is the default `hiddenStyle`), `recordInfo` + `infoText` (the square of a capture) |
+| `darkchess` | `orthodoxSpec()`, inherited | `hidden` (fog is the default `hiddenStyle`), `recordInfo` + `infoText` (the square of a capture); `bareKingsDraw: false` |
 | `chess960` | `orthodoxSpec()`, inherited | `castlingMoves(spec, w, side, { toRook: true })` in `extraMoves`; `options[0].describe` |
-| `atomic` | `orthodoxSpec()`, inherited | nothing else (the ring counts explosions); optional blast marks through `layoutOf` with `layout.outlines` |
+| `atomic` | `orthodoxSpec()`, inherited | nothing else (the ring counts explosions); optional blast marks through `layoutOf` with `layout.outlines`; `escapeRule: true` and `bareKingsDraw: false` (its own bare-kings rule in `worldResult`) |
 | `crazyhouse` | `orthodoxSpec()`, inherited | `solidExtra` (the hands), `handOrder: ['p', 'n', 'b', 'r', 'q']`, promoted types `+q` ... with `glyph: { sprite, promoted: true }` |
-| `bughouse` | own spec (`[file, rank, board]`) | its own per-board `applyMiss(b, action, side)` (above), `unifyWorlds: (bs) => unifyCastling(bs)`, `budgetRule: (b, side) => ({ sides: [side, (side + 2) % 4], limit: 8 })`, `replySide: (s, me) => 3 - me`, `solidExtra`, `handOrder`, `castlingMoves` and `pawnExtras` (on a per-board view of `x.ep`); `passWhenStuck: true` only if the lead chooses it |
-| `antichess` | `orthodoxSpec({ royalKing: false, ... })`, inherited | `compulsoryCapture: true` with its `filterMoves`, `resetsQuiet: false` on `k`, `sideInfo` |
-| `koth` | `orthodoxSpec({ boardOpts: { shade, layout: { outlines } } })`, inherited | `layout.outlines` for the hill; `attacks` with its default options |
+| `bughouse` | own spec (`[file, rank, board]`) | its own per-board `applyMiss(b, action, side)` (above), `unifyWorlds: (bs) => unifyCastling(bs)`, `budgetRule: (b, side) => ({ sides: [side, (side + 2) % 4], limit: 8 })`, `replySide: (s, me) => 3 - me`, `solidExtra`, `handOrder`, `castlingMoves` and `pawnExtras` (on a per-board view of `x.ep`); `passWhenStuck: true` only if the lead chooses it; `escapeRule: false`, `bareKingsDraw: false`, `drawsWait: true` |
+| `antichess` | `orthodoxSpec({ royalKing: false, ... })`, inherited | `compulsoryCapture: true` with its `filterMoves`, `resetsQuiet: false` on `k`, `sideInfo`; `escapeRule: false`, `bareKingsDraw: false`, `drawsWait: false` |
+| `koth` | `orthodoxSpec({ boardOpts: { shade, layout: { outlines } } })`, inherited | `layout.outlines` for the hill; `attacks` with its default options; `bareKingsDraw: false` |
 | `threecheck` | `orthodoxSpec()`, inherited | `givesCheck(spec, next, side, enemy, { royal: false })`, `solidExtra` (`'checks:W:B'`), `noteText`, `sideInfo`, `recordInfo` + `infoText` |
-| `horde` | `orthodoxSpec()`, inherited | `sideInfo` |
+| `horde` | `orthodoxSpec()`, inherited | `sideInfo`; `bareKingsDraw: false` |
 | `hexagonal` | own spec | `pawnExtras(..., { pawn, forward, captures })` with hex vectors, `applyMiss: (b) => clearEnPassant(b)` (no castling, no `unifyWorlds`) |
-| `fourplayer` | own spec | `applyMiss: (b) => clearEnPassant(b)` (also runs for a skipped player), `unifyWorlds: (bs) => unifyCastling(bs)`, `budgetRule` (FFA `{ limit }` by kings left, Teams `{ limit: 2 }`), `passWhenStuck: (s) => !s.worlds[0].b.x.teams`, `recordInfo` + `infoText` ("Blue is out"), `resignResult`; `castlingMoves` along a file and `orthodoxAfterMove` (horizontal en passant square) |
+| `fourplayer` | own spec | `applyMiss: (b) => clearEnPassant(b)` (also runs for a skipped player), `unifyWorlds: (bs) => unifyCastling(bs)`, `budgetRule` (FFA `{ limit }` by kings left, Teams `{ limit: 2 }`), `passWhenStuck: (s) => !s.worlds[0].b.x.teams`, `recordInfo` + `infoText` ("Blue is out"), `resignResult`; `castlingMoves` along a file and `orthodoxAfterMove` (horizontal en passant square); `escapeRule: false`, `bareKingsDraw: false` (its own FFA rule), `drawsWait: true` |
 | `capablanca` | own spec (10 × 8) | copy the orthodox hooks: `applyMiss: (b) => clearEnPassant(b)`, `unifyWorlds: (bs) => unifyCastling(bs)`; `castlingRights` (king to c or i) and the default `castlingMoves` |
-| `shogi` | own spec | `handOrder: ['r', 'b', 'g', 's', 'n', 'l', 'p']`, `solidExtra` (the hands), optional `codeText` |
-| `xiangqi` | own spec | `resetsQuiet: false` on the soldier |
-| `makruk` | own spec (`whiteBlack()`) | `sideInfo` (the count) |
+| `shogi` | own spec | `handOrder: ['r', 'b', 'g', 's', 'n', 'l', 'p']`, `solidExtra` (the hands), optional `codeText`; `specialMoves: false` |
+| `xiangqi` | own spec | `resetsQuiet: false` on the soldier; `specialMoves: false` |
+| `makruk` | own spec (`whiteBlack()`) | `sideInfo` (the count); `specialMoves: false`, `bareKingsDraw: false` (its own bare-Khuns rule) |
 
 ## UI layout
 
@@ -345,3 +442,5 @@ recentres only when the focus changes (its `key`, or without a key its point and
   keeps (`x.ep`, `x.castle`) is identical in all worlds, and `budgetInfo(V, s, side).used <= limit` for every side.
 - Performance: `generate` runs in every world on every move; keep it allocation-light. A random game of 60 plies must
   run in a few seconds in the fuzz test.
+- Test positions follow the classic end rules (L5, section "Classic end rules"): a king that cannot escape ends the
+  game at once, and the draws wait while the side to move can take the enemy king for certain.

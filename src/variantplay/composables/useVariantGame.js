@@ -12,12 +12,18 @@
  * variant has one (the board as the player knows it), but every attempt is decided on the real state. With
  * `V.umpire` an attempt is binding (no odds preview) and the results show no odds. While a hidden game runs there is
  * no undo and no danger line.
+ *
+ * Split is not offered while the budget of the side to move is full (docs/rules.md 7.1), nor Split and Measure while a
+ * capture is compulsory; in hidden pass & play the mode follows the next player's budget only once the device is
+ * passed, so the mover never learns it. Rolls are remembered under `rollMemoKey` (rolls.js), so undo never rerolls a
+ * result.
  */
 
 import { computed, markRaw, ref, shallowRef } from 'vue'
 import {
 	applyMove,
 	applyOutcome,
+	budgetInfo,
 	chooseMove,
 	legalMoves,
 	loadVariant,
@@ -31,6 +37,7 @@ import {
 } from '../../variants/index.js'
 import { lastMoveSquares, sidePieceAt } from '../marks.js'
 import { needsConfirmation, refusalKind, resignResult } from '../panel.js'
+import { rollMemoKey } from '../rolls.js'
 import { loadVariantGame, saveVariantGame } from '../variantGames.js'
 
 /**
@@ -137,6 +144,37 @@ export function useVariantGame(id) {
 	/** Whether the side to move must capture (compulsory capture): Split and Measure are not allowed then. */
 	const compulsory = computed(() => Boolean(V.value && state.value && mustCapture(V.value, state.value)))
 
+	/**
+	 * Whether the quantum budget of the side to move is full (`budgetInfo`, the variant's budget rule): a split always
+	 * adds arrangements, so none is possible then.
+	 */
+	const budgetFull = computed(() => {
+		if (!V.value || !state.value || state.value.result) {
+			return false
+		}
+		const info = budgetInfo(V.value, state.value, state.value.turn)
+		return info.used >= info.limit
+	})
+
+	/**
+	 * Whether a move mode is closed now: Split with a full budget or a compulsory capture, Measure with a compulsory
+	 * capture.
+	 *
+	 * @param {string} m move, split, merge or measure
+	 * @return {boolean}
+	 */
+	function blocked(m) {
+		return (m === 'split' && (budgetFull.value || compulsory.value)) || (m === 'measure' && compulsory.value)
+	}
+
+	/** Go back to Move mode when the current mode is closed in the new position. */
+	function leaveBlockedMode() {
+		if (blocked(mode.value)) {
+			mode.value = 'move'
+			clearSelection()
+		}
+	}
+
 	const canUndo = computed(() => Boolean(record.value?.moves.length && !thinking.value && !secret.value
 		&& !handover.value))
 
@@ -166,8 +204,9 @@ export function useVariantGame(id) {
 	 * @param {string} code move code
 	 */
 	function play(code) {
-		// the roll memo: the same move at the same ply gets the same roll, so undo never rerolls a result already seen
-		const memoKey = state.value.ply + ':' + code
+		// the roll memo: the same move in the same position gets the same roll (whatever it promotes to), so undo never
+		// rerolls a result already seen
+		const memoKey = rollMemoKey(state.value, code)
 		const rolls = { ...(record.value.rolls ?? {}) }
 		rolls[memoKey] ??= Math.random()
 		record.value = { ...record.value, rolls }
@@ -311,6 +350,10 @@ export function useVariantGame(id) {
 	 * @param {number} sq square
 	 */
 	function clickSplit(sq) {
+		if (blocked('split')) {
+			clearSelection()
+			return
+		}
 		const [f, t1] = sel.value
 		if (f === undefined) {
 			if (splitTargets(V.value, own.value, sq).length >= 2) {
@@ -388,7 +431,7 @@ export function useVariantGame(id) {
 	 * @param {string} m move, split, merge or measure
 	 */
 	function setMode(m) {
-		if (compulsory.value && (m === 'split' || m === 'measure')) {
+		if (blocked(m)) {
 			return
 		}
 		mode.value = m
@@ -440,7 +483,7 @@ export function useVariantGame(id) {
 					add(m.to, 'target')
 				}
 			}
-		} else if (mode.value === 'split' && sel.value.length) {
+		} else if (mode.value === 'split' && sel.value.length && !blocked('split')) {
 			for (const t of splitTargets(V.value, own.value, sel.value[0])) {
 				if (!sel.value.includes(t)) {
 					add(t, 'target')
@@ -486,27 +529,34 @@ export function useVariantGame(id) {
 		if (!s || s.result) {
 			return
 		}
-		if (compulsory.value && (mode.value === 'split' || mode.value === 'measure')) {
-			mode.value = 'move'
-		}
 		const p = players.value[s.turn]
 		if (p?.kind === 'computer') {
+			// the computer's full budget keeps a player's Split mode
 			runComputer()
 		} else if (V.value.hidden && humanSides.value.length > 1) {
 			if (played && players.value[played.side]?.kind === 'human') {
+				// the mover still looks at the panel: the mode follows the next player's budget only behind the curtain
 				handover.value = played
 			} else {
 				curtain.value = true
+				leaveBlockedMode()
 			}
+		} else {
+			// the player to move finds a usable mode
+			leaveBlockedMode()
 		}
 	}
 
-	/** Step 2 of the hidden hand-over: the mover passes the device, the curtain covers the board. */
+	/**
+	 * Step 2 of the hidden hand-over: the mover passes the device, the curtain covers the board, and the next player
+	 * finds a usable mode behind it.
+	 */
 	function passDevice() {
 		handover.value = null
 		refused.value = []
 		lastRoll.value = null
 		curtain.value = true
+		leaveBlockedMode()
 	}
 
 	/** Let the computer play the side to move. */
@@ -547,6 +597,7 @@ export function useVariantGame(id) {
 		notice.value = null
 		clearSelection()
 		commit(s, list)
+		leaveBlockedMode()
 	}
 
 	/**
@@ -621,6 +672,7 @@ export function useVariantGame(id) {
 		own,
 		secret,
 		compulsory,
+		budgetFull,
 		canUndo,
 		marks,
 		danger,

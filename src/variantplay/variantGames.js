@@ -27,7 +27,8 @@ export const MAX_GAMES = 24
  * @property {boolean} autoFlip turn the board to the side to move in pass & play
  * @property {object} initial start state
  * @property {Array<{code: string, i: number}>} moves moves with the index of their outcome
- * @property {Record<string, number>} [rolls] the roll memo: `<ply>:<code>` → the random number used
+ * @property {Record<string, number>} [rolls] the roll memo: `rollMemoKey` of rolls.js (`<ply>:<position hash>:<code
+ *   without its promotion>`) → the random number used; keys of older games (`<ply>:<code>`) are never found again
  * @property {object} current current state
  * @property {number} created creation time (ms)
  * @property {number} updated last change (ms)

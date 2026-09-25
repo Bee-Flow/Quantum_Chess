@@ -168,13 +168,32 @@ export function handOf(w, side) {
 	return out
 }
 
+/** The key of each world object already keyed (worlds are never changed once built, as `generate` assumes too). */
+const keyCache = new WeakMap()
+
 /**
- * A text key of a world: two worlds with the same key are the same position.
+ * A text key of a world: two worlds with the same key are the same position. Remembered per world object, so a
+ * world must not be changed after it was keyed.
  *
  * @param {object} w world
  * @return {string}
  */
 export function worldKey(w) {
+	let key = keyCache.get(w)
+	if (key === undefined) {
+		key = keyOf(w)
+		keyCache.set(w, key)
+	}
+	return key
+}
+
+/**
+ * The text key of a world (see `worldKey`), computed.
+ *
+ * @param {object} w world
+ * @return {string}
+ */
+function keyOf(w) {
 	const hands = []
 	for (let id = 0; id < w.sq.length; id++) {
 		if (w.sq[id] === HAND) {

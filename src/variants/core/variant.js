@@ -27,7 +27,8 @@
  *   `x.epVictim`); a variant whose `x.ep` has another shape (bughouse: one per board) replaces it.
  * - `unifyWorlds(bs, mover) -> bs`: the worlds of the chosen outcome, with state-level bookkeeping made identical in
  *   every world (castling rights); same length and order, unchanged worlds by reference, never mutating, and only
- *   data that neither the solid pieces nor `worldResult` read. `orthodoxSpec()` brings `unifyWorlds: unifyCastling`.
+ *   data that neither the solid pieces, `worldResult`, `stateResult` nor the captures of the next move depend on (the
+ *   escape rule below builds its outcomes without this hook). `orthodoxSpec()` brings `unifyWorlds: unifyCastling`.
  * - `budgetRule(b, side) -> { sides?, limit? }`: the sides that share one quantum budget and its limit (defaults: the
  *   side alone and 8), read on the first world; must be cheap and must never lower a limit during a game.
  * - `recordInfo(prev, code, branch, next) -> object | null`: JSON data stored as `info` on the history record (null
@@ -44,6 +45,29 @@
  * - type flag `resetsQuiet` (default: solid and not royal): moving a piece of this type resets the quiet counter.
  * - move field `certain` (default true for the kinds `castle` and `ep`): a certain move is legal only when every
  *   world generates it as a certain move, so it never rolls, never links and is never a split or merge path.
+ *
+ * The classic end rules of docs/rules.md (sections 5 and 6) are switched on by three flags. Their default is true for
+ * a "classic" variant: exactly two sides, at least one royal type, no `compulsoryCapture`, and neither `nextSide` nor
+ * `actions` (one move per turn). A variant sets a flag to false to leave that rule out:
+ *
+ * - `escapeRule`: after a move (not in the computer player's search), if every legal action of the side to move
+ *   (moves, splits, merges, measurements; at least one) would leave one of its royal pieces to be captured for
+ *   certain on the next move (one legal move or merge of the side that moves next takes it in every world: a king
+ *   danger of 100 %), the game going on, and none of its actions could capture an enemy royal piece with any chance,
+ *   the mover wins at once: `{ winner: mover, reason: 'cannotEscape' }` ("your king cannot escape"). An outcome that
+ *   ends the game is an escape, and a side without any legal action gets `noMoves` instead. The search relies on
+ *   `generate`, `applyClassical` (with `afterMove`) and `applyMiss` being pure functions of the world.
+ * - `bareKingsDraw`: the game is drawn (`reason: 'bareKings'`) when only royal pieces are left on the board in every
+ *   world and no hand holds a piece. It is checked after `worldResult` and `stateResult`, so a variant that already
+ *   returns `'bareKings'` from `worldResult` keeps its own rule. King of the Hill sets it to false.
+ * - `drawsWait`: the generic draws (the quiet-move draw and the bare-kings draw) wait while the side to move can
+ *   capture an enemy royal piece for certain (a converging capture counts). Draws a variant returns from its own
+ *   hooks are not affected, nor is the move limit. ("No legal move" cannot meet a certain capture.)
+ *
+ * One more declaration flag, read by the board UI only:
+ *
+ * - `specialMoves` (default true): false when the variant has neither castling nor en passant, so the shared rules
+ *   card leaves out its sentence about them.
  */
 
 import { normaliseType } from './world.js'
@@ -100,6 +124,12 @@ export function defineVariant(spec) {
 	// the types whose moves reset the quiet counter (pawns by default)
 	V.quietTypes = new Set(Object.keys(types)
 		.filter((t) => types[t].resetsQuiet ?? (types[t].solid && !types[t].royal)))
+	// the classic end rules (docs/rules.md 5 and 6) fit a two-player game with royal pieces and one move per turn
+	const classic = V.sideCount === 2 && V.royalTypes.size > 0 && !V.compulsoryCapture && !V.nextSide && !V.actions
+	V.escapeRule = V.escapeRule ?? classic
+	V.bareKingsDraw = V.bareKingsDraw ?? classic
+	V.drawsWait = V.drawsWait ?? classic
+	V.specialMoves = V.specialMoves ?? true
 	return V
 }
 

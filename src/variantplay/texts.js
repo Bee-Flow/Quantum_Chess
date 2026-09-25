@@ -31,7 +31,8 @@ export function percent(p) {
 }
 
 /**
- * The label of an outcome key. A drop (a code with `@`) reads "Dropped", and its miss says why.
+ * The label of an outcome key. A drop (a code with `@`) reads "Dropped", and its miss says that the piece stays in
+ * hand, without a reason: a drop misses on a square that was taken, but in shogi also where a pawn drop would mate.
  *
  * @param {string} key miss, move, capture, split, gone or a square name
  * @param {string} [code] the move code
@@ -41,7 +42,7 @@ export function outcomeText(key, code = '') {
 	const drop = typeof code === 'string' && code.includes('@')
 	switch (key) {
 		case 'miss':
-			return drop ? t('quantumchess', 'Missed: the square was taken') : t('quantumchess', 'Missed')
+			return drop ? t('quantumchess', 'Missed: the piece stays in hand') : t('quantumchess', 'Missed')
 		case 'move':
 			return drop ? t('quantumchess', 'Dropped') : t('quantumchess', 'Moved')
 		case 'capture':
@@ -106,6 +107,9 @@ export function reasonText(V, reason) {
 			return t('quantumchess', 'no legal move')
 		case 'bareKings':
 			return t('quantumchess', 'only the two kings are left')
+		case 'cannotEscape':
+			// TRANSLATORS: why a game ended: every move of the loser would have let its king be captured for certain
+			return t('quantumchess', 'the king could not escape')
 		default:
 			return reason
 	}
@@ -137,12 +141,17 @@ export function resultText(V, result) {
 }
 
 /**
- * The quantum rules shared by every variant, as short sentences.
+ * The quantum rules shared by every variant, as short sentences. The sentence on castling and en passant is left out
+ * for a variant that has neither (`specialMoves: false`). A variant with royal pieces also gets "capture the king"
+ * (worded so that it does not deny check: three-check counts checks and Kriegspiel's umpire announces them; check
+ * just never limits a move), and one with the classic escape rule (`escapeRule`, docs/rules.md 5) the king that
+ * cannot escape, so the variant's own card only says what is special in it.
  *
+ * @param {object} [V] variant
  * @return {string[]}
  */
-export function sharedRules() {
-	return [
+export function sharedRules(V = null) {
+	const out = [
 		t('quantumchess', 'Split: a piece that is not a king or pawn may move to two empty squares at once and becomes a ghost, 50 % on each.'),
 		t('quantumchess', 'Merge: bring two parts of a ghost together on one square.'),
 		t(
@@ -154,13 +163,30 @@ export function sharedRules() {
 			'Kings and pawns (and the pieces the variant names) are always solid: their moves are settled at once.',
 		),
 		t('quantumchess', 'Measure: spend your turn to find out where one of your ghosts really is.'),
-		t(
+	]
+	if (V?.specialMoves !== false) {
+		out.push(t(
 			'quantumchess',
 			'Castling and en passant are only possible when they are possible in every possibility, and they are never rolled.',
-		),
+		))
+	}
+	out.push(
 		t('quantumchess', 'If the game might be over in some possibilities but not in others, a roll decides.'),
 		t('quantumchess', 'Each side has a budget of 8 possible arrangements of its pieces.'),
-	]
+	)
+	if (V?.royalTypes?.size > 0) {
+		out.push(t(
+			'quantumchess',
+			'Check does not limit your moves: you win by capturing the enemy king, unless the variant has its own goal.',
+		))
+		if (V.escapeRule) {
+			out.push(t(
+				'quantumchess',
+				'Your king cannot escape: if every move you could make would leave your king to be captured for certain, you lose at once, unless one of your moves could still capture the enemy king.',
+			))
+		}
+	}
+	return out
 }
 
 /**

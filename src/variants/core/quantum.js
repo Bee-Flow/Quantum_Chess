@@ -24,13 +24,16 @@
  * Two generic checks follow every move: the **solid roll** (solid pieces, such as kings and pawns, are never
  * superposed: if a move would leave one in different places in different worlds, a roll decides) and the
  * **game-end roll** (if the game would be over in some worlds but not in others, a roll decides whether it is).
+ * A classic two-player variant also gets the classic end rules of docs/rules.md 5 and 6 (flags `escapeRule`,
+ * `bareKingsDraw` and `drawsWait`, see variant.js): "your king cannot escape", the bare-kings draw, and generic draws
+ * that wait while the side to move can capture an enemy royal piece for certain.
  *
  * Weights are integers that always sum to T = 2^24 (like the classic rules engine), so the odds shown to players are
  * exact. Every function here is pure; states are plain JSON objects that must be treated as immutable.
  */
 
 import { rescaleWeights } from '../../engine/index.js'
-import { applyClassical, generate, HAND, nameOf, OFF, worldKey } from './world.js'
+import { applyClassical, generate, HAND, nameOf, OFF, pieceMoves, worldKey } from './world.js'
 
 /** The sum of all world weights. */
 export const T = 16777216
@@ -66,6 +69,14 @@ export const STATE_VERSION = 1
  *   of this outcome (weights not yet rescaled) with their per-world result `k` (miss, move, capture), the capture
  *   square `cap`, `idle` when the action did not take effect there and `rq` when it resets the quiet counter
  * @property {number[]} captures squares where something was captured
+ */
+
+/**
+ * @callback ApplyFn how a classical move is applied in one world (`applyClassical`, or a memoised copy of it)
+ * @param {object} V variant
+ * @param {object} b world
+ * @param {object} m classical move of that world
+ * @return {object} the new world
  */
 
 const tableCache = new WeakMap()
@@ -593,9 +604,12 @@ function noPath(m) {
 	return m.kind === 'castle' || isCertain(m)
 }
 
+/** The quiet targets per move map of a world (`generate` caches the map per world), by piece and square. */
+const quietCache = new WeakMap()
+
 /**
  * The quiet targets of piece `id` from `f` in a world: squares it can reach with an ordinary non-capturing move
- * without promotion (certain moves excluded).
+ * without promotion (certain moves excluded). Cached per move map; the result must not be changed.
  *
  * @param {Map<string, object>} gen the world's moves
  * @param {number} id piece id
@@ -603,11 +617,21 @@ function noPath(m) {
  * @return {Map<number, object>}
  */
 function quietTargets(gen, id, f) {
-	const out = new Map()
-	for (const m of gen.values()) {
-		if (m.id === id && m.from === f && m.capture < 0 && !m.promo && !m.drop && !noPath(m)) {
-			out.set(m.to, m)
+	let perGen = quietCache.get(gen)
+	if (perGen === undefined) {
+		perGen = new Map()
+		quietCache.set(gen, perGen)
+	}
+	const k = id + ':' + f
+	let out = perGen.get(k)
+	if (out === undefined) {
+		out = new Map()
+		for (const m of gen.values()) {
+			if (m.id === id && m.from === f && m.capture < 0 && !m.promo && !m.drop && !noPath(m)) {
+				out.set(m.to, m)
+			}
 		}
+		perGen.set(k, out)
 	}
 	return out
 }
@@ -690,12 +714,14 @@ function mergeCandidates(V, state, f) {
 	}
 	const out = []
 	for (const other of locs) {
-		if (other === f || facesOf(state, X, [f, other]).size > 1) {
+		// the other part must be one the player can pick up, and both parts must have one face
+		if (other === f || ownPieceAt(state, other) !== X || facesOf(state, X, [f, other]).size > 1) {
 			continue
 		}
 		const common = [...reach.get(f)].filter((t) => reach.get(other).has(t) && t !== f && t !== other)
 		for (const t of common) {
-			if (friendlyMaybe(state, t, X)) {
+			// a third part on the target must have that face too (merges never promote)
+			if (friendlyMaybe(state, t, X) || facesOf(state, X, [f, other, t]).size > 1) {
 				continue
 			}
 			out.push({
@@ -741,6 +767,37 @@ function friendlyMaybe(state, t, X) {
 }
 
 /**
+ * The squares from which the side to move can handle its piece `id`: the piece's squares on the board (ascending)
+ * that hold no other piece in any world (`ownPieceAt`). A part whose square may hold another piece cannot be picked
+ * up, but the piece's other parts still can.
+ *
+ * @param {QState} state state
+ * @param {number} id piece id
+ * @return {number[]}
+ */
+function homeSquares(state, id) {
+	return pieceLocations(state, id).map((l) => l.sq).filter((s) => s >= 0 && ownPieceAt(state, s) === id)
+}
+
+/**
+ * The pieces of the side to move that stand on the board in some world, in the order of first appearance.
+ *
+ * @param {QState} state state
+ * @return {number[]}
+ */
+function ownPieces(state) {
+	const seen = new Set()
+	for (const { b } of state.worlds) {
+		for (let id = 0; id < b.sq.length; id++) {
+			if (b.sd[id] === state.turn && b.sq[id] >= 0) {
+				seen.add(id)
+			}
+		}
+	}
+	return [...seen]
+}
+
+/**
  * Every legal move of the side to move. Splits are many; they are included only with `splits: true`.
  *
  * @param {object} V variant
@@ -755,37 +812,30 @@ export function legalMoves(V, state, { splits = false } = {}) {
 	}
 	const out = ordinaryMoves(V, state)
 	const must = mustCapture(V, state)
-	const seen = new Set()
-	for (const { b } of state.worlds) {
-		for (let id = 0; id < b.sq.length; id++) {
-			if (b.sd[id] !== state.turn || b.sq[id] < 0 || seen.has(id)) {
-				continue
+	for (const id of ownPieces(state)) {
+		const quantum = superposed(state, id)
+		if (!quantum && !splits) {
+			continue
+		}
+		const home = homeSquares(state, id)
+		if (home.length === 0) {
+			continue
+		}
+		if (quantum) {
+			if (!must) {
+				out.push({ code: '?' + nameOf(V, home[0]), type: 'measure', from: [home[0]], to: [] })
 			}
-			seen.add(id)
-			if (!superposed(state, id) && !splits) {
-				continue
-			}
-			const locs = pieceLocations(state, id).map((l) => l.sq).filter((s) => s >= 0)
-			const f0 = locs[0]
-			if (ownPieceAt(state, f0) !== id) {
-				continue
-			}
-			if (superposed(state, id)) {
-				if (!must) {
-					out.push({ code: '?' + nameOf(V, f0), type: 'measure', from: [f0], to: [] })
+			const merges = new Map()
+			for (const f of home) {
+				for (const m of mergesFrom(V, state, f)) {
+					merges.set(m.code, m)
 				}
-				const merges = new Map()
-				for (const f of locs) {
-					for (const m of mergesFrom(V, state, f)) {
-						merges.set(m.code, m)
-					}
-				}
-				out.push(...merges.values())
 			}
-			if (splits) {
-				for (const f of locs) {
-					out.push(...splitsFrom(V, state, f))
-				}
+			out.push(...merges.values())
+		}
+		if (splits) {
+			for (const f of home) {
+				out.push(...splitsFrom(V, state, f))
 			}
 		}
 	}
@@ -793,7 +843,21 @@ export function legalMoves(V, state, { splits = false } = {}) {
 }
 
 /**
- * The legal splits of the piece on `f`.
+ * Whether the budget of the side to move is full, so that no split can be legal: a split has a world in which both
+ * halves move, and those two children are new arrangements (both targets are certainly empty), while every other
+ * arrangement keeps at least one world. So a split always adds an arrangement.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @return {boolean}
+ */
+function budgetFull(V, state) {
+	const { used, limit } = budgetInfo(V, state, state.turn)
+	return used >= limit
+}
+
+/**
+ * The legal splits of the piece on `f` (none at once when the budget is full).
  *
  * @param {object} V variant
  * @param {QState} state state
@@ -801,6 +865,9 @@ export function legalMoves(V, state, { splits = false } = {}) {
  * @return {object[]}
  */
 export function splitsFrom(V, state, f) {
+	if (state.result || budgetFull(V, state)) {
+		return []
+	}
 	const targets = splitTargets(V, state, f)
 	const out = []
 	for (let i = 0; i < targets.length; i++) {
@@ -879,9 +946,11 @@ function resetsQuiet(V, b, m) {
  * @param {object} V variant
  * @param {QState} state state
  * @param {string} key move key
+ * @param {ApplyFn} [apply] how a classical move is applied in one world (`applyClassical`; the escape search passes a
+ *   memoised one)
  * @return {{worlds: object[], sample: object}|null}
  */
-function perWorldMove(V, state, key) {
+function perWorldMove(V, state, key, apply = applyClassical) {
 	const { gens, union } = table(V, state)
 	const sample = union.get(key)
 	if (!sample) {
@@ -893,7 +962,7 @@ function perWorldMove(V, state, key) {
 			return { b, w, k: 'miss', cap: -1, idle: true }
 		}
 		return {
-			b: applyClassical(V, b, m),
+			b: apply(V, b, m),
 			w,
 			k: m.capture >= 0 ? 'capture' : 'move',
 			cap: m.capture >= 0 ? m.to : -1,
@@ -1000,6 +1069,19 @@ function isMeasured(V, state, sample) {
  * @return {Branch[]|null}
  */
 export function branches(V, state, code) {
+	return branchesWith(V, state, code, applyClassical)
+}
+
+/**
+ * The outcomes of a move (see `branches`), with the worlds built by `apply`.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @param {string} code move code
+ * @param {ApplyFn} apply how a classical move is applied in one world
+ * @return {Branch[]|null}
+ */
+function branchesWith(V, state, code, apply) {
 	if (state.result) {
 		return null
 	}
@@ -1014,11 +1096,11 @@ export function branches(V, state, code) {
 	}
 	let groups
 	if (mv.type === 'move') {
-		groups = moveBranches(V, state, mv.key)
+		groups = moveBranches(V, state, mv.key, apply)
 	} else if (mv.type === 'split') {
-		groups = splitBranches(V, state, mv)
+		groups = splitBranches(V, state, mv, apply)
 	} else if (mv.type === 'merge') {
-		groups = mergeBranches(V, state, mv)
+		groups = mergeBranches(V, state, mv, apply)
 	} else {
 		groups = measureBranches(V, state, mv)
 	}
@@ -1113,10 +1195,11 @@ function linkOrRoll(V, state, worlds, action, measured) {
  * @param {object} V variant
  * @param {QState} state state
  * @param {string} key move key
+ * @param {ApplyFn} apply how a classical move is applied in one world
  * @return {Branch[]|null}
  */
-function moveBranches(V, state, key) {
-	const r = perWorldMove(V, state, key)
+function moveBranches(V, state, key, apply) {
+	const r = perWorldMove(V, state, key, apply)
 	if (!r) {
 		return null
 	}
@@ -1125,14 +1208,19 @@ function moveBranches(V, state, key) {
 }
 
 /**
- * Outcomes of a split (never rolled), or null when it is illegal.
+ * The per-world results of a split before `applyMiss`: `{ X, t1, t2, entries, branching }` (targets in ascending
+ * order; `branching` when some world has both quiet moves), or null when the split is illegal on its face (a target
+ * that is not certainly empty, a piece that cannot split). Each world where X stands on `f` has two children, one
+ * per target (the second is left out for a world of weight 1); an idle child (X not on `f`, or that quiet move is
+ * not possible in its world) keeps its world.
  *
  * @param {object} V variant
  * @param {QState} state state
  * @param {object} mv parsed split
- * @return {Branch[]|null}
+ * @param {ApplyFn} apply how a classical move is applied in one world
+ * @return {{X: number, t1: number, t2: number, entries: object[], branching: boolean}|null}
  */
-function splitBranches(V, state, mv) {
+function splitEntries(V, state, mv, apply) {
 	const f = mv.from[0]
 	let [t1, t2] = mv.to
 	if (t1 === t2 || t1 === f || t2 === f) {
@@ -1161,7 +1249,7 @@ function splitBranches(V, state, mv) {
 	 */
 	const child = (b, w, m) => {
 		entries.push(m
-			? { b: applyClassical(V, b, m), w, k: 'move', cap: -1, rq: resetsQuiet(V, b, m) }
+			? { b: apply(V, b, m), w, k: 'move', cap: -1, rq: resetsQuiet(V, b, m) }
 			: { b, w, k: 'move', cap: -1, idle: true })
 	}
 	state.worlds.forEach(({ b, w }, i) => {
@@ -1182,10 +1270,26 @@ function splitBranches(V, state, mv) {
 			child(b, w2, m2)
 		}
 	})
-	if (!branching) {
+	return { X, t1, t2, entries, branching }
+}
+
+/**
+ * Outcomes of a split (never rolled), or null when it is illegal.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @param {object} mv parsed split
+ * @param {ApplyFn} apply how a classical move is applied in one world
+ * @return {Branch[]|null}
+ */
+function splitBranches(V, state, mv, apply) {
+	const r = splitEntries(V, state, mv, apply)
+	if (!r || !r.branching) {
 		return null
 	}
-	const worlds = idleApply(V, state, { type: 'split', code: mv.code, id: X, from: [f], to: [t1, t2] }, entries, true)
+	const { X, t1, t2 } = r
+	const action = { type: 'split', code: mv.code, id: X, from: [mv.from[0]], to: [t1, t2] }
+	const worlds = idleApply(V, state, action, r.entries, true)
 	const merged = dedupe(worlds)
 	if (merged.length > MAX_WORLDS || overBudget(V, state, merged)) {
 		return null
@@ -1205,16 +1309,20 @@ function splitBranches(V, state, mv) {
  * @param {object} V variant
  * @param {QState} state state
  * @param {object} mv parsed merge
+ * @param {ApplyFn} [apply] how a classical move is applied in one world (`applyClassical`; the escape search passes a
+ *   memoised one)
  * @return {{X: number, worlds: object[]}|null}
  */
-function perWorldMerge(V, state, mv) {
+function perWorldMerge(V, state, mv, apply = applyClassical) {
 	const [f1, f2] = mv.from
 	const t = mv.to[0]
 	const X = ownPieceAt(state, f1)
 	if (X < 0 || ownPieceAt(state, f2) !== X || f1 === f2 || t === f1 || t === f2 || friendlyMaybe(state, t, X)) {
 		return null
 	}
-	if (!V.types[state.worlds[0].b.ty[X]].splittable || facesOf(state, X, [f1, f2]).size > 1) {
+	// the type is read where X stands on f1: X may be absent from the first world
+	const home = state.worlds.find(({ b }) => b.board[f1] === X).b
+	if (!V.types[home.ty[X]].splittable || facesOf(state, X, [f1, f2, t]).size > 1) {
 		return null
 	}
 	const { gens } = table(V, state)
@@ -1240,7 +1348,7 @@ function perWorldMerge(V, state, mv) {
 			return { b, w, k: 'miss', cap: -1, idle: true, m: null }
 		}
 		return {
-			b: applyClassical(V, b, m),
+			b: apply(V, b, m),
 			w,
 			k: m.capture >= 0 ? 'capture' : 'move',
 			cap: m.capture >= 0 ? t : -1,
@@ -1260,10 +1368,11 @@ function perWorldMerge(V, state, mv) {
  * @param {object} V variant
  * @param {QState} state state
  * @param {object} mv parsed merge
+ * @param {ApplyFn} apply how a classical move is applied in one world
  * @return {Branch[]|null}
  */
-function mergeBranches(V, state, mv) {
-	const r = perWorldMerge(V, state, mv)
+function mergeBranches(V, state, mv, apply) {
+	const r = perWorldMerge(V, state, mv, apply)
 	if (!r) {
 		return null
 	}
@@ -1538,12 +1647,32 @@ function sitOut(V, next) {
  * @param {Branch} branch the chosen outcome
  * @param {Branch[]} all every outcome (for the history record)
  * @param {object} [opts] options
- * @param {boolean} [opts.light] for the computer player's search: no history record, no "no legal move" check
+ * @param {boolean} [opts.light] for the computer player's search: no history record, no "your king cannot escape"
+ *   and no "no legal move" check
  * @return {QState}
  */
 export function stateAfter(V, state, code, branch, all, { light = false } = {}) {
+	return buildState(V, state, code, branch, all, light, true)
+}
+
+/**
+ * Build the state after a chosen branch (see `stateAfter`). The escape rule's search leaves out `unifyWorlds`
+ * (`unify` false): that hook changes only state-level bookkeeping such as castling rights, which neither the result
+ * nor the captures of the next move depend on, and it is called once per played move.
+ *
+ * @param {object} V variant
+ * @param {QState} state state before the move
+ * @param {string} code move code
+ * @param {Branch} branch the chosen outcome
+ * @param {Branch[]} all every outcome (for the history record)
+ * @param {boolean} light the computer player's search or the escape rule's: no history record, no "your king cannot
+ *   escape" and no "no legal move" check
+ * @param {boolean} unify whether the worlds pass through `unifyWorlds`
+ * @return {QState}
+ */
+function buildState(V, state, code, branch, all, light, unify) {
 	let entries = branch.worlds
-	if (V.unifyWorlds) {
+	if (unify && V.unifyWorlds) {
 		// state-level facts (castling rights) made identical in every world, before identical worlds merge
 		const bs = V.unifyWorlds(entries.map((e) => e.b), state.turn)
 		entries = entries.map((e, i) => (bs[i] === e.b ? e : { ...e, b: bs[i] }))
@@ -1581,8 +1710,15 @@ export function stateAfter(V, state, code, branch, all, { light = false } = {}) 
 	if (!next.result && V.stateResult) {
 		next.result = V.stateResult(next)
 	}
-	if (!next.result && next.quiet >= V.quietPlies) {
-		next.result = { winner: null, reason: 'quiet' }
+	if (!next.result && !light && V.escapeRule && cannotEscape(V, next)) {
+		next.result = { winner: state.turn, reason: 'cannotEscape' }
+	}
+	if (!next.result) {
+		// the generic draws, which wait while the side to move can take an enemy royal piece for certain
+		const draw = V.bareKingsDraw && onlyRoyals(V, next) ? 'bareKings' : next.quiet >= V.quietPlies ? 'quiet' : null
+		if (draw && !(V.drawsWait && certainCapture(V, next))) {
+			next.result = { winner: null, reason: draw }
+		}
 	}
 	if (!next.result && next.ply >= V.maxPly) {
 		next.result = { winner: null, reason: 'moveLimit' }
@@ -1691,10 +1827,7 @@ export function royalDanger(V, state, side) {
 		return 0
 	}
 	let best = 0
-	for (let e = 0; e < V.sideCount; e++) {
-		if (!V.enemies(e, side) || (V.isOut && V.isOut(state.worlds[0].b, e))) {
-			continue
-		}
+	for (const e of attackersOf(V, state, side)) {
 		const acc = new Map()
 		for (const { b, w } of state.worlds) {
 			const royal = hasRoyalPiece(V, b, side)
@@ -1710,6 +1843,635 @@ export function royalDanger(V, state, side) {
 		best = Math.max(best, mergeDanger(V, state, e, side))
 	}
 	return best
+}
+
+/**
+ * The sides that may capture a piece of `side`: its enemies that are still in the game.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @param {number} side the side in danger
+ * @return {number[]}
+ */
+function attackersOf(V, state, side) {
+	const out = []
+	for (let e = 0; e < V.sideCount; e++) {
+		if (V.enemies(e, side) && !(V.isOut && V.isOut(state.worlds[0].b, e))) {
+			out.push(e)
+		}
+	}
+	return out
+}
+
+/**
+ * Whether enemy `e` could capture a royal piece of `side` for certain with one legal move: one ordinary move key takes
+ * a royal piece in every world (`royalLoss`; a key generated as a certain move in some worlds and as an ordinary move
+ * in others is not legal), or a merge takes one in every world (`mergeDanger` is 1). `royalDanger` counts the same
+ * captures; this stops as soon as the answer is known. A certain capture takes a royal piece in the first world too,
+ * so the candidate keys come from there, and a merge needs a superposed piece whose move does it there.
+ *
+ * @param {object} V variant
+ * @param {QState} state state (no result)
+ * @param {number} e the capturing side
+ * @param {number} side the side in danger
+ * @return {boolean}
+ */
+function certainFrom(V, state, e, side) {
+	const b0 = state.worlds[0].b
+	const royal0 = hasRoyalPiece(V, b0, side)
+	// candidate key -> whether it is a certain move in the first world
+	const keys = new Map()
+	let merge = false
+	for (const m of generate(V, b0, e).values()) {
+		if (m.capture >= 0 && royalLoss(V, b0, m, side, royal0, null)) {
+			keys.set(m.key, isCertain(m))
+			merge ||= superposed(state, m.id)
+		}
+	}
+	for (let i = 1; i < state.worlds.length && keys.size > 0; i++) {
+		const b = state.worlds[i].b
+		const gen = generate(V, b, e)
+		const royal = hasRoyalPiece(V, b, side)
+		for (const [k, certain] of keys) {
+			const m = gen.get(k)
+			if (!m || m.capture < 0 || isCertain(m) !== certain || !royalLoss(V, b, m, side, royal, null)) {
+				keys.delete(k)
+			}
+		}
+	}
+	return keys.size > 0 || (merge && mergeDanger(V, state, e, side) === 1)
+}
+
+/**
+ * Whether the side to move can capture a royal piece of `side` for certain with its next move.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @param {number} side the side in danger
+ * @return {boolean}
+ */
+function certainlyTaken(V, state, side) {
+	if (state.result || V.royalTypes.size === 0 || !V.enemies(state.turn, side)) {
+		return false
+	}
+	return certainFrom(V, state, state.turn, side)
+}
+
+/**
+ * Whether the side to move can capture an enemy royal piece for certain (the generic draws wait then).
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @return {boolean}
+ */
+function certainCapture(V, state) {
+	for (let s = 0; s < V.sideCount; s++) {
+		if (V.enemies(state.turn, s) && certainFrom(V, state, state.turn, s)) {
+			return true
+		}
+	}
+	return false
+}
+
+/**
+ * Whether some legal action of the side to move might capture an enemy royal piece (in at least one world), counted
+ * as `royalDanger` counts them. Ordinary moves are enough: in each world a merge plays an ordinary move of one of its
+ * parts, and that move's key is legal on its own.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @return {boolean}
+ */
+function mightTakeRoyal(V, state) {
+	const d = state.turn
+	const { gens, union } = table(V, state)
+	for (let s = 0; s < V.sideCount; s++) {
+		if (!V.enemies(d, s)) {
+			continue
+		}
+		for (let i = 0; i < state.worlds.length; i++) {
+			const b = state.worlds[i].b
+			const royal = hasRoyalPiece(V, b, s)
+			for (const m of gens[i].values()) {
+				if (m.capture >= 0 && union.has(m.key) && royalLoss(V, b, m, s, royal, null)) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+/**
+ * Whether only royal pieces are left on the board in every world and no hand holds a piece (the bare-kings draw).
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @return {boolean}
+ */
+function onlyRoyals(V, state) {
+	for (const { b } of state.worlds) {
+		for (let id = 0; id < b.sq.length; id++) {
+			const s = b.sq[id]
+			if (s === HAND || (s >= 0 && !V.royalTypes.has(b.ty[id]))) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+/**
+ * @typedef {object} EscapeSearch what one `cannotEscape` search remembers
+ * @property {number} d the side to move, which must escape
+ * @property {number} e the side that moves after any action of `d`
+ * @property {boolean} fast whether facts of single worlds may decide (`e` does not depend on the world: no
+ *   `nextSide` and no `isOut`)
+ * @property {boolean} free whether an outcome in which `e` can take a royal piece of `d` for certain can end the game
+ *   only in `worldResult`: no `stateResult`, the move limit not reached, and no generic draw (they wait, or cannot
+ *   happen)
+ * @property {ApplyFn} apply `applyClassical`, memoised per classical move, so that every action builds the same world
+ *   objects for the same move (a split's children are the worlds of the quiet moves)
+ * @property {Map<object, WorldFacts>} facts `worldFacts` per world object
+ */
+
+/**
+ * @typedef {object} WorldFacts what the escape search knows about one world after an action of `d`
+ * @property {boolean} ended whether the game is over there (`worldResult`, `d` the mover)
+ * @property {boolean} royal whether `d` has a royal piece there
+ * @property {Map<string, object>|null} all every move of `e` that takes a royal piece of `d` there, by key, once asked
+ * @property {Map<string, object|null>} one the move of `e` with a key when it takes a royal piece of `d` there (else
+ *   null), once asked
+ * @property {Map<string, object|null>} merge the move a merge of one piece of `e` onto one square plays there
+ *   (`mergeMove`), by piece and square, once asked
+ */
+
+/**
+ * Start the escape search on a new state.
+ *
+ * @param {object} V variant
+ * @param {QState} state the new state (no result yet)
+ * @return {EscapeSearch}
+ */
+function escapeSearch(V, state) {
+	const d = state.turn
+	const applied = new Map()
+	return {
+		d,
+		e: nextSide(V, state.worlds[0].b, d),
+		fast: !V.nextSide && !V.isOut,
+		free: !V.stateResult && state.ply + 1 < V.maxPly
+			&& (V.drawsWait || (!V.bareKingsDraw && state.quiet + 1 < V.quietPlies)),
+		/**
+		 * `applyClassical`, memoised per move object (a move object belongs to one world).
+		 *
+		 * @param {object} W variant
+		 * @param {object} b world
+		 * @param {object} m classical move of that world
+		 * @return {object}
+		 */
+		apply(W, b, m) {
+			let next = applied.get(m)
+			if (next === undefined) {
+				next = applyClassical(W, b, m)
+				applied.set(m, next)
+			}
+			return next
+		},
+		facts: new Map(),
+	}
+}
+
+/**
+ * What the escape search knows about one world after an action (remembered per world object).
+ *
+ * @param {object} V variant
+ * @param {EscapeSearch} ctx the search
+ * @param {object} b world
+ * @return {WorldFacts}
+ */
+function worldFacts(V, ctx, b) {
+	let f = ctx.facts.get(b)
+	if (f === undefined) {
+		f = {
+			ended: worldResult(V, b, ctx.d) !== null,
+			royal: hasRoyalPiece(V, b, ctx.d),
+			all: null,
+			one: new Map(),
+			merge: new Map(),
+		}
+		ctx.facts.set(b, f)
+	}
+	return f
+}
+
+/**
+ * The move of side `e` with the key of `m0` in world `b`, as `generate` gives it, or null. When the variant builds its
+ * moves from the descriptors alone (no `generate`, no `filterMoves` hook), a move key names its from square, and the
+ * descriptor moves come before the special ones, so the moves of the piece on that square are enough; otherwise, or
+ * when that piece has no such move, every move of `e` is generated.
+ *
+ * @param {object} V variant
+ * @param {object} b world
+ * @param {number} e side
+ * @param {object} m0 a move of `e` with that key in another world
+ * @return {object|null}
+ */
+function keyMove(V, b, e, m0) {
+	const id = m0.from >= 0 ? b.board[m0.from] : -1
+	if (!V.generate && !V.filterMoves && id >= 0 && b.sd[id] === e) {
+		const out = []
+		pieceMoves(V, b, id, out)
+		const m = out.find((x) => x.key === m0.key)
+		if (m) {
+			return m
+		}
+	}
+	return generate(V, b, e).get(m0.key) ?? null
+}
+
+/**
+ * The move of the next side with the key of `m0` in world `b` when it takes a royal piece of the side that acted there
+ * (`royalLoss`), else null. Asked key by key, so that only the moves in question are generated and applied.
+ *
+ * @param {object} V variant
+ * @param {EscapeSearch} ctx the search
+ * @param {object} b world
+ * @param {object} m0 a move of the next side with that key in another world
+ * @return {object|null}
+ */
+function royalMove(V, ctx, b, m0) {
+	const f = worldFacts(V, ctx, b)
+	if (f.all) {
+		return f.all.get(m0.key) ?? null
+	}
+	let r = f.one.get(m0.key)
+	if (r === undefined) {
+		const m = keyMove(V, b, ctx.e, m0)
+		r = m && m.capture >= 0 && royalLoss(V, b, m, ctx.d, f.royal, null) ? m : null
+		f.one.set(m0.key, r)
+	}
+	return r
+}
+
+/**
+ * Every move of the next side that takes a royal piece of the side that acted in world `b`, by key.
+ *
+ * @param {object} V variant
+ * @param {EscapeSearch} ctx the search
+ * @param {object} b world
+ * @return {Map<string, object>}
+ */
+function royalThreats(V, ctx, b) {
+	const f = worldFacts(V, ctx, b)
+	if (!f.all) {
+		const all = new Map()
+		for (const [k, m] of generate(V, b, ctx.e)) {
+			if (m.capture >= 0 && royalLoss(V, b, m, ctx.d, f.royal, null)) {
+				all.set(k, m)
+			}
+		}
+		f.all = all
+	}
+	return f.all
+}
+
+/**
+ * How a set of worlds after an action leaves the side that acted, from facts of single worlds (as `certainFrom`
+ * decides it): `'ended'` when the game is over in one of them; `'certain'` when one legal move key of the next side
+ * takes a royal piece of it in every world, or one merge does (`mergeThreat`); `'free'` when neither can; else
+ * `'merge'`, which only the whole state can decide (a rare converging capture, see `mergeCase`).
+ *
+ * @param {object} V variant
+ * @param {EscapeSearch} ctx the search
+ * @param {object[]} bs the worlds
+ * @return {'ended'|'certain'|'free'|'merge'}
+ */
+function threatOver(V, ctx, bs) {
+	if (worldFacts(V, ctx, bs[0]).ended) {
+		return 'ended'
+	}
+	const first = royalThreats(V, ctx, bs[0])
+	const common = new Map(first)
+	const merge = [...first.values()].some((m) => bs.some((b) => b.sq[m.id] !== bs[0].sq[m.id]))
+	for (let i = 1; i < bs.length; i++) {
+		if (common.size === 0 && !merge) {
+			return 'free'
+		}
+		const b = bs[i]
+		if (worldFacts(V, ctx, b).ended) {
+			return 'ended'
+		}
+		for (const [k, m] of common) {
+			const n = royalMove(V, ctx, b, m)
+			if (!n || isCertain(n) !== isCertain(m)) {
+				common.delete(k)
+			}
+		}
+	}
+	return common.size > 0 ? 'certain' : merge ? mergeThreat(V, ctx, bs, first) : 'free'
+}
+
+/**
+ * Whether a merge of the next side takes a royal piece of the side that acted in every world (`mergeDanger` is 1 on
+ * the state of these worlds), from facts of single worlds. Such a merge plays, in the first world, a move of a
+ * superposed piece X onto a square t that takes a royal piece there, so those moves name every candidate; each
+ * candidate is decided by `mergeCase`. `'certain'` when one candidate is certain, else `'merge'` when one is open,
+ * else `'free'`.
+ *
+ * @param {object} V variant
+ * @param {EscapeSearch} ctx the search
+ * @param {object[]} bs the worlds (none of them ended)
+ * @param {Map<string, object>} first every move of the next side that takes a royal piece in the first world
+ * @return {'certain'|'free'|'merge'}
+ */
+function mergeThreat(V, ctx, bs, first) {
+	let open = false
+	const seen = new Set()
+	for (const m of first.values()) {
+		const X = m.id
+		const k = X + ':' + m.to
+		if (m.promo || noPath(m) || seen.has(k) || !bs.some((b) => b.sq[X] !== bs[0].sq[X])) {
+			continue
+		}
+		seen.add(k)
+		const r = mergeCase(V, ctx, bs, X, m.to)
+		if (r === 'certain') {
+			return 'certain'
+		}
+		open ||= r === 'merge'
+	}
+	return open ? 'merge' : 'free'
+}
+
+/**
+ * Whether the merge of piece X of the next side onto `t` takes a royal piece of the side that acted in every world,
+ * as `mergeCandidates`, `perWorldMerge` and `mergeDanger` decide it on the state of these worlds. That merge exists
+ * and plays in every world exactly when X stands on two squares over the worlds and on one of them in each world,
+ * those squares hold nothing else, X has one splittable type, `t` holds no other piece of the next side, and in
+ * every world X's merge move onto `t` (`mergeMove`) exists; it is weighed only when `t` may hold an enemy piece, and
+ * it is certain when each of those moves takes a royal piece (`royalLoss`).
+ *
+ * `'no'` when the merge is not certain; `'certain'` when it is and stays so on every subset of the worlds (as a
+ * merge, or, where X stands on one square only, as the ordinary move with one key), which a split needs (see
+ * `splitTrapped`): so `t` must hold an enemy piece in every world and the moves from one square must share one key;
+ * else `'merge'` (the whole state decides).
+ *
+ * @param {object} V variant
+ * @param {EscapeSearch} ctx the search
+ * @param {object[]} bs the worlds
+ * @param {number} X piece of the next side
+ * @param {number} t target square
+ * @return {'certain'|'no'|'merge'}
+ */
+function mergeCase(V, ctx, bs, X, t) {
+	const type = bs[0].ty[X]
+	if (!V.types[type]?.splittable) {
+		return 'no'
+	}
+	// per square of X: the key of its merge move there
+	const keys = new Map()
+	let oneKey = true
+	let prey = 0
+	for (const b of bs) {
+		const s = b.sq[X]
+		if (s < 0 || s === t || b.sd[X] !== ctx.e || b.ty[X] !== type) {
+			return 'no'
+		}
+		const occ = b.board[t]
+		if (occ >= 0 && b.sd[occ] === ctx.e) {
+			return 'no'
+		}
+		const m = mergeMove(V, ctx, b, X, t)
+		if (!m || m.capture < 0 || !royalLoss(V, b, m, ctx.d, worldFacts(V, ctx, b).royal, null)) {
+			return 'no'
+		}
+		if (!keys.has(s)) {
+			if (keys.size === 2) {
+				return 'no'
+			}
+			keys.set(s, m.key)
+		}
+		oneKey &&= keys.get(s) === m.key
+		prey += occ >= 0 && V.enemies(ctx.e, b.sd[occ]) ? 1 : 0
+	}
+	if (keys.size < 2 || prey === 0) {
+		return 'no'
+	}
+	for (const b of bs) {
+		for (const s of keys.keys()) {
+			if (b.board[s] !== -1 && b.board[s] !== X) {
+				return 'no'
+			}
+		}
+	}
+	return prey === bs.length && oneKey ? 'certain' : 'merge'
+}
+
+/**
+ * The move a merge of piece X onto `t` plays in world `b`, as `perWorldMerge` finds it: the first move of the next
+ * side, in `generate` order, that takes X from its square to `t`, without promotion and not certain (`noPath`), or
+ * null. When the variant builds its moves from the descriptors alone (no `generate`, no `filterMoves`), the moves of
+ * X come in that order before the special moves, and no other piece has a move from X's square, so the moves of X
+ * are enough when one of them fits. Remembered per world.
+ *
+ * @param {object} V variant
+ * @param {EscapeSearch} ctx the search
+ * @param {object} b world (X of the next side on the board)
+ * @param {number} X piece id
+ * @param {number} t target square
+ * @return {object|null}
+ */
+function mergeMove(V, ctx, b, X, t) {
+	const f = worldFacts(V, ctx, b)
+	const k = X + ':' + t
+	let r = f.merge.get(k)
+	if (r === undefined) {
+		const s = b.sq[X]
+		const fits = (m) => m.id === X && m.from === s && m.to === t && !m.promo && !noPath(m)
+		r = null
+		if (!V.generate && !V.filterMoves) {
+			const out = []
+			pieceMoves(V, b, X, out)
+			r = out.find(fits) ?? null
+		}
+		if (r === null) {
+			for (const m of generate(V, b, ctx.e).values()) {
+				if (fits(m)) {
+					r = m
+					break
+				}
+			}
+		}
+		f.merge.set(k, r)
+	}
+	return r
+}
+
+/**
+ * Whether one outcome of an action of the side to move is an escape: the game ends, or none of its royal pieces can
+ * be captured for certain on the next move. The outcome's state is built (as in the light `stateAfter`, without
+ * `unifyWorlds`) only when facts of single worlds cannot tell. A settling roll gives every world of an outcome the same
+ * `worldResult`, so its first world tells whether the game ends there.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @param {string} code the action
+ * @param {Branch} br the outcome
+ * @param {Branch[]} list every outcome of the action
+ * @param {EscapeSearch} ctx the search
+ * @return {boolean}
+ */
+function outcomeEscapes(V, state, code, br, list, ctx) {
+	if (ctx.fast) {
+		const r = threatOver(V, ctx, br.worlds.map((e) => e.b))
+		if (r === 'ended' || r === 'free') {
+			return true
+		}
+		if (r === 'certain' && ctx.free) {
+			return false
+		}
+	}
+	const next = buildState(V, state, code, br, list, true, false)
+	return Boolean(next.result) || !certainlyTaken(V, next, state.turn)
+}
+
+/**
+ * Whether an action of the side to move escapes (see `cannotEscape`): some outcome ends the game, or leaves no royal
+ * piece of that side capturable for certain. Null when the action is illegal.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @param {string} code the action
+ * @param {EscapeSearch} ctx the search
+ * @return {boolean|null}
+ */
+function escapesBy(V, state, code, ctx) {
+	const list = branchesWith(V, state, code, ctx.apply)
+	if (!list) {
+		return null
+	}
+	return list.some((br) => outcomeEscapes(V, state, code, br, list, ctx))
+}
+
+/**
+ * Whether a split of the side to move is surely no escape, from its worlds alone (without building its outcomes):
+ * it is illegal, or one legal move key or one merge of the next side takes a royal piece of the mover in every world
+ * the split can lead to (`threatOver` gives `'certain'` only when that holds on every subset of the worlds too, as the
+ * settling rolls may pick one), and none of those worlds ends the game (then no outcome can, see
+ * `EscapeSearch.free`). The children of a split are the worlds of the piece's quiet moves, which the search has
+ * already met.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @param {number} f from square
+ * @param {number} t1 first target
+ * @param {number} t2 second target
+ * @param {EscapeSearch} ctx the search
+ * @return {boolean}
+ */
+function splitTrapped(V, state, f, t1, t2, ctx) {
+	const code = splitCode(V, f, t1, t2)
+	const r = splitEntries(V, state, { type: 'split', code, from: [f], to: [t1, t2] }, ctx.apply)
+	if (!r || !r.branching) {
+		return true
+	}
+	if (!ctx.fast || !ctx.free) {
+		return false
+	}
+	const action = { type: 'split', code, id: r.X, from: [f], to: [r.t1, r.t2] }
+	return threatOver(V, ctx, idleApply(V, state, action, r.entries, true).map((e) => e.b)) === 'certain'
+}
+
+/**
+ * The ordinary moves of the side to move in the order the escape search tries them: moves of a royal piece, then
+ * captures, then the others.
+ *
+ * @param {object} V variant
+ * @param {QState} state state
+ * @return {string[]}
+ */
+function escapeOrder(V, state) {
+	const { captureKeys } = table(V, state)
+	const royalOn = (f) => f >= 0 && state.worlds.some(({ b }) => b.board[f] >= 0 && V.royalTypes.has(b.ty[b.board[f]]))
+	const rank = (m) => (royalOn(m.from) ? 0 : captureKeys.has(m.code) ? 1 : 2)
+	return ordinaryMoves(V, state)
+		.map((m) => ({ code: m.code, r: rank(m) }))
+		.sort((a, b) => a.r - b.r)
+		.map((m) => m.code)
+}
+
+/**
+ * The classic "your king cannot escape" (the `escapeRule`, docs/rules.md 5), on a new state: the side to move has at
+ * least one legal action (move, split, merge or Measure), none of its actions might capture an enemy royal piece, and
+ * after every outcome of every action the game goes on with one of its royal pieces capturable for certain by the
+ * next move.
+ *
+ * The outcomes are built as in the light `stateAfter` (without `unifyWorlds`), so the rule never recurses. The search
+ * stops at the first escape: moves of the royal pieces and captures come first, then the other moves, merges and
+ * measurements, and the splits (the most numerous actions) last, from the pieces' home squares, and none at a full
+ * budget. In an ordinary position the first action is already an escape. Facts of single worlds are remembered for
+ * the whole search, and a split is skipped when the worlds it can lead to prove that it is no escape.
+ *
+ * @param {object} V variant
+ * @param {QState} state the new state (no result yet)
+ * @return {boolean}
+ */
+function cannotEscape(V, state) {
+	const ctx = escapeSearch(V, state)
+	const moves = escapeOrder(V, state)
+	// the first move is usually an escape: look for royal captures only when it is not
+	if (moves.length > 0 && escapesBy(V, state, moves[0], ctx)) {
+		return false
+	}
+	if (mightTakeRoyal(V, state)) {
+		return false
+	}
+	// every listed ordinary move is legal
+	let any = moves.length > 0
+	const must = mustCapture(V, state)
+	const rest = new Set(moves.slice(1))
+	for (const id of ownPieces(state)) {
+		if (!superposed(state, id)) {
+			continue
+		}
+		const home = homeSquares(state, id)
+		for (const f of home) {
+			for (const m of mergesFrom(V, state, f)) {
+				rest.add(m.code)
+			}
+		}
+		if (!must && home.length > 0) {
+			rest.add('?' + nameOf(V, home[0]))
+		}
+	}
+	for (const code of rest) {
+		const r = escapesBy(V, state, code, ctx)
+		if (r) {
+			return false
+		}
+		any ||= r === false
+	}
+	// a split needs quiet moves, and a full budget allows none (see `budgetFull`)
+	if (must || moves.length === 0 || budgetFull(V, state)) {
+		return any
+	}
+	for (const id of ownPieces(state)) {
+		for (const f of homeSquares(state, id)) {
+			const targets = splitTargets(V, state, f)
+			for (let i = 0; i < targets.length; i++) {
+				for (let j = i + 1; j < targets.length; j++) {
+					if (splitTrapped(V, state, f, targets[i], targets[j], ctx)) {
+						continue
+					}
+					if (escapesBy(V, state, splitCode(V, f, targets[i], targets[j]), ctx)) {
+						return false
+					}
+				}
+			}
+		}
+	}
+	return any
 }
 
 /**
@@ -1732,8 +2494,9 @@ function royalLoss(V, b, m, side, royal, after) {
 }
 
 /**
- * The largest danger to a royal piece of `side` from one merge of enemy `e` onto a square that may hold such a piece
- * (a converging capture): the weight of the worlds in which the merge takes a royal piece of `side`.
+ * The largest danger to a royal piece of `side` from one merge of enemy `e` (a converging capture): the weight of the
+ * worlds in which the merge captures and takes a royal piece of `side` (`royalLoss`). Every merge onto a square that
+ * may hold a piece `e` can capture is weighed, so a converging capture next to the king counts in atomic.
  *
  * @param {object} V variant
  * @param {QState} state state
@@ -1744,9 +2507,11 @@ function royalLoss(V, b, m, side, royal, after) {
 function mergeDanger(V, state, e, side) {
 	// a new state object for another side to move: the move table is cached per state object
 	const se = state.turn === e ? state : { ...state, turn: e }
-	const royalMaybe = (t) => se.worlds.some(({ b }) => {
+	// only a merge that captures in some world can take a royal piece: directly, or by what the capture sets off
+	// (atomic's explosions next to the king)
+	const preyMaybe = (t) => se.worlds.some(({ b }) => {
 		const id = b.board[t]
-		return id >= 0 && b.sd[id] === side && V.royalTypes.has(b.ty[id])
+		return id >= 0 && V.enemies(e, b.sd[id])
 	})
 	const pieces = new Set()
 	for (const { b } of se.worlds) {
@@ -1764,7 +2529,7 @@ function mergeDanger(V, state, e, side) {
 		}
 		for (const { sq: f } of pieceLocations(se, X)) {
 			for (const mv of f >= 0 ? mergeCandidates(V, se, f) : []) {
-				if (seen.has(mv.code) || !royalMaybe(mv.to[0])) {
+				if (seen.has(mv.code) || !preyMaybe(mv.to[0])) {
 					continue
 				}
 				seen.add(mv.code)

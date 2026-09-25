@@ -11,7 +11,10 @@
   under the moves, `noteText(note)` for roll notes, `codeText(code)` for move codes, `handOrder` for the hands and
   `options[i].describe(value)` for the game's options. While a game with hidden information runs, the other sides'
   budgets, the danger line and undo are hidden, and in pass & play the mover first sees "Your move" before passing the
-  device; the curtain then covers the board and the whole side panel.
+  device; the curtain then covers the board and the whole side panel. Split is greyed out while the budget of the
+  player to move is full, and the shared rules leave castling and en passant out when the variant has neither
+  (`specialMoves: false`). During the hand-over the mode tooltips, the compulsory line and the keyboard focus say
+  nothing about the opponent.
 -->
 <template>
 	<div class="qc-vgame">
@@ -69,7 +72,7 @@
 					<details>
 						<summary>{{ t('quantumchess', 'The quantum rules of every variant') }}</summary>
 						<ul>
-							<li v-for="(r, i) in sharedRules()" :key="'s' + i">
+							<li v-for="(r, i) in sharedRules(V)" :key="'s' + i">
 								{{ r }}
 							</li>
 						</ul>
@@ -158,12 +161,12 @@
 					<span
 						v-for="m in modes"
 						:key="m.id"
-						:title="m.blocked ? t('quantumchess', 'Not now: a capture is compulsory.') : undefined">
+						:title="m.blocked || undefined">
 						<NcButton
 							size="small"
 							:variant="game.mode.value === m.id ? 'primary' : 'secondary'"
 							:pressed="game.mode.value === m.id"
-							:disabled="!game.isHumanTurn.value || Boolean(game.handover.value) || m.blocked"
+							:disabled="!game.isHumanTurn.value || Boolean(game.handover.value) || Boolean(m.blocked)"
 							@click="game.setMode(m.id)">
 							{{ m.label }}
 						</NcButton>
@@ -358,16 +361,31 @@ const showRules = ref(false)
 const variantRules = computed(() => (V.value?.rules ? V.value.rules() : []))
 const allSquares = computed(() => new Set(Array.from({ length: V.value?.topology.size ?? 0 }, (_, i) => i)))
 
-/** Whether the player to move must capture (compulsory capture, as in Antichess). */
-const compulsory = computed(() => Boolean(state.value && !state.value.result && game.isHumanTurn.value
-	&& game.compulsory.value))
+/**
+ * Whether the player to move looks at the panel: a human's turn, and not the hidden hand-over, in which the mover still
+ * looks at it while the opponent is to move (nor the curtain). Only then do the mode tooltips and the compulsory line
+ * speak about the side to move.
+ */
+const moverLooks = computed(() => Boolean(state.value && !state.value.result && game.isHumanTurn.value
+	&& !game.handover.value && !game.curtain.value))
 
-const modes = computed(() => [
-	{ id: 'move', label: t('quantumchess', 'Move'), blocked: false },
-	{ id: 'split', label: t('quantumchess', 'Split'), blocked: compulsory.value },
-	{ id: 'merge', label: t('quantumchess', 'Merge'), blocked: false },
-	{ id: 'measure', label: t('quantumchess', 'Measure'), blocked: compulsory.value },
-])
+/** Whether the player to move must capture (compulsory capture, as in Antichess). */
+const compulsory = computed(() => moverLooks.value && game.compulsory.value)
+
+/** Whether the budget of the player to move is full: no split is possible (docs/rules.md 7.1). */
+const budgetFull = computed(() => moverLooks.value && game.budgetFull.value)
+
+/** The move modes, each with the reason why it is closed now (the tooltip of the greyed-out button), or null. */
+const modes = computed(() => {
+	const must = compulsory.value ? t('quantumchess', 'Not now: a capture is compulsory.') : null
+	const full = budgetFull.value ? t('quantumchess', 'Budget full: merge or measure a piece first.') : null
+	return [
+		{ id: 'move', label: t('quantumchess', 'Move'), blocked: null },
+		{ id: 'split', label: t('quantumchess', 'Split'), blocked: must ?? full },
+		{ id: 'merge', label: t('quantumchess', 'Merge'), blocked: null },
+		{ id: 'measure', label: t('quantumchess', 'Measure'), blocked: must },
+	]
+})
 
 /** Per side: the budget pips (unknown for the other sides while a hidden game runs) and the variant's own text. */
 const players = computed(() => {
@@ -423,10 +441,20 @@ const hands = computed(() => {
 		.filter((h) => h.pieces.length)
 })
 
+/**
+ * The squares the keyboard can reach: the from squares of the moves and the marked targets, only while the player to
+ * move looks at the board (never the opponent's pieces during the hidden hand-over or a computer's turn). A from
+ * square the viewer cannot see is left out unless the viewer's own piece may stand there; the targets are marked from
+ * the viewer's own moves (in Kriegspiel on the board as the viewer knows it, where every other square is hidden).
+ */
 const focusable = computed(() => {
 	const out = new Set()
+	if (!moverLooks.value) {
+		return out
+	}
+	const hidden = game.hidden.value
 	for (const m of game.moves.value) {
-		if (m.from >= 0) {
+		if (m.from >= 0 && (!hidden?.has(m.from) || ownPieceMaybe(m.from))) {
 			out.add(m.from)
 		}
 	}
@@ -437,6 +465,17 @@ const focusable = computed(() => {
 	}
 	return out
 })
+
+/**
+ * Whether the viewer's own piece may stand on a square (in some world).
+ *
+ * @param {number} sq square
+ * @return {boolean}
+ */
+function ownPieceMaybe(sq) {
+	const viewer = game.viewer.value
+	return state.value.worlds.some(({ b }) => b.board[sq] >= 0 && b.sd[b.board[sq]] === viewer)
+}
 
 const boardLabel = computed(() => (entry.value
 	? t('quantumchess', 'Board of {variant}', { variant: entry.value.name() })
