@@ -12,6 +12,10 @@ release as its release notes.
 
 ## [Unreleased]
 
+### Changed
+
+- The App Store page is in English only. The app itself is still in English, Dutch, German and French.
+
 ## [1.0.2] - 2026-09-25
 
 Maintenance release.

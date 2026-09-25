@@ -47,8 +47,8 @@ Plural forms follow Nextcloud: Dutch and German `nplurals=2; plural=(n != 1);`, 
 ## Terminology
 
 Every language uses one word per game term. The glossary with all terms, the form of address and typography rules
-is [`GLOSSARY.md`](GLOSSARY.md); `appinfo/info.xml` uses the same terms. Move codes such as `g1-f3|h3`
-are never translated.
+is [`GLOSSARY.md`](GLOSSARY.md). Move codes such as `g1-f3|h3` are never translated. The App Store texts in
+`appinfo/info.xml` (name, summary, description) are English only and are not translated.
 
 ## Transifex
 
