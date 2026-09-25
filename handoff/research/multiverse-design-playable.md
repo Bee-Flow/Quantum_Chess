@@ -618,7 +618,9 @@ playing core splits.
 
 The core applies splits and merges world by world and keeps a world unchanged where a part cannot move
 (`quantum.js:873-887`, `941-957`). Three cases can therefore leave worlds with different skeletons; the solid roll
-then decides, with the UI note "A piece that is always solid was settled" and the outcome label *Split*:
+then decides, with the UI note "A piece that is always solid was settled" and the outcome label *Split* (*Moved*
+for a merge), or *Missed* for the part in which nothing happened (the core labels each part by its own worlds, so a
+part made only of idle worlds is `miss`, CORE-CHANGES.md Q4):
 
 | Case | What the player gets |
 |---|---|
@@ -818,9 +820,9 @@ one outcome, not rolled.
     next three moves; after `(0T4)d2-e3` (L0 end 7, boards 1 and 2 sealed) 1 world, budget 1.
 24. **Measure is free.** 17 + `(0T1)a4-a3`, `?(0)c3`: two outcomes 50/50; afterwards turn White, L0 end 2, `ply` + 1,
     `↵` illegal.
-25. **E1, splitting a ghost part.** 17 + `(0T1)a4-a3`, `(0)c3-(0)d1|(0)a4` (targets sorted by square): two outcomes, key `split`, 50/50, notes
-    start with `solid:`; one has 2 worlds (knight a4 / d1), L0 end 3, turn Black; the other 1 world (knight e3), L0
-    end 2, turn White.
+25. **E1, splitting a ghost part.** 17 + `(0T1)a4-a3`, `(0)c3-(0)d1|(0)a4` (targets sorted by square): two outcomes,
+    50/50, notes start with `solid:`; key `split` with 2 worlds (knight a4 / d1), L0 end 3, turn Black; key `miss`
+    with 1 world (knight e3), L0 end 2, turn White (CORE-CHANGES.md Q4).
 26. **Submit is never rolled.** The state of 20 before the measurement; `(−1T2)b2-b3` (certain): turn stays White (L0 optional), `↵` legal in
     every world, `outcomes(↵)` has one entry, not rolled.
 27. **Game-end roll.** As 10 but the knight 50 % on e3 / 50 % on a3 (two worlds): `royalDanger(Black) = 0.5`;
