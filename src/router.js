@@ -26,6 +26,12 @@ export function buildRoutes() {
 			component: () => import('./views/LocalGameView.vue'),
 		},
 		{ path: '/rules', name: 'rules', component: () => import('./views/RulesView.vue') },
+		{ path: '/variants', name: 'variants', component: () => import('./views/VariantsView.vue') },
+		{
+			path: '/variants/:variant/:id',
+			name: 'variant-game',
+			component: () => import('./views/VariantGameView.vue'),
+		},
 		{ path: '/game/:id(\\d+)', name: 'online-game', component: () => import('./views/OnlineGameView.vue') },
 		{
 			path: '/review/:source(local|online)/:id',

@@ -216,6 +216,7 @@ src/<feature>/
 | `review/` | Post-game review: key moments, the evaluation graph |
 | `trainer/` | Lessons, puzzles, the lesson and puzzle runners, progress, and `report.js`, through which other features report game events |
 | `llm/` | LLM opponents: personas, LLM source selection, the move protocol, the privacy notice |
+| `variantplay/` | Chess variant games on this device: the variant board, the move modes, saving and replaying games |
 | `home/`, `rules/`, `stats/` | Home screen tiles, the in-app rules page, statistics and the leaderboard |
 | `settings/` | The Nextcloud admin and personal settings pages (not the in-app settings dialog, which lives in `app/`), and their messages |
 | `services/` | Infrastructure shared by all features: `api.js` (one function per HTTP route), `initialState.js`, `storage.js` (`localStorage` that never throws, scoped per user), `preferences.js`, `format.js` (generic number and date formatting), `async.js` (abortable waits), `sound.js`, `ids.js` |
@@ -223,6 +224,7 @@ src/<feature>/
 | `styles/` | Design tokens (`tokens.scss`), global app styles, board themes |
 | `engine/` | JavaScript rules engine (section 5) |
 | `ai/` | Computer player (section 5) |
+| `variants/` | The chess variants: their quantum layer, rules modules and computer player (section 5.6) |
 
 ### 4.3 Dependency rules
 
@@ -230,10 +232,10 @@ Layers, from top to bottom. A module may import from its own layer and the layer
 above:
 
 1. `App.vue`, `router.js`, `views/`, `app/`
-2. Feature folders: `home`, `rules`, `stats`, `trainer`, `review`, `online`, `game`, `coach`, `llm`
+2. Feature folders: `home`, `rules`, `stats`, `trainer`, `review`, `online`, `game`, `coach`, `llm`, `variantplay`
 3. `board/`
 4. `services/`, `composables/`, `styles/`
-5. `engine/` and `ai/`
+5. `engine/`, `ai/` and `variants/`
 
 Features may use each other where one composes the other, as long as there are no cycles. For example, the online
 host renders the game screen, the local game host embeds the coach and the LLM chat, the review reuses the coach's
@@ -245,7 +247,8 @@ Outside the rules engine and the computer player, code imports those packages on
 - `engine/index.js`: the rules engine API (mirrored by `lib/Engine/Engine.php`);
 - `engine/ui/index.js`: presentation helpers built on the rules (section 5.4);
 - `ai/client.js`: the promise API of the computer player, which runs in the Web Worker;
-- `ai/levels.js`: the level table (names, strengths), which is cheap to import on the main thread.
+- `ai/levels.js`: the level table (names, strengths), which is cheap to import on the main thread;
+- `variants/index.js`: the chess variants (catalogue, loader, quantum layer and their computer player).
 
 ESLint enforces these entry points with `no-restricted-imports`.
 
@@ -393,6 +396,36 @@ the public API deliberately does not expose. Two things set it apart from the re
 
 The computer player uses only the engine's public API (`engine/index.js`). Given a seed and a node budget, a search
 is deterministic, and tests rely on that. Searches bounded by wall-clock time are not.
+
+### 5.6 The chess variants (`src/variants/`)
+
+Version 2 adds twenty chess variants, from 3D and 4D chess to shogi and xiangqi, played on this device (pass & play
+and against a computer player). They do not use the rules engine of section 5.1: that engine is specified byte for
+byte for classic Quantum Chess and mirrored in PHP for online games. The variants share one generic quantum layer
+instead, which is JavaScript only. The player-facing rules are in [`docs/variants.md`](../variants.md).
+
+| Module | Responsibility |
+|---|---|
+| `index.js` | The public API: catalogue, `loadVariant(id)` (one lazily loaded chunk per variant), the quantum layer and the computer player |
+| `catalog.js` | Names, summaries and categories of the variants, cheap to import on every page |
+| `core/topology.js` | Boards as squares with integer coordinates in any number of dimensions, their names and their drawing (square, hexagon or intersection cells, several boards) |
+| `core/world.js` | One **world**: an ordinary position (piece list, board, the variant's extra state). Movement descriptors (leap, ride, hop, lame leaper, oriented vectors, regions), move generation and application |
+| `core/orthodox.js`, `core/orthodoxVariant.js` | The orthodox pieces, castling (including Chess960), double steps, en passant and promotion, and a ready-made 8 × 8 declaration |
+| `core/variant.js` | `defineVariant()`: the defaults and caches of a variant declaration |
+| `core/quantum.js` | The quantum layer: weighted worlds (integer weights summing to 2^24), split, merge, measure, "land = roll, pass = link", the budget, the solid roll and the game-end roll. `branches()` lists every outcome of a move with its weight; playing a move samples one |
+| `core/ai.js` | The computer player of the variants: expectimax over the outcomes of each roll, with a reply search at the higher levels |
+| `<id>.js` | One module per variant: its board, pieces, setup, special moves and win conditions, declared through hooks (`extraMoves`, `afterMove`, `worldResult`, `visibility`, ...) |
+
+A variant only describes ordinary chess in one world. The quantum layer plays each move in every world at once, and
+two generic checks make every rule quantum without variant code: the **solid roll** keeps kings, pawns and other
+solid pieces in one place, and the **game-end roll** settles a result that holds in only some worlds (a third check,
+an explosion, a king on the hill). Hidden-information variants add `visibility()` and the moves a player may try.
+
+`src/variantplay/` holds the UI: `VariantBoard.vue` draws any layout in SVG, `useVariantGame` runs a game (move
+modes, the confirmation of rolled moves, the computer's turns, undo with a roll memo, the hand-over curtain of the
+hidden-information variants), and `variantGames.js` stores the games in the browser. The variant tests are in
+`tests/js/variants/`; `fuzz.spec.js` plays random games in every variant and checks the invariants of the quantum
+layer after every move.
 
 ## 6. Data flow
 

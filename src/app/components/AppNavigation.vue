@@ -20,6 +20,11 @@
 					<NcIconSvgWrapper :path="mdiHomeOutline" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem :name="t('quantumchess', 'Chess variants')" :to="{ name: 'variants' }">
+				<template #icon>
+					<NcIconSvgWrapper :path="mdiCubeOutline" />
+				</template>
+			</NcAppNavigationItem>
 			<NcAppNavigationItem :name="t('quantumchess', 'Trainer')" to="/trainer">
 				<template #icon>
 					<NcIconSvgWrapper :path="mdiSchoolOutline" />
@@ -130,6 +135,7 @@ import {
 	mdiChartLine,
 	mdiCogOutline,
 	mdiCreationOutline,
+	mdiCubeOutline,
 	mdiHomeOutline,
 	mdiPlus,
 	mdiRobotOutline,
