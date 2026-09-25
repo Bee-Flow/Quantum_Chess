@@ -6,7 +6,8 @@
 # Translation glossary
 
 English is the source language. Every translation uses **one word per term** below, in the app, the notifications,
-the settings pages, the trainer, the rules page and `appinfo/info.xml`. The terms follow the glossary of
+the settings pages, the trainer and the rules page. The App Store texts in `appinfo/info.xml` are English only. The
+terms follow the glossary of
 [`docs/rules.md`](../docs/rules.md). Workflow: [`README.md`](README.md).
 
 Form of address: Dutch *je*, German *du*, French *vous* (as Nextcloud itself).
