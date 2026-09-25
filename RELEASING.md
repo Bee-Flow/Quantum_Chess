@@ -7,7 +7,8 @@
 
 Apps in the Nextcloud App Store are **code-signed**: every file of the release carries a signature made with the
 app's private key, and Nextcloud checks it against a certificate issued by Nextcloud. Steps 1 to 4 are done **once**;
-after that, every release is step 5: bump the version, tag, publish a GitHub release, and a workflow does the rest.
+after that, every release is step 5: publish a GitHub release with a version tag, and a workflow does the rest,
+including the version numbers.
 
 | | Step | Where | How long |
 |---|---|---|---|
@@ -15,7 +16,7 @@ after that, every release is step 5: bump the version, tag, publish a GitHub rel
 | 2 | Ask Nextcloud to sign the certificate | GitHub pull request | a few days (waiting) |
 | 3 | Register the app in the App Store | apps.nextcloud.com | 5 minutes |
 | 4 | Store the key and an App Store token as GitHub secrets | GitHub repository settings | 5 minutes |
-| 5 | Release | GitHub | 10 minutes per release |
+| 5 | Release | GitHub (browser) | 2 minutes, plus about 5 minutes of waiting |
 
 You need an account on [apps.nextcloud.com](https://apps.nextcloud.com), the public GitHub repository
 `bee-flow/quantum_chess` with `appinfo/info.xml` on its `main` branch, and `openssl` (included in macOS and Linux;
@@ -115,41 +116,39 @@ mistake here shows up before anything is published.
 
 ## 5. Publish a release (every release)
 
-1. **Start from a green `main`**: all checks of the *CI* workflow pass.
-2. **Bump the version** to `X.Y.Z` ([semantic versioning](https://semver.org): `1.0.1` for fixes, `1.1.0` for new
-   features) in three places:
-   - `appinfo/info.xml`: `<version>X.Y.Z</version>`
-   - `package.json` and `package-lock.json`: `npm version X.Y.Z --no-git-tag-version`
-   - `CHANGELOG.md`: rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` (today's date), add a new empty
-     `## [Unreleased]` above it, and update the links at the bottom. The App Store shows this section as the release
-     notes.
+Everything happens on GitHub; no computer or local checkout is needed.
 
-   Then check: `make version-check` prints the same version three times.
-3. **Commit, tag and push**:
-   ```sh
-   git commit -am "Release X.Y.Z"
-   git tag -a vX.Y.Z -m "Quantum Chess X.Y.Z"
-   git push origin main vX.Y.Z
-   ```
-4. **Publish a GitHub release** for the tag: **Releases → Draft a new release**, choose the tag `vX.Y.Z`, title
-   `Quantum Chess X.Y.Z`, paste the changelog section as the description, and click **Publish release**. Or:
-   `gh release create vX.Y.Z --title "Quantum Chess X.Y.Z" --notes "See CHANGELOG.md"`.
-5. **Watch the workflow** *Build and publish app release* under **Actions**. It
-   1. checks that the tag matches the versions in `info.xml`, `package.json` and `CHANGELOG.md`;
+1. **Start from a green `main`**: all checks of the *CI* workflow pass.
+2. **Release notes**: either keep them under `## [Unreleased]` in `CHANGELOG.md` while you work, or write them in
+   the release description in the next step. Notes under `## [Unreleased]` win; the description is used when that
+   section is empty.
+3. **Publish a GitHub release**: **Releases → Draft a new release**.
+   - **Tag**: type the new version, e.g. `v1.0.1` for fixes or `v1.1.0` for new features
+     ([semantic versioning](https://semver.org)), and choose *Create new tag on publish* with target `main`.
+   - **Title**: `Quantum Chess 1.1.0`.
+   - **Description**: the release notes, or click *Generate release notes*.
+   - Click **Publish release**.
+4. **Watch the workflow** *Build and publish app release* under **Actions**. It
+   1. writes the version of the tag into `appinfo/info.xml`, `package.json`, `package-lock.json` and `CHANGELOG.md`
+      (`tools/set-version.mjs`: `## [Unreleased]` becomes `## [1.1.0] - <date>`) and checks that they agree;
    2. builds the app (`npm ci`, `npm run build`) and packages the runtime files (`make appstore`);
    3. downloads the certificate from the certificate repository, checks it against `APP_PRIVATE_KEY`, and code-signs
       every file with `occ integrity:sign-app` (`make sign`);
-   4. attaches `quantumchess-vX.Y.Z.tar.gz` to the GitHub release;
-   5. uploads the release to the App Store, which verifies the signature.
+   4. attaches `quantumchess-v1.1.0.tar.gz` to the GitHub release;
+   5. uploads the release to the App Store, which verifies the signature;
+   6. commits the new version to `main` as *Release v1.1.0*, so the repository matches the release. This commit
+      starts no CI run. Pre-releases and releases older than `main` (hotfixes) leave `main` unchanged.
 
    A few minutes later the new version is on https://apps.nextcloud.com/apps/quantumchess and Nextcloud servers
    offer it as an update.
 
-**Pre-releases** such as `1.1.0-beta.1` work the same way, except for the changelog. The App Store treats versions
-with a `-` as unstable (offered only to servers on the beta channel) and always shows the `## [Unreleased]` section
-as their notes, so for a pre-release do **not** rename `## [Unreleased]`: write the notes there. `make version-check`
-accepts that for a version with a `-` (it then checks that `## [Unreleased]` is not empty). Rename the section only
-for the final release.
+**Pre-releases** such as `v1.1.0-beta.1` work the same way: tick *Set as a pre-release*. The App Store treats
+versions with a `-` as unstable (offered only to servers on the beta channel) and shows the `## [Unreleased]` section
+as their notes, so for a pre-release the notes stay under `## [Unreleased]` (the release description is placed there
+when the section is empty). `main` keeps its version and notes; the final release then turns `## [Unreleased]` into
+`## [1.1.0] - <date>`.
+
+To bump the files by hand instead, for example in a pull request: `node tools/set-version.mjs 1.1.0`.
 
 ### Manual fallback (without GitHub Actions)
 
@@ -193,7 +192,8 @@ sudo -u www-data php occ integrity:check-app quantumchess    # no output means e
 
 | Problem | Cause and fix |
 |---|---|
-| *Tag vX.Y.Z does not match version …* | The tag differs from `info.xml`, `package.json` or `CHANGELOG.md`. Fix the files, delete the release and the tag (`git push --delete origin vX.Y.Z`), and tag again. |
+| *The release tag '…' is not a version* | The tag must look like `v1.2.0` or `v1.2.0-beta.1`. Delete the release and its tag on GitHub (**Releases** and **Tags**) and publish it again with a correct tag. |
+| *Record the released version on main* shows a warning | `main` refuses direct pushes (branch protection). The release itself is complete; bump the files in a pull request with `node tools/set-version.mjs X.Y.Z`. |
 | *The secret APP_PRIVATE_KEY is missing* / *APPSTORE_TOKEN is missing* | Add the secret (step 4). Secrets are not available to workflows in forks. |
 | *APP_PRIVATE_KEY does not belong to the App Store certificate* | The secret holds another key. Paste the whole `quantumchess.key` again. |
 | The certificate download fails | The certificate request (step 2) is not merged yet. |

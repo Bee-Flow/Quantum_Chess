@@ -8,7 +8,9 @@
 # packaging and signing use the Makefile (`make appstore`, `make sign`), which is tested in CI and usable by hand;
 # the private key is checked against the App Store certificate before anything is uploaded.
 #
-# Trigger: publish a GitHub release whose tag is v<version of appinfo/info.xml>, e.g. v1.0.0 (see RELEASING.md).
+# Trigger: publish a GitHub release with a version tag, e.g. v1.2.0 (see RELEASING.md). The workflow writes that
+# version into appinfo/info.xml, package.json and CHANGELOG.md (tools/set-version.mjs) before it builds, and records
+# a final release on the default branch after the App Store accepted it, so nobody bumps versions by hand.
 # Secrets: APP_PRIVATE_KEY (contents of quantumchess.key) and APPSTORE_TOKEN (apps.nextcloud.com → Account → API token).
 
 name: Build and publish app release
@@ -50,7 +52,14 @@ jobs:
             || { echo '::error::The secret APPSTORE_TOKEN is missing (see RELEASING.md, step 4)'; exit 1; }
 
       - name: Set app version from the tag
-        run: echo "APP_VERSION=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${TAG#v}"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] \
+            || { echo "::error::The release tag '$TAG' is not a version such as v1.2.0 or v1.2.0-beta.1"; exit 1; }
+          echo "APP_VERSION=v$version" >> "$GITHUB_ENV"
+          echo "APP_SEMVER=$version" >> "$GITHUB_ENV"
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -70,6 +79,16 @@ jobs:
         with:
           node-version-file: ${{ env.APP_NAME }}/package.json
           package-manager-cache: false
+
+      # The description of the GitHub release becomes the changelog entry when CHANGELOG.md has no notes under
+      # [Unreleased]. It is passed through a file, never interpolated into the script.
+      - name: Write the version into info.xml, package.json and CHANGELOG.md
+        working-directory: ${{ env.APP_NAME }}
+        env:
+          RELEASE_NOTES: ${{ github.event.release.body }}
+        run: |
+          printf '%s\n' "$RELEASE_NOTES" > "$RUNNER_TEMP/release-notes.md"
+          node tools/set-version.mjs "$APP_SEMVER" --notes-file "$RUNNER_TEMP/release-notes.md"
 
       - name: Validate app version against tag (info.xml, package.json, CHANGELOG.md)
         working-directory: ${{ env.APP_NAME }}
@@ -162,6 +181,32 @@ jobs:
           appstore_token: ${{ secrets.APPSTORE_TOKEN }}
           download_url: ${{ steps.attach_to_release.outputs.browser_download_url }}
           app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      # Keeps the versions on the default branch in step with the final releases; pre-releases and releases older
+      # than the branch (hotfixes) leave it alone. A push made with GITHUB_TOKEN starts no workflow run. If the branch
+      # refuses direct pushes, the release is still complete: bump the files in a pull request instead
+      # (node tools/set-version.mjs X.Y.Z).
+      - name: Record the released version on ${{ github.event.repository.default_branch }}
+        if: ${{ !contains(env.APP_SEMVER, '-') }}
+        continue-on-error: true
+        working-directory: ${{ env.APP_NAME }}
+        env:
+          BRANCH: ${{ github.event.repository.default_branch }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          remote="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --quiet --no-tags "$remote" "$BRANCH"
+          git checkout --quiet --force -B release-version FETCH_HEAD
+          node tools/set-version.mjs "$APP_SEMVER" --no-downgrade --notes-file "$RUNNER_TEMP/release-notes.md"
+          if git diff --quiet; then
+            echo "$BRANCH already records version $APP_SEMVER"
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit --quiet --all --message "Release $APP_VERSION [skip ci]"
+          git push --quiet "$remote" "HEAD:$BRANCH"
+          echo "Recorded version $APP_SEMVER on $BRANCH"
 
       - name: Remove the private key
         if: always()

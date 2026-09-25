@@ -76,7 +76,8 @@ src/                web app, JavaScript rules engine, computer player
 templates/          PHP templates of the app page and the two settings pages
 tests/              js/ (Vitest), php/ (PHPUnit), e2e/ (Playwright), fixtures/ (engine parity fixtures)
 tools/              development tools: l10n.mjs (string extraction and conversion), check-references.mjs (the
-                    comment and link check), screenshots/ (the App Store screenshots)
+                    comment and link check), set-version.mjs (the release version, see RELEASING.md),
+                    screenshots/ (the App Store screenshots)
 translationfiles/   gettext template and .po files, translator README and glossary
 ```
 
