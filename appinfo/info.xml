@@ -126,7 +126,7 @@
 - Les clés d'API sont stockées chiffrées sur votre serveur et n'atteignent jamais le navigateur. Rien n'est envoyé ailleurs qu'au fournisseur d'IA que vous choisissez.
 - En anglais, néerlandais, allemand et français
 ]]></description>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<licence>agpl</licence>
 	<author homepage="https://beeflow.nl">BeeFlow</author>
 	<namespace>QuantumChess</namespace>

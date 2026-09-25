@@ -12,6 +12,10 @@ release as its release notes.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-25
+
+Maintenance release.
+
 ## [1.0.0] - 2026-09-23
 
 The first release: chess with superposition, measurement and entanglement, inside Nextcloud.
@@ -49,5 +53,6 @@ The first release: chess with superposition, measurement and entanglement, insid
   addresses, rate limits, a first-use notice before any AI request, and clean-up when an account is deleted.
 - **Languages**: English, Dutch, German and French.
 
-[Unreleased]: https://github.com/bee-flow/quantum_chess/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/bee-flow/quantum_chess/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/bee-flow/quantum_chess/releases/tag/v1.0.1
 [1.0.0]: https://github.com/bee-flow/quantum_chess/releases/tag/v1.0.0
