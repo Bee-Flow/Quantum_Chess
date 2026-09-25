@@ -4,6 +4,16 @@ Category: `dimensions`. UI name and summary line as already fixed in `src/varian
 there): name "3D chess (Raumschach)", summary "Five boards stacked into a 5 × 5 × 5 cube, with the unicorn flying
 through space."
 
+**Superseded in part (handoff/LEAD-DECISIONS.md L1, L2):** the core now applies the classic end rules to this variant
+(`escapeRule`, `bareKingsDraw` and `drawsWait` at their defaults), and the variant sets `specialMoves: false`. So
+`src/variants/raumschach.js` has no `worldResult` of its own: the core's bare-kings draw waits while the side to move
+can take the other king for certain, which with only kings left is exactly while they touch. Where sections 2.6, 3,
+4.6, 4.8 and 5 (card entry 7) say that mate is not detected and a mated king is captured on the next move, the game
+now ends at once (`cannotEscape`), also after a stalemate, which the IRF scores as a draw; the rules card has 7
+entries, without entry 7. Two more differences in the implementation: the piece values for the computer are the IRF's
+theory Vol. I values (U 300, N 500, B 550, Q 1500), and each board frame of section 6 carries its level label and
+encloses the strip of file letters under its cells, so that the label never meets them in Black's turned view.
+
 ---
 
 ## 1. Sources and chosen rule set

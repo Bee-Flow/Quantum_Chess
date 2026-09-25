@@ -167,11 +167,12 @@ closed-position draw is covered by the per-possibility stalemate draw (section 4
   - The king is solid, and the king-danger display works as usual. It only concerns Black: White has no royal
     piece, so `royalDanger(V, state, 0)` is always 0 (T7).
   - Consequence (decision): a classical stalemate of Black (king not attacked, but every king move steps into
-    attack, and no other move) is **not** a draw here. Black must move, and White may then capture the king. This
-    follows from the shared "capture the king" rule and needs no extra text.
-  - Known deviation from `docs/rules.md` sections 5 and 6, shared by every variant (CORE-CHANGES item 72): the
-    variants core has no "your king cannot escape" loss and no "draws wait while the king can be taken for certain"
-    rule. A mated Black king plays one more move and is then captured.
+    attack, and no other move) is **not** a draw here.
+  - Update (handoff/LEAD-DECISIONS.md L1, which overrides this spec): the core's classic end rules apply. White
+    wins at once when the Black king cannot escape (`cannotEscape`), including the classical stalemate above; a
+    Black action that might capture the last White piece is an escape, since that outcome ends the game. White has
+    no royal piece, so it never loses this way. The 50-move draw waits while White can capture the Black king for
+    certain, but not while Black can capture the last White piece for certain. `bareKingsDraw` is off.
 - **Black wins by capturing every White piece.**
   - Checked per possibility.
   - A capture always lands on an occupied square, so the capture roll itself decides whether the last White piece

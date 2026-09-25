@@ -3,6 +3,12 @@
 Category: `boards` (as in `src/variants/catalog.js`; the current placeholder module wrongly says `rules`). UI name:
 "Hexagonal chess". Summary (already in the catalogue): "Gliński's chess on 91 hexagons, with three bishops each."
 
+**Superseded in part (handoff/LEAD-DECISIONS.md L1):** the core now applies the classic "your king cannot escape" rule
+to this variant (`escapeRule`, reason `cannotEscape`), together with `bareKingsDraw` and `drawsWait`, so the variant
+has no `worldResult` of its own. Where sections 2.6, 3, 4.8, 5 (card entry 8) and 7 (C9, Q6) say that a mated or
+stalemated side plays one more move and then loses its king, the game now ends at once in favour of the side that
+delivered the mate or stalemate. `src/variants/hexagonal.js` and its tests follow L1.
+
 ---
 
 ## 1. Sources and chosen rule set
