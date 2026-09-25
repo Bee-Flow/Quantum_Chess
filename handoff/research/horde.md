@@ -11,7 +11,7 @@ Research note: WebFetch was blocked by the network proxy for lichess.org, wikipe
 The **lichess source code** could be read: the rules below were checked against the scalachess implementation
 (raw.githubusercontent.com, saved in `handoff/ext/scalachess/`). The other sources come from search-engine
 extracts. Every test case in section 7 was run on a prototype built on the real `src/variants/core`
-(`handoff/exp/anti/proto.mjs`, `thorde.mjs`).
+(`handoff/prototypes/anti/proto.mjs`, `thorde.mjs`).
 
 | Source | What it gives |
 |---|---|

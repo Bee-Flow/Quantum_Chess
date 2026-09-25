@@ -13,7 +13,7 @@ quantum treatment of hands and drops are the same, and this file only repeats wh
 Research note: WebFetch and curl were blocked by the network proxy for chess.com, wikipedia.org, pychess.org,
 chessvariants.com and the CSC rules PDF. Only raw.githubusercontent.com could be read. Lichess has no bughouse. The
 test cases in section 7 were run on a prototype built on the real `src/variants/core`, with the team budget of 4.4
-patched into a copy of `quantum.js` (`handoff/exp/zh/bug.mjs`, `quantum_team.js`, `tbug.mjs`, `tbug2.mjs`,
+patched into a copy of `quantum.js` (`handoff/prototypes/zh/bug.mjs`, `quantum_team.js`, `tbug.mjs`, `tbug2.mjs`,
 `tbug3.mjs`, `fuzz.mjs`, `ai.mjs`).
 
 | Source | What it gives |

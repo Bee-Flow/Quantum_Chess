@@ -7,7 +7,7 @@ export const meta = {
   ],
 }
 
-const SP = args.scratchpad
+const SP = args.handoff
 const REPO = '/home/user/Quantum_Chess'
 const IDS = args.ids
 
@@ -31,7 +31,7 @@ const IMPLEMENT = (id) => `You implement the chess variant "${id}" for Quantum C
 
 Read first, in this order:
 1. ${SP}/IMPLEMENTING.md (the API as built, style rules and the checks you must run).
-2. ${SP}/research/${id}.md (the researched and reviewed rules spec of this variant). If it does not exist, research the rules yourself first (precise, well-known rule set).
+2. ${SP}/research/${id}.md (the researched and reviewed rules spec of this variant). If it does not exist, research the rules yourself first (precise, well-known rule set). The researchers' prototypes on the real core are in ${SP}/prototypes/ (see ${SP}/status-research.md for which folder belongs to which variant); reuse what is correct.
 3. The core files named in IMPLEMENTING.md, especially src/variants/core/quantum.js, world.js, orthodox.js, orthodoxVariant.js, variant.js, and tests/js/variants/core.spec.js + helpers.js.
 4. docs/rules.md (the quantum rules players know).
 ${EXTRA[id] ? '\nVariant-specific guidance: ' + EXTRA[id] + '\n' : ''}

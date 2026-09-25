@@ -2,7 +2,7 @@
 
 Snapshot of a Claude Code cloud session, so the work can continue on a local machine with more parallel agents.
 Branch: `claude/quantum-chess-4d-mode-2d5v1o` (never push to another branch without the owner's permission).
-Snapshot date: 2026-09-25.
+Snapshot date: 2026-09-25 (updated after stopping the cloud workflows at 14:06 UTC).
 
 ---
 
@@ -29,7 +29,7 @@ mogen naast elkaar lopen.
 ultracode. We hervatten een sessie. Lees eerst handoff/SESSION.md volledig, daarna handoff/IMPLEMENTING.md en
 handoff/CONTRACT.md. Voer daarna het "Resume plan" uit handoff/SESSION.md uit, stap voor stap, met zoveel
 parallelle workflows als de machine aankan: stap 1 (onderzoek afmaken) en stap 2 (5D multiverse) tegelijk, en stap 3
-(implementatie van de andere 18 varianten) zodra de specificaties klaar zijn. Gebruik als scratchpad de absolute
+(implementatie van de andere 18 varianten) zodra de specificaties klaar zijn. Gebruik als handoff de absolute
 map <repo>/handoff. Werk op branch claude/quantum-chess-4d-mode-2d5v1o, commit en push na elke afgeronde stap, en
 geef in het Nederlands een korte statusupdate na elke stap. Het doel: versie 2.0.0 met alle varianten uit de lijst
 van de gebruiker, elk met het quantum-element, en 5D Chess with Multiverse Time Travel extra goed uitgewerkt.
@@ -101,20 +101,41 @@ The user communicates in Dutch; answer in Dutch. Code, comments and repository d
 All checks passed at the snapshot: `npx eslint .`, `npm run lint:refs`, `npm run lint:lines`,
 `npx vitest run tests/js/variants`.
 
-## 4. In progress at the snapshot (cloud session)
+## 4. Status of the stopped workflows (stopped on 2026-09-25 14:06 UTC at the user's request)
 
-- **Research workflow** (`handoff/workflows/research.workflow`): specs written for 15 variants
-  (`handoff/research/<id>.md`), **none reviewed yet** (a reviewed spec ends with a section "8. Review notes").
-  Missing: `capablanca`, `makruk`, `shogi`, `xiangqi`.
-- **Multiverse workflow** (`handoff/workflows/multiverse.workflow`): the three research files are written
-  (`handoff/research/multiverse-rules.md`, `-pieces.md`, `-engines.md`); next phase: the three designs.
-  `handoff/research/multiverse.md` is an earlier simplified spec from the general research.
-- The cloud session may still push results later: always `git pull` before starting.
+Both cloud workflows were stopped so that the work continues only on the local machine. Their full agent reports are
+in `handoff/status-research.md` and `handoff/status-multiverse.md`; the researchers' prototypes (built on the real
+core, with their test positions) are in `handoff/prototypes/`, their reference generators in `handoff/tools/`.
+
+**Research workflow** (`handoff/workflows/research.workflow`):
+
+| Variant(s) | Research spec | Critique |
+|---|---|---|
+| raumschach, trid, hyper4d, kriegspiel, darkchess, chess960, koth, threecheck, atomic, crazyhouse, bughouse, antichess, horde, hexagonal, fourplayer | written (`handoff/research/<id>.md`) | not started |
+| multiverse | simplified "5D-lite" spec written; superseded by the multiverse workflow | not needed |
+| capablanca, makruk | stopped while running: no spec yet (partial prototypes in `handoff/prototypes/capamak/`) | not started |
+| shogi | stopped while running: nothing written | not started |
+| xiangqi | not started | not started |
+
+The researchers could not fetch web pages (blocked by the cloud proxy) and worked from search extracts, their own
+knowledge and the cloned reference engines; most of them checked every test case on a prototype running on the real
+core. Locally, with web access, the critique step can check the specs against the original sources.
+
+**Multiverse workflow** (`handoff/workflows/multiverse.workflow`):
+
+| Phase | Status |
+|---|---|
+| Research: rules, pieces, engines | finished (`handoff/research/multiverse-rules.md`, `-pieces.md`, `-engines.md`) |
+| Design: playable | finished (`handoff/research/multiverse-design-playable.md`) |
+| Design: faithful, quantum | stopped while running: nothing written |
+| Judge, synthesis, implementation, UI, verification, fixes | not started |
+
+The repository itself has no changes from these workflows (`src/variants/multiverse.js` is still the placeholder).
 
 ## 5. Resume plan
 
-Use the absolute path of `handoff/` as the workflow `scratchpad` argument (the scripts read and write
-`<scratchpad>/research`, `<scratchpad>/docs`, `<scratchpad>/IMPLEMENTING.md`, `<scratchpad>/CONTRACT.md`).
+Use the absolute path of `handoff/` as the workflow `handoff` argument (the scripts read and write
+`<handoff>/research`, `<handoff>/docs`, `<handoff>/IMPLEMENTING.md`, `<handoff>/CONTRACT.md`).
 Workflow scripts can be started with the Workflow tool: `{ scriptPath: "<repo>/handoff/workflows/<name>.workflow",
 args: {...} }`.
 
@@ -127,25 +148,37 @@ args: {...} }`.
 - Others: github.com/fairy-stockfish/Fairy-Stockfish, github.com/gbtami/pychess-variants,
   github.com/obryanlouis/4pchess, github.com/saFilipJohansson/4D-Chess, github.com/lukajk1/4D-chess, and the
   lichess scalachess sources (github.com/lichess-org/scalachess).
-- `handoff/tools/` holds the researchers' small reference generators (Python and `.mjs`) used to compute move counts.
+- `handoff/tools/` holds the researchers' small reference generators (Python and `.mjs`) used to compute move counts,
+  and `handoff/prototypes/` their prototypes of the variants on the real core (useful for the implementers).
 
 **Stap 1: finish the research** (parallel with step 2).
 Run `research.workflow` with
-`args: { scratchpad: "<repo>/handoff", skip: [<ids that already have handoff/research/<id>.md>], done: [<ids whose spec
-already has "8. Review notes">] }`. At the snapshot: `skip` = antichess, atomic, bughouse, chess960, crazyhouse,
-darkchess, fourplayer, hexagonal, horde, hyper4d, koth, kriegspiel, raumschach, threecheck, trid;
-`done` = multiverse (the multiverse workflow of step 2 replaces its simplified spec). It researches capablanca,
-makruk, shogi, xiangqi and critiques every other spec.
+
+```json
+{ "scratchpad": "<repo>/handoff",
+  "skip": ["raumschach", "trid", "hyper4d", "kriegspiel", "darkchess", "chess960", "koth", "threecheck", "atomic",
+           "crazyhouse", "bughouse", "antichess", "horde", "hexagonal", "fourplayer"],
+  "done": ["multiverse"] }
+```
+
+It researches capablanca, makruk, shogi and xiangqi, and runs the adversarial critique on every spec (a reviewed spec
+ends with a section "8. Review notes").
 
 **Stap 2: the 5D multiverse** (parallel with step 1).
-Run `multiverse.workflow` with `args: { scratchpad: "<repo>/handoff", skipResearch: true }`. It writes
-`handoff/research/multiverse-design-*.md`, `multiverse-final.md`, implements `src/variants/multiverse.js` and its
-tests, improves the UI (layout arrows, present, submit, boards still to move) with Playwright screenshots in
+Run `multiverse.workflow` with
+
+```json
+{ "scratchpad": "<repo>/handoff", "skipResearch": true, "skipDesigns": ["playable"] }
+```
+
+It writes the two missing designs (`handoff/research/multiverse-design-faithful.md`, `-quantum.md`), lets two judges
+score all three, synthesises `handoff/research/multiverse-final.md`, implements `src/variants/multiverse.js` with
+its tests, improves the UI (layout arrows, the present, submit, boards still to move) with Playwright screenshots in
 `handoff/screens/`, verifies with three lenses and applies the fixes. Afterwards: read the result, run all checks,
 look at the screenshots, commit.
 
 **Stap 3: implement the other 18 variants** (as soon as their specs are reviewed; batches are fine).
-Run `implement.workflow` with `args: { scratchpad: "<repo>/handoff", ids: [...] }` where ids are from: raumschach,
+Run `implement.workflow` with `args: { handoff: "<repo>/handoff", ids: [...] }` where ids are from: raumschach,
 trid, hyper4d, kriegspiel, darkchess, chess960, atomic, crazyhouse, bughouse, antichess, koth, threecheck, horde,
 hexagonal, fourplayer, capablanca, shogi, xiangqi, makruk. One implementer per variant (module
 `src/variants/<id>.js`, tests `tests/js/variants/<id>.spec.js`, docs snippet `handoff/docs/<id>.md`), then an

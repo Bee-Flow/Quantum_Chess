@@ -17,9 +17,9 @@ albertochueca.com. What I used:
 
 Every test case in section 7 was run on a prototype built on the real `src/variants/core`:
 
-- `handoff/exp/fp/proto.mjs` (the variant);
+- `handoff/prototypes/fp/proto.mjs` (the variant);
 - `quantum_fp.js` (a copy of `quantum.js` with the two proposed hooks of section 3.4);
-- the scripts `t1.mjs` … `t9.mjs`.
+- the scripts `t1.mjs` … `t13.mjs`.
 
 | Source | What it gives |
 |---|---|
@@ -391,8 +391,8 @@ The classic budget of 8 per side assumes two sides, so that 8 × 8 = 64 possibil
 - The 4-location limit is unchanged, but with a budget of 2 a piece cannot have more than 2 parts until a player is
   out.
 - It also keeps the computer fast: at most 16 worlds × 160 squares while the board is full. Random games ran at about
-  3 ms per ply, and the "hard" computer takes at most about 0.3 s per move in the opening and middlegame (`t7.mjs`,
-  `t8.mjs`).
+  3 ms per ply, and the computer (normal and hard) took at most about 0.3 s per move over the first 24–40 plies
+  (`t7.mjs`, `t8.mjs`, `t11.mjs`, the last with the evaluate term of 3.3).
 
 ### 4.4 Pawns, promotion, en passant, castling
 
@@ -515,7 +515,7 @@ points, which keeps "only a captured king eliminates" true.
 
 - Helper: `stateOf(V, worlds, turn, edit)` with `edit = (b) => { b.x = { teams, ep: -1, epVictim: -1, castle: [] } }`.
 - Default kings: `K4 = { h1: '0:k', a7: '1:k', g14: '2:k', n8: '3:k' }` (sides 0–3 = Red, Blue, Yellow, Green).
-- "Outcomes" lists `key p`. All results below were produced by the prototype (`handoff/exp/fp/t1`–`t9.mjs`), with
+- "Outcomes" lists `key p`. All results below were produced by the prototype (`handoff/prototypes/fp/t1`–`t13.mjs`), with
   the two proposed hooks where stated.
 
 ### Board, setup, moves

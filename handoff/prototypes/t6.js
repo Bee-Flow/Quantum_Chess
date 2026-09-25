@@ -1,0 +1,5 @@
+const Chess = require('../5dsrc/package/dist/5d-chess.js')
+const c = new Chess(null, 'two_timelines')
+const mv = c.moves('notation_short').split('\n')
+console.log('white pawn/other timeline moves:', mv.filter(x => /T1\)[a-h]\d?>/.test(x) || /^\(\S+\)[a-h]/.test(x) && x.includes('>')).slice(0, 10))
+console.log('all non-physical:', mv.filter(x => x.includes('>')))

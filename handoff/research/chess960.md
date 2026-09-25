@@ -10,10 +10,10 @@ shuffled into one of 960 start positions."
 Research note: WebFetch was blocked by the network proxy for every rules site in this session (lichess.org,
 wikipedia.org, fide.com, russellcottrell.com, fairy-stockfish.github.io all returned EGRESS_BLOCKED). The rules below
 come from search-engine extracts of the pages listed, plus prior knowledge. The numbering scheme was then implemented
-as a reference generator (`handoff/exp/c960/sp.mjs`) and checked against the three published anchor numbers
+as a reference generator (`handoff/prototypes/c960/sp.mjs`) and checked against the three published anchor numbers
 (0 = BBQNNRKR, 518 = RNBQKBNR, 959 = RKRNNQBB). All 960 numbers give 960 distinct, valid back ranks, and the
 inverse function returns the original number for each of them. Every test case in section 7 was run on a prototype
-built on the real `src/variants/core` (`handoff/exp/c960/proto.mjs`, `t960.mjs`, `perft.mjs`).
+built on the real `src/variants/core` (`handoff/prototypes/c960/proto.mjs`, `t960.mjs`, `perft.mjs`).
 
 | Source | What it gives |
 |---|---|
@@ -94,7 +94,7 @@ These are exactly `orthodoxTypes()` from `src/variants/core/orthodox.js`.
 
 Inverse (back rank → number): `N = B1 + 4·B2 + 16·Q + 96·N4`.
 
-The reference implementation (`handoff/exp/c960/sp.mjs`), to be ported as a pure helper (for example
+The reference implementation (`handoff/prototypes/c960/sp.mjs`), to be ported as a pure helper (for example
 `backRank960(n)` returning a lower-case string such as `'rnbqkbnr'` for `standardSetup`):
 
 ```js

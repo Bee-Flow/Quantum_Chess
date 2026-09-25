@@ -11,7 +11,7 @@ Research note: WebFetch and curl were blocked by the network proxy for lichess.o
 chess.com, chessvariants.com, talkchess.com and fandom.com. Only raw.githubusercontent.com could be read. So the
 primary source is the **lichess rules code itself** (scalachess). The other sources below are search-engine extracts.
 Every test case in section 7 was run on a prototype built on the real `src/variants/core`
-(`handoff/exp/zh/zh.mjs`, `tzh.mjs`, `tzhq.mjs`, `tzh3.mjs`, `fuzz.mjs`, `ai2.mjs`).
+(`handoff/prototypes/zh/zh.mjs`, `tzh.mjs`, `tzhq.mjs`, `tzh3.mjs`, `fuzz.mjs`, `ai2.mjs`).
 
 | Source | What it gives |
 |---|---|

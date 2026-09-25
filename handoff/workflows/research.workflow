@@ -4,7 +4,7 @@ export const meta = {
   phases: [{ title: 'Research', detail: 'one agent per variant group' }, { title: 'Critique', detail: 'adversarial check of each spec' }],
 }
 
-const SP = args.scratchpad
+const SP = args.handoff
 const GROUPS = [
   { ids: ['raumschach', 'trid'], brief: 'Raumschach (5x5x5 3D chess, Maack 1907: exact setup incl. unicorns, pawn movement in 3D, promotion) AND Star Trek Tri-Dimensional Chess (Bartmess "Federation Standard" rules: 3 main 4x4 levels + 4 attack boards 2x2). For Tri-D propose a SIMPLIFIED playable version with the 4 attack boards FIXED in their starting pins (no attack-board moves), and precise square coordinates, which squares exist, how pieces move between levels (projection rule), setup, promotion.' },
   { ids: ['multiverse'], brief: '5D Chess with Multiverse Time Travel. Research the real rules precisely (timelines, boards per turn, the present, moving through time and across timelines, branching, active timelines, checkmate). Then design a PLAYABLE SIMPLIFIED "5D-lite" that fits the engine: one move per ply, capture-the-king wins (no check), a small board (propose 5x5 or 8x8 with justification; smaller keeps the UI readable), bounded number of timelines (e.g. at most 5) and bounded history window, how a time-travel move is encoded as a square-based key, how squares are numbered (static integer encoding with caps), what the world object is, which timeline(s) are playable on a turn. The quantum layer (worlds of multiverses) sits on top.' },

@@ -32,7 +32,7 @@ marked [C].
 | S7 | **5D Chess Wiki (wiki.gg)**, https://5dchess.wiki.gg/wiki/Rules (search excerpts only) | pawn "forward"/"sideways" definition, no en passant through time or timelines, castling only physically, mate definition ("no sequence of legal moves that leaves the Present on the opponent's color and none of the active player's kings in check"), timeline advantage worth slightly more than a queen |
 | S8 | Wikipedia, https://en.wikipedia.org/wiki/5D_Chess_with_Multiverse_Time_Travel (search excerpts only) | developer, dimensions, present line, "the nth timeline created by a player is active if the opponent has created at least n−1 timelines", display (timelines you create go downwards from your point of view), time controls 10+3/L, 20+5/L, 40+8/L |
 | S9 | Steam guides and discussions (search excerpts only): "A Guide on Pieces Moving Through Time and Timelines" (id 2176513845), "All Variants Explained" (id 2223803379), threads "Can't submit moves when an active board has no movable pieces", "Forgotten timelines", "So you can play on inactive timelines?", "How do this check works?", "Moving pieces into the (player's) future?" | inactive timelines are optional but playable; stalemate when a present board cannot be moved on; trans-temporal check; forward-in-time moves only to other timelines |
-| S10 | **My experiments** with 5d-chess-js 1.2.1 under Node 22, scripts `handoff/exp/t1.js` … `t6.js` | worked examples in section 8 |
+| S10 | **My experiments** with 5d-chess-js 1.2.1 under Node 22, scripts `handoff/prototypes/t1.js` … `t6.js` | worked examples in section 8 |
 
 ---
 

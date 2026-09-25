@@ -1,0 +1,17 @@
+const Chess = require('../5dsrc/package/dist/5d-chess.js')
+const c = new Chess(null, 'two_timelines')
+const tryDo = (label, f) => { try { const r = f(); console.log(label, 'OK', r === undefined ? '' : JSON.stringify(r)) } catch (e) { console.log(label, 'ERR', e.message.split('\n')[0]) } }
+const mv = c.moves('notation_short').split('\n')
+console.log('count', mv.length, 'hops:', mv.filter(x => x.includes('>') && !x.includes('>>')).slice(0, 6))
+const hop = mv.find(x => x.includes('>') && !x.includes('>>'))
+tryDo('hop ' + hop, () => c.move(hop))
+console.log('submittable after one hop between the two present boards:', c.submittable())
+tryDo('submit', () => c.submit())
+console.log(c.export('5dpgn'))
+// check test: can white submit a move leaving king capturable?
+const d = new Chess()
+d.import('1. f3 / e6')
+console.log('white moves g4 then submit (allows Qh4 mate?)')
+tryDo('g4', () => d.move('g4')); tryDo('submit', () => d.submit())
+console.log('black: checks after Qh4?'); tryDo('Qh4', () => d.move('Qh4')); tryDo('submit', () => d.submit())
+console.log('inCheck', d.inCheck, 'inCheckmate', d.inCheckmate)

@@ -7,7 +7,7 @@ for a clear UI. The rules themselves are in the sibling files `multiverse-rules.
 file only restates rules where an engine decision depends on them.
 
 Everything marked **[measured]** was run in this container (Node 22.22, x86-64) with the scripts in
-`handoff/exp/eng/` (bench1–bench5, proto.mjs). Browser numbers on phones will be slower, probably 1.5–3 times.
+`handoff/prototypes/eng/` (bench1–bench5, proto.mjs). Browser numbers on phones will be slower, probably 1.5–3 times.
 
 ---
 
@@ -721,7 +721,7 @@ turn (it would reveal and redraw rolls).
 
 ## 12. Reproduction
 
-- The scripts are in `handoff/exp/eng/`:
+- The scripts are in `handoff/prototypes/eng/`:
   - `bench1.js`: growth under random play;
   - `bench2.js`: moves per board and check cost;
   - `bench3.js`, `bench4.js`: mate detection, including the cwmtt test games;

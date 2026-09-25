@@ -9,7 +9,7 @@ the four centre squares to win."
 
 Research note: WebFetch was blocked by the network proxy for every rules site in this session (lichess.org,
 wikipedia.org). The rules below come from search-engine extracts of the pages listed, plus prior knowledge. Every test
-case in section 7 was run on a prototype built on the real `src/variants/core` (`handoff/exp/c960/proto.mjs`,
+case in section 7 was run on a prototype built on the real `src/variants/core` (`handoff/prototypes/c960/proto.mjs`,
 `tkoth.mjs`).
 
 | Source | What it gives |
