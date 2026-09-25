@@ -699,8 +699,9 @@ each board used once, makes Submit legal.
 
 1. Not stuck if `canSubmit`.
 2. **Quick path**: not stuck if every must-move row has a **physical** key (kind `normal` or `double`) in the cached
-   generation (possibly the computer's pruned view: pruning never removes must-move rows' keys). A physical move never
-   disappears during the turn, so playing one on every must-move board finishes it. Most calls end here (measured
+   generation (possibly the computer's pruned view: pruning never removes must-move rows' keys). A physical move
+   disappears during the turn only when a roll or measurement of another action keeps only worlds without it (section
+   15, I3); otherwise playing one on every must-move board finishes the turn. Most calls end here (measured
    0.03–0.1 ms).
 3. The **unpruned** union of the mover's keys (castling and en passant only when every world has them). Not stuck if
    some key might capture an enemy royal piece (the player may still try it; this exit is one-sided).
@@ -722,21 +723,23 @@ each board used once, makes Submit legal.
    call on average, at most 22 ms; about half of the calls on Timeline Marauders pass the quick path, two thirds on
    Timeline Invasion, all of them on Small.
 
-Exactness: because the structure follows the key (F3), every legal key clears its boards whatever the dice say, and
-keys can only disappear during a turn (boards never change and new boards belong to the opponent), except that a jump
-turns into a branch once its target board was played, which the search models (no key appears during a turn: the
-mover's boards do not change, and a board another action advanced stays as a past board with the same pieces).
-"Stuck" is therefore always right. "Not stuck" is exact except for three one-sided cases: the royal capture of step 3
-may be Missed; a jump or branch whose path runs through the oldest stored board of a row that another action of the
-turn advances (that board is then sealed) is still counted; and measuring one piece can settle a piece linked to it,
-so a second measurement the search counts may no longer exist. In those cases the player may still be stuck later;
-the game then ends by the next `stateResult` or by `noMoves`. Measured: in those 2,621 positions none was "not stuck"
-while every action of the side to move stranded it. The first version of this test (a quick path on any departing
-key, a bipartite matching of the keyless must-move rows to jump sources, and "a branch that changes the must-move
-set" as a way out) missed real stuck positions in two ways: a branch from a must-move row counted as a way out
-although only its own row left the set (Timeline Marauders, easy self-play: 3 of 30 games, test Q27b), and rows whose
-only keys are jumps onto boards that another must-move board needs (a row with departing keys was never checked
-again; 2 of 1,222 positions in 30 easy games, test Q27c).
+Exactness: because the structure follows the key (F3), every legal key clears its boards whatever the dice say, and keys
+can only disappear during a turn (boards never change and new boards belong to the opponent), except that a jump turns
+into a branch once its target board was played, which the search models (no key appears during a turn: the mover's
+boards do not change, and a board another action advanced stays as a past board with the same pieces). "Stuck" is
+therefore always right. "Not stuck" is exact except for four one-sided cases: the royal capture of step 3 may be Missed;
+a jump or branch whose path runs through the oldest stored board of a row that another action of the turn advances (that
+board is then sealed) is still counted; measuring one piece can settle a piece linked to it, so a second measurement the
+search counts may no longer exist; and a key that only some worlds have disappears when a roll or measurement of another
+action keeps only the other worlds, so every world alone may be stuck while the union is not (section 15, I3: the turn
+is then a gamble whose bad outcome is `stranded`). In those cases the player may still be stuck later; the game then
+ends by the next `stateResult` or by `noMoves`. Measured: in those 2,621 positions none was "not stuck" while every
+action of the side to move stranded it. The first version of this test (a quick path on any departing key, a bipartite
+matching of the keyless must-move rows to jump sources, and "a branch that changes the must-move set" as a way out)
+missed real stuck positions in two ways: a branch from a must-move row counted as a way out although only its own row
+left the set (Timeline Marauders, easy self-play: 3 of 30 games, test Q27b), and rows whose only keys are jumps onto
+boards that another must-move board needs (a row with departing keys was never checked again; 2 of 1,222 positions in 30
+easy games, test Q27c).
 
 `reasonText`: `checkmate` → "The turn could not be finished and a king would certainly be captured (checkmate)";
 `stalemate` → "The turn could not be finished (stalemate)"; `stranded` → "A move left the turn impossible to finish
@@ -744,15 +747,15 @@ again; 2 of 1,222 positions in 30 easy games, test Q27c).
 
 ### 6.14 Records and texts
 
-- **`recordInfo(prev, code, branch, next)`** (CC Q9) stores, when non-empty: `rows` (new row indexes), `arrows`
-  (`[u1, v1, x1, y1, u2, v2, x2, y2]` per travel, in absolute board coordinates, the board the piece left and the one
-  it arrived on; none when the outcome is `miss`), `text` (split, merge and measure codes in absolute notation, e.g.
-  `(0T2)c3 split (0T1)a3 | (0T1)e3`), `back` (the new present when it moved back), `memory` (`[u, v]`: after a merge
-  whose worlds still differ, the latest past board on which they differ), and, for every action except Submit,
-  `cells`: the squares of the action as `[u, v, x, y]` **on the boards it produced**: the start square (or both
-  parts of a merge, or the measured part) on `(u, en + 1)`; a target on a latest board on `(u2, en2 + 1)`; a target
-  on a past board on the new row `(nu, v2 + 1)` (a royal target without a row: `(u2, v2)`). The same in every
-  outcome (a Missed move still marks where it went). Pure (undo replays call it again).
+- **`recordInfo(prev, code, branch, next)`** (CC Q9) stores, when non-empty: `rows` (new row indexes), `arrows` (`[u1,
+  v1, x1, y1, u2, v2, x2, y2]` per travel, in absolute board coordinates, the board the piece left and the one it
+  arrived on; none when the outcome is `miss`), `text` (split, merge and measure codes in absolute notation, e.g.
+  `(0T2)c3-(0T1)a3|(0T1)e3`, no words: section 15, I1), `back` (the new present when it moved back), `memory` (`[u, v]`:
+  after a merge whose worlds still differ, the latest past board on which they differ), and, for every action except
+  Submit, `cells`: the squares of the action as `[u, v, x, y]` **on the boards it produced**: the start square (or both
+  parts of a merge, or the measured part) on `(u, en + 1)`; a target on a latest board on `(u2, en2 + 1)`; a target on a
+  past board on the new row `(nu, v2 + 1)` (a royal target without a row: `(u2, v2)`). The same in every outcome (a
+  Missed move still marks where it went). Pure (undo replays call it again).
 - **`lastMoveMarks(state)`** (7.2 H11): the squares of every record of the opponent's last turn and of the turn in
   progress (the trailing run of records of `state.turn`, if any, plus the run before it), from `info.cells`, each
   turned into the square that shows that board now (`slotAt`; sealed boards skipped). So a branch marks its arrival on
@@ -1347,8 +1350,8 @@ unless noted.
 59. **L1 Limits.** `ply = 1199` + any move → `moveLimit`; `quiet = 299` + a knight move → `quiet`; a pawn move resets
     `quiet` to 0.
 60. **R1 Records.** After S3's branch: `info = { rows: [2], arrows: [[0, 4, 2, 2, 2, 3, 0, 2]], back: 3, cells:
-    [[0, 5, 2, 2], [2, 3, 0, 2]] }`. After Q6's time split: `info.text = '(0T2)c3 split (0T1)a3 | (0T1)e3'`. After
-    Q14's Missed: `{ rows: [2], arrows: [], back: 3, cells: [[0, 5, 2, 2], [2, 3, 2, 4]] }`.
+    [[0, 5, 2, 2], [2, 3, 0, 2]] }`. After Q6's time split: `info.text = '(0T2)c3-(0T1)a3|(0T1)e3'` (section 15,
+    I1). After Q14's Missed: `{ rows: [2], arrows: [], back: 3, cells: [[0, 5, 2, 2], [2, 3, 2, 4]] }`.
 61. **R2 Last-move marks.** A rook on (0T5) e3, L0 `[2, 10]`, reach 2: after `(0T5)e3>>(0T3)e3` (onto the oldest stored
     board, whose slot L0's own advance reuses) `lastMoveMarks` = `(0)e3`, `(+1)e3` (not `(0)~3e3`). White, created
     `[1, 0]`, L0 `[2, 10]` and L+1 `[9, 10]` (parent `[0, 8]`), both `4k/5/5/5/K3R`: after `(0T5)e1-e2`, `(+1T5)e1-e3`
@@ -1486,8 +1489,9 @@ rules: () => [
    which you cannot finish your turn loses the game (`stranded`); the game asks for confirmation first.
 4. Castling without an attack test (out of, through and into danger); castling and en passant only when certain;
    promotion to a queen only (as in the base game of 5D; it differs from Quantum Chess, not from 5D); en passant is
-   not possible on the first board of a new timeline and also works when the victim's square was occupied one turn
-   earlier (the chess rule; 5d-chess-js differs).
+   not possible on the first board of a new timeline, works right after a double step made on that first board, and
+   also works when the victim's square was occupied one turn earlier (the chess rule; 5d-chess-js differs in the last
+   two).
 5. 300 moves without a capture or pawn move, or 1,200 moves in all, draw.
 6. The quantum rules of section 1.8.
 
@@ -1526,14 +1530,15 @@ Brawns shows only the known brawn gap (18 last-rank brawn moves in 8 positions).
 runs (Small 12 × 150, Standard 4 × 80 at reach 4, Two Timelines 3 × 60, Timeline Invasion 6 × 120, Timeline
 Marauders 8 games), with no structural roll.
 
-**Rules fidelity [measured].** All 21 setups, 40 random games each with reach and cap lifted (reach 30, cap 4):
-18,357 positions, 2,224,883 reference moves. The generator produces **exactly the reference moves** except: castling
-while attacked (80 positions; Quantum Chess has no check), en passant after a double step whose victim square was
-occupied one turn earlier (31; the chess rule), and in Just Brawns 39 brawn moves onto the last rank in 13 positions
-that 5d-chess-js 1.2.1 does not generate in a custom setup (a reference gap; the official rule promotes them), plus 8
-check reports that follow from those. The present and "may submit" agree everywhere; the phantom check agrees in all
-1,424 checked positions except those 8. (Even starts must be loaded into 5d-chess-js with `new Chess(fen)`; loading
-them with `fen()` on a default board leaves a stray timeline 0.)
+**Rules fidelity [measured].** All 21 setups, 40 random games each with reach and cap lifted (reach 30, cap 4): 18,357
+positions, 2,224,883 reference moves. The generator produces **exactly the reference moves** except: castling while
+attacked (80 positions; Quantum Chess has no check), en passant after a double step whose victim square was occupied one
+turn earlier (31; the chess rule), en passant right after a double step made on the first board of a new timeline
+(5d-chess-js looks for the same timeline's board one turn earlier, which does not exist; section 15, I2), and in Just
+Brawns 39 brawn moves onto the last rank in 13 positions that 5d-chess-js 1.2.1 does not generate in a custom setup (a
+reference gap; the official rule promotes them), plus 8 check reports that follow from those. The present and "may
+submit" agree everywhere; the phantom check agrees in all 1,424 checked positions except those 8. (Even starts must be
+loaded into 5d-chess-js with `new Chess(fen)`; loading them with `fen()` on a default board leaves a stray timeline 0.)
 
 **Cost of the limits [measured]** (cap 3, random play; share of the reference moves removed by the reach, including
 rides through sealed boards): Standard reach 4: 0.87 % (reach 2: 3.4 %); Two Timelines reach 4: 0.49 % (reach 2:
@@ -1639,3 +1644,55 @@ reviewer's proposal (6, 9, 12), and the verification led to three further change
 - **Costs of the changes.** `info.cells` makes a history record about 210 bytes instead of 155, so the worst saved
   record grows from about 450 KB to about 520 KB (3, 6.17). The computer's 64-world timings and the typical-play
   timings did not grow (6.15, 6.16). The cross-check against 5d-chess-js and the fuzz still pass (13).
+
+**Notes from the implementation** (2026-09-26; they override the text above where they differ)
+
+The module (`src/variants/multiverse.js` and `src/variants/multiverse/`) was checked against this spec: the scenarios
+of section 10 (`tests/js/variants/multiverse.spec.js`), a cross-check against 5d-chess-js 1.2.1 that runs the module
+itself (`handoff/tools/mv-cross.mjs`: 2,016 games, 155,532 positions, 0 unexplained differences) and a verification
+of the quantum rules of section 8. Four points needed a correction or a note; the text above is corrected where it
+was wrong.
+
+- **I1. The record text of a split, merge or measurement is its absolute code in the move notation** (6.14, R1):
+  `(0T2)c3-(0T1)a3|(0T1)e3`, not `(0T2)c3 split (0T1)a3 | (0T1)e3`. The record is saved with the game and
+  `codeText` shows `info.text` as it is, so an English word in it would appear untranslated in every other language
+  (every user-visible text goes through `t()`). The notation is the core's own code format (`from-a|b`, `a|b-to`,
+  `?square`) with the squares written as boards and cells (`(0T5)a3|(0T5)e3-(0T5)c4`, `?(+1T5)c3`). If the move list
+  should show a word, `codeText` must add it with `t()` when the list is drawn; the record keeps only the notation.
+  Test R1.
+- **I2. En passant right after a double step made on the first board of a new timeline** is a deliberate difference
+  from 5d-chess-js (12.4, 13). Black to move, created `[1, 0]`, L0 `[2, 9]` (9: `4k/5/5/5/K4`), L+1 `[9, 9]`
+  (parent `[0, 8]`; 9: `4k/4p*/5/3P*1/K4`): after `(+1T4)e4-e2` on the row's first board and `(0T4)e5-d5`,
+  `(+1T5)d2-e3` is en passant (kind `ep`, `capture 100 certain`), as 1.5 says: on the move right after the enemy's
+  physical double step, as in chess. 5d-chess-js infers en passant from the same timeline's board one turn earlier
+  (here (+1T4) ○), which does not exist, so it offers none. The cross-check reports it as its own category
+  (`epNoBoard`, 99 cases in six runs of 336 games). Test S13b.
+- **I3. A roll can take away a key of a later action of the turn: "not stuck" has a fourth one-sided case** (6.13
+  step 2 and the exactness paragraph). The quick path relied on "a physical move never disappears during the turn".
+  With quantum pieces that is false: a roll or measurement of another action keeps only some worlds, and a key that
+  only the other worlds had is gone. Example (test Q27d): White to move, created `[1, 0]`, L0 `[2, 10]` and L+1
+  `[9, 10]` (parent `[0, 8]`) both must move; one Black knight stands on (0)c3 in world A and on (+1)c3 in world B,
+  and in each world it blocks one White pawn on c2 (A: L0 `4k/5/2n2/2P2/5`, L+1 `4k/5/5/2P2/5`; B the other way
+  round). Each world alone is stuck (stalemate), but the union is not: both pawn moves are keys with `miss 50 /
+  move 50`. Missed (the pawn was blocked; the move still plays its board, F3) leaves the other pawn free and the turn
+  can be finished; Moved keeps only the world in which the other pawn is blocked, and the turn is `stranded`. Both
+  moves carry the warning "After this move you cannot finish your turn: you lose". "Not stuck" therefore means that
+  some sequence of actions finishes the turn in some outcome, and 6.13 and the documentation of `stuck` now list this
+  case. **The rule is kept**: the turn is a real gamble, not a stalemate (a Missed move is a legal way to play a
+  blocked board, so the player has an even chance to play on), and a strand caused by the dice still loses (F10):
+  with a draw there, a player who is behind could pick a move with a stranding outcome and escape a lost position by
+  chance. The quantum verification found this position by construction (`handoff/tmp/mv-qverify/scen5.mjs`); its
+  comparison of the stuck test with a brute-force search over real actions and outcomes (about 8,000 heavy-quantum
+  positions) found no other case. **Open for the lead**: calling such a position stuck (the start-of-turn split,
+  stalemate here) needs a stuck test that is exact over outcomes, a search over real states instead of skeletons,
+  at a much higher cost.
+- **I4. `stranded` endings in self-play** (6.16, A3). Normal against normal: 2 of 8 Timeline Marauders games in the
+  scenario run, and 17 of 160 Timeline Marauders and 3 of 60 Timeline Invasion games in a repeat
+  (`handoff/tmp/mv-fix/strand2.mjs`), ended `stranded`, against 1 of 8 normal games on the prototype. In each of them
+  every other action lost as well: the only moves that did not strand let the opponent win for certain with its next
+  move, so the endings were forced and A3 holds. Which of the two losses the computer picks is random: the level noise
+  (±25 at normal) is larger than the one-move preference of the core's `WIN − ply` for the later loss. Preferring the
+  later loss (a human may miss the win) would be a change in `core/ai.js` (keep the noise away from won and lost
+  values), not in the variant. Whether the earlier actions of those turns could have avoided the loss is computer tuning
+  (6.15), not a rules issue. The scenario file plays A3 with 2 games per setup and level; the spec's 8 run with
+  `QC_SLOW=1` (about 75 s, and they pass).
