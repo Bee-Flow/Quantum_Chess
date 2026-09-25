@@ -1,0 +1,23 @@
+import { V, visibility, names, newGame, applyOutcome, br, st, legalMoves, squareView, N, pieceLocations } from './proto.mjs'
+let s = newGame(V)
+console.log('D1 white', visibility(s, 0).size, names(visibility(s, 0)).join(' '))
+console.log('D1 black', visibility(s, 1).size, names(visibility(s, 1)).join(' '))
+s = applyOutcome(V, s, 'e2-e4', 0)
+const w = visibility(s, 0)
+console.log('D2 after e4 white', w.size, names(w).join(' '))
+const b = visibility(s, 1)
+console.log('D2 after e4 black', b.size, names(b).join(' '))
+s = applyOutcome(V, s, 'd7-d5', 0)
+console.log('D2 after d5 white', visibility(s, 0).size, names(visibility(s,0)).filter(x=>x[1]>='5').join(' '))
+console.log('D2 after d5 black', visibility(s, 1).size, names(visibility(s,1)).filter(x=>x[1]<='4').join(' '))
+// D3 blocked pawn
+let s3 = st([[{ e1: '0:k', e4: '0:p', e8: '1:k', e5: '1:p' }, 1]], 0)
+console.log('D3 white', names(visibility(s3, 0)).join(' '), legalMoves(V, s3).map(m=>m.code).join(' '))
+// D4 en passant
+let s4 = st([[{ e1: '0:k', e5: '0:p', e8: '1:k', d7: '1:p' }, 1]], 1)
+s4 = applyOutcome(V, s4, 'd7-d5', 0)
+console.log('D4 white after d7-d5', names(visibility(s4, 0)).join(' '), legalMoves(V, s4).map(m=>m.code).join(' '))
+let s4b = applyOutcome(V, s4, 'e1-f1', 0)
+console.log('D4 white after Kf1', names(visibility(s4b, 0)).join(' '))
+let s4c = applyOutcome(V, s4, 'e5-d6', 0)
+console.log('D4 ep capture', JSON.stringify(br(s4, 'e5-d6')), names(visibility(s4c, 0)).join(' '))

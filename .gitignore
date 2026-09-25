@@ -11,3 +11,7 @@
 *.crt
 *.csr
 /tests/php/.phpunit.cache/
+
+# third-party sources cloned for the version 2 research (see handoff/SESSION.md)
+/handoff/ext/
+/handoff/5dsrc/

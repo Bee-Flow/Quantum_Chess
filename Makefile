@@ -45,7 +45,7 @@ TAR_REPRO := $(shell $(TAR) --version 2>/dev/null | grep -q 'GNU tar' && echo '-
 
 # Files that must carry an SPDX header (generated, vendored and fixture files are excluded)
 SPDX_GLOBS := '*.php' '*.js' '*.mjs' '*.cjs' '*.ts' '*.vue' '*.scss' '*.yml' '*.yaml'
-SPDX_EXCLUDE := ^(js|assets|vendor|node_modules|l10n|build|tests/fixtures)/
+SPDX_EXCLUDE := ^(js|assets|vendor|node_modules|l10n|build|tests/fixtures|handoff)/
 
 .DEFAULT_GOAL := help
 .PHONY: help build dev test test-js test-php lint lint-js lint-refs lint-lines lint-php cs psalm lint-xml lint-spdx appstore sign \
