@@ -9,108 +9,138 @@
   show their percentage. Squares that the viewer cannot see (fog of war, Kriegspiel) are covered.
 -->
 <template>
-	<svg
-		class="qc-vboard qc-scope"
-		:data-board-theme="theme"
-		:viewBox="viewBox"
-		preserveAspectRatio="xMidYMid meet"
-		role="group"
-		:aria-label="label">
-		<defs>
-			<filter
-				v-for="tint in tints"
-				:id="tint.id"
-				:key="tint.id"
-				color-interpolation-filters="sRGB">
-				<feColorMatrix type="matrix" :values="tint.matrix" />
-			</filter>
-		</defs>
-		<rect
-			v-for="(a, i) in areas"
-			:key="'a' + i"
-			:x="a.x"
-			:y="a.y"
-			:width="a.w"
-			:height="a.h"
-			class="qc-vboard__area"
-			:class="['qc-vboard__area--' + (a.shade ?? 'frame')]" />
-		<g v-for="(b, i) in boards" :key="'b' + i">
+	<div class="qc-vboard-wrap">
+		<div v-if="zoomable" class="qc-vboard__zoom">
+			<NcButton
+				size="small"
+				:aria-label="t('quantumchess', 'Zoom out')"
+				:disabled="zoom <= 1"
+				@click="setZoom(zoom / 1.5)">
+				−
+			</NcButton>
+			<NcButton
+				size="small"
+				:aria-label="t('quantumchess', 'Zoom in')"
+				:disabled="zoom >= MAX_ZOOM"
+				@click="setZoom(zoom * 1.5)">
+				+
+			</NcButton>
+			<NcButton size="small" :disabled="zoom === 1" @click="setZoom(1)">
+				{{ t('quantumchess', 'Whole board') }}
+			</NcButton>
+		</div>
+		<svg
+			ref="svgEl"
+			class="qc-vboard qc-scope"
+			:class="{ 'qc-vboard--panning': zoom > 1 }"
+			:data-board-theme="theme"
+			:viewBox="viewBox"
+			preserveAspectRatio="xMidYMid meet"
+			role="group"
+			:aria-label="label"
+			@pointerdown="panStart"
+			@pointermove="panMove"
+			@pointerup="panEnd"
+			@pointercancel="panEnd"
+			@click.capture="swallowClickAfterPan"
+			@wheel="wheel">
+			<defs>
+				<filter
+					v-for="tint in tints"
+					:id="tint.id"
+					:key="tint.id"
+					color-interpolation-filters="sRGB">
+					<feColorMatrix type="matrix" :values="tint.matrix" />
+				</filter>
+			</defs>
 			<rect
-				:x="b.x - 0.06"
-				:y="b.y - 0.06"
-				:width="b.w + 0.12"
-				:height="b.h + 0.12"
-				class="qc-vboard__frame" />
-			<text
-				v-if="b.label"
-				:x="b.x + b.w / 2"
-				:y="b.y - 0.22"
-				class="qc-vboard__board-label"
-				text-anchor="middle">{{ b.label }}</text>
-		</g>
-		<line
-			v-for="(l, i) in lines"
-			:key="'l' + i"
-			:x1="l.x1"
-			:y1="l.y1"
-			:x2="l.x2"
-			:y2="l.y2"
-			class="qc-vboard__line" />
-		<g
-			v-for="c in cells"
-			:key="c.sq"
-			class="qc-vboard__cell"
-			:class="cellClasses(c)"
-			role="button"
-			:tabindex="focusable.has(c.sq) ? 0 : -1"
-			:aria-label="cellLabel(c)"
-			:data-square="c.name"
-			@click="emit('square', c.sq)"
-			@keydown.enter.prevent="emit('square', c.sq)"
-			@keydown.space.prevent="emit('square', c.sq)">
-			<rect
-				v-if="c.shape === 'rect'"
-				:x="c.cx - c.w / 2"
-				:y="c.cy - c.h / 2"
-				:width="c.w"
-				:height="c.h"
-				class="qc-vboard__shape" />
-			<polygon v-else-if="c.shape === 'hex'" :points="hexPoints(c)" class="qc-vboard__shape" />
-			<circle
-				v-else
-				:cx="c.cx"
-				:cy="c.cy"
-				:r="c.w * 0.45"
-				class="qc-vboard__shape qc-vboard__shape--point" />
-			<circle
-				v-if="marks[c.sq]?.includes('target')"
-				:cx="c.cx"
-				:cy="c.cy"
-				:r="c.size * (c.pieces.length ? 0.46 : 0.16)"
-				:class="c.pieces.length ? 'qc-vboard__ring' : 'qc-vboard__dot'" />
-			<g v-for="(pc, k) in c.pieces" :key="k" :transform="`translate(${c.cx + pc.dx}, ${c.cy + pc.dy})`">
-				<VariantPiece
-					:glyph="pc.glyph"
-					:size="pc.size"
-					:p="pc.p"
-					:tintId="'qc-tint-' + uid + '-' + pc.side"
-					:spin="pc.spin" />
+				v-for="(a, i) in areas"
+				:key="'a' + i"
+				:x="a.x"
+				:y="a.y"
+				:width="a.w"
+				:height="a.h"
+				class="qc-vboard__area"
+				:class="['qc-vboard__area--' + (a.shade ?? 'frame')]" />
+			<g v-for="(b, i) in boards" :key="'b' + i">
+				<rect
+					:x="b.x - 0.06"
+					:y="b.y - 0.06"
+					:width="b.w + 0.12"
+					:height="b.h + 0.12"
+					class="qc-vboard__frame" />
+				<text
+					v-if="b.label"
+					:x="b.x + b.w / 2"
+					:y="b.y - 0.22"
+					class="qc-vboard__board-label"
+					text-anchor="middle">{{ b.label }}</text>
 			</g>
-		</g>
-		<text
-			v-for="(l, i) in labels"
-			:key="'t' + i"
-			:x="l.x"
-			:y="l.y"
-			class="qc-vboard__label"
-			text-anchor="middle"
-			dominant-baseline="central">{{ l.text }}</text>
-	</svg>
+			<line
+				v-for="(l, i) in lines"
+				:key="'l' + i"
+				:x1="l.x1"
+				:y1="l.y1"
+				:x2="l.x2"
+				:y2="l.y2"
+				class="qc-vboard__line" />
+			<g
+				v-for="c in cells"
+				:key="c.sq"
+				class="qc-vboard__cell"
+				:class="cellClasses(c)"
+				role="button"
+				:tabindex="focusable.has(c.sq) ? 0 : -1"
+				:aria-label="cellLabel(c)"
+				:data-square="c.name"
+				@click="emit('square', c.sq)"
+				@keydown.enter.prevent="emit('square', c.sq)"
+				@keydown.space.prevent="emit('square', c.sq)">
+				<rect
+					v-if="c.shape === 'rect'"
+					:x="c.cx - c.w / 2"
+					:y="c.cy - c.h / 2"
+					:width="c.w"
+					:height="c.h"
+					class="qc-vboard__shape" />
+				<polygon v-else-if="c.shape === 'hex'" :points="hexPoints(c)" class="qc-vboard__shape" />
+				<circle
+					v-else
+					:cx="c.cx"
+					:cy="c.cy"
+					:r="c.w * 0.45"
+					class="qc-vboard__shape qc-vboard__shape--point" />
+				<circle
+					v-if="marks[c.sq]?.includes('target')"
+					:cx="c.cx"
+					:cy="c.cy"
+					:r="c.size * (c.pieces.length ? 0.46 : 0.16)"
+					:class="c.pieces.length ? 'qc-vboard__ring' : 'qc-vboard__dot'" />
+				<g v-for="(pc, k) in c.pieces" :key="k" :transform="`translate(${c.cx + pc.dx}, ${c.cy + pc.dy})`">
+					<VariantPiece
+						:glyph="pc.glyph"
+						:size="pc.size"
+						:p="pc.p"
+						:tintId="'qc-tint-' + uid + '-' + pc.side"
+						:spin="pc.spin" />
+				</g>
+			</g>
+			<text
+				v-for="(l, i) in labels"
+				:key="'t' + i"
+				:x="l.x"
+				:y="l.y"
+				class="qc-vboard__label"
+				text-anchor="middle"
+				dominant-baseline="central">{{ l.text }}</text>
+		</svg>
+	</div>
 </template>
 
 <script setup>
 import { t } from '@nextcloud/l10n'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import NcButton from '@nextcloud/vue/components/NcButton'
 import VariantPiece from './VariantPiece.vue'
 import { boardPrefs } from '../../board/boardPreferences.js'
 import { isHighContrast, resolveBoardTheme } from '../../board/boardThemes.js'
@@ -147,11 +177,123 @@ const H = computed(() => topo.value.layout.height)
 const turned = computed(() => props.rotation === 90 || props.rotation === 270)
 const PAD = 0.7
 
-const viewBox = computed(() => {
+/** Large layouts (3D, 4D, the multiverse) can be zoomed and panned. */
+const zoomable = computed(() => W.value * H.value > 200 || Boolean(topo.value.layout.zoomable))
+const MAX_ZOOM = 8
+const zoom = ref(1)
+const centre = ref(null)
+const svgEl = ref(null)
+
+const full = computed(() => {
 	const w = turned.value ? H.value : W.value
 	const h = turned.value ? W.value : H.value
-	return `${-PAD} ${-PAD} ${w + 2 * PAD} ${h + 2 * PAD}`
+	return { x: -PAD, y: -PAD, w: w + 2 * PAD, h: h + 2 * PAD }
 })
+
+const viewBox = computed(() => {
+	const f = full.value
+	if (zoom.value <= 1) {
+		return `${f.x} ${f.y} ${f.w} ${f.h}`
+	}
+	const w = f.w / zoom.value
+	const h = f.h / zoom.value
+	const c = centre.value ?? { x: f.x + f.w / 2, y: f.y + f.h / 2 }
+	const x = Math.min(Math.max(c.x - w / 2, f.x), f.x + f.w - w)
+	const y = Math.min(Math.max(c.y - h / 2, f.y), f.y + f.h - h)
+	return `${x} ${y} ${w} ${h}`
+})
+
+/**
+ * Set the zoom factor (1 shows the whole board).
+ *
+ * @param {number} z zoom factor
+ */
+function setZoom(z) {
+	zoom.value = Math.min(MAX_ZOOM, Math.max(1, z))
+	if (zoom.value === 1) {
+		centre.value = null
+	}
+}
+
+// the layout may ask to start zoomed in on a point (the present of the multiverse)
+watch(() => topo.value.layout.focus, (focus) => {
+	if (focus && zoomable.value) {
+		const [x, y] = rot(focus.x, focus.y)
+		centre.value = { x, y }
+		zoom.value = Math.min(MAX_ZOOM, Math.max(1, focus.zoom ?? zoom.value))
+	}
+}, { immediate: true })
+
+let pan = null
+let panned = false
+
+/**
+ * Start panning a zoomed board.
+ *
+ * @param {PointerEvent} e event
+ */
+function panStart(e) {
+	panned = false
+	if (zoom.value <= 1 || !svgEl.value) {
+		return
+	}
+	const f = full.value
+	pan = {
+		x: e.clientX,
+		y: e.clientY,
+		c: centre.value ?? { x: f.x + f.w / 2, y: f.y + f.h / 2 },
+		scale: (f.w / zoom.value) / svgEl.value.getBoundingClientRect().width,
+	}
+}
+
+/**
+ * Pan while the pointer moves.
+ *
+ * @param {PointerEvent} e event
+ */
+function panMove(e) {
+	if (!pan) {
+		return
+	}
+	const dx = e.clientX - pan.x
+	const dy = e.clientY - pan.y
+	if (Math.abs(dx) + Math.abs(dy) > 5) {
+		panned = true
+	}
+	if (panned) {
+		centre.value = { x: pan.c.x - dx * pan.scale, y: pan.c.y - dy * pan.scale }
+	}
+}
+
+/** Stop panning. */
+function panEnd() {
+	pan = null
+}
+
+/**
+ * A click that ends a pan is not a move.
+ *
+ * @param {MouseEvent} e event
+ */
+function swallowClickAfterPan(e) {
+	if (panned) {
+		e.stopPropagation()
+		panned = false
+	}
+}
+
+/**
+ * Ctrl + wheel zooms.
+ *
+ * @param {WheelEvent} e event
+ */
+function wheel(e) {
+	if (!zoomable.value || !e.ctrlKey) {
+		return
+	}
+	e.preventDefault()
+	setZoom(e.deltaY < 0 ? zoom.value * 1.25 : zoom.value / 1.25)
+}
 
 /**
  * Rotate a layout point.
@@ -293,6 +435,21 @@ function cellLabel(c) {
 </script>
 
 <style lang="scss" scoped>
+.qc-vboard-wrap {
+	position: relative;
+}
+
+.qc-vboard__zoom {
+	display: flex;
+	justify-content: flex-end;
+	gap: 4px;
+	margin-bottom: 4px;
+}
+
+.qc-vboard--panning {
+	cursor: grab;
+}
+
 .qc-vboard {
 	display: block;
 	width: 100%;

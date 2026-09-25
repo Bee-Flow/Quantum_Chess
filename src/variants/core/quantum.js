@@ -253,8 +253,8 @@ export function budget(state, side) {
 }
 
 /**
- * A key of the solid pieces of a world: where every solid piece stands (by side and type, not by id) and how many
- * solid pieces each hand holds.
+ * A key of the solid pieces of a world: where every solid piece stands (by side and type, not by id), how many
+ * solid pieces each hand holds, and the variant's own solid structure (`solidExtra`).
  *
  * @param {object} V variant
  * @param {object} b world
@@ -274,7 +274,8 @@ function solidKey(V, b) {
 			hand.push(b.sd[id] + b.ty[id])
 		}
 	}
-	return parts.join(',') + '|' + hand.sort().join('')
+	// the variant may add structure that must be the same in every world (the timelines of the multiverse)
+	return parts.join(',') + '|' + hand.sort().join('') + (V.solidExtra ? '|' + V.solidExtra(b) : '')
 }
 
 /**
@@ -1139,9 +1140,9 @@ export function stateAfter(V, state, code, branch, all, { light = false } = {}) 
 		const sample = table(V, state).union.get(mv.key)
 		if (sample?.drop) {
 			resetQuiet = true
-		} else if (sample) {
-			const b = state.worlds.find((e) => e.b.board[sample.from] >= 0).b
-			const type = b.ty[b.board[sample.from]]
+		} else if (sample && sample.from >= 0) {
+			const b = state.worlds.find((e) => e.b.board[sample.from] >= 0)?.b
+			const type = b ? b.ty[b.board[sample.from]] : null
 			resetQuiet ||= V.solidTypes.has(type) && !V.royalTypes.has(type)
 		}
 	}

@@ -43,7 +43,10 @@
 			<aside class="qc-vgame__panel">
 				<header class="qc-vgame__head">
 					<h2>{{ entry?.name() }}</h2>
-					<NcButton variant="tertiary" :aria-expanded="showRules ? 'true' : 'false'" @click="showRules = !showRules">
+					<NcButton
+						variant="tertiary"
+						:aria-expanded="showRules ? 'true' : 'false'"
+						@click="showRules = !showRules">
 						{{ showRules ? t('quantumchess', 'Hide rules') : t('quantumchess', 'Rules') }}
 					</NcButton>
 				</header>
@@ -92,13 +95,19 @@
 						<strong>{{ resultText(V, state.result) }}</strong>
 					</template>
 					<template v-else-if="game.thinking.value">
-						<NcLoadingIcon :size="16" inline /> {{ t('quantumchess', '{side} is thinking …', { side: sideName(V, state.turn) }) }}
+						<NcLoadingIcon :size="16" inline /> {{
+							t('quantumchess', '{side} is thinking …', { side: sideName(V, state.turn) })
+						}}
 					</template>
 					<template v-else>
 						{{ t('quantumchess', '{side} to move', { side: sideName(V, state.turn) }) }}
 					</template>
 					<span v-if="game.danger.value > 0 && !state.result" class="qc-vgame__danger">
-						{{ t('quantumchess', 'Your king is in danger: {percent}', { percent: percent(game.danger.value) }) }}
+						{{ t(
+							'quantumchess',
+							'Your king is in danger: {percent}',
+							{ percent: percent(game.danger.value) },
+						) }}
 					</span>
 				</p>
 
@@ -121,15 +130,30 @@
 					{{ modeHint }}
 				</p>
 
+				<div v-if="actions.length" class="qc-vgame__choices">
+					<NcButton
+						v-for="a in actions"
+						:key="a.code"
+						variant="primary"
+						:disabled="!game.isHumanTurn.value || !a.legal"
+						@click="game.attempt(a.code)">
+						{{ a.label }}
+					</NcButton>
+				</div>
+
 				<section v-if="hands.length" class="qc-vgame__hands">
 					<div v-for="h in hands" :key="h.side" class="qc-vgame__hand">
-						<span class="qc-vgame__hand-title">{{ t('quantumchess', 'In hand: {side}', { side: sideName(V, h.side) }) }}</span>
+						<span class="qc-vgame__hand-title">{{
+							t('quantumchess', 'In hand: {side}', { side: sideName(V, h.side) })
+						}}</span>
 						<button
 							v-for="p in h.pieces"
 							:key="p.type"
 							type="button"
 							class="qc-vgame__hand-piece"
-							:class="{ 'qc-vgame__hand-piece--on': game.dropType.value === p.type && h.side === state.turn }"
+							:class="{
+								'qc-vgame__hand-piece--on': game.dropType.value === p.type && h.side === state.turn,
+							}"
 							:disabled="h.side !== state.turn || !game.isHumanTurn.value"
 							:aria-label="t('quantumchess', 'Drop {piece}', { piece: typeName(V, p.type) })"
 							@click="game.chooseDrop(p.type)">
@@ -159,7 +183,9 @@
 									width="28"
 									height="28"
 									aria-hidden="true">
-									<VariantPiece :glyph="glyphOf(V, m.promo ?? pieceTypeAt(m.from), state.turn)" :size="0.95" />
+									<VariantPiece
+										:glyph="glyphOf(V, m.promo ?? pieceTypeAt(m.from), state.turn)"
+										:size="0.95" />
 								</svg>
 							</template>
 						</NcButton>
@@ -203,9 +229,14 @@
 				<section class="qc-vgame__moves" :aria-label="t('quantumchess', 'Moves')">
 					<ol>
 						<li v-for="(h, i) in historyRows" :key="i">
-							<span class="qc-vgame__swatch qc-vgame__swatch--small" :style="{ background: sideFill(V.sides[h.side]) }" aria-hidden="true" />
+							<span
+								class="qc-vgame__swatch qc-vgame__swatch--small"
+								:style="{ background: sideFill(V.sides[h.side]) }"
+								aria-hidden="true" />
 							<span class="qc-vgame__code">{{ h.text }}</span>
-							<span v-if="h.rolled" class="qc-vgame__rolled">🎲 {{ outcomeText(h.key) }} · {{ percent(h.p) }}</span>
+							<span
+								v-if="h.rolled"
+								class="qc-vgame__rolled">🎲 {{ outcomeText(h.key) }} · {{ percent(h.p) }}</span>
 						</li>
 					</ol>
 				</section>
@@ -241,7 +272,7 @@ import VariantPiece from '../variantplay/components/VariantPiece.vue'
 import { useVariantGame } from '../variantplay/composables/useVariantGame.js'
 import { glyphOf, sideFill, typeName } from '../variantplay/glyphs.js'
 import { noteText, outcomeText, percent, resultText, sharedRules } from '../variantplay/texts.js'
-import { BUDGET, budget, catalogEntry, handView, sideName } from '../variants/index.js'
+import { BUDGET, budget, catalogEntry, handView, isLegal, sideName } from '../variants/index.js'
 
 const route = useRoute()
 const game = useVariantGame(String(route.params.id))
@@ -277,6 +308,14 @@ const modeHint = computed(() => {
 	}
 })
 
+/** The variant's own turn actions, such as "Submit turn" in the multiverse. */
+const actions = computed(() => {
+	if (!V.value?.actions || !state.value || state.value.result) {
+		return []
+	}
+	return V.value.actions(state.value).map((a) => ({ ...a, legal: isLegal(V.value, state.value, a.code) }))
+})
+
 const hands = computed(() => {
 	if (!V.value || !state.value || !V.value.drops) {
 		return []
@@ -300,10 +339,13 @@ const focusable = computed(() => {
 	return out
 })
 
-const boardLabel = computed(() => (entry.value ? t('quantumchess', 'Board of {variant}', { variant: entry.value.name() }) : ''))
+const boardLabel = computed(() => (entry.value
+	? t('quantumchess', 'Board of {variant}', { variant: entry.value.name() })
+	: ''))
 
 /** Hide the last roll of the opponent in hidden-information variants (only what the umpire says is shown). */
-const hideLast = computed(() => V.value?.hidden && game.lastRoll.value && game.lastRoll.value.side !== game.viewer.value)
+const hideLast = computed(() => V.value?.hidden && game.lastRoll.value
+	&& game.lastRoll.value.side !== game.viewer.value)
 
 const noticeText = computed(() => {
 	const n = game.notice.value
@@ -316,7 +358,10 @@ const noticeText = computed(() => {
 				? t('quantumchess', 'The umpire says: that move is not possible. Try another one.')
 				: t('quantumchess', 'That move is not possible.')
 		case 'noSplit':
-			return t('quantumchess', 'This piece cannot split: it needs two empty squares it could move to, within the budget.')
+			return t(
+				'quantumchess',
+				'This piece cannot split: it needs two empty squares it could move to, within the budget.',
+			)
 		case 'noMerge':
 			return t('quantumchess', 'Choose a part of one of your ghosts.')
 		case 'noMeasure':
@@ -335,7 +380,11 @@ const historyRows = computed(() => {
 		let text = h.code
 		if (secret) {
 			text = h.captures.length
-				? t('quantumchess', 'Capture on {squares}', { squares: h.captures.map((s) => V.value.topology.names[s]).join(', ') })
+				? t(
+						'quantumchess',
+						'Capture on {squares}',
+						{ squares: h.captures.map((s) => V.value.topology.names[s]).join(', ') },
+					)
 				: t('quantumchess', 'A move')
 		}
 		return { side: h.side, text, rolled: h.rolled && !secret, key: h.key, p: h.p }
@@ -354,7 +403,11 @@ function playerText(i) {
 		return ''
 	}
 	if (p.kind === 'computer') {
-		const level = { easy: t('quantumchess', 'Easy'), normal: t('quantumchess', 'Normal'), hard: t('quantumchess', 'Hard') }[p.level] ?? ''
+		const level = {
+			easy: t('quantumchess', 'Easy'),
+			normal: t('quantumchess', 'Normal'),
+			hard: t('quantumchess', 'Hard'),
+		}[p.level] ?? ''
 		return t('quantumchess', 'Computer ({level})', { level })
 	}
 	return game.humanSides.value.length === 1 ? t('quantumchess', 'You') : t('quantumchess', 'Player')

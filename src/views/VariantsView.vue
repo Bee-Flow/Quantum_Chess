@@ -20,9 +20,15 @@
 			<h3>{{ t('quantumchess', 'Continue on this device') }}</h3>
 			<ul class="qc-variants__saved">
 				<li v-for="g in saved" :key="g.id">
-					<router-link :to="{ name: 'variant-game', params: { variant: g.variant, id: g.id } }" class="qc-variants__saved-link">
+					<router-link
+						:to="{ name: 'variant-game', params: { variant: g.variant, id: g.id } }"
+						class="qc-variants__saved-link">
 						<strong>{{ catalogEntry(g.variant)?.name() ?? g.variant }}</strong>
-						<span>{{ g.result ? t('quantumchess', 'Finished') : t('quantumchess', 'Move {n}', { n: Math.floor(g.ply / 2) + 1 }) }}</span>
+						<span>{{
+							g.result
+								? t('quantumchess', 'Finished')
+								: t('quantumchess', 'Move {n}', { n: Math.floor(g.ply / 2) + 1 })
+						}}</span>
 					</router-link>
 					<NcButton
 						variant="tertiary"
@@ -42,7 +48,10 @@
 				<li v-if="cat.id === 'uncertainty'">
 					<router-link class="qc-variants__tile" :to="{ name: 'new-game' }" data-test="variant-classic">
 						<span class="qc-variants__tile-title">{{ t('quantumchess', 'Quantum Chess') }}</span>
-						<span class="qc-variants__tile-summary">{{ t('quantumchess', 'The classic: chess with superposition. Also online against other players.') }}</span>
+						<span class="qc-variants__tile-summary">{{ t(
+							'quantumchess',
+							'The classic: chess with superposition. Also online against other players.',
+						) }}</span>
 					</router-link>
 				</li>
 				<li v-for="e in cat.entries" :key="e.id">
@@ -140,7 +149,9 @@
 						</NcButton>
 					</div>
 				</fieldset>
-				<NcCheckboxRadioSwitch v-if="setup.opponent === 'local' && !setup.variant.hidden" v-model="setup.autoFlip">
+				<NcCheckboxRadioSwitch
+					v-if="setup.opponent === 'local' && !setup.variant.hidden"
+					v-model="setup.autoFlip">
 					{{ t('quantumchess', 'Turn the board to the player to move') }}
 				</NcCheckboxRadioSwitch>
 				<div class="qc-variants__buttons">
@@ -209,7 +220,15 @@ function randomInt(min, max) {
  * @param {object} entry catalogue entry
  */
 async function openSetup(entry) {
-	setup.value = { entry, variant: null, opponent: 'computer', level: 'normal', side: '0', options: {}, autoFlip: false }
+	setup.value = {
+		entry,
+		variant: null,
+		opponent: 'computer',
+		level: 'normal',
+		side: '0',
+		options: {},
+		autoFlip: false,
+	}
 	const V = markRaw(await loadVariant(entry.id))
 	const options = {}
 	for (const o of V.options) {
