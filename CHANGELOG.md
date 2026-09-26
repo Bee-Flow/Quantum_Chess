@@ -22,13 +22,13 @@ Chess are unchanged.
 
 - **Multiverse chess (5D)**, the quantum version of *5D Chess With Multiverse Time Travel*: timelines as rows and time
   as columns; pieces that travel back in time and to other timelines, where a move onto an older board opens a new
-  timeline (up to three per player, an option); turns with a move on every must-move board of the present, ended by
-  *Submit turn*; every official piece (unicorn, dragon, princess, brawn, common king and royal queen) and all 21
+  timeline (up to three per player, or four on a laptop: an option); turns with a move on every must-move board of the present, ended by
+  *Submit turn*; every official piece (unicorn, dragon, princess, brawn, common king and royal queen) and 44
   official start positions, *Small* (5 × 5) by default. Boards are certain and pieces are quantum: ghosts, twins and
   links on every board, the past included. A turn that cannot be finished ends the game as checkmate or stalemate, and a
   move that would strand your own turn asks first.
 - **Nineteen more chess variants**, grouped as in the app:
-  - *Other dimensions*: 3D chess (Raumschach), Tri-Dimensional chess and 4D chess.
+  - *Other dimensions*: 3D chess (Raumschach), Tri-Dimensional chess with movable attack boards and 4D chess.
   - *Hidden information*: Kriegspiel and Fog of war.
   - *Different rules*: Chess960, Atomic, Crazyhouse, Bughouse, Antichess, King of the Hill, Three-check and Horde.
   - *Different boards and more players*: Hexagonal chess, Four-player chess and Capablanca chess.
@@ -41,7 +41,9 @@ Chess are unchanged.
   check, "your king cannot escape", and the bare-kings and 50-move draws, which wait while a king can be captured for
   certain; a variant with its own goal keeps it.
 - **Computer player** for every variant with three levels (Easy, Normal and Hard), running in your browser and keeping
-  the board responsive while it thinks. In the hidden-information variants it sees only what its own side may see.
+  the board responsive while it thinks. It plays the quantum moves too: splits that fork, dodge or block, merges that
+  capture and measurements that settle a danger. In the hidden-information variants it sees only what its own side
+  may see.
 - **Pass & play** for two players, or four in Bughouse and Four-player chess, on one device; against the computer you
   take one seat and the computer plays all the others. In Kriegspiel and Fog of war each player sees only their own
   view: a hand-over screen covers the board between turns, and the whole board is revealed when the game ends.

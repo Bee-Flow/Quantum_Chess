@@ -39,7 +39,7 @@ other boards.
 
 - **Multiverse chess (5D)**, the quantum version of *5D Chess With Multiverse Time Travel*: timelines side by side,
   pieces that travel back in time and to other timelines, turns with a move on every board that must move, and ghosts
-  across the whole multiverse, past boards included; every official piece and all 21 official start positions, starting
+  across the whole multiverse, past boards included; every official piece and 44 official start positions, starting
   on the quick *Small* 5 × 5 board
 - Nineteen more variants: *other dimensions* (3D chess, Tri-Dimensional chess, 4D chess), *hidden information*
   (Kriegspiel, Fog of war), *different rules* (Chess960, Atomic, Crazyhouse, Bughouse, Antichess, King of the Hill,
