@@ -44,7 +44,7 @@ import kriegspiel from '../../../src/variants/kriegspiel.js'
 import raumschach from '../../../src/variants/raumschach.js'
 import shogi from '../../../src/variants/shogi.js'
 import threecheck from '../../../src/variants/threecheck.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch } from './helpers.js'
 
 /** Plain orthodox chess with the classic end rules. */
 const V = defineVariant(Object.assign(orthodoxSpec(), { id: 'test-ui2', category: 'rules', rules: () => [] }))
@@ -434,9 +434,9 @@ describe('U3: the escape rule for splits, fast and exact', () => {
 			const s = worldsOf(W, eightWorlds(common, pairs))
 			expect(s.worlds).toHaveLength(8)
 			const list = branches(W, s, code)
-			const start = performance.now()
+			const elapsed = stopwatch()
 			const after = stateAfter(W, s, code, list[0], list)
-			const ms = performance.now() - start
+			const ms = elapsed()
 			expect(after.result, W.id).toEqual({ winner: 0, reason: 'cannotEscape' })
 			expect(legalMoves(W, { ...after, result: null }, { splits: true }).length).toBeGreaterThan(800)
 			// about 5-30 ms on a laptop; the bound only catches a return to searching every split in full

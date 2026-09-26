@@ -43,6 +43,11 @@
  * per search: the forcing pre-pass, the evaluation and the third move of the hard level share them (`OutcomeMemo`,
  * within a memory limit).
  *
+ * The time budget follows the wall clock (`Date.now`) unless `chooseMove` is given another clock (`now`, only read at
+ * those checks): tests pass one that counts the checks, so that how much the search gets done, and so the move it
+ * chooses, does not depend on the speed or the load of the machine. The yields to the browser always follow the wall
+ * clock.
+ *
  * With `aiView`, the computer plays the best move of its view that is legal on the real state. When none is, it tries
  * what a player could attempt (`candidateMoves`, and the merges and measurements of its `ownView`) in random order,
  * until the umpire accepts one.
@@ -105,10 +110,12 @@ class SearchClock {
 	/**
 	 * @param {number} timeMs how long the search may take from now, in milliseconds
 	 * @param {AbortSignal} [signal] abort the search
+	 * @param {() => number} [now] the clock, in milliseconds (the wall clock unless a test counts work instead)
 	 */
-	constructor(timeMs, signal) {
+	constructor(timeMs, signal, now = Date.now) {
 		this.timeMs = timeMs
-		this.deadline = Date.now() + timeMs
+		this.now = now
+		this.deadline = now() + timeMs
 		this.signal = signal
 	}
 
@@ -118,7 +125,7 @@ class SearchClock {
 	 * @return {boolean}
 	 */
 	up() {
-		return Date.now() > this.deadline || Boolean(this.signal?.aborted)
+		return this.now() > this.deadline || Boolean(this.signal?.aborted)
 	}
 
 	/**
@@ -137,7 +144,7 @@ class SearchClock {
 	 * @return {boolean}
 	 */
 	past(ms) {
-		return Date.now() > this.deadline + ms
+		return this.now() > this.deadline + ms
 	}
 }
 
@@ -945,11 +952,13 @@ async function firstLegal(V, real, best, judged, ordered, legal, rng, pause) {
  * @param {string} [opts.level] easy, normal or hard
  * @param {() => number} [opts.rng] random numbers
  * @param {AbortSignal} [opts.signal] abort the search
+ * @param {() => number} [opts.now] the clock of the time budget, in milliseconds (default `Date.now`, as in the app);
+ *   tests pass a clock that counts work (each read moves it on), so that the search does as much on any machine
  * @return {Promise<string|null>} a move code, or null when there is none
  */
-export async function chooseMove(V, state, { level = 'normal', rng = Math.random, signal } = {}) {
+export async function chooseMove(V, state, { level = 'normal', rng = Math.random, signal, now: time = Date.now } = {}) {
 	const L = LEVELS.find((l) => l.id === level) ?? LEVELS[1]
-	const clock = new SearchClock(L.timeMs * timeShare(V, state), signal)
+	const clock = new SearchClock(L.timeMs * timeShare(V, state), signal, time)
 	const pause = pacer()
 	const me = state.turn
 	// hidden-information variants: search the position as this side sees it, then keep the moves that are legal
@@ -1256,7 +1265,7 @@ async function deepen(V, state, me, L, clock, scored, rng, signal, pause, outcom
 	const top = [...scored]
 		.sort((a, b) => Math.round(b.value) - Math.round(a.value) || b.forcing - a.forcing || b.value - a.value)
 		.slice(0, L.deep)
-	const budget = new SearchClock(clock.deadline - Date.now() - clock.timeMs / 10, signal)
+	const budget = new SearchClock(clock.deadline - clock.now() - clock.timeMs / 10, signal, clock.now)
 	let best = null
 	let bestValue = -Infinity
 	for (const { code } of top) {

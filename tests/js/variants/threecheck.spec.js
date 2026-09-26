@@ -30,7 +30,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { givesCheck, nameOf } from '../../../src/variants/core/world.js'
 import V, { checksOf, kingPressure } from '../../../src/variants/threecheck.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const J = JSON.stringify
 
@@ -695,9 +695,9 @@ describe('three-check: the computer player', () => {
 	it('plays a legal move from the start at every level within its time budget', async () => {
 		for (const level of LEVELS) {
 			const s = newGame(V)
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(7) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs + 500)
+			expect(elapsed()).toBeLessThan(level.timeMs + 500)
 			expect(branches(V, s, code), level.id + ': ' + code).not.toBeNull()
 		}
 	}, 20000)
@@ -705,10 +705,10 @@ describe('three-check: the computer player', () => {
 	it('gives the third check when it can, and takes a free check', async () => {
 		for (const level of LEVELS) {
 			const third = st([{ a1: '0:k', d1: '0:q', h8: '1:k', a7: '1:p', b7: '1:p' }], { checks: [2, 0] })
-			const code = await chooseMove(V, third, { level: level.id, rng: seededRng(3) })
+			const code = await chooseMove(V, third, { level: level.id, rng: seededRng(3), now: workClock() })
 			expect(run(third, code).every((o) => J(o.result) === J({ winner: 0, reason: 'checks' })), code).toBe(true)
 			const first = st([{ g1: '0:k', f1: '0:b', a2: '0:p', e8: '1:k', h7: '1:p' }])
-			expect(await chooseMove(V, first, { level: level.id, rng: seededRng(3) })).toBe('f1-b5')
+			expect(await chooseMove(V, first, { level: level.id, rng: seededRng(3), now: workClock() })).toBe('f1-b5')
 		}
 	}, 20000)
 })

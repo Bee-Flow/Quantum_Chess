@@ -36,7 +36,7 @@ import {
 	T,
 } from '../../../src/variants/core/quantum.js'
 import { generate, nameOf, worldFrom } from '../../../src/variants/core/world.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const sq = (name) => V.topology.byName(name)
 const PROMOS = ['q', 'r', 'b', 'n', 'k']
@@ -624,7 +624,7 @@ describe('antichess: the computer player', () => {
 		])
 		for (const level of ['easy', 'normal', 'hard']) {
 			for (let seed = 1; seed <= 3; seed++) {
-				const code = await chooseMove(V, s, { level, rng: seededRng(seed) })
+				const code = await chooseMove(V, s, { level, rng: seededRng(seed), now: workClock() })
 				expect(['c3-d5', 'e3-d5', 'e4-d5', 'c3|e3-d5'], level + ' ' + code).toContain(code)
 			}
 		}
@@ -633,9 +633,9 @@ describe('antichess: the computer player', () => {
 	it('makes a legal move from the start position at every level within its time budget', async () => {
 		const s = newGame(V)
 		for (const level of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(7) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs)
+			expect(elapsed()).toBeLessThan(level.timeMs)
 			expect(isLegal(V, s, code), level.id + ' ' + code).toBe(true)
 		}
 	})
@@ -644,7 +644,7 @@ describe('antichess: the computer player', () => {
 		// no capture anywhere; Rd1-d7 and h2-h3 offer a piece to the c8 bishop, which must then take it
 		const s = one({ d1: '0:r', h2: '0:p', c8: '1:b', h7: '1:p' })
 		for (const level of ['normal', 'hard']) {
-			const code = await chooseMove(V, s, { level, rng: seededRng(3) })
+			const code = await chooseMove(V, s, { level, rng: seededRng(3), now: workClock() })
 			const after = play(V, s, code)
 			expect(mustCapture(V, after), level + ' ' + code).toBe(true)
 		}

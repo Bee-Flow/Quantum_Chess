@@ -27,7 +27,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { generate } from '../../../src/variants/core/world.js'
 import V, { targetCount } from '../../../src/variants/darkchess.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const S = (name) => V.topology.byName(name)
 const N = (sq) => V.topology.names[sq]
@@ -574,7 +574,8 @@ describe('darkchess: the computer sees only what a player sees', () => {
 		// c8 and e8 are hidden, yet empty in every possibility: a piece there would be a target of the pawn
 		expect(enemyPieces(V.aiView(s, 0), 1)).toEqual(['kf8 nb8 ng8 pa7 pb7 pc7 pe7 pf7 pg7 ph7 ra8 rh8'])
 		for (const level of LEVELS) {
-			expect(await chooseMove(V, s, { level: level.id, rng: seededRng(3) }), level.id).toBe('d7-d8=q')
+			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(3), now: workClock() })
+			expect(code, level.id).toBe('d7-d8=q')
 		}
 		// the same for Black, whose king goes to the nearest hidden square of its own back rank
 		const black = stateOf(V, [[{ h8: '1:k', d2: '1:p', a8: '0:k' }, 1]], 1)
@@ -709,10 +710,10 @@ describe('darkchess: the computer sees only what a player sees', () => {
 		]), 'a1-a8')
 		for (const s of [newGame(V), ghost]) {
 			for (const level of LEVELS) {
-				const started = Date.now()
+				const elapsed = stopwatch()
 				const code = await chooseMove(V, s, { level: level.id, rng: seededRng(5) })
 				expect(isLegal(V, s, code), level.id + ': ' + code).toBe(true)
-				expect(Date.now() - started).toBeLessThan(level.timeMs * 2 + 1000)
+				expect(elapsed()).toBeLessThan(level.timeMs * 2 + 1000)
 			}
 		}
 	}, 30000)

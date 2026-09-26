@@ -32,7 +32,7 @@ import { generate } from '../../../src/variants/core/world.js'
 import V from '../../../src/variants/kriegspiel.js'
 import { CHECK_PENALTY, evaluate } from '../../../src/variants/kriegspiel/computer.js'
 import { announce, checkOf, pawnTries } from '../../../src/variants/kriegspiel/umpire.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const S = (name) => V.topology.byName(name)
 const N = (sq) => V.topology.names[sq]
@@ -610,7 +610,7 @@ describe('kriegspiel: the computer', () => {
 		const legal = ['a2-b3', 'b2-a3', 'b2-c3', 'c2-b3']
 		expect(legalMoves(V, s).map((m) => m.code).sort()).toEqual(legal)
 		// without any announcement (the phantoms stand at home, every push is refused)
-		expect(legal).toContain(await chooseMove(V, s, { level: 'easy', rng: () => 0.5 }))
+		expect(legal).toContain(await chooseMove(V, s, { level: 'easy', rng: () => 0.5, now: workClock() }))
 		// the view itself then holds moves the umpire accepts, without the core's own fallback: only the phantom
 		// king and a phantom pawn on the first accepted pawn try (b3, which both a2 and c2 can take)
 		const fallback = V.aiView(s, 0)
@@ -623,7 +623,7 @@ describe('kriegspiel: the computer', () => {
 		const told = { ...s, history: [record(1, { captures: [], check: null, tries: pawnTries(V, s) })] }
 		const view = V.aiView(told, 0)
 		expect(['a3', 'b3', 'c3', 'd3'].every((q) => view.worlds[0].b.board[S(q)] >= 0)).toBe(true)
-		expect(legal).toContain(await chooseMove(V, told, { level: 'normal', rng: () => 0.5 }))
+		expect(legal).toContain(await chooseMove(V, told, { level: 'normal', rng: () => 0.5, now: workClock() }))
 	})
 
 	it('keeps the announced check in its view and wants the king off the check line', () => {
@@ -647,9 +647,9 @@ describe('kriegspiel: the computer', () => {
 	it('plays a legal move from the start at every level within its time budget', async () => {
 		const s = newGame(V)
 		for (const level of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(5) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs + 1000)
+			expect(elapsed()).toBeLessThan(level.timeMs + 1000)
 			expect(branches(V, s, code), level.id + ' ' + code).not.toBeNull()
 		}
 	})

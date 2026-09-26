@@ -29,7 +29,7 @@ import {
 import { applyClassical, generate } from '../../../src/variants/core/world.js'
 import V, { extras, startRights } from '../../../src/variants/trid.js'
 import { COL_OF, COLS } from '../../../src/variants/trid/board.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch } from './helpers.js'
 
 const topo = V.topology
 
@@ -844,9 +844,9 @@ describe('Tri-D chess: quantum rules', () => {
 	it('lets the computer play a legal move from the start at every level within its time', async () => {
 		const s = newGame(V)
 		for (const L of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(3) })
-			expect(Date.now() - started).toBeLessThan(L.timeMs + 1000)
+			expect(elapsed()).toBeLessThan(L.timeMs + 1000)
 			expect(branches(V, s, code), L.id + ': ' + code).not.toBeNull()
 		}
 	}, 20000)

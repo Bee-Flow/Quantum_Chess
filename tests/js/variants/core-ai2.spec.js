@@ -27,7 +27,7 @@ import { defineVariant } from '../../../src/variants/core/variant.js'
 import { addPiece, HAND } from '../../../src/variants/core/world.js'
 import horde from '../../../src/variants/horde.js'
 import shogi from '../../../src/variants/shogi.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, workClock } from './helpers.js'
 
 /**
  * An orthodox test variant with extra fields.
@@ -42,7 +42,8 @@ function orthodox(extra = {}) {
 const V = orthodox()
 
 /**
- * The codes the computer chooses at a level for a few seeds.
+ * The codes the computer chooses at a level for a few seeds, each search with the same budget of work on any machine
+ * (`workClock`).
  *
  * @param {object} W variant
  * @param {object} s state
@@ -53,7 +54,7 @@ const V = orthodox()
 async function picks(W, s, level, seeds) {
 	const out = []
 	for (let seed = 1; seed <= seeds; seed++) {
-		out.push(await chooseMove(W, s, { level, rng: seededRng(seed) }))
+		out.push(await chooseMove(W, s, { level, rng: seededRng(seed), now: workClock() }))
 	}
 	return out
 }
@@ -238,8 +239,12 @@ describe('the hard level looks a move deeper than the normal level', () => {
 		expect(await picks(V, s, 'hard', 5)).toEqual(['b5-c7', 'b5-c7', 'b5-c7', 'b5-c7', 'b5-c7'])
 	})
 
-	it('ends in time when the third move does not fit in the budget (64 worlds)', async () => {
-		// six White pieces in two places each: 2 ** 6 worlds
+	/**
+	 * Six White pieces in two places each: 2 ** 6 worlds.
+	 *
+	 * @return {object}
+	 */
+	function sixtyFour() {
 		const pairs = [['b1', 'c3'], ['g1', 'f3'], ['d1', 'd3'], ['a1', 'a3'], ['h1', 'h3'], ['c1', 'e3']]
 		const types = ['n', 'n', 'q', 'r', 'r', 'b']
 		const placements = []
@@ -250,7 +255,25 @@ describe('the hard level looks a move deeper than the normal level', () => {
 			})
 			placements.push([{ ...p, b8: '1:n', g8: '1:n', a8: '1:r', h8: '1:r' }, 1])
 		}
-		const s = stateOf(V, placements)
+		return stateOf(V, placements)
+	}
+
+	it('ends in time when the third move does not fit in the budget (64 worlds)', async () => {
+		const s = sixtyFour()
+		const hard = LEVELS.find((l) => l.id === 'hard')
+		// a check every 0.12 ms, the pace of a desktop here: the two-move pass fits (about 18,000 checks, 2.2 s), the
+		// third move does not, and stops at nine tenths of the budget
+		const now = workClock(0.12)
+		const code = await chooseMove(V, s, { level: 'hard', rng: seededRng(3), now })
+		expect(now.elapsed()).toBeGreaterThanOrEqual(hard.timeMs * 0.9)
+		expect(now.elapsed()).toBeLessThan(hard.timeMs)
+		expect(branches(V, s, code)).not.toBeNull()
+	})
+
+	// on the wall clock, as in the app: only on an idle machine, since a busy one (vitest runs many files at once)
+	// can slow the two-move pass past the deadline, and the search then stops one step after it
+	it.runIf(process.env.QC_PERF === '1')('ends in time on the wall clock too (QC_PERF=1)', async () => {
+		const s = sixtyFour()
 		const hard = LEVELS.find((l) => l.id === 'hard')
 		const started = Date.now()
 		const code = await chooseMove(V, s, { level: 'hard', rng: seededRng(3) })
@@ -273,7 +296,7 @@ describe('A2: exact ties are broken at random', () => {
 		let s = newGame(V)
 		const white = []
 		for (let ply = 0; ply < 12 && !s.result; ply++) {
-			const code = await chooseMove(V, s, { level: 'hard', rng })
+			const code = await chooseMove(V, s, { level: 'hard', rng, now: workClock() })
 			if (s.turn === 0) {
 				white.push(code)
 			}
@@ -294,7 +317,8 @@ describe('A5: the level of the computer', () => {
 		})
 		const s = newGame(W)
 		for (const level of LEVELS) {
-			expect(branches(W, s, await chooseMove(W, s, { level: level.id, rng: seededRng(1) }))).not.toBeNull()
+			const code = await chooseMove(W, s, { level: level.id, rng: seededRng(1), now: workClock() })
+			expect(branches(W, s, code)).not.toBeNull()
 		}
 		expect(seen).toEqual([[0, 'easy'], [0, 'normal'], [0, 'hard']])
 	})

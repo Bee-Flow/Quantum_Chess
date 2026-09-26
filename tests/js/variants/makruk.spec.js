@@ -34,7 +34,7 @@ import {
 	royalSquares,
 } from '../../../src/variants/core/world.js'
 import V, { canTakeKhun, countInfo, honourLimit, stalemated } from '../../../src/variants/makruk.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch } from './helpers.js'
 
 const K = { a1: '0:k', h8: '1:k' }
 
@@ -599,10 +599,10 @@ describe('makruk: the computer player', () => {
 	it('plays a legal move from the start position at every level within its time budget', async () => {
 		const s = newGame(V, {})
 		for (const level of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: () => 0.5 })
 			expect(branches(V, s, code), level.id).not.toBeNull()
-			expect(Date.now() - started, level.id).toBeLessThan(level.timeMs + 500)
+			expect(elapsed(), level.id).toBeLessThan(level.timeMs + 500)
 		}
 	}, 20000)
 

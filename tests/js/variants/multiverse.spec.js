@@ -49,7 +49,7 @@ import V from '../../../src/variants/multiverse.js'
 import { solidExtra, stuck } from '../../../src/variants/multiverse/engine.js'
 import { buildWorld, place } from '../../../src/variants/multiverse/setup.js'
 import { LAB, lOf, mandatory, ROWS, skeleton, uOf } from '../../../src/variants/multiverse/skeleton.js'
-import { play } from './helpers.js'
+import { play, workClock } from './helpers.js'
 
 /**
  * The games per setup and level of the self-play scenario A3: the spec's 8 with `QC_SLOW=1` (about a minute and a
@@ -1392,7 +1392,7 @@ describe('Multiverse chess: the computer', () => {
 
 	it('A2 the computer takes a king', async () => {
 		const s = kingInThePast()
-		const code = await chooseMove(V, s, { level: 'normal', rng: seededRng(1) })
+		const code = await chooseMove(V, s, { level: 'normal', rng: seededRng(1), now: workClock() })
 		expect(play(V, s, code).result).toEqual({ winner: 0, reason: 'king' })
 	})
 
@@ -1414,7 +1414,7 @@ describe('Multiverse chess: the computer', () => {
 			while (!s.result) {
 				const way = legalMoves(V, s).some((m) => V.moveWarning(s, m.code) !== LOSE)
 				expect(way, where + ', ply ' + s.ply + ': no action keeps the turn finishable').toBe(true)
-				const code = await chooseMove(V, s, { level, rng })
+				const code = await chooseMove(V, s, { level, rng, now: workClock() })
 				expect(code, where + ': a failed search').toBeTypeOf('string')
 				expect(isLegal(V, s, code), where + ': ' + code).toBe(true)
 				previous = s
@@ -1463,7 +1463,7 @@ describe('Multiverse chess: the computer', () => {
 			const rng = seededRng(seed)
 			let s = stateOf([[w, 1]])
 			while (!s.result && s.turn === 0) {
-				s = applyMove(V, s, await chooseMove(V, s, { level: 'normal', rng }), rng).state
+				s = applyMove(V, s, await chooseMove(V, s, { level: 'normal', rng, now: workClock() }), rng).state
 			}
 			const takes = !s.result && legalMoves(V, s).some((m) => m.type === 'move' && m.to >= 0
 				&& s.worlds.some(({ b }) => b.board[m.to] === queen))
@@ -1487,7 +1487,7 @@ describe('Multiverse chess: the computer', () => {
 		const stranded = []
 		for (let seed = 1; seed <= 4; seed++) {
 			const rng = seededRng(seed)
-			const code = await chooseMove(V, s, { level: 'easy', rng })
+			const code = await chooseMove(V, s, { level: 'easy', rng, now: workClock() })
 			if (applyMove(V, s, code, rng).state.result) {
 				stranded.push(seed + ': ' + code)
 			}

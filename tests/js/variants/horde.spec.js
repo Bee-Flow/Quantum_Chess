@@ -31,7 +31,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { addPiece, applyClassical, attacks, emptyWorld, generate, nameOf } from '../../../src/variants/core/world.js'
 import V from '../../../src/variants/horde.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const sq = (name) => V.topology.byName(name)
 const STALEMATE = { winner: null, reason: 'stalemate' }
@@ -770,17 +770,17 @@ describe('horde: hooks for the computer and the board', () => {
 	it('makes a legal move from the start position at every level within its time budget', async () => {
 		const s = newGame(V)
 		for (const level of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(7) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs + 500)
+			expect(elapsed()).toBeLessThan(level.timeMs + 500)
 			expect(isLegal(V, s, code), level.id + ' ' + code).toBe(true)
 		}
 		// and as Black after White's first move
 		const a = play(V, s, 'e4-e5')
 		for (const level of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, a, { level: level.id, rng: seededRng(7) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs + 500)
+			expect(elapsed()).toBeLessThan(level.timeMs + 500)
 			expect(isLegal(V, a, code), level.id + ' ' + code).toBe(true)
 		}
 	}, 20000)
@@ -789,9 +789,9 @@ describe('horde: hooks for the computer and the board', () => {
 		const white = one({ e1: '0:q', a2: '0:p', e8: '1:k', h7: '1:p' })
 		const black = one({ h2: '0:p', h8: '1:r', e8: '1:k', a7: '1:p' }, 1)
 		for (const level of ['easy', 'normal', 'hard']) {
-			const w = await chooseMove(V, white, { level, rng: seededRng(3) })
+			const w = await chooseMove(V, white, { level, rng: seededRng(3), now: workClock() })
 			expect(play(V, white, w).result, level + ' ' + w).toEqual({ winner: 0, reason: 'king' })
-			const b = await chooseMove(V, black, { level, rng: seededRng(3) })
+			const b = await chooseMove(V, black, { level, rng: seededRng(3), now: workClock() })
 			expect(play(V, black, b).result, level + ' ' + b).toEqual({ winner: 1, reason: 'horde' })
 		}
 	})
@@ -803,7 +803,7 @@ describe('horde: hooks for the computer and the board', () => {
 		expect(codes(s)).toEqual(['e4-d5', 'e4-e5'])
 		expect(play(V, play(V, s, 'e4-e5'), 'g7-e6').result).toEqual(STALEMATE)
 		for (const level of ['easy', 'hard']) {
-			expect(await chooseMove(V, s, { level, rng: seededRng(1) }), level).toBe('e4-d5')
+			expect(await chooseMove(V, s, { level, rng: seededRng(1), now: workClock() }), level).toBe('e4-d5')
 		}
 	})
 
@@ -812,7 +812,8 @@ describe('horde: hooks for the computer and the board', () => {
 		// stalemating g7-e6 counts only if Black would rather draw than play on, and Black, far ahead, would not
 		const s = one(place('Pb2 Pe4 ke8 ra8 ng7 nd5 pb3'))
 		for (let seed = 1; seed <= 3; seed++) {
-			expect(await chooseMove(V, s, { level: 'normal', rng: seededRng(seed) }), 'seed ' + seed).toBe('e4-d5')
+			const code = await chooseMove(V, s, { level: 'normal', rng: seededRng(seed), now: workClock() })
+			expect(code, 'seed ' + seed).toBe('e4-d5')
 		}
 	})
 })

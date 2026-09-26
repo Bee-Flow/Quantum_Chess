@@ -33,7 +33,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { applyClassical, attacks, generate, royalSquares, worldFrom } from '../../../src/variants/core/world.js'
 import V, { BISHOP6, distance, PAWN_START, promotes, ROOK6 } from '../../../src/variants/hexagonal.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const topo = V.topology
 
@@ -734,13 +734,13 @@ describe('hexagonal: declaration and computer player', () => {
 	it('makes a legal move from the start at every level within its time budget', async () => {
 		const s = newGame(V)
 		for (const level of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(5) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs + 250)
+			expect(elapsed()).toBeLessThan(level.timeMs + 250)
 			expect(isLegal(V, s, code)).toBe(true)
 		}
 		// and it takes a king that hangs
 		const hang = one({ ...K, f6: '0:q', a6: '1:n' })
-		expect(await chooseMove(V, hang, { level: 'easy', rng: seededRng(3) })).toBe('f6-f11')
+		expect(await chooseMove(V, hang, { level: 'easy', rng: seededRng(3), now: workClock() })).toBe('f6-f11')
 	}, 30000)
 })

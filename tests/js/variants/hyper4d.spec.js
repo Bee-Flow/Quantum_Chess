@@ -29,7 +29,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { applyClassical, attacks, generate, royalSquares, worldFrom } from '../../../src/variants/core/world.js'
 import V from '../../../src/variants/hyper4d.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const topo = V.topology
 
@@ -637,9 +637,9 @@ describe('4D chess: end of the game', () => {
 		])
 		expect(s.worlds).toHaveLength(32)
 		expect([budget(s, 0), budget(s, 1)]).toEqual([8, 4])
-		const started = Date.now()
+		const elapsed = stopwatch()
 		expect(play(V, s, 'C1c1-C3c3').result).toEqual({ winner: 0, reason: 'cannotEscape' })
-		expect(Date.now() - started).toBeLessThan(4000)
+		expect(elapsed()).toBeLessThan(4000)
 	}, 30000)
 })
 
@@ -659,16 +659,16 @@ describe('4D chess: the computer player', () => {
 	it('plays a legal move from the start at every level within its time', async () => {
 		const s = newGame(V)
 		for (const L of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(5) })
-			expect(Date.now() - started).toBeLessThan(L.timeMs + 1000)
+			expect(elapsed()).toBeLessThan(L.timeMs + 1000)
 			expect(branches(V, s, code), L.id + ': ' + code).not.toBeNull()
 		}
 	}, 20000)
 
 	it('takes a free queen', async () => {
 		const s = pos([{ A1a1: '0:r', D1d1: '0:k', D4d4: '1:k', A4a1: '1:q' }])
-		expect(await chooseMove(V, s, { level: 'normal', rng: seededRng(1) })).toBe('A1a1-A4a1')
+		expect(await chooseMove(V, s, { level: 'normal', rng: seededRng(1), now: workClock() })).toBe('A1a1-A4a1')
 	})
 })
 

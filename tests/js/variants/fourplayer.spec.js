@@ -29,7 +29,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { cloneWorld, nameOf, OFF, placePiece } from '../../../src/variants/core/world.js'
 import V from '../../../src/variants/fourplayer.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const LETTERS = ['R', 'B', 'Y', 'G']
 
@@ -171,7 +171,7 @@ function redTerms(placement, mover, teams = false) {
 async function playOut(s, level, plies, seed) {
 	const rng = seededRng(seed)
 	while (!s.result && s.ply < plies) {
-		const code = await chooseMove(V, s, { level, rng })
+		const code = await chooseMove(V, s, { level, rng, now: workClock() })
 		s = applyMove(V, s, code, rng).state
 	}
 	return s
@@ -954,7 +954,8 @@ describe('four-player chess: declaration, view and computer', () => {
 		expect(s.turn).toBe(1)
 		for (const L of LEVELS) {
 			for (const seed of [1, 2]) {
-				expect(await chooseMove(V, s, { level: L.id, rng: seededRng(seed) }), L.id).toBe('b7-a8')
+				const code = await chooseMove(V, s, { level: L.id, rng: seededRng(seed), now: workClock() })
+				expect(code, L.id).toBe('b7-a8')
 			}
 		}
 	})
@@ -979,7 +980,8 @@ describe('four-player chess: declaration, view and computer', () => {
 		for (const state of [s, bare]) {
 			for (const L of LEVELS) {
 				for (const seed of [1, 2]) {
-					expect(await chooseMove(V, state, { level: L.id, rng: seededRng(seed) }), L.id).toBe('d7-a7')
+					const code = await chooseMove(V, state, { level: L.id, rng: seededRng(seed), now: workClock() })
+					expect(code, L.id).toBe('d7-a7')
 				}
 			}
 		}
@@ -1002,10 +1004,10 @@ describe('four-player chess: declaration, view and computer', () => {
 		for (const m of ['ffa', 'teams']) {
 			const s = newGame(V, { mode: m })
 			for (const L of LEVELS) {
-				const started = Date.now()
+				const elapsed = stopwatch()
 				const code = await chooseMove(V, s, { level: L.id, rng: seededRng(3) })
 				expect(isLegal(V, s, code), m + ' ' + L.id + ' ' + code).toBe(true)
-				expect(Date.now() - started).toBeLessThan(L.timeMs + 500)
+				expect(elapsed()).toBeLessThan(L.timeMs + 500)
 			}
 		}
 	})

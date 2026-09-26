@@ -30,6 +30,7 @@ import { aiTimeShare, evaluate, replySide, scans, viewFilter, WEIGHTS } from '..
 import { SUBMIT } from '../../../src/variants/multiverse/moves.js'
 import { buildWorld } from '../../../src/variants/multiverse/setup.js'
 import { LAB, mandatory, playable, ROWS } from '../../../src/variants/multiverse/skeleton.js'
+import { stopwatch, workClock } from './helpers.js'
 
 /**
  * A square by its static name.
@@ -358,7 +359,7 @@ describe('the computer player', () => {
 	it('takes a king in the past or the present (test A2)', async () => {
 		const s = one(S9)
 		for (const level of ['easy', 'normal']) {
-			const code = await chooseMove(V, s, { level, rng: seededRng(1) })
+			const code = await chooseMove(V, s, { level, rng: seededRng(1), now: workClock() })
 			expect(run(s, [code]).result, level + ': ' + code).toEqual({ winner: 0, reason: 'king' })
 		}
 	})
@@ -370,7 +371,7 @@ describe('the computer player', () => {
 			let s = one(A4)
 			const codes = []
 			while (!s.result && s.turn === 0) {
-				const code = await chooseMove(V, s, { level: 'normal', rng })
+				const code = await chooseMove(V, s, { level: 'normal', rng, now: workClock() })
 				codes.push(code)
 				s = applyMove(V, s, code, rng).state
 			}
@@ -384,7 +385,7 @@ describe('the computer player', () => {
 		const s = run(start('marauders'), A5)
 		for (let seed = 1; seed <= 4; seed++) {
 			const rng = seededRng(seed)
-			const code = await chooseMove(V, s, { level: 'easy', rng })
+			const code = await chooseMove(V, s, { level: 'easy', rng, now: workClock() })
 			expect(applyMove(V, s, code, rng).state.result, 'seed ' + seed + ': ' + code).toBeNull()
 		}
 	}, 20000)
@@ -398,7 +399,7 @@ describe('the computer player', () => {
 				let boards = playableRows(s)
 				let plies = 0
 				while (!s.result && s.ply < maxPly) {
-					const code = await chooseMove(V, s, { level: 'easy', rng })
+					const code = await chooseMove(V, s, { level: 'easy', rng, now: workClock() })
 					const where = setup + ' ' + g + ' ply ' + s.ply + ': ' + code
 					expect(code, where).not.toBeNull()
 					expect(isLegal(V, s, code), where).toBe(true)
@@ -432,13 +433,13 @@ describe('the computer player', () => {
 			const rng = seededRng(3)
 			let mid = start(setup)
 			for (let i = 0; i < 12 && !mid.result; i++) {
-				mid = applyMove(V, mid, await chooseMove(V, mid, { level: 'easy', rng }), rng).state
+				mid = applyMove(V, mid, await chooseMove(V, mid, { level: 'easy', rng, now: workClock() }), rng).state
 			}
 			for (const s of [start(setup), mid]) {
 				for (const L of LEVELS) {
-					const t0 = performance.now()
+					const elapsed = stopwatch()
 					const code = await chooseMove(V, s, { level: L.id, rng: seededRng(5) })
-					const ms = performance.now() - t0
+					const ms = elapsed()
 					measured.push(setup + ' ' + L.id + ' ' + Math.round(ms) + ' ms')
 					expect(isLegal(V, s, code)).toBe(true)
 					expect(ms, measured.join(', ')).toBeLessThan(L.timeMs + 500)
@@ -456,7 +457,7 @@ describe('the computer player', () => {
 			while (!s.result && s.ply < 300) {
 				let code
 				if (s.turn === me) {
-					code = await chooseMove(V, s, { level: 'easy', rng })
+					code = await chooseMove(V, s, { level: 'easy', rng, now: workClock() })
 				} else {
 					const list = legalMoves(V, s)
 					code = list[Math.floor(rng() * list.length)].code

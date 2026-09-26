@@ -19,7 +19,7 @@ import { orthodoxSpec } from '../../../src/variants/core/orthodoxVariant.js'
 import { branches, budgetInfo, newGame, splitCode, splitTargets } from '../../../src/variants/core/quantum.js'
 import { defineVariant } from '../../../src/variants/core/variant.js'
 import { worldKey } from '../../../src/variants/core/world.js'
-import { stateOf } from './helpers.js'
+import { stateOf, workClock } from './helpers.js'
 
 /**
  * An orthodox test variant with extra fields.
@@ -76,7 +76,7 @@ describe('U1: a computer with a view of the position always moves', () => {
 		const s = stateOf(K, [[real, 1]])
 		for (const level of ['easy', 'normal', 'hard']) {
 			for (let seed = 1; seed <= 4; seed++) {
-				expect(captures).toContain(await chooseMove(K, s, { level, rng: seeded(seed) }))
+				expect(captures).toContain(await chooseMove(K, s, { level, rng: seeded(seed), now: workClock() }))
 			}
 		}
 	})
@@ -89,7 +89,7 @@ describe('U1: a computer with a view of the position always moves', () => {
 		})
 		const s = stateOf(K, [[real, 1]])
 		for (let seed = 1; seed <= 4; seed++) {
-			expect(await chooseMove(K, s, { level: 'normal', rng: seeded(seed) })).toBe('b2-c3')
+			expect(await chooseMove(K, s, { level: 'normal', rng: seeded(seed), now: workClock() })).toBe('b2-c3')
 		}
 	})
 
@@ -105,7 +105,7 @@ describe('U1: a computer with a view of the position always moves', () => {
 		const s = stateOf(K, [ghost('f3'), ghost('h3')])
 		const seen = new Set()
 		for (let seed = 1; seed <= 8; seed++) {
-			const code = await chooseMove(K, s, { level: 'easy', rng: seeded(seed) })
+			const code = await chooseMove(K, s, { level: 'easy', rng: seeded(seed), now: workClock() })
 			expect(code === '?f3' || code.includes('|')).toBe(true)
 			expect(branches(K, s, code)).not.toBeNull()
 			seen.add(code)
@@ -118,20 +118,20 @@ describe('U1: a computer with a view of the position always moves', () => {
 			aiView: () => stateOf(K, [[guess, 1]]),
 			candidateMoves: () => [{ code: 'a2-a3', type: 'move' }],
 		})
-		expect(await chooseMove(K, stateOf(K, [[real, 1]]), { level: 'easy', rng: seeded(1) })).toBeNull()
-		expect(captures).toContain(await chooseMove(V, stateOf(V, [[real, 1]]), { level: 'easy', rng: seeded(1) }))
+		const opts = () => ({ level: 'easy', rng: seeded(1), now: workClock() })
+		expect(await chooseMove(K, stateOf(K, [[real, 1]]), opts())).toBeNull()
+		expect(captures).toContain(await chooseMove(V, stateOf(V, [[real, 1]]), opts()))
 	})
 })
 
 describe('U2: the time budget of the computer', () => {
 	/**
-	 * A fake clock for `Date.now`, moved forward by the test variant's hooks.
+	 * A fake clock for the search (the option `now` of `chooseMove`), moved forward by the test variant's hooks.
 	 *
-	 * @return {{now: number}}
+	 * @return {{now: number, read: () => number}}
 	 */
 	function fakeClock() {
-		const clock = { now: 1000000 }
-		vi.spyOn(Date, 'now').mockImplementation(() => clock.now)
+		const clock = { now: 1000000, read: () => clock.now }
 		return clock
 	}
 
@@ -145,7 +145,7 @@ describe('U2: the time budget of the computer', () => {
 			},
 		})
 		const start = clock.now
-		const code = await chooseMove(S, newGame(S), { level: 'hard', rng: seeded(1) })
+		const code = await chooseMove(S, newGame(S), { level: 'hard', rng: seeded(1), now: clock.read })
 		expect(branches(S, newGame(S), code)).not.toBeNull()
 		// before, the search finished the candidate it had begun: up to 400 ms late
 		expect(clock.now - start).toBeGreaterThan(4000)
@@ -166,7 +166,7 @@ describe('U2: the time budget of the computer', () => {
 				return 0
 			},
 		})
-		const code = await chooseMove(S, newGame(S), { level: 'easy', rng: seeded(2) })
+		const code = await chooseMove(S, newGame(S), { level: 'easy', rng: seeded(2), now: clock.read })
 		expect(branches(S, newGame(S), code)).not.toBeNull()
 		// one quiet move in one world: one evaluation, and no split candidates were ranked
 		expect(evaluations).toBe(1)
@@ -186,7 +186,7 @@ describe('U2: the time budget of the computer', () => {
 			},
 		})
 		const start = clock.now
-		const code = await chooseMove(S, newGame(S), { level: 'hard', rng: seeded(3) })
+		const code = await chooseMove(S, newGame(S), { level: 'hard', rng: seeded(3), now: clock.read })
 		expect(branches(S, newGame(S), code)).not.toBeNull()
 		// the hard level would search all 20 answers (41 evaluations); late, it judges the position after the move
 		expect(evaluations).toBe(1)
@@ -203,7 +203,7 @@ describe('U2: the time budget of the computer', () => {
 			},
 		})
 		const start = clock.now
-		const code = await chooseMove(S, newGame(S), { level: 'hard', rng: seeded(4) })
+		const code = await chooseMove(S, newGame(S), { level: 'hard', rng: seeded(4), now: clock.read })
 		expect(branches(S, newGame(S), code)).not.toBeNull()
 		// at most one answer (2 evaluations) after the deadline, then one quick judgement
 		expect(clock.now - start).toBeGreaterThan(4000)

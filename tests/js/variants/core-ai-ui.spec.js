@@ -35,7 +35,7 @@ import { aiSplits, chooseMove, mightForce } from '../../../src/variants/core/ai.
 import { orthodoxSpec } from '../../../src/variants/core/orthodoxVariant.js'
 import { branches, legalMoves, newGame, T } from '../../../src/variants/core/quantum.js'
 import { defineVariant } from '../../../src/variants/core/variant.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, workClock } from './helpers.js'
 
 /**
  * An orthodox test variant with extra fields.
@@ -80,7 +80,7 @@ describe('U3: the side whose reply the computer searches', () => {
 
 	it('by default avoids a capture that the next side takes back', async () => {
 		const s = stateOf(V, [[position, 1]])
-		const code = await chooseMove(V, s, { level: 'normal', rng: () => 0.5 })
+		const code = await chooseMove(V, s, { level: 'normal', rng: () => 0.5, now: workClock() })
 		// the quiet moves tie; the checks among them (d1-e2) are tried first since they count as forcing (A1)
 		expect(code).not.toBe('d1-d5')
 		expect(legalMoves(V, s).map((m) => m.code)).toContain(code)
@@ -89,7 +89,7 @@ describe('U3: the side whose reply the computer searches', () => {
 	it('searches no reply when replySide gives null', async () => {
 		const W = orthodox({ replySide: () => null })
 		const s = stateOf(W, [[position, 1]])
-		expect(await chooseMove(W, s, { level: 'normal', rng: () => 0.5 })).toBe('d1-d5')
+		expect(await chooseMove(W, s, { level: 'normal', rng: () => 0.5, now: workClock() })).toBe('d1-d5')
 	})
 
 	it('asks replySide with the state after the move and my side', async () => {
@@ -101,7 +101,7 @@ describe('U3: the side whose reply the computer searches', () => {
 			},
 		})
 		const s = stateOf(W, [[position, 1]])
-		expect(await chooseMove(W, s, { level: 'normal', rng: () => 0.5 })).not.toBe('d1-d5')
+		expect(await chooseMove(W, s, { level: 'normal', rng: () => 0.5, now: workClock() })).not.toBe('d1-d5')
 		expect(seen.length).toBeGreaterThan(0)
 		expect(seen.every(([turn, me]) => turn === 1 && me === 0)).toBe(true)
 	})
@@ -110,12 +110,13 @@ describe('U3: the side whose reply the computer searches', () => {
 		// as if I moved again: the queen goes where its next move takes the king
 		const W = orthodox({ replySide: (s, me) => me })
 		const s = stateOf(W, [[position, 1]])
-		expect(['d1-e2', 'd1-a4', 'd1-h5']).toContain(await chooseMove(W, s, { level: 'normal', rng: () => 0.5 }))
+		const code = await chooseMove(W, s, { level: 'normal', rng: () => 0.5, now: workClock() })
+		expect(['d1-e2', 'd1-a4', 'd1-h5']).toContain(code)
 	})
 
 	it('takes a free queen as before', async () => {
 		const s = stateOf(V, [[{ e1: '0:k', d1: '0:r', e8: '1:k', d7: '1:q' }, 1]])
-		expect(await chooseMove(V, s, { level: 'normal', rng: () => 0.5 })).toBe('d1-d7')
+		expect(await chooseMove(V, s, { level: 'normal', rng: () => 0.5, now: workClock() })).toBe('d1-d7')
 	})
 })
 

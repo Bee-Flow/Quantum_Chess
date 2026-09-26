@@ -27,7 +27,7 @@ import {
 	splitsFrom,
 } from '../../../src/variants/core/quantum.js'
 import { addPiece, HAND } from '../../../src/variants/core/world.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 /** The four kings on their start squares. */
 const K = { 'A:e1': '0:k', 'A:e8': '3:k', 'B:e1': '1:k', 'B:e8': '2:k' }
@@ -757,14 +757,14 @@ describe('bughouse: the computer', () => {
 
 	it('B23: answers with the opponent on its own board', async () => {
 		const s = build([[{ ...K, 'A:d1': '0:q', 'A:d8': '3:r', 'A:d5': '3:p' }, 1]])
-		expect(await chooseMove(V, s, { level: 'easy', rng: () => 0.5 })).toBe('A:d1-A:d5')
-		expect(await chooseMove(V, s, { level: 'normal', rng: () => 0.5 })).not.toBe('A:d1-A:d5')
-		expect(await chooseMove(V, s, { level: 'hard', rng: () => 0.5 })).not.toBe('A:d1-A:d5')
+		expect(await chooseMove(V, s, { level: 'easy', rng: () => 0.5, now: workClock() })).toBe('A:d1-A:d5')
+		expect(await chooseMove(V, s, { level: 'normal', rng: () => 0.5, now: workClock() })).not.toBe('A:d1-A:d5')
+		expect(await chooseMove(V, s, { level: 'hard', rng: () => 0.5, now: workClock() })).not.toBe('A:d1-A:d5')
 		// the default reply side (White B, on the other board) would not see the rook
 		const keep = V.replySide
 		delete V.replySide
 		try {
-			expect(await chooseMove(V, s, { level: 'normal', rng: () => 0.5 })).toBe('A:d1-A:d5')
+			expect(await chooseMove(V, s, { level: 'normal', rng: () => 0.5, now: workClock() })).toBe('A:d1-A:d5')
 		} finally {
 			V.replySide = keep
 		}
@@ -774,9 +774,9 @@ describe('bughouse: the computer', () => {
 		let s = newGame(V)
 		for (let seat = 0; seat < 4; seat++) {
 			for (const L of LEVELS) {
-				const started = Date.now()
+				const elapsed = stopwatch()
 				const code = await chooseMove(V, s, { level: L.id, rng: () => 0.37 })
-				expect(Date.now() - started).toBeLessThan(L.timeMs)
+				expect(elapsed()).toBeLessThan(L.timeMs)
 				expect(isLegal(V, s, code), L.id + ' ' + code).toBe(true)
 			}
 			s = play(V, s, codes(s)[0])

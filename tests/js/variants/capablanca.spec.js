@@ -28,7 +28,7 @@ import {
 	T,
 } from '../../../src/variants/core/quantum.js'
 import { applyClassical, attacks, generate, royalSquares, worldFrom } from '../../../src/variants/core/world.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const FILES = 'abcdefghij'
 const WHITE_WINS = { winner: 0, reason: 'king' }
@@ -813,7 +813,7 @@ describe('Capablanca chess: the computer player', () => {
 	it('takes the king when it can, at every level', async () => {
 		const s = stateOf(V, [[{ a1: '0:k', a4: '0:c', j4: '1:k', h8: '1:q', b2: '1:p' }, 1]])
 		for (const L of LEVELS) {
-			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(5) })
+			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(5), now: workClock() })
 			expect(play(V, s, code).result, L.id + ': ' + code).toEqual(WHITE_WINS)
 		}
 	})
@@ -821,10 +821,10 @@ describe('Capablanca chess: the computer player', () => {
 	it('makes a legal move from the start at every level within its time', async () => {
 		const s = newGame(V, {})
 		for (const L of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(11) })
 			expect(outcomes(V, s, code), L.id + ': ' + code).not.toBeNull()
-			expect(Date.now() - started).toBeLessThan(L.timeMs + 1500)
+			expect(elapsed()).toBeLessThan(L.timeMs + 1500)
 		}
 	}, 20000)
 
@@ -836,10 +836,10 @@ describe('Capablanca chess: the computer player', () => {
 		}
 		expect(s.worlds.length).toBe(64)
 		for (const L of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(3) })
 			expect(outcomes(V, s, code), L.id + ': ' + code).not.toBeNull()
-			expect(Date.now() - started).toBeLessThan(L.timeMs + 1500)
+			expect(elapsed()).toBeLessThan(L.timeMs + 1500)
 		}
 	}, 30000)
 })

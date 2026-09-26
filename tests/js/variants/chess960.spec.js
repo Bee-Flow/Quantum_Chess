@@ -36,7 +36,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { optionValues } from '../../../src/variants/core/variant.js'
 import { applyClassical, generate, nameOf } from '../../../src/variants/core/world.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch } from './helpers.js'
 
 /**
  * The index of a square.
@@ -954,9 +954,9 @@ describe('chess960: random games and the computer player', () => {
 		const swap = st(pair({ a1: '0:r', f1: '0:k', g1: '0:r', e8: '1:k' }, { h1: '1:n' }, { e1: '1:n' }))
 		for (const level of LEVELS) {
 			for (const s of [newGame(V, optionValues(V, {})), newGame(V, { position: 3 }), swap]) {
-				const started = Date.now()
+				const elapsed = stopwatch()
 				const code = await chooseMove(V, s, { level: level.id, rng: seededRng(7) })
-				expect(Date.now() - started).toBeLessThan(level.timeMs + 500)
+				expect(elapsed()).toBeLessThan(level.timeMs + 500)
 				expect(branches(V, s, code), level.id + ': ' + code).not.toBeNull()
 			}
 		}

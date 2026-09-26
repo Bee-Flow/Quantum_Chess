@@ -29,7 +29,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { applyClassical, generate, nameOf, OFF, placePiece, worldFrom } from '../../../src/variants/core/world.js'
 import V, { facing, inPalace, ownHalf } from '../../../src/variants/xiangqi.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 /**
  * The index of a point.
@@ -670,17 +670,17 @@ describe('xiangqi: the computer and random games', () => {
 
 	it('takes a free chariot and flies to win (the spec\'s computer cases)', async () => {
 		const free = S([[{ d1: '0:k', a1: '0:r', f10: '1:k', a7: '1:r', i10: '1:h' }, 1]])
-		expect(await chooseMove(V, free, { level: 'normal', rng: () => 0.5 })).toBe('a1-a7')
+		expect(await chooseMove(V, free, { level: 'normal', rng: () => 0.5, now: workClock() })).toBe('a1-a7')
 		const fly = S([[{ d1: '0:k', a1: '0:r', d10: '1:k', a7: '1:r' }, 1]])
-		expect(await chooseMove(V, fly, { level: 'easy', rng: () => 0.5 })).toBe('d1-d10')
+		expect(await chooseMove(V, fly, { level: 'easy', rng: () => 0.5, now: workClock() })).toBe('d1-d10')
 	})
 
 	it('makes a legal move from the start at every level within its time budget', async () => {
 		for (const level of LEVELS) {
 			const s = newGame(V)
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(3) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs + 500)
+			expect(elapsed()).toBeLessThan(level.timeMs + 500)
 			expect(branches(V, s, code), level.id + ': ' + code).not.toBeNull()
 		}
 	}, 20000)

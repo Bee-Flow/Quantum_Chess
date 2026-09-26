@@ -4,7 +4,8 @@
  */
 
 /**
- * Helpers for the variant tests: build states from explicit worlds, play moves with a chosen outcome.
+ * Helpers for the variant tests: build states from explicit worlds, play moves with a chosen outcome, give the
+ * computer a budget of work instead of time (`workClock`) and time a search on a busy machine (`stopwatch`).
  */
 
 import { expect } from 'vitest'
@@ -60,4 +61,47 @@ export function play(V, state, code, index = 0) {
 	const list = branches(V, state, code)
 	expect(list, 'legal: ' + code).not.toBeNull()
 	return applyOutcome(V, state, code, index)
+}
+
+/**
+ * A clock for the time budget of the computer (the option `now` of `chooseMove`) that counts work instead of time:
+ * each read moves it `ms` milliseconds on. The search reads it at each of its checks (each candidate, outcome and
+ * answer), so it gets the same work done on any machine, however busy (vitest runs many files at once), and makes
+ * the same choice for the same seed. The default, 0.01 ms per check (the level times then allow 40,000, 150,000
+ * and 400,000 checks), lets every search of a few worlds in these tests finish, as it does in the app on a desktop,
+ * where such a check takes 5 to 20 microseconds (the longest search, 4D chess from the start at the hard level, takes
+ * 184,000 checks); at 64 worlds a check takes 0.1 to 1.5 ms, and a test there passes a larger step.
+ *
+ * @param {number} [ms] milliseconds per read
+ * @return {(() => number) & {elapsed: () => number}} the clock; `elapsed()` is the time it has counted
+ */
+export function workClock(ms = 0.01) {
+	let reads = 0
+	const now = () => ++reads * ms
+	now.elapsed = () => reads * ms
+	return now
+}
+
+/**
+ * The processor time this thread has used, in milliseconds (the whole process where Node cannot tell the thread).
+ *
+ * @return {number}
+ */
+export function cpuMs() {
+	const { user, system } = process.threadCpuUsage ? process.threadCpuUsage() : process.cpuUsage()
+	return (user + system) / 1000
+}
+
+/**
+ * A stopwatch for a timed check on a busy machine: the milliseconds since the call, as the processor time of this
+ * thread (never more than the wall-clock time). Other work on the machine holds the thread back but does not count,
+ * so a search that keeps to its time on an idle machine passes under load too; a search or a step that is too slow
+ * still shows.
+ *
+ * @return {() => number} the milliseconds since the call
+ */
+export function stopwatch() {
+	const wall = performance.now()
+	const cpu = cpuMs()
+	return () => Math.min(performance.now() - wall, cpuMs() - cpu)
 }

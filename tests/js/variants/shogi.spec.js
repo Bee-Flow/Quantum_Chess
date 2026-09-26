@@ -32,7 +32,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { addPiece, generate, HAND, OFF } from '../../../src/variants/core/world.js'
 import V, { farRanks, impasse, pawnDropMate } from '../../../src/variants/shogi.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 /**
  * The square index of a square name (`5e`).
@@ -730,9 +730,9 @@ describe('shogi: random games and the computer player', () => {
 	it('lets the computer make a legal move from the start at every level within its time budget', async () => {
 		const s = newGame(V)
 		for (const level of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(5) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs + 250)
+			expect(elapsed()).toBeLessThan(level.timeMs + 250)
 			expect(isLegal(V, s, code)).toBe(true)
 		}
 		// and with pieces in both hands
@@ -742,7 +742,7 @@ describe('shogi: random games and the computer player', () => {
 			[[0, 'b'], [0, 'g'], [0, 'p'], [1, 's'], [1, 'n']],
 		)
 		expect(generate(V, mid.worlds[0].b, 0).size).toBeGreaterThan(150)
-		const code = await chooseMove(V, mid, { level: 'normal', rng: seededRng(6) })
+		const code = await chooseMove(V, mid, { level: 'normal', rng: seededRng(6), now: workClock() })
 		expect(isLegal(V, mid, code)).toBe(true)
 	}, 30000)
 

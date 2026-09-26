@@ -30,7 +30,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { addPiece, HAND, OFF } from '../../../src/variants/core/world.js'
 import V from '../../../src/variants/crazyhouse.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const sq = (name) => V.topology.byName(name)
 const RIGHT_K = () => ({ flag: 'K', side: 0, king: sq('e1'), rook: sq('h1'), kingTo: sq('g1'), rookTo: sq('f1') })
@@ -421,12 +421,12 @@ describe('crazyhouse: end of the game and texts', () => {
 			const full = ['n', 'b', 'r', 'q', 'p'].flatMap((type) => [[0, type], [1, type]])
 			return stateOf(V, worlds, 1, withHand(full))
 		}
-		const started = Date.now()
+		const elapsed = stopwatch()
 		const mate = play(V, build('c2'), 'h2-h1')
-		const elapsed = Date.now() - started
+		const ms = elapsed()
 		expect(mate.worlds.length).toBe(64)
 		expect(mate.result).toEqual({ winner: 1, reason: 'cannotEscape' })
-		expect(elapsed).toBeLessThan(5000)
+		expect(ms).toBeLessThan(5000)
 		// with the knight on c3 (it takes b1, not a1) a drop on c1..g1 saves the king
 		const saved = play(V, build('c3'), 'h2-h1')
 		expect(saved.result).toBeNull()
@@ -655,11 +655,11 @@ describe('crazyhouse: computer player and random games', () => {
 	it('makes a legal move from the start at every level within its time budget', async () => {
 		const s = newGame(V)
 		for (const L of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(7) })
-			const elapsed = Date.now() - started
+			const ms = elapsed()
 			expect(branches(V, s, code), L.id + ' ' + code).not.toBeNull()
-			expect(elapsed, L.id).toBeLessThan(L.timeMs + 1000)
+			expect(ms, L.id).toBeLessThan(L.timeMs + 1000)
 		}
 	}, 30000)
 
@@ -678,7 +678,7 @@ describe('crazyhouse: computer player and random games', () => {
 		expect(play(V, z, 'f7-h8').result).toEqual({ winner: 0, reason: 'king' })
 		for (const L of LEVELS) {
 			// it takes the king, or wins as surely by a move the king cannot escape (a queen drop on the back rank)
-			const code = await chooseMove(V, z, { level: L.id, rng: seededRng(5) })
+			const code = await chooseMove(V, z, { level: L.id, rng: seededRng(5), now: workClock() })
 			expect(branches(V, z, code), L.id + ' ' + code).toHaveLength(1)
 			expect(play(V, z, code).result?.winner, L.id + ' ' + code).toBe(0)
 		}
@@ -690,10 +690,10 @@ describe('crazyhouse: computer player and random games', () => {
 		expect(hand(m, 0)).toEqual([['p', 3, 3]])
 		expect(hand(m, 1)).toEqual([['b', 1, 1], ['p', 1, 1]])
 		const hard = LEVELS.find((l) => l.id === 'hard')
-		const started = Date.now()
+		const elapsed = stopwatch()
 		const code = await chooseMove(V, m, { level: 'hard', rng: seededRng(9) })
 		expect(branches(V, m, code), code).not.toBeNull()
-		expect(Date.now() - started).toBeLessThan(hard.timeMs + 1500)
+		expect(elapsed()).toBeLessThan(hard.timeMs + 1500)
 	}, 30000)
 
 	it('orders the king\'s moves and the moves onto the squares in between first when a line attacks the king', () => {
@@ -743,14 +743,17 @@ describe('crazyhouse: computer player and random games', () => {
 		expect(royalDanger(V, s, 0)).toBe(1)
 		expect(codes(s).slice(0, 4)).toEqual(['a1-b1', 'c3-d1', 'c3-b1', 'n@b1'])
 		for (const level of ['normal', 'hard']) {
-			const code = await chooseMove(V, s, { level, rng: seededRng(3) })
+			// a check every half millisecond, the pace of a desktop here: 3,000 checks at the normal level, 8,000 at
+			// the hard level (a quarter as many leave the normal level on a1-b1, which leaves the king attacked)
+			const code = await chooseMove(V, s, { level, rng: seededRng(3), now: workClock(0.5) })
 			const list = branches(V, s, code)
 			expect(list, level + ' ' + code).not.toBeNull()
 			for (let i = 0; i < list.length; i++) {
 				expect(royalDanger(V, play(V, s, code, i), 0), level + ' ' + code).toBeLessThan(1)
 			}
 		}
-	}, 30000)
+		// a fixed amount of work: about 7 s on a desktop, over twice that on a loaded one
+	}, 60000)
 
 	it('F1 random games with many drops keep the crazyhouse invariants', () => {
 		for (const seed of [11, 12, 13, 14, 15, 16]) {

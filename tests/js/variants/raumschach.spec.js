@@ -31,7 +31,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { applyClassical, generate, worldFrom } from '../../../src/variants/core/world.js'
 import V from '../../../src/variants/raumschach.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 /** The default kings of the spec's test positions. */
 const KINGS = { Ae3: '0:k', Ee3: '1:k' }
@@ -869,17 +869,17 @@ describe('Raumschach: the computer player', () => {
 	it('makes a legal move from the start at every level within its time', async () => {
 		const s = newGame(V)
 		for (const L of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(11) })
 			expect(outcomes(V, s, code), L.id + ': ' + code).not.toBeNull()
-			expect(Date.now() - started).toBeLessThan(L.timeMs + 1500)
+			expect(elapsed()).toBeLessThan(L.timeMs + 1500)
 		}
 	}, 20000)
 
 	it('does not give a unicorn for a pawn at the start, and splits the queen towards the centre', async () => {
 		const s = newGame(V)
 		for (const level of ['normal', 'hard']) {
-			const code = await chooseMove(V, s, { level, rng: seededRng(5) })
+			const code = await chooseMove(V, s, { level, rng: seededRng(5), now: workClock() })
 			expect(['Bb1-Ee4', 'Be1-Eb4'], level).not.toContain(code)
 		}
 		for (const seed of [1, 2, 3]) {

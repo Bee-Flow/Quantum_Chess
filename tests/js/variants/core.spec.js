@@ -27,7 +27,7 @@ import {
 } from '../../../src/variants/core/quantum.js'
 import { defineVariant } from '../../../src/variants/core/variant.js'
 import { worldFrom } from '../../../src/variants/core/world.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, workClock } from './helpers.js'
 
 const V = defineVariant(Object.assign(orthodoxSpec(), { id: 'test', category: 'rules' }))
 
@@ -171,7 +171,7 @@ describe('orthodox chess in the quantum layer', () => {
 
 	it('lets the computer choose a legal move, and take a free queen', async () => {
 		const s = stateOf(V, [[{ e1: '0:k', d1: '0:r', e8: '1:k', d7: '1:q' }, 1]])
-		const code = await chooseMove(V, s, { level: 'normal', rng: () => 0.5 })
+		const code = await chooseMove(V, s, { level: 'normal', rng: () => 0.5, now: workClock() })
 		expect(code).toBe('d1-d7')
 	})
 

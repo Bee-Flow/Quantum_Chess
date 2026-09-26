@@ -31,7 +31,7 @@ import {
 	T,
 } from '../../../src/variants/core/quantum.js'
 import { applyClassical, generate } from '../../../src/variants/core/world.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const V = atomic
 
@@ -868,9 +868,9 @@ describe('atomic: board and computer player', () => {
 	it('makes a legal move from the start at every level within its time budget', async () => {
 		for (const level of LEVELS) {
 			const s = newGame(V)
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: level.id, rng: seededRng(3) })
-			expect(Date.now() - started).toBeLessThan(level.timeMs + 500)
+			expect(elapsed()).toBeLessThan(level.timeMs + 500)
 			expect(branches(V, s, code), level.id + ': ' + code).not.toBeNull()
 		}
 	}, 20000)
@@ -879,7 +879,7 @@ describe('atomic: board and computer player', () => {
 		const s = beforeNxf7()
 		for (const level of LEVELS) {
 			for (const seed of [1, 2, 3]) {
-				const code = await chooseMove(V, s, { level: level.id, rng: seededRng(seed) })
+				const code = await chooseMove(V, s, { level: level.id, rng: seededRng(seed), now: workClock() })
 				// e5-f7 and e5-d7 both blow up the king on e8; after a quiet move Black cannot escape that blow-up, so
 				// the computer, which sees the escape rule, may also win at once that way
 				const result = applyMove(V, s, code, 0).state.result

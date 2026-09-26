@@ -24,7 +24,7 @@ import {
 	T,
 } from '../../../src/variants/core/quantum.js'
 import V from '../../../src/variants/koth.js'
-import { play, stateOf } from './helpers.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const HILL_WIN = { winner: 0, reason: 'hill' }
 
@@ -553,7 +553,7 @@ describe('King of the Hill: the computer player', () => {
 		})
 		expect(defences.sort()).toEqual(['h1-d1', 'h1-d1|h4', 'h1-h4'])
 		for (let n = 1; n <= 20; n++) {
-			const code = await chooseMove(V, s, { level: 'normal', rng: seededRng(n) })
+			const code = await chooseMove(V, s, { level: 'normal', rng: seededRng(n), now: workClock() })
 			const after = applyOutcome(V, s, code, 0)
 			expect(outcomes(V, after, 'c3-d4'), 'seed ' + n + ': ' + code).toBeNull()
 		}
@@ -596,7 +596,7 @@ describe('King of the Hill: the computer player', () => {
 		}
 		const parried = (x) => outcomes(V, x, 'e3-d4') === null && outcomes(V, x, 'e3-e4') === null
 		for (let n = 1; n <= 3; n++) {
-			const code = await chooseMove(V, s, { level: 'hard', rng: seededRng(n) })
+			const code = await chooseMove(V, s, { level: 'hard', rng: seededRng(n), now: workClock() })
 			const threat = play(V, play(V, s, code), 'd2-e3')
 			const answers = legalMoves(V, threat).filter((m) => parried(play(V, threat, m.code)))
 			expect(answers.length, 'seed ' + n + ': ' + code).toBeGreaterThan(0)
@@ -610,7 +610,7 @@ describe('King of the Hill: the computer player', () => {
 			let s = newGame(V)
 			const codes = []
 			while (!s.result && codes.length < 12) {
-				const code = await chooseMove(V, s, { level: 'hard', rng: seededRng(n) })
+				const code = await chooseMove(V, s, { level: 'hard', rng: seededRng(n), now: workClock() })
 				codes.push(code)
 				s = applyOutcome(V, s, code, 0)
 			}
@@ -621,12 +621,13 @@ describe('King of the Hill: the computer player', () => {
 				expect(codes[i], 'seed ' + n + ': ' + codes.join(' ')).not.toBe(back)
 			}
 		}
-	}, 20000)
+		// up to 36 complete searches of the hard level: about 5 s on a desktop, three times that on a loaded one
+	}, 60000)
 
 	it('steps onto a free hill square when it can', async () => {
 		const s = stateOf(V, [[{ c3: '0:k', a8: '1:r', h8: '1:k', h7: '1:p' }, 1]])
 		for (const level of ['easy', 'normal', 'hard']) {
-			const code = await chooseMove(V, s, { level, rng: seededRng(3) })
+			const code = await chooseMove(V, s, { level, rng: seededRng(3), now: workClock() })
 			expect(play(V, s, code).result, level + ': ' + code).toEqual(HILL_WIN)
 		}
 	})
@@ -634,10 +635,10 @@ describe('King of the Hill: the computer player', () => {
 	it('makes a legal move from the start at every level', async () => {
 		const s = newGame(V)
 		for (const L of LEVELS) {
-			const started = Date.now()
+			const elapsed = stopwatch()
 			const code = await chooseMove(V, s, { level: L.id, rng: seededRng(11) })
 			expect(outcomes(V, s, code), L.id + ': ' + code).not.toBeNull()
-			expect(Date.now() - started).toBeLessThan(L.timeMs + 1500)
+			expect(elapsed()).toBeLessThan(L.timeMs + 1500)
 		}
 	}, 20000)
 })

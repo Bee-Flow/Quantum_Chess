@@ -31,7 +31,7 @@ import { branches, legalMoves, newGame, T } from '../../../src/variants/core/qua
 import { defineVariant } from '../../../src/variants/core/variant.js'
 import { cloneWorld, placePiece } from '../../../src/variants/core/world.js'
 import hyper4d from '../../../src/variants/hyper4d.js'
-import { stateOf } from './helpers.js'
+import { cpuMs, stateOf, stopwatch, workClock } from './helpers.js'
 
 const V = defineVariant(Object.assign(orthodoxSpec(), { id: 'test-app', category: 'rules' }))
 
@@ -71,19 +71,10 @@ function sixtyFour(W) {
 }
 
 /**
- * The processor time this process has used, in milliseconds.
- *
- * @return {number}
- */
-function cpuMs() {
-	const { user, system } = process.cpuUsage()
-	return (user + system) / 1000
-}
-
-/**
- * Run a search and measure it: how long it took and the longest stretch in which a 1 ms timer could not run (the
- * longest synchronous block). A stretch counts only with the processor time the process used in it, so that a busy
- * machine that holds the whole process back (other test files run in parallel) does not look like a block.
+ * Run a search (on the wall clock, as in the app, unless `opts.now` is another clock) and measure it: how long it took
+ * and the longest stretch in which a 1 ms timer could not run (the longest synchronous block). Both count only the
+ * processor time this thread used (`cpuMs`, `stopwatch`), so that a busy machine that holds the whole process back
+ * (other test files run in parallel) does not look like a slow search or a block.
  *
  * @param {object} W variant
  * @param {object} s state
@@ -104,9 +95,9 @@ async function measured(W, s, opts) {
 		ticks++
 	}
 	const timer = setInterval(tick, 1)
-	const started = performance.now()
+	const elapsed = stopwatch()
 	const code = await chooseMove(W, s, opts)
-	const ms = performance.now() - started
+	const ms = elapsed()
 	tick()
 	clearInterval(timer)
 	return { code, ms, block, ticks }
@@ -138,24 +129,40 @@ describe('H2: the computer yields to the browser throughout its search', () => {
 
 	it('has no stretch over 75 ms at 64 worlds on a 4 x 4 x 4 x 4 board, and keeps to its time', async () => {
 		// before, the forcing pre-pass alone was one block of 200 ms here (400 ms and more on other positions)
-		const run = () => measured(hyper4d, big, { level: 'easy', rng: seededRng(1) })
+		// a check every half millisecond (800 checks, about 0.6 s on a desktop): the same work on a busy machine,
+		// where the search yields more often rather than less, since it yields by the wall clock
+		const run = async () => {
+			const now = workClock(0.5)
+			const r = await measured(hyper4d, big, { level: 'easy', rng: seededRng(1), now })
+			return { ...r, counted: now.elapsed() }
+		}
 		const r = await bestOf(run, (x) => x.block, 3, 75)
 		expect(branches(hyper4d, big, r.code)).not.toBeNull()
 		expect(r.block).toBeLessThan(75)
 		expect(r.ticks).toBeGreaterThan(10)
-		expect(r.ms).toBeLessThan(easy.timeMs + 300)
+		expect(r.counted).toBeLessThan(easy.timeMs + 10)
+		// on the wall clock, as in the app, it keeps to its time too (processor time, `stopwatch`)
+		const wall = await measured(hyper4d, big, { level: 'easy', rng: seededRng(1) })
+		expect(branches(hyper4d, big, wall.code)).not.toBeNull()
+		expect(wall.ms).toBeLessThan(easy.timeMs + 300)
 	})
 
 	it('stops soon after it is aborted, also inside the pre-pass and an evaluation', async () => {
 		for (const level of ['easy', 'normal']) {
-			const run = () => {
+			const run = async () => {
 				const controller = new AbortController()
-				setTimeout(() => controller.abort(), 30)
-				return measured(hyper4d, big, { level, rng: seededRng(1), signal: controller.signal })
+				// the time from the abort to the end of the search (processor time, `stopwatch`)
+				let sinceAbort = null
+				setTimeout(() => {
+					sinceAbort = stopwatch()
+					controller.abort()
+				}, 30)
+				const r = await measured(hyper4d, big, { level, rng: seededRng(1), signal: controller.signal })
+				return { ...r, late: sinceAbort ? sinceAbort() : Infinity }
 			}
-			const r = await bestOf(run, (x) => x.ms, 3, 30 + 100)
+			const r = await bestOf(run, (x) => x.late, 3, 100)
 			expect(r.code).toBeNull()
-			expect(r.ms).toBeLessThan(30 + 100)
+			expect(r.late).toBeLessThan(100)
 		}
 	})
 })
@@ -181,9 +188,12 @@ describe('H3: aiTimeShare', () => {
 			aiViewExact: true,
 		}
 		const hard = LEVELS.find((l) => l.id === 'hard')
-		const r = await measured(W, big, { level: 'hard', rng: seededRng(2) })
-		expect(branches(hyper4d, big, r.code)).not.toBeNull()
-		expect(r.ms).toBeLessThan(hard.timeMs / 10 + 300)
+		// a check per millisecond: at 64 worlds the search runs until the end of its share
+		const now = workClock(1)
+		const code = await chooseMove(W, big, { level: 'hard', rng: seededRng(2), now })
+		expect(branches(hyper4d, big, code)).not.toBeNull()
+		expect(now.elapsed()).toBeGreaterThanOrEqual(hard.timeMs / 10)
+		expect(now.elapsed()).toBeLessThan(hard.timeMs / 10 + 10)
 		expect(seen).toEqual([big])
 		expect(seen[0]).toBe(big)
 	})
@@ -192,9 +202,10 @@ describe('H3: aiTimeShare', () => {
 		const easy = LEVELS.find((l) => l.id === 'easy')
 		for (const share of [0, -1, Number.NaN, 7]) {
 			const W = { ...hyper4d, aiTimeShare: () => share }
-			const r = await measured(W, sixtyFour(hyper4d), { level: 'easy', rng: seededRng(3) })
-			expect(r.ms, String(share)).toBeGreaterThan(easy.timeMs * 0.6)
-			expect(r.ms, String(share)).toBeLessThan(easy.timeMs + 300)
+			const now = workClock(1)
+			await chooseMove(W, sixtyFour(hyper4d), { level: 'easy', rng: seededRng(3), now })
+			expect(now.elapsed(), String(share)).toBeGreaterThanOrEqual(easy.timeMs)
+			expect(now.elapsed(), String(share)).toBeLessThan(easy.timeMs + 10)
 		}
 	})
 })
@@ -220,9 +231,11 @@ describe('H2: the end of the time', () => {
 		expect(legalMoves(W, s)[0].code).toMatch(/^e1-/)
 		for (const level of ['easy', 'normal', 'hard']) {
 			for (let seed = 1; seed <= 3; seed++) {
-				const r = await measured(W, s, { level, rng: seededRng(seed) })
-				expect(r.code, level + ' ' + seed).toMatch(/^a2-/)
-				expect(r.ms).toBeLessThan(150)
+				// a check per millisecond: the search looks on for at most 100 checks after its time
+				const now = workClock(1)
+				const code = await chooseMove(W, s, { level, rng: seededRng(seed), now })
+				expect(code, level + ' ' + seed).toMatch(/^a2-/)
+				expect(now.elapsed()).toBeLessThan(150)
 			}
 		}
 	})
@@ -256,18 +269,18 @@ describe('H2: the end of the time', () => {
 			[{ a2: '0:p', e1: '0:k', b7: '1:r', h3: '1:b', h8: '1:k' }, 2],
 		])
 		expect(legalMoves(W, s).map((m) => m.code).slice(0, 2)).toEqual(['a2-a3', 'e1-f1'])
-		vi.spyOn(Date, 'now').mockImplementation(() => clock.now)
+		const now = () => clock.now
 		const picks = new Set()
 		for (let at = 1; at <= 60; at++) {
 			clock.now = 1e12
 			clock.calls = 0
 			clock.at = at
-			picks.add(await chooseMove(W, s, { level: 'normal', rng: () => 0.5 }))
+			picks.add(await chooseMove(W, s, { level: 'normal', rng: () => 0.5, now }))
 		}
 		expect(picks.has('e1-f1')).toBe(false)
 		// with the whole time the computer steps aside to d1
 		clock.at = -1
-		expect(await chooseMove(W, s, { level: 'normal', rng: () => 0.5 })).toBe('e1-d1')
+		expect(await chooseMove(W, s, { level: 'normal', rng: () => 0.5, now })).toBe('e1-d1')
 	})
 })
 
@@ -318,7 +331,7 @@ describe('H2: aiViewExact', () => {
 		for (const exact of [true, false]) {
 			for (const level of ['easy', 'normal']) {
 				const { W, state } = counted(exact)
-				const code = await chooseMove(W, state, { level, rng: seededRng(1) })
+				const code = await chooseMove(W, state, { level, rng: seededRng(1), now: workClock() })
 				expect(code, `${exact} ${level}`).not.toBe('d1-h5')
 				expect(branches(V, real, code), `${exact} ${level}: ${code}`).not.toBeNull()
 			}
@@ -327,9 +340,9 @@ describe('H2: aiViewExact', () => {
 
 	it('checks only the chosen move (and the next best) on the real state instead of every candidate', async () => {
 		const exact = counted(true)
-		await chooseMove(exact.W, exact.state, { level: 'normal', rng: seededRng(1) })
+		await chooseMove(exact.W, exact.state, { level: 'normal', rng: seededRng(1), now: workClock() })
 		const each = counted(false)
-		await chooseMove(each.W, each.state, { level: 'normal', rng: seededRng(1) })
+		await chooseMove(each.W, each.state, { level: 'normal', rng: seededRng(1), now: workClock() })
 		expect(exact.reads()).toBeGreaterThan(0)
 		expect(exact.reads() * 5).toBeLessThan(each.reads())
 	})
