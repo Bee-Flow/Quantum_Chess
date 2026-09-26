@@ -23,11 +23,21 @@ const GAP = 0.8
 /** Left edge of board B in the drawing. */
 const BX = 8 + GAP
 /**
- * Height of the strip of file letters under the cells. Each board frame holds it, so that the board letter (drawn
- * above the frame in every view) never meets the file letters, which the half turn of Team 2's view puts above the
- * cells (as in raumschach).
+ * Height of the strip of file letters under the cells. Each board frame holds it, so that the name above the frame
+ * never meets the file letters, which the half turn of Team 2's view puts above the cells (as in raumschach).
  */
 const STRIP = 0.6
+/**
+ * Height of the drawing: the boards (8.6 high) in the middle of a drawing about three quarters as high as it is wide,
+ * so that the board on screen is tall enough for a phone's view zoomed in on one board (28 px per square) to show the
+ * whole board with its letter: the zoomed view keeps the shape of the drawing (a 360 px phone shows 9 units in
+ * height, a 390 px phone 9.7). The names of the players are drawn at the edges where they sit.
+ */
+const HEIGHT = 13.2
+/** The top of the board frames: `(HEIGHT - 8 - STRIP) / 2`. */
+const TOP = 2.3
+/** How far a player's name is from the edge of its board frame (the middle of the text). */
+const NAME_GAP = 0.3
 
 // Square index = 64 × board + 8 × rank + file (the order of the coordinates below), so the coordinates of a square
 // follow from its index.
@@ -95,10 +105,10 @@ const PAWN_DROP_SQUARES = BOARD_SQUARES.map((list) => list.filter((sq) => rankOf
 // of Team 1 sit side by side at the bottom (White A bottom-left, Black B bottom-right), as over the board.
 const labels = []
 for (let i = 0; i < 8; i++) {
-	labels.push({ x: i + 0.5, y: 8.32, text: FILE_LETTERS[i] })
-	labels.push({ x: BX + (7 - i) + 0.5, y: 8.32, text: FILE_LETTERS[i] })
-	labels.push({ x: -0.3, y: 7.5 - i, text: String(i + 1) })
-	labels.push({ x: BX + 8.3, y: i + 0.5, text: String(i + 1) })
+	labels.push({ x: i + 0.5, y: TOP + 8.32, text: FILE_LETTERS[i] })
+	labels.push({ x: BX + (7 - i) + 0.5, y: TOP + 8.32, text: FILE_LETTERS[i] })
+	labels.push({ x: -0.3, y: TOP + 7.5 - i, text: String(i + 1) })
+	labels.push({ x: BX + 8.3, y: TOP + i + 0.5, text: String(i + 1) })
 }
 
 const topology = makeTopology({
@@ -106,7 +116,7 @@ const topology = makeTopology({
 	name: ([f, r, bd]) => (bd ? 'B' : 'A') + ':' + FILE_LETTERS[f] + (r + 1),
 	cell: ([f, r, bd]) => ({
 		x: bd ? BX + 7 - f : f,
-		y: bd ? r : 7 - r,
+		y: TOP + (bd ? r : 7 - r),
 		w: 1,
 		h: 1,
 		shape: 'rect',
@@ -114,29 +124,63 @@ const topology = makeTopology({
 	}),
 	layout: {
 		width: BX + 8,
-		// the height includes the strip of file letters, so the drawing turns about its middle
-		height: 8 + STRIP,
+		// the frames, with their strips of file letters, sit in the middle, so the drawing turns about their middle
+		height: HEIGHT,
 		// the whole drawing is small enough to show at once, but too wide for a phone: allow zooming in on a board
 		zoomable: true,
 		labels,
-		boards: [{ x: 0, y: 0, w: 8, h: 8 + STRIP, label: 'A' }, { x: BX, y: 0, w: 8, h: 8 + STRIP, label: 'B' }],
+		// no board letters: the players' names at the edges say which board it is ("White A", "Black A")
+		boards: [
+			{ x: 0, y: TOP, w: 8, h: 8 + STRIP },
+			{ x: BX, y: TOP, w: 8, h: 8 + STRIP },
+		],
 	},
 })
 
-// One layout per seat: a wooden rim behind the board of the seat to move, and a focus on that board. The focus key
-// names the seat, not the board: the view turns on every ply with auto-flip, and the board recentres only when the
-// key changes, so a zoomed view follows the seat to move with the current rotation.
-const ACTIVE = [0, 1, 2, 3].map((seat) => {
-	const x = SEAT_BOARD[seat] ? BX : 0
-	return {
-		...topology,
-		layout: {
-			...topology.layout,
-			areas: [{ x: x - 0.12, y: -0.12, w: 8.24, h: 8.24, shade: 'wood' }],
-			focus: { x: x + 4, y: 4, key: 'seat' + seat },
-		},
+/** The drawings shown (built on first use, when the names can be translated): `plain` and one per seat. */
+let drawings = null
+
+/**
+ * The drawings shown: the boards with the name of each player at the edge where the player sits (White A and Black B
+ * at the bottom, their opponents at the top; the half turn of Team 2's view takes the names along), and per seat a
+ * wooden rim behind the board of the seat to move and a focus on that board. A name is the only label of its edge, in
+ * bold, in the middle of the edge just outside the frame; the names say which board it is, so the boards carry no
+ * letter of their own. With a mouse the focus keeps both boards in view (`zoom: 1`); on a touch screen the view opens
+ * on the board of the seat to move at about 28 px per square (about 20 for both boards on a phone), with both names
+ * of that board in view (the box holds the frame and the names), and the player pans, pinches or taps "Whole board".
+ * The focus key names the seat, not the board: the view turns on every ply with auto-flip, and the board recentres
+ * only when the key changes, so it follows the seat to move with the current rotation.
+ *
+ * @param {object} V the variant (for the names)
+ * @return {{plain: object, active: object[]}}
+ */
+function seatDrawings(V) {
+	if (!drawings) {
+		const names = [0, 1, 2, 3].map((seat) => ({
+			x: (SEAT_BOARD[seat] ? BX : 0) + 4,
+			y: Math.round((seat % 2 === 0 ? TOP + 8 + STRIP + NAME_GAP : TOP - NAME_GAP) * 100) / 100,
+			text: sideName(V, seat),
+			strong: true,
+		}))
+		const plain = { ...topology, layout: { ...topology.layout, labels: [...labels, ...names] } }
+		const active = [0, 1, 2, 3].map((seat) => {
+			const x = SEAT_BOARD[seat] ? BX : 0
+			// the box: the frame, a margin at the sides, and the two names above and below it
+			const box = { w: 8.6, h: Math.round((8 + STRIP + 2 * NAME_GAP + 0.7) * 100) / 100 }
+			const focus = { x: x + 4, y: TOP + 4.3, zoom: 1, box, key: 'seat' + seat }
+			return {
+				...plain,
+				layout: {
+					...plain.layout,
+					areas: [{ x: x - 0.12, y: TOP - 0.12, w: 8.24, h: 8.24, shade: 'wood' }],
+					focus,
+				},
+			}
+		})
+		drawings = { plain, active }
 	}
-})
+	return drawings
+}
 
 /** Piece values for the computer (the crazyhouse estimate: minor pieces and pawns gain, heavy pieces lose). */
 const VALUES = { k: 400, q: 420, r: 230, b: 200, n: 220, p: 100 }
@@ -236,6 +280,8 @@ const spec = {
 	topology,
 	types,
 	handOrder: ['p', 'n', 'b', 'r', 'q'],
+	// the hand of each seat is shown under its board (the index in `layout.boards`)
+	handBoards: SEAT_BOARD,
 	maxPly: 1200,
 	quietPlies: 200,
 	// a seat without any legal move waits for a piece from its partner: it sits out instead of ending the game
@@ -510,13 +556,14 @@ const spec = {
 		}
 	},
 	/**
-	 * The board of the seat to move is marked (and followed when zoomed in).
+	 * The boards with the players' names; the board of the seat to move is marked (and opened on a touch screen).
 	 *
 	 * @param {object} state state
 	 * @return {object}
 	 */
 	layoutOf(state) {
-		return state.result ? topology : ACTIVE[state.turn]
+		const d = seatDrawings(spec)
+		return state.result ? d.plain : d.active[state.turn]
 	},
 	/**
 	 * The computer answers with the opponent on its own board, who moves three plies later; the next seat plays on

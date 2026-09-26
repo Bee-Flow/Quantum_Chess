@@ -67,7 +67,7 @@ const spec = Object.assign(orthodoxSpec(), {
 		announce: announce(spec, prev, code, branch, next),
 		...(next.result ? { end: true } : {}),
 	}),
-	infoText: (record) => umpireLines(spec, record),
+	infoText: (record, viewer, opts) => umpireLines(spec, record, opts),
 	aiView: (state, side) => aiView(spec, state, side),
 	evaluate: (w, side) => evaluate(spec, w, side),
 })

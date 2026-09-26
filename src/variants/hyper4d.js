@@ -52,11 +52,12 @@ for (let w = 0; w < N; w++) {
 }
 
 /**
- * One frame with its label ("B2") per board, the rank numbers left of every board row and the outer file letters (a
- * and d) under every board of the bottom row. Black's view turns the drawing round, so the file letters end up above
- * the top row, on the line of the board labels: with only a and d they stay clear of the label in the middle ("d B1
- * a"). Files b and c carry no letter on screen; every cell's full name is in its aria-label (screen readers), and the
- * board draws no tooltip.
+ * One frame with its label ("B2") per board, the rank numbers left of every board (in the gap before it, so a phone
+ * zoomed in on a few boards still shows them) and the file letters a-d under every board of the bottom row. Black's
+ * view turns the drawing round, so the file letters end up above the top row, where the board labels are drawn just
+ * above the frames (in every view): the letters keep 0.8 units from the frames, a line above the labels there
+ * ("d c b a" over "B1"). Every cell's full name is in its aria-label (screen readers), and the board draws no
+ * tooltip.
  */
 const boards = []
 const labels = []
@@ -66,13 +67,16 @@ for (let w = 0; w < N; w++) {
 	}
 }
 for (let z = 0; z < N; z++) {
-	for (const x of [0, N - 1]) {
-		labels.push({ x: round(z * PITCH + x + 0.5), y: round(SIZE + 0.32), text: 'abcd'[x] })
+	for (let x = 0; x < N; x++) {
+		labels.push({ x: round(z * PITCH + x + 0.5), y: round(SIZE + 0.8), text: 'abcd'[x] })
 	}
 }
 for (let w = 0; w < N; w++) {
-	for (let y = 0; y < N; y++) {
-		labels.push({ x: -0.3, y: round((N - 1 - w) * PITCH + (N - 1 - y) + 0.5), text: String(y + 1) })
+	for (let z = 0; z < N; z++) {
+		for (let y = 0; y < N; y++) {
+			const y0 = (N - 1 - w) * PITCH + (N - 1 - y) + 0.5
+			labels.push({ x: round(z * PITCH - 0.3), y: round(y0), text: String(y + 1) })
+		}
 	}
 }
 
@@ -91,6 +95,63 @@ const topology = makeTopology({
 	}),
 	layout: { width: SIZE, height: SIZE, boards, labels },
 })
+
+/** The centres of the 2 × 2 blocks of boards: between the first and second board column (or row), and so on. */
+const BLOCKS = [0, 1, 2].map((i) => round(i * PITCH + N + GAP / 2))
+/** The layouts with a focus, by key (built on first use). */
+const FOCUSED = new Map()
+
+/**
+ * The block whose centre is nearest to a coordinate.
+ *
+ * @param {number} v layout coordinate
+ * @return {number} 0, 1 or 2
+ */
+function nearestBlock(v) {
+	let best = 0
+	for (let i = 1; i < BLOCKS.length; i++) {
+		if (Math.abs(v - BLOCKS[i]) < Math.abs(v - BLOCKS[best])) {
+			best = i
+		}
+	}
+	return best
+}
+
+/**
+ * The drawing with a focus on the 2 × 2 block of boards around the pieces of the side to move (their mean position in
+ * the first possibility): the home boards at the start, following the army as it advances. With a mouse the whole
+ * hypercube stays in view (`zoom: 1`); on a touch screen the board opens on the block at 28 px per cell (about 19
+ * for the whole drawing on a phone), and the player pans, pinches or taps "Whole board". The key names the side
+ * to move, so the view recentres on every move (the view turns with it when the board follows the player to move),
+ * as the bughouse board does.
+ *
+ * @param {object} state state
+ * @return {object} a topology
+ */
+function focusedLayout(state) {
+	const b = state.worlds[0].b
+	let x = 0
+	let y = 0
+	let n = 0
+	for (let id = 0; id < b.sq.length; id++) {
+		if (b.sq[id] >= 0 && b.sd[id] === state.turn) {
+			const c = topology.cells[b.sq[id]]
+			x += c.x + 0.5
+			y += c.y + 0.5
+			n++
+		}
+	}
+	const i = n ? nearestBlock(x / n) : 1
+	const j = n ? nearestBlock(y / n) : 1
+	const key = state.turn + ':' + i + ':' + j
+	let out = FOCUSED.get(key)
+	if (!out) {
+		const box = { w: 2 * N + GAP + 1, h: 2 * N + GAP + 1 }
+		out = { ...topology, layout: { ...topology.layout, focus: { x: BLOCKS[i], y: BLOCKS[j], zoom: 1, box, key } } }
+		FOCUSED.set(key, out)
+	}
+	return out
+}
 
 /** Orthogonal (8), diagonal (24), triagonal (32) and quadragonal (16) directions. */
 const ORTHOGONAL = directions(4, 1)
@@ -183,6 +244,16 @@ const spec = {
 		return side === 0 ? v : [v[0], -v[1], v[2], -v[3]]
 	},
 	topology,
+	/**
+	 * The drawing, opened on the side to move's boards on a touch screen (see `focusedLayout`); the plain drawing once
+	 * the game is over.
+	 *
+	 * @param {object} state state
+	 * @return {object} a topology
+	 */
+	layoutOf(state) {
+		return state.result ? topology : focusedLayout(state)
+	},
 	types: {
 		k: {
 			name: () => t('quantumchess', 'King'),

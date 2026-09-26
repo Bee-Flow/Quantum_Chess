@@ -120,12 +120,14 @@ describe('King of the Hill: board and setup', () => {
 			.toEqual(['hilldark', 'hilldark', 'hill', 'hill', 'dark', 'light'])
 		const hillCells = V.topology.cells.filter((c) => /^hill/.test(c.shade))
 		expect(hillCells).toHaveLength(4)
+		// a thin warm border (kind hill) and a legend under the board
 		expect(V.topology.layout.outlines).toEqual([
-			{ x1: 3, y1: 3, x2: 5, y2: 3 },
-			{ x1: 5, y1: 3, x2: 5, y2: 5 },
-			{ x1: 5, y1: 5, x2: 3, y2: 5 },
-			{ x1: 3, y1: 5, x2: 3, y2: 3 },
+			{ x1: 3, y1: 3, x2: 5, y2: 3, kind: 'hill' },
+			{ x1: 5, y1: 3, x2: 5, y2: 5, kind: 'hill' },
+			{ x1: 5, y1: 5, x2: 3, y2: 5, kind: 'hill' },
+			{ x1: 3, y1: 5, x2: 3, y2: 3, kind: 'hill' },
 		])
+		expect(V.boardLegend()).toEqual([{ kind: 'hill', text: 'Hill: a king that reaches it wins.' }])
 		expect(V.topology.layout.labels).toHaveLength(16)
 		expect(V.topology.layout.lines ?? []).toEqual([])
 		expect(typeof V.applyMiss).toBe('function')

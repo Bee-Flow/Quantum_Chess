@@ -6,7 +6,10 @@
 <!--
   The chess variants (route /variants): the catalogue by category, the variant games on this device, and the New game
   dialog of a variant (opponent, level, side and the variant's options; an option may describe its value, for example
-  the back rank of a Chess960 start position).
+  the back rank of a Chess960 start position). A variant with a `view` option of the values `white` and `black` (the
+  multiverse, which cannot turn its board) gets the view of the human's side preselected against the computer: Black
+  at the bottom when the human plays Black. A game that the browser storage refuses is not opened: the dialog stays
+  open and says that the game could not be saved on this device.
 -->
 <template>
 	<div class="qc-variants">
@@ -162,6 +165,9 @@
 					v-model="setup.autoFlip">
 					{{ t('quantumchess', 'Turn the board to the player to move') }}
 				</NcCheckboxRadioSwitch>
+				<p v-if="setup.notSaved" class="qc-variants__not-saved" role="alert">
+					{{ t('quantumchess', 'This game could not be saved on this device.') }}
+				</p>
 				<div class="qc-variants__buttons">
 					<NcButton variant="primary" type="submit">
 						{{ t('quantumchess', 'Start game') }}
@@ -175,7 +181,7 @@
 <script setup>
 import { mdiTrashCanOutline } from '@mdi/js'
 import { n, t } from '@nextcloud/l10n'
-import { computed, markRaw, ref } from 'vue'
+import { computed, markRaw, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
@@ -255,6 +261,7 @@ async function openSetup(entry) {
 		side: '0',
 		options: {},
 		autoFlip: false,
+		notSaved: false,
 	}
 	const V = markRaw(await loadVariant(entry.id))
 	const options = {}
@@ -269,7 +276,30 @@ async function openSetup(entry) {
 	}
 }
 
-/** Create the game and open it. */
+/**
+ * The variant's `view` option when it offers the values `white` and `black`, else null.
+ *
+ * @param {object} V variant
+ * @return {object|null}
+ */
+function viewOption(V) {
+	const o = V?.options?.find((x) => x.id === 'view' && x.type === 'choice')
+	const ids = o?.values?.map((c) => c.id) ?? []
+	return ids.includes('white') && ids.includes('black') ? o : null
+}
+
+// against the computer the view follows the human's side (Black at the bottom when the human plays Black); in pass &
+// play the variant's default. Only when the side or the opponent changes, so the player may still choose another view.
+watch(() => [setup.value?.variant, setup.value?.side, setup.value?.opponent], ([V, side, opponent], old) => {
+	const o = viewOption(V)
+	if (!o || (old && old[0] === V && old[1] === side && old[2] === opponent)) {
+		return
+	}
+	const black = opponent === 'computer' && V.sides[Number(side)]?.color === 'black'
+	setup.value.options[o.id] = black ? 'black' : o.default
+})
+
+/** Create the game and open it; when the storage refuses it, keep the dialog open with a notice. */
 function start() {
 	const s = setup.value
 	const V = s.variant
@@ -283,6 +313,12 @@ function start() {
 		: { kind: 'computer', level: s.level }))
 	const initial = newGame(V, options, Math.random)
 	const rec = createVariantGame({ variant: V.id, options, players, initial, autoFlip: s.autoFlip })
+	// the finished games that made room are gone from the list
+	saved.value = listVariantGames()
+	if (!rec) {
+		s.notSaved = true
+		return
+	}
 	setup.value = null
 	router.push({ name: 'variant-game', params: { variant: V.id, id: rec.id } })
 }
@@ -441,5 +477,15 @@ function remove(id) {
 .qc-variants__buttons {
 	display: flex;
 	justify-content: flex-end;
+}
+
+// a warning note, as NcNoteCard draws one: readable text on a light tint of the warning colour
+.qc-variants__not-saved {
+	margin: 0;
+	padding: 8px 12px;
+	border-inline-start: 4px solid var(--color-warning, #a37200);
+	border-radius: var(--border-radius-large);
+	background: rgba(var(--color-warning-rgb, 163, 114, 0), 0.1);
+	color: var(--color-main-text);
 }
 </style>

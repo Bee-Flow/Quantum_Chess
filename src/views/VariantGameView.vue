@@ -8,10 +8,12 @@
   preview and result, the hands of the drop variants, the move list and the rules of the variant.
 
   Optional variant hooks shown here: `sideInfo(state, side, viewer)` in the player rows, `infoText(record, viewer)`
-  under the moves, `noteText(note)` for roll notes, `codeText(code)` for move codes, `handOrder` for the hands and
-  `options[i].describe(value)` for the game's options. While a game with hidden information runs, the other sides'
-  budgets, the danger line and undo are hidden, and in pass & play the mover first sees "Your move" before passing the
-  device; the curtain then covers the board and the whole side panel. Split is greyed out while the budget of the
+  under the moves, `noteText(note)` for roll notes, `codeText(code, record)` for move codes (with the move's history
+  record), `handOrder` for the hands, `options[i].describe(value)` for the game's options, `moveWarning` (through the
+  composable: the warning waits for "Play anyway") and `flipBoard: false` (no "Flip board"). While a game with hidden
+  information runs, the other sides' budgets, the danger line and undo are hidden, and in pass & play the mover first
+  sees "Your move" before passing the device; the curtain then covers the board and hides the players and the move
+  controls (the title and the rules stay). Split is greyed out while the budget of the
   player to move is full, and the shared rules leave castling and en passant out when the variant has neither
   (`specialMoves: false`). During the hand-over the mode tooltips, the compulsory line and the keyboard focus say
   nothing about the opponent, and in a hidden game the keyboard reaches only the squares of the player to move (never
@@ -19,9 +21,30 @@
   preview and the roll result say when an outcome ends the game ("The game ends: …") unless a roll note already does
   (the preview not while a hidden game runs, see useVariantGame), and the pieces in hand and in the promotion choice
   are turned like their side's pieces on the board (shogi).
+
+  Layout: on a wide screen the board is on the left and the panel on the right (title and rules, players, the move
+  controls and the hint of the move mode, then the last roll, the move list and the game buttons). On a narrow screen
+  the title comes first (beside the navigation toggle), then the board, the move controls, which stay at the bottom of
+  the screen while a tall board is scrolled (a slim bar: the status, the move types and a move waiting for
+  confirmation), the hint below them, the players and the rest. The board leaves room for that bar, so a tall board
+  (3D chess) opens whole above it; when a move waits for confirmation, the page scrolls so that the move's squares,
+  which stay marked, are not under the bar. The pieces in hand of a drop variant sit at the board, always shown (empty
+  or not): in a two-player game the hand of the side at the top of the board above it and the other below it, with
+  more sides all below it, grouped per board with `handBoards` (bughouse: each board's two hands under it, the hand of
+  the seat at its top first, in fixed halves that do not wrap when the hands fill).
+
+  The move waiting for confirmation is named in its box (long algebraic, `moveText`), and the hint then says to
+  confirm or cancel it. The move list is oldest first and numbered, with a column per side in a two-player game (a
+  multi-move turn in one cell), written in long algebraic notation with the piece letters and `x` for a capture (the
+  saved moves keep their piece type); the variant's `infoText` gives only the lines that carry information there
+  (`brief`), and a game with an umpire heads its announcements "Umpire". A budget the viewer may not know reads
+  "Budget hidden". `boardLegend(state)` adds lines under the board (`{ kind, text }`, with a swatch for `kind: 'hill'`,
+  the hill of King of the Hill), as the fog legend does for hidden squares. A failed save shows "This game could not
+  be saved on this device." until a save works again; this notice and the refusal notice are drawn as warning notes
+  (the main text colour on a light tint of the warning colour).
 -->
 <template>
-	<div class="qc-vgame">
+	<div ref="rootEl" class="qc-vgame">
 		<NcEmptyContent
 			v-if="game.missing.value"
 			:name="t('quantumchess', 'Game not found')"
@@ -34,32 +57,11 @@
 		</NcEmptyContent>
 		<NcLoadingIcon v-else-if="!V || !state" :size="44" class="qc-vgame__loading" />
 		<template v-else>
-			<div class="qc-vgame__board">
-				<VariantBoard
-					:variant="V"
-					:state="state"
-					:rotation="game.rotation.value"
-					:marks="game.marks.value"
-					:hidden="game.curtain.value ? allSquares : game.hidden.value"
-					:viewer="game.curtain.value ? -1 : game.viewer.value"
-					:focusable="focusable"
-					:label="boardLabel"
-					@square="game.click" />
-				<div v-if="game.curtain.value" class="qc-vgame__curtain">
-					<p>{{ t('quantumchess', 'Pass the device to {side}.', { side: sideName(V, state.turn) }) }}</p>
-					<NcButton variant="primary" @click="game.curtain.value = false">
-						{{ t('quantumchess', 'I am {side}: show my board', { side: sideName(V, state.turn) }) }}
-					</NcButton>
-				</div>
-				<p v-if="fogLegend" class="qc-vgame__legend">
-					{{ t('quantumchess', 'Fog: squares you cannot see.') }}
-				</p>
-			</div>
-
-			<aside v-if="!game.curtain.value" class="qc-vgame__panel">
+			<div class="qc-vgame__top">
 				<header class="qc-vgame__head">
 					<h2>{{ entry?.name() }}</h2>
 					<NcButton
+						class="qc-vgame__rules-toggle"
 						variant="tertiary"
 						:aria-expanded="showRules ? 'true' : 'false'"
 						@click="showRules = !showRules">
@@ -82,7 +84,75 @@
 						</ul>
 					</details>
 				</section>
+			</div>
 
+			<div class="qc-vgame__board" :class="{ 'qc-vgame__board--hands': hands.length }">
+				<VariantBoard
+					class="qc-vgame__drawing"
+					:variant="V"
+					:state="state"
+					:rotation="game.rotation.value"
+					:marks="game.marks.value"
+					:hidden="game.curtain.value ? allSquares : game.hidden.value"
+					:viewer="game.curtain.value ? -1 : game.viewer.value"
+					:focusable="focusable"
+					:label="boardLabel"
+					@square="game.click" />
+				<div
+					v-for="g in hands"
+					:key="g.key"
+					class="qc-vgame__hands"
+					:class="['qc-vgame__hands--' + g.place, { 'qc-vgame__hands--board': g.board }]">
+					<div
+						v-for="h in g.hands"
+						:key="h.side"
+						class="qc-vgame__hand"
+						:class="'qc-vgame__hand--' + g.place">
+						<span class="qc-vgame__hand-title">{{
+							t('quantumchess', 'In hand: {side}', { side: sideName(V, h.side) })
+						}}</span>
+						<button
+							v-for="p in h.pieces"
+							:key="p.type"
+							type="button"
+							class="qc-vgame__hand-piece"
+							:class="{
+								'qc-vgame__hand-piece--on': game.dropType.value === p.type && h.side === state.turn,
+							}"
+							:disabled="h.side !== state.turn || !game.isHumanTurn.value || Boolean(game.handover.value)"
+							:aria-label="t('quantumchess', 'Drop {piece}', { piece: typeName(V, p.type) })"
+							@click="game.chooseDrop(p.type)">
+							<svg viewBox="-0.5 -0.5 1 1" class="qc-vgame__hand-glyph" aria-hidden="true">
+								<VariantPiece
+									:glyph="glyphOf(V, p.type, h.side)"
+									:size="0.95"
+									:spin="pieceSpin(V, h.side, game.rotation.value)" />
+							</svg>
+							<span>{{ p.min === p.max ? p.max : p.min + '–' + p.max }}</span>
+						</button>
+						<span v-if="!h.pieces.length" class="qc-vgame__hand-empty" aria-hidden="true" />
+					</div>
+				</div>
+				<div v-if="game.curtain.value" class="qc-vgame__curtain">
+					<p>{{ t('quantumchess', 'Pass the device to {side}.', { side: sideName(V, state.turn) }) }}</p>
+					<NcButton variant="primary" @click="game.curtain.value = false">
+						{{ t('quantumchess', 'I am {side}: show my board', { side: sideName(V, state.turn) }) }}
+					</NcButton>
+				</div>
+				<p v-if="fogLegend" class="qc-vgame__legend">
+					<span class="qc-vgame__fog-swatch" aria-hidden="true" />
+					{{ t('quantumchess', 'Fog: squares you cannot see.') }}
+				</p>
+				<p v-for="(l, i) in boardLegend" :key="'legend' + i" class="qc-vgame__legend">
+					<span
+						v-if="l.kind === 'hill'"
+						class="qc-vgame__legend-swatch qc-vgame__legend-swatch--hill"
+						aria-hidden="true" />
+					{{ l.text }}
+				</p>
+			</div>
+
+			<section v-if="!game.curtain.value" class="qc-vgame__info">
 				<ul v-if="gameOptions.length" class="qc-vgame__options">
 					<li v-for="(line, i) in gameOptions" :key="i">
 						{{ line }}
@@ -111,19 +181,30 @@
 								used: players[i].pips.used,
 								max: players[i].pips.limit,
 							})">
-							<span
-								v-for="k in players[i].pips.limit"
-								:key="k"
-								class="qc-vgame__pip"
-								:class="{ 'qc-vgame__pip--used': k <= players[i].pips.used }" />
+							<span class="qc-vgame__pips" aria-hidden="true">
+								<span
+									v-for="k in players[i].pips.limit"
+									:key="k"
+									class="qc-vgame__pip"
+									:class="{ 'qc-vgame__pip--used': k <= players[i].pips.used }" />
+							</span>
+							<small class="qc-vgame__budget-count">{{ t('quantumchess', 'Budget {used}/{max}', {
+								used: players[i].pips.used,
+								max: players[i].pips.limit,
+							}) }}</small>
 						</span>
 						<span
 							v-else
 							class="qc-vgame__budget qc-vgame__budget--unknown"
-							:title="t('quantumchess', 'Quantum budget: unknown')">?</span>
+							:title="t('quantumchess', 'Quantum budget: unknown')">
+							<span class="qc-vgame__unknown-track" aria-hidden="true">?</span>
+							<small class="qc-vgame__budget-count">{{ t('quantumchess', 'Budget hidden') }}</small>
+						</span>
 					</li>
 				</ul>
+			</section>
 
+			<section v-if="!game.curtain.value" ref="controlsEl" class="qc-vgame__controls">
 				<p class="qc-vgame__status" role="status" aria-live="polite">
 					<template v-if="state.result">
 						<strong>{{ resultText(V, state.result) }}</strong>
@@ -165,9 +246,11 @@
 					<span
 						v-for="m in modes"
 						:key="m.id"
+						class="qc-vgame__mode"
 						:title="m.blocked || undefined">
 						<NcButton
 							size="small"
+							wide
 							:variant="game.mode.value === m.id ? 'primary' : 'secondary'"
 							:pressed="game.mode.value === m.id"
 							:disabled="!game.isHumanTurn.value || Boolean(game.handover.value) || Boolean(m.blocked)"
@@ -176,9 +259,6 @@
 						</NcButton>
 					</span>
 				</div>
-				<p class="qc-vgame__hint">
-					{{ modeHint }}
-				</p>
 
 				<div v-if="actions.length" class="qc-vgame__choices">
 					<NcButton
@@ -190,37 +270,6 @@
 						{{ a.label }}
 					</NcButton>
 				</div>
-
-				<section v-if="hands.length" class="qc-vgame__hands">
-					<div v-for="h in hands" :key="h.side" class="qc-vgame__hand">
-						<span class="qc-vgame__hand-title">{{
-							t('quantumchess', 'In hand: {side}', { side: sideName(V, h.side) })
-						}}</span>
-						<button
-							v-for="p in h.pieces"
-							:key="p.type"
-							type="button"
-							class="qc-vgame__hand-piece"
-							:class="{
-								'qc-vgame__hand-piece--on': game.dropType.value === p.type && h.side === state.turn,
-							}"
-							:disabled="h.side !== state.turn || !game.isHumanTurn.value || Boolean(game.handover.value)"
-							:aria-label="t('quantumchess', 'Drop {piece}', { piece: typeName(V, p.type) })"
-							@click="game.chooseDrop(p.type)">
-							<svg
-								viewBox="-0.5 -0.5 1 1"
-								width="30"
-								height="30"
-								aria-hidden="true">
-								<VariantPiece
-									:glyph="glyphOf(V, p.type, h.side)"
-									:size="0.95"
-									:spin="pieceSpin(V, h.side, game.rotation.value)" />
-							</svg>
-							<span>{{ p.min === p.max ? p.max : p.min + '–' + p.max }}</span>
-						</button>
-					</div>
-				</section>
 
 				<section v-if="game.promoChoices.value" class="qc-vgame__box">
 					<p>{{ t('quantumchess', 'Promote to') }}</p>
@@ -246,20 +295,33 @@
 					</div>
 				</section>
 
-				<section v-if="game.pending.value" class="qc-vgame__box qc-vgame__box--pending">
-					<p>{{ t('quantumchess', 'This move is settled by a roll:') }}</p>
-					<ul class="qc-vgame__outcomes">
-						<li v-for="(o, i) in game.pending.value.outcomes" :key="i">
-							<strong>{{ percent(o.p) }}</strong> {{ outcomeText(o.key, game.pending.value.code) }}
-							<small v-for="nt in o.notes" :key="nt"> · {{ noteText(V, nt) }}</small>
-							<small v-if="endText(V, o.result, o.notes)" class="qc-vgame__ends">
-								· {{ endText(V, o.result, o.notes) }}
-							</small>
-						</li>
-					</ul>
+				<section
+					v-if="game.pending.value"
+					class="qc-vgame__box qc-vgame__box--pending"
+					:class="{ 'qc-vgame__box--warning': game.pending.value.warning }">
+					<p class="qc-vgame__pending-move">
+						<strong class="qc-vgame__code">{{ pendingText }}</strong>
+					</p>
+					<p v-if="game.pending.value.warning" class="qc-vgame__warning" role="alert">
+						<strong>{{ game.pending.value.warning }}</strong>
+					</p>
+					<template v-if="game.pending.value.outcomes.length">
+						<p>{{ t('quantumchess', 'This move is settled by a roll:') }}</p>
+						<ul class="qc-vgame__outcomes">
+							<li v-for="(o, i) in game.pending.value.outcomes" :key="i">
+								<strong>{{ percent(o.p) }}</strong> {{ outcomeText(o.key, game.pending.value.code) }}
+								<small v-for="nt in o.notes" :key="nt"> · {{ noteText(V, nt) }}</small>
+								<small v-if="endText(V, o.result, o.notes)" class="qc-vgame__ends">
+									· {{ endText(V, o.result, o.notes) }}
+								</small>
+							</li>
+						</ul>
+					</template>
 					<div class="qc-vgame__choices">
 						<NcButton variant="primary" @click="game.confirm">
-							{{ t('quantumchess', 'Play and roll') }}
+							{{ game.pending.value.outcomes.length
+								? t('quantumchess', 'Play and roll')
+								: t('quantumchess', 'Play anyway') }}
 						</NcButton>
 						<NcButton @click="game.cancel">
 							{{ t('quantumchess', 'Cancel') }}
@@ -267,6 +329,19 @@
 					</div>
 				</section>
 
+				<p v-if="noticeText" class="qc-vgame__notice" role="alert">
+					{{ noticeText }}
+				</p>
+				<p v-if="game.saveFailed.value" class="qc-vgame__notice qc-vgame__notice--save" role="alert">
+					{{ t('quantumchess', 'This game could not be saved on this device.') }}
+				</p>
+			</section>
+
+			<p v-if="!game.curtain.value" class="qc-vgame__hint qc-vgame__hint--mode">
+				{{ modeHint }}
+			</p>
+
+			<aside v-if="!game.curtain.value" class="qc-vgame__panel">
 				<section v-if="showRoll" class="qc-vgame__box qc-vgame__box--roll">
 					<p v-if="V.umpire">
 						{{ t('quantumchess', 'Result: {result}', {
@@ -290,30 +365,45 @@
 				</section>
 
 				<section v-if="report.length" class="qc-vgame__box qc-vgame__box--report" aria-live="polite">
+					<h3 v-if="V.umpire" class="qc-vgame__box-title">
+						{{ t('quantumchess', 'Umpire') }}
+					</h3>
 					<p v-for="(line, i) in report" :key="i" class="qc-vgame__report-line">
 						{{ line }}
 					</p>
 				</section>
 
-				<p v-if="noticeText" class="qc-vgame__notice" role="alert">
-					{{ noticeText }}
-				</p>
 				<p v-if="refusedText" class="qc-vgame__hint">
 					{{ refusedText }}
 				</p>
 
-				<section class="qc-vgame__moves" :aria-label="t('quantumchess', 'Moves')">
-					<ol>
-						<li v-for="(h, i) in historyRows" :key="i">
-							<div class="qc-vgame__move">
-								<span
-									class="qc-vgame__swatch qc-vgame__swatch--small"
-									:style="{ background: sideFill(V.sides[h.side]) }"
-									aria-hidden="true" />
-								<span class="qc-vgame__code">{{ h.text }}</span>
-								<span v-if="h.result" class="qc-vgame__rolled">{{ h.result }}</span>
+				<section ref="movesEl" class="qc-vgame__moves" :aria-label="t('quantumchess', 'Moves')">
+					<ol class="qc-vgame__move-rows" :class="{ 'qc-vgame__move-rows--pairs': pairs }">
+						<li v-for="row in moveList" :key="row.n" class="qc-vgame__move-row">
+							<span class="qc-vgame__move-number">{{ row.n }}.</span>
+							<!-- an empty first cell: a game that the second side began -->
+							<div v-for="(cell, k) in row.cells" :key="k" class="qc-vgame__move-cell">
+								<template v-if="cell">
+									<div v-for="h in cell" :key="h.index" class="qc-vgame__move-entry">
+										<div class="qc-vgame__move">
+											<span
+												v-if="!pairs"
+												class="qc-vgame__swatch qc-vgame__swatch--small"
+												:style="{ background: sideFill(V.sides[h.side]) }"
+												aria-hidden="true" />
+											<span
+												class="qc-vgame__code"
+												:class="{ 'qc-vgame__code--hidden': h.secret }">{{ h.text }}</span>
+										</div>
+										<small v-if="h.result" class="qc-vgame__rolled">{{ h.result }}</small>
+										<small
+											v-for="(line, j) in h.lines"
+											:key="j"
+											class="qc-vgame__move-line">{{ line }}</small>
+									</div>
+								</template>
+								<span v-else-if="k === 0" class="qc-vgame__move-none" aria-hidden="true">…</span>
 							</div>
-							<small v-for="(line, k) in h.lines" :key="k" class="qc-vgame__move-line">{{ line }}</small>
 						</li>
 					</ol>
 				</section>
@@ -322,7 +412,7 @@
 					<NcButton :disabled="!game.canUndo.value" @click="game.undo">
 						{{ t('quantumchess', 'Undo') }}
 					</NcButton>
-					<NcButton @click="game.flipped.value = !game.flipped.value">
+					<NcButton v-if="V.flipBoard !== false" @click="game.flipped.value = !game.flipped.value">
 						{{ t('quantumchess', 'Flip board') }}
 					</NcButton>
 					<NcButton v-if="!state.result && !game.handover.value" @click="game.resign">
@@ -339,7 +429,7 @@
 
 <script setup>
 import { t } from '@nextcloud/l10n'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
@@ -349,10 +439,10 @@ import VariantPiece from '../variantplay/components/VariantPiece.vue'
 import { useVariantGame } from '../variantplay/composables/useVariantGame.js'
 import { glyphOf, pieceSpin, sideFill, typeName } from '../variantplay/glyphs.js'
 import { focusSquares } from '../variantplay/marks.js'
-import { budgetPips, recordsSince, sideInfoOf, sortHand } from '../variantplay/panel.js'
+import { budgetPips, handGroups, moveRows, recordsSince, sideInfoOf, sortHand } from '../variantplay/panel.js'
 import {
-	codeText,
 	endText,
+	moveText,
 	noteText,
 	optionLines,
 	outcomeText,
@@ -373,6 +463,9 @@ const state = computed(() => game.state.value)
 const record = computed(() => game.record.value)
 const entry = computed(() => catalogEntry(String(route.params.variant)))
 const showRules = ref(false)
+const rootEl = ref(null)
+const controlsEl = ref(null)
+const movesEl = ref(null)
 
 const variantRules = computed(() => (V.value?.rules ? V.value.rules() : []))
 const allSquares = computed(() => new Set(Array.from({ length: V.value?.topology.size ?? 0 }, (_, i) => i)))
@@ -422,13 +515,38 @@ const gameOptions = computed(() => (V.value?.options?.length ? optionLines(V.val
 const fogLegend = computed(() => Boolean(V.value?.hidden && (V.value.hiddenStyle ?? 'fog') === 'fog'
 	&& game.hidden.value && !game.curtain.value))
 
+/** The variant's lines under the board (`boardLegend(state)`: the hill of King of the Hill), not behind the curtain. */
+const boardLegend = computed(() => {
+	if (!V.value?.boardLegend || !state.value || game.curtain.value) {
+		return []
+	}
+	const list = V.value.boardLegend(state.value)
+	return Array.isArray(list) ? list.filter((l) => l && typeof l.text === 'string' && l.text) : []
+})
+
 /** The result of the move just played, shown to the mover before the device is passed. */
 const handoverResult = computed(() => {
 	const h = game.handover.value
-	return h ? codeText(V.value, h.code) + ' · ' + outcomeText(h.key, h.code) : ''
+	if (!h) {
+		return ''
+	}
+	const history = state.value?.history ?? []
+	const last = history.at(-1)
+	const type = typeOfRecord(history.length - 1)
+	return moveText(V.value, h.code, { record: last?.code === h.code ? last : null, type })
+		+ ' · ' + outcomeText(h.key, h.code)
+})
+
+/** The move waiting for confirmation, in the notation of the move list. */
+const pendingText = computed(() => {
+	const p = game.pending.value
+	return p ? moveText(V.value, p.code, { type: p.type ?? null, capture: Boolean(p.capture) }) : ''
 })
 
 const modeHint = computed(() => {
+	if (game.pending.value) {
+		return t('quantumchess', 'Confirm or cancel the move.')
+	}
 	switch (game.mode.value) {
 		case 'split':
 			return t('quantumchess', 'Choose a piece, then two empty squares.')
@@ -449,12 +567,21 @@ const actions = computed(() => {
 	return V.value.actions(state.value).map((a) => ({ ...a, legal: isLegal(V.value, state.value, a.code) }))
 })
 
+/**
+ * The hands of a drop variant, one per side, empty or not (so nothing jumps after the first capture), in the groups of
+ * `handGroups` (panel.js): in a two-player game the hand of the side whose pieces point down in this view (the side at
+ * the top of the board) above the board, every other hand below it; per board with the variant's `handBoards`.
+ */
 const hands = computed(() => {
 	if (!V.value || !state.value || !V.value.drops) {
 		return []
 	}
-	return V.value.sides.map((s, side) => ({ side, pieces: sortHand(V.value, handView(state.value, side)) }))
-		.filter((h) => h.pieces.length)
+	const rotation = game.rotation.value
+	const onTop = (side) => pieceSpin(V.value, side, rotation) === 180
+	return handGroups(V.value, rotation, onTop).map((g) => ({
+		...g,
+		hands: g.sides.map((side) => ({ side, pieces: sortHand(V.value, handView(state.value, side)) })),
+	}))
 })
 
 /**
@@ -526,16 +653,30 @@ const report = computed(() => {
 	return recordsSince(state.value.history, viewer).flatMap((h) => recordLines(V.value, h, viewer))
 })
 
+/**
+ * The type of the piece that moved in a history record, as the saved move list keeps it (`t`), or null (games saved
+ * before, or a move list that does not match the history).
+ *
+ * @param {number} i index in the history
+ * @return {string|null}
+ */
+function typeOfRecord(i) {
+	const saved = record.value?.moves ?? []
+	return saved.length === (state.value?.history.length ?? -1) ? (saved[i]?.t ?? null) : null
+}
+
+/** Every history record as the move list shows it, oldest first. */
 const historyRows = computed(() => {
 	if (!state.value) {
 		return []
 	}
 	const viewer = game.viewer.value
 	const running = !state.value.result
-	return state.value.history.map((h) => {
+	return state.value.history.map((h, index) => {
 		const secret = V.value.hidden && h.side !== viewer && running
-		const lines = recordLines(V.value, h, viewer)
-		let text = codeText(V.value, h.code)
+		// the move list keeps the lines that carry information (the umpire box says the rest)
+		const lines = recordLines(V.value, h, viewer, { brief: true })
+		let text = moveText(V.value, h.code, { record: h, type: typeOfRecord(index) })
 		let result = null
 		if (secret) {
 			// a variant with its own lines (the umpire's announcements) says what the opponent's move revealed
@@ -552,8 +693,76 @@ const historyRows = computed(() => {
 		} else if (h.rolled) {
 			result = '🎲 ' + outcomeText(h.key, h.code) + ' · ' + percent(h.p)
 		}
-		return { side: h.side, text, result, lines }
-	}).reverse()
+		return { index, side: h.side, text, result, lines, secret }
+	})
+})
+
+/** Whether the move list has a column per side (a two-player game). */
+const pairs = computed(() => V.value?.sides.length === 2)
+
+/** The numbered rows of the move list (`moveRows`), each cell with the rows of its records. */
+const moveList = computed(() => moveRows(state.value?.history ?? [], V.value?.sides.length ?? 2).map((row) => ({
+	n: row.n,
+	cells: row.cells.map((cell) => (cell ? cell.items.map((i) => historyRows.value[i]) : null)),
+})))
+
+// the newest move is at the end of the list: keep it in view
+watch(() => state.value?.history.length, async () => {
+	await nextTick()
+	if (movesEl.value) {
+		movesEl.value.scrollTop = movesEl.value.scrollHeight
+	}
+}, { immediate: true })
+
+/**
+ * The element whose scrolling moves the page: the nearest ancestor that scrolls, else the document.
+ *
+ * @param {Element} el element
+ * @return {Element}
+ */
+function scroller(el) {
+	for (let e = el.parentElement; e; e = e.parentElement) {
+		const y = getComputedStyle(e).overflowY
+		if ((y === 'auto' || y === 'scroll') && e.scrollHeight > e.clientHeight) {
+			return e
+		}
+	}
+	return document.scrollingElement ?? document.documentElement
+}
+
+/**
+ * On a narrow screen the move controls stay at the bottom of the screen: when a move waits for confirmation, scroll
+ * the page so that its marked squares are above them (as far as the top of the screen allows).
+ */
+function revealPending() {
+	const bar = controlsEl.value
+	const root = rootEl.value
+	if (!bar || !root || getComputedStyle(bar).position !== 'sticky') {
+		return
+	}
+	const cells = [...root.querySelectorAll('.qc-vboard__cell--selected, .qc-vboard__cell--target')]
+		.map((c) => c.getBoundingClientRect())
+	if (!cells.length) {
+		return
+	}
+	const top = Math.min(...cells.map((r) => r.top))
+	const bottom = Math.max(...cells.map((r) => r.bottom))
+	const barTop = bar.getBoundingClientRect().top
+	const box = scroller(root)
+	const viewTop = box === document.scrollingElement || box === document.documentElement
+		? 0
+		: box.getBoundingClientRect().top
+	const by = Math.min(bottom - barTop + 8, top - viewTop - 8)
+	if (bottom > barTop - 8 && by > 0) {
+		box.scrollBy({ top: by })
+	}
+}
+
+watch(() => game.pending.value, async (p) => {
+	if (p) {
+		await nextTick()
+		revealPending()
+	}
 })
 
 /**
@@ -608,16 +817,36 @@ function pieceTypeAt(sq) {
 .qc-vgame {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: 16px;
+	grid-template-areas:
+		'top'
+		'board'
+		'controls'
+		'hint'
+		'info'
+		'panel';
+	gap: 8px;
 	box-sizing: border-box;
-	padding: 8px 12px 24px;
+	padding: 8px 4px 24px;
 }
 
 @media (min-width: 1024px) {
 	.qc-vgame {
-		grid-template-columns: minmax(0, 1fr) 340px;
+		grid-template-columns: minmax(0, 1fr) 360px;
+		grid-template-rows: auto auto auto auto 1fr;
+		grid-template-areas:
+			'board top'
+			'board info'
+			'board controls'
+			'board hint'
+			'board panel';
+		gap: 12px 20px;
 		align-items: start;
 		padding: 12px 20px;
+	}
+
+	// the hint belongs to the move types right above it
+	.qc-vgame__hint.qc-vgame__hint--mode {
+		margin-top: -4px;
 	}
 }
 
@@ -625,10 +854,77 @@ function pieceTypeAt(sq) {
 	margin: 64px auto;
 }
 
-.qc-vgame__board {
-	position: relative;
+.qc-vgame__top {
+	grid-area: top;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 	min-width: 0;
-	padding-top: 8px;
+}
+
+.qc-vgame__info {
+	grid-area: info;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+// the move controls: at the bottom of the screen while a tall board is scrolled on a narrow screen
+.qc-vgame__controls {
+	grid-area: controls;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.qc-vgame__hint--mode {
+	grid-area: hint;
+}
+
+.qc-vgame__board {
+	grid-area: board;
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px 16px;
+	min-width: 0;
+	padding-top: 4px;
+}
+
+// the hands take room above and below the board: the drawing gives it up in height
+.qc-vgame__board--hands {
+	--qc-vboard-reserve: 250px;
+}
+
+// a slim bar (the status and the move types; the hint stays below it) that leaves the board as much of the screen
+// as it can; the drawing is kept short enough to fit above it with the title (3D chess opens whole)
+@media (max-width: 1023px) {
+	.qc-vgame__controls {
+		position: sticky;
+		bottom: 0;
+		z-index: 2;
+		gap: 6px;
+		padding: 6px 8px 8px;
+		border-top: 1px solid var(--color-border);
+		background: var(--color-main-background);
+	}
+
+	.qc-vgame__board {
+		--qc-vboard-reserve: 232px;
+		padding-top: 0;
+	}
+
+	.qc-vgame__board--hands {
+		--qc-vboard-reserve: 340px;
+	}
+}
+
+.qc-vgame__drawing {
+	flex: 1 0 100%;
+	min-width: 0;
 }
 
 .qc-vgame__curtain {
@@ -646,23 +942,33 @@ function pieceTypeAt(sq) {
 }
 
 .qc-vgame__panel {
+	grid-area: panel;
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
 	min-width: 0;
 }
 
+// on a narrow screen the title is the first line, beside the navigation toggle
 .qc-vgame__head {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
 	gap: 8px;
-	padding-inline-start: 40px;
+	min-height: 44px;
+	padding-inline-start: 44px;
 
 	h2 {
+		flex: 1;
+		min-width: 0;
 		margin: 0;
 		font-size: 20px;
+		line-height: 1.25;
+		overflow-wrap: anywhere;
 	}
+}
+
+.qc-vgame__rules-toggle {
+	flex: none;
 }
 
 @media (min-width: 1024px) {
@@ -719,7 +1025,7 @@ function pieceTypeAt(sq) {
 
 .qc-vgame__player-name {
 	display: flex;
-	flex: 1;
+	flex: 1 0 auto;
 	flex-direction: column;
 	min-width: 0;
 
@@ -730,43 +1036,82 @@ function pieceTypeAt(sq) {
 
 .qc-vgame__swatch {
 	flex: none;
+	box-sizing: border-box;
 	width: 18px;
 	height: 18px;
-	border: 1px solid var(--color-border-dark);
+	border: 1px solid var(--color-text-maxcontrast);
 	border-radius: 50%;
 }
 
+// a small square in the move list, so that it does not look like a radio button
 .qc-vgame__swatch--small {
 	width: 10px;
 	height: 10px;
+	border-radius: 2px;
 }
 
 .qc-vgame__budget {
 	display: flex;
+	flex: none;
+	flex-direction: column;
+	align-items: flex-end;
 	gap: 2px;
 }
 
+.qc-vgame__pips {
+	display: flex;
+	gap: 2px;
+}
+
+// an empty pip is an outline that holds on the white card and on the highlighted card of the side to move
 .qc-vgame__pip {
-	width: 6px;
+	box-sizing: border-box;
+	width: 7px;
 	height: 12px;
+	border: 1px solid var(--color-text-maxcontrast);
 	border-radius: 2px;
-	background: var(--color-border);
+	background: var(--color-main-background);
 }
 
 .qc-vgame__pip--used {
+	border-color: var(--qc-quantum, #6b3fd4);
 	background: var(--qc-quantum, #6b3fd4);
 }
 
-.qc-vgame__budget--unknown {
+.qc-vgame__budget-count {
 	color: var(--color-text-maxcontrast);
-	font-weight: bold;
+	font-size: 11px;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
 }
 
+// a budget the viewer may not know: an empty track with a question mark instead of the pips, captioned
+.qc-vgame__unknown-track {
+	display: flex;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	width: 70px;
+	height: 14px;
+	border: 1px dashed var(--color-text-maxcontrast);
+	border-radius: 2px;
+	background: repeating-linear-gradient(90deg, transparent 0 8px, var(--color-border-dark) 8px 9px);
+	color: var(--color-text-maxcontrast);
+	font-size: 11px;
+	font-weight: bold;
+	line-height: 1;
+}
+
+// a long text (the multiverse's timelines) wraps instead of covering the name
 .qc-vgame__side-info {
-	flex: none;
+	flex: 0 1 auto;
+	min-width: 0;
 	padding: 0 6px;
-	border-radius: var(--border-radius-pill);
-	background: var(--color-background-dark);
+	border: 1px solid var(--color-border-dark);
+	border-radius: 10px;
+	overflow-wrap: anywhere;
+	background: var(--color-main-background);
 	font-size: 13px;
 	font-variant-numeric: tabular-nums;
 }
@@ -778,11 +1123,41 @@ function pieceTypeAt(sq) {
 	list-style: none;
 }
 
+// a sample of the hill of King of the Hill: its light and dark green, with its border
+.qc-vgame__legend-swatch {
+	flex: none;
+	box-sizing: border-box;
+	width: 14px;
+	height: 14px;
+	border-radius: 2px;
+}
+
+.qc-vgame__legend-swatch--hill {
+	border: 1.5px solid #6b4f2c;
+	background: linear-gradient(135deg, #b4d3a4 50%, #7fac75 50%);
+}
+
 .qc-vgame__legend {
+	display: flex;
+	flex: 1 0 100%;
+	order: 2;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
 	margin: 4px 0 0;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
-	text-align: center;
+}
+
+// a sample of the fog: the dark fog square with its hatch
+.qc-vgame__fog-swatch {
+	flex: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 2px;
+	background:
+		repeating-linear-gradient(45deg, rgb(255 255 255 / 0.3) 0 1px, transparent 1px 4px),
+		#3d4652;
 }
 
 .qc-vgame__status {
@@ -803,12 +1178,23 @@ function pieceTypeAt(sq) {
 	font-weight: bold;
 }
 
-.qc-vgame__modes,
 .qc-vgame__choices,
 .qc-vgame__actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
+}
+
+// the four move types as one row: the buttons share the width, each at least as wide as its label
+.qc-vgame__modes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.qc-vgame__mode {
+	display: flex;
+	flex: 1 1 auto;
 }
 
 .qc-vgame__hint,
@@ -817,21 +1203,46 @@ function pieceTypeAt(sq) {
 	color: var(--color-text-maxcontrast);
 }
 
+// the hands of one place: a whole line above or below the board
 .qc-vgame__hands {
 	display: flex;
+	flex: 1 1 100%;
 	flex-direction: column;
-	gap: 6px;
+	gap: 4px;
+	min-width: 0;
+}
+
+// the hand of the side at the top of the board sits above it, the others below it
+.qc-vgame__hands--top {
+	order: -1;
+}
+
+.qc-vgame__hands--bottom {
+	order: 1;
+}
+
+// the two hands of one board (bughouse) under it: a fixed half, so the layout does not change as the hands fill
+.qc-vgame__hands--board {
+	flex: 0 0 calc(50% - 8px);
+	align-self: flex-start;
 }
 
 .qc-vgame__hand {
+	--qc-hand-tile: clamp(34px, 4.2vw, 50px);
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 4px;
+	justify-content: center;
+	gap: 4px 6px;
+	min-height: calc(var(--qc-hand-tile) + 8px);
+}
+
+.qc-vgame__hands--board .qc-vgame__hand {
+	justify-content: flex-start;
 }
 
 .qc-vgame__hand-title {
-	width: 100%;
+	flex: none;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
@@ -840,18 +1251,38 @@ function pieceTypeAt(sq) {
 	display: flex;
 	align-items: center;
 	gap: 2px;
-	min-height: 36px;
+	min-height: 44px;
 	margin: 0;
-	padding: 2px 6px;
-	border: 2px solid var(--color-border);
+	padding: 1px 6px 1px 2px;
+	border: 2px solid var(--color-border-dark);
 	border-radius: var(--border-radius-large);
 	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-weight: bold;
+	font-variant-numeric: tabular-nums;
 	cursor: pointer;
+
+	&:disabled {
+		cursor: default;
+	}
+}
+
+.qc-vgame__hand-glyph {
+	width: var(--qc-hand-tile);
+	height: var(--qc-hand-tile);
 }
 
 .qc-vgame__hand-piece--on {
 	border-color: var(--color-primary-element);
 	background: var(--color-primary-element-light);
+}
+
+.qc-vgame__hand-empty {
+	box-sizing: border-box;
+	width: var(--qc-hand-tile);
+	height: var(--qc-hand-tile);
+	border: 2px dashed var(--color-border-dark);
+	border-radius: var(--border-radius-large);
 }
 
 .qc-vgame__box {
@@ -862,6 +1293,17 @@ function pieceTypeAt(sq) {
 	p {
 		margin: 0 0 4px;
 	}
+}
+
+.qc-vgame__box-title {
+	margin: 0 0 4px;
+	font-size: 15px;
+	font-weight: bold;
+}
+
+// the move a box asks about, first and in the move list's notation
+.qc-vgame__pending-move {
+	font-size: 16px;
 }
 
 .qc-vgame__box--pending {
@@ -876,6 +1318,15 @@ function pieceTypeAt(sq) {
 	border-color: var(--color-primary-element);
 }
 
+.qc-vgame__box--warning {
+	border-width: 2px;
+	border-color: var(--qc-danger, #c90000);
+}
+
+.qc-vgame__warning {
+	color: var(--qc-danger, #c90000);
+}
+
 .qc-vgame__report-line {
 	margin: 0;
 }
@@ -886,40 +1337,74 @@ function pieceTypeAt(sq) {
 	list-style: none;
 }
 
+// a warning note, as NcNoteCard draws one: the main text colour on a light tint of the warning colour (the warning
+// text colour is made for the page background, and on the warning colour itself it is unreadable)
 .qc-vgame__notice {
 	margin: 0;
 	padding: 6px 10px;
+	border-inline-start: 4px solid rgb(var(--color-warning-rgb, 163, 114, 0));
 	border-radius: var(--border-radius-large);
-	background: var(--color-warning, #fff3cd);
-	color: var(--color-warning-text, #000);
+	background: rgba(var(--color-warning-rgb, 163, 114, 0), 0.1);
+	color: var(--color-main-text);
 }
 
 .qc-vgame__moves {
 	max-height: 220px;
 	overflow-y: auto;
+	font-size: 13px;
+}
 
-	ol {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
+// one numbered row per move (two players: a column per side) or per turn
+.qc-vgame__move-rows {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
 
-	li {
-		display: flex;
-		flex-direction: column;
-		padding: 2px 0;
-		font-size: 13px;
-	}
+.qc-vgame__move-row {
+	display: grid;
+	grid-template-columns: 2.6em minmax(0, 1fr);
+	gap: 0 8px;
+	padding: 2px 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.qc-vgame__move-rows--pairs .qc-vgame__move-row {
+	grid-template-columns: 2.6em minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.qc-vgame__move-number {
+	color: var(--color-text-maxcontrast);
+	text-align: end;
+	font-variant-numeric: tabular-nums;
+}
+
+.qc-vgame__move-cell {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.qc-vgame__move-entry {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.qc-vgame__move-none {
+	color: var(--color-text-maxcontrast);
 }
 
 .qc-vgame__move {
 	display: flex;
 	align-items: center;
 	gap: 6px;
+	min-width: 0;
+	overflow-wrap: anywhere;
 }
 
 .qc-vgame__move-line {
-	padding-inline-start: 16px;
 	color: var(--color-text-maxcontrast);
 }
 
@@ -927,7 +1412,24 @@ function pieceTypeAt(sq) {
 	font-family: var(--font-face-monospace, monospace);
 }
 
+// a move the viewer cannot see is described in words, not written as a code
+.qc-vgame__code--hidden {
+	font-family: inherit;
+	font-style: italic;
+}
+
 .qc-vgame__rolled {
 	color: var(--color-text-maxcontrast);
+}
+
+@media (max-width: 1023px) {
+	// the pending box sits in the slim bar at the bottom: compact
+	.qc-vgame__box--pending {
+		padding: 6px 10px;
+
+		p {
+			margin: 0 0 2px;
+		}
+	}
 }
 </style>

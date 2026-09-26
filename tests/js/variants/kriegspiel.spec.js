@@ -360,6 +360,12 @@ describe('kriegspiel: the umpire', () => {
 		const ep = play(V, stateOf(V, [[{ e1: '0:k', e5: '0:p', e8: '1:k', d7: '1:p' }, 1]], 1), 'd7-d5')
 		expect(V.infoText(ep.history.at(-1), 0)).toEqual(['Black moved.', '1 pawn try.'])
 		expect(V.infoText({ code: 'e2-e4', side: 0 }, 0)).toBeNull()
+		// the move list asks for the lines that carry information only: no "… moved." and no "No pawn tries."
+		expect(V.infoText(next.history.at(-1), 0, { brief: true }))
+			.toEqual(['Capture on d7: a pawn.', 'Check: long diagonal (100 %).'])
+		expect(V.infoText(ep.history.at(-1), 0, { brief: true })).toEqual(['1 pawn try.'])
+		const quiet = play(V, stateOf(V, [[{ e1: '0:k', a2: '0:p', e8: '1:k' }, 1]]), 'a2-a3')
+		expect(V.infoText(quiet.history.at(-1), 1, { brief: true })).toEqual([])
 	})
 
 	it('says on the rules card what the umpire really announces about en passant and ghosts', () => {

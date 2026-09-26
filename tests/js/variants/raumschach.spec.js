@@ -260,7 +260,8 @@ describe('Raumschach: the cube, its drawing and the start array', () => {
 			expect(type.name().length, id).toBeGreaterThan(0)
 			expect(type.glyph, id).toBeDefined()
 		}
-		expect(V.types.u.glyph).toEqual({ text: 'U', shape: 'circle' })
+		// the unicorn is a knight with a horn
+		expect(V.types.u.glyph).toEqual({ sprite: 'n', horn: true })
 		expect([...V.solidTypes].sort()).toEqual(['k', 'p'])
 		expect(Object.keys(V.types).filter((id) => V.types[id].splittable).sort()).toEqual(['b', 'n', 'q', 'r', 'u'])
 		// the IRF's order: Q > B > N > R > U > P

@@ -33,18 +33,22 @@ truth; this guide summarises them):
   reason; if you believe the core needs a change, describe it in your final report instead of editing core files.
   Variant modules import `isCertain(m)`, `budgetInfo(V, state, side)` and `mustCapture(V, state)` from it
   (`src/variants/index.js` exports the last two for the UI).
-- `src/variants/core/ai.js`: the computer player (optional hooks `evaluate`, `materialSign`, `aiView`, `replySide`;
-  exports `mightForce` and `aiSplits` for tests). It sees the escape rule (section "Computer player" below).
+- `src/variants/core/ai.js`: the computer player (optional hooks `evaluate`, `materialSign`, `aiView`, `aiViewExact`,
+  `replySide`, `aiTimeShare`; exports `mightForce` and `aiSplits` for tests). It sees the escape rule and yields to
+  the browser throughout its search (section "Computer player" below).
 - `handoff/CORE-CHANGES.md` section 8 ("Follow-up pass"): what changed in the core after the first pass (the classic
   end rules, merge and Measure fixes, the computer's time budget and hidden-information fallback, texts); section 9
   ("Third pass"): the computer sees the escape rule and looks a move deeper at the hard level, the outcomes of the
   preview carry their game result, the board hides targets and focus in hidden games, and the escape check is faster
-  for splits.
+  for splits; section 10 ("App and UI pass"): the generic app and computer items of the multiverse spec
+  (`handoff/research/multiverse-final.md` 7.2, H2-H13), packed saved games, and the fixes of the visual review of the
+  variant screens (phone boards, badges, hands, move list, notices).
 - `tests/js/variants/core.spec.js`, `core-quantum.spec.js`, `core-world.spec.js` + `tests/js/variants/helpers.js`
   (`stateOf`, `play`): how to write tests.
 - `src/variants/catalog.js`: names/summaries (already written for every variant; do not edit).
 - `src/variantplay/glyphs.js`: how glyphs are drawn; `src/variantplay/components/VariantBoard.vue`: how layouts are
-  drawn; `src/variantplay/texts.js` and `panel.js`: where the UI hooks are read.
+  drawn; `src/variantplay/texts.js`, `panel.js`, `marks.js` and `composables/useVariantGame.js`: where the UI hooks
+  are read; `src/variantplay/variantGames.js`: how games are saved (section "Saved games" below).
 
 ## Module shape
 
@@ -195,6 +199,7 @@ rest are defaults):
 | `compulsoryCapture: true` | when some legal move key might capture (captures in at least one world), only such keys are legal, no split and no Measure, and only merges with a capturing outcome. `mustCapture(V, state)` tells; the UI says so and disables Split and Measure. A per-world rule, if any, stays in `filterMoves`. Default false |
 | `passWhenStuck: true \| (state) => boolean` | a side without a legal move sits out instead of the `noMoves` result: the next side that can move is to move, `ply` does not grow for the skipped sides, every world passes through `applyMiss` with `type: 'pass'` once per skipped side, the record gets `skipped: [sides]` and the move list shows "{side} cannot move and sits out". The function is called on the new state (the stuck side to move). If no side can move, `noMoves` applies as before. Not evaluated on the light states of the computer's search, but on the real states it builds (the outcomes of its own candidates, answers that might mate, the hard level's third move). Default false |
 | `recordInfo(prev, code, branch, next) -> object \| null` | JSON data stored as `info` on the history record (null stores nothing). Called once per real state at the end of `stateAfter`, after the result, `stateResult`, `noMoves` and any sit-out: `next.turn` is the side really to move and the record (`next.history.at(-1)`) already has `skipped`. `branch.worlds` are the worlds of the outcome before `unifyWorlds`. Called for every played move, and also inside the computer's search wherever it builds real states (the outcomes of its own candidates, answers that might mate, the hard level's third move), never for its light states; undo replays call it again, so keep it pure and cheap. Show it with `infoText` |
+| `allowQuantum(state, action) -> boolean` | the variant may forbid a split, merge or measurement that the generic rules allow (the multiverse: both halves of a split land on one board, a merge starts from one board, a Measure only on a board the side may play). `action` is `{ type: 'split', from: [f], to: [t1, t2] }`, `{ type: 'merge', from: [f1, f2], to: [t] }` (`to` empty when a pair of parts is checked for the merge marks) or `{ type: 'measure', from: [s], to: [] }`. A forbidden action is illegal everywhere (legal moves, outcomes, merge danger, the computer); with the hook the legal moves list one measurement per allowed part. The UI follows it: Split marks only second targets that make a legal split with the first, Measure checks the tapped part itself. Cheap, state only. Default: everything allowed (contract in the `variant.js` header) |
 
 ### Computer player
 
@@ -202,7 +207,9 @@ rest are defaults):
 |---|---|
 | `evaluate(w, side)` | extra evaluation terms in centipawns (KOTH: king near the hill...). It also ranks the computer's split targets (only the best 6 targets per piece are paired, ties at random) |
 | `materialSign: -1` | the computer prefers LESS material (antichess) |
-| `aiView(state, side, level)` | the state as the computer sees it (hidden information). `level` is the id of the computer's level (`'easy'`, `'normal'` or `'hard'`), an optional third argument that a hook may ignore. The computer plays the best move of its view that is legal on the real state. When none is, it tries what a player in its seat could attempt, shuffled with the search's random numbers, until `branches` accepts one: `candidateMoves(real)` (else the legal moves of the real state) plus the merges and measurements of `ownView(real, me)`. It returns null only when none of them is legal |
+| `aiView(state, side, level)` | the state as the computer sees it (hidden information). `level` is the id of the computer's level (`'easy'`, `'normal'` or `'hard'`), an optional third argument that a hook may ignore. The computer plays the best move of its view that is legal on the real state. When none is, it tries what a player in its seat could attempt, shuffled with the search's random numbers, until `branches` accepts one: `candidateMoves(real)` (else the legal moves of the real state) plus the merges and measurements of `ownView(real, me)`. It returns null only when none of them is legal. Without `aiViewExact` every candidate is checked on the real state (`branches`) before it is judged, inside the timed loop of the search |
+| `aiViewExact: true` | declaration flag (default false): every candidate of `aiView` is legal on the real state with the same outcomes (the multiverse's view only prunes). The search then skips the per-candidate check and checks only the move it chose on the real state; when that one is illegal it tries the next best judged candidate, then the others in the order of the search, then the fallback above. Set it only when the view is exact: a wrong flag makes the computer play the best of a view that the real state does not match |
+| `aiTimeShare(state) -> number` | the share of the level's time this ply may take, in (0, 1] (default 1; any other value, NaN included, counts as 1). Called once per `chooseMove`, with the real state. The level's time is multiplied by it, and the hard level's safety margin (a tenth) is taken from the shorter time. A turn of several moves shares one level time this way (the multiverse: one over the actions already made this turn, `x.t`, plus the boards still to play; it reads the world, not the history). Keep it cheap |
 | `replySide(state, me) -> side \| null` | whose answer the normal and hard levels look at after the computer's move (`state` = after that move). Default `state.turn`. `null`: no answer; another side: its answers are searched on `{ ...state, turn: side }` (bughouse: `(s, me) => 3 - me`, the opponent on the same board); `me` (a turn of several moves): the computer's best continuation |
 
 The levels: easy judges the positions right after its own move (noise ±120 centipawns); normal also looks at the
@@ -247,22 +254,36 @@ different moves for different seeds (the same move for the same seed). With time
 variant of two sides and unless it has found a sure win, the hard level re-scores its best candidates (`deep: 8` in
 `LEVELS`) with a third move: after each answer of the other side, the computer's best forcing move or none. The
 candidates are taken in the order of their value (rounded to a centipawn, forcing moves first among equals) while the
-remaining budget, less a tenth of the level's time, lasts; the best candidate whose whole evaluation fitted is
-played, else the two-move choice stands. It finds a knight fork of king and rook, where the rook falls on the third
-move.
+remaining budget, less a tenth of the level's time (after `aiTimeShare`), lasts; the best candidate whose whole
+evaluation fitted is played, else the two-move choice stands. It finds a knight fork of king and rook, where the rook
+falls on the third move.
 
-The time budget of a level (easy 0.4 s, normal 1.5 s, hard 4 s) runs from the call of `chooseMove` and is also
-checked inside the evaluation of each candidate (before each outcome and each answer), so the computer keeps to it
-at 64 worlds too. When the time is spent before any candidate has a value, that candidate is judged by the positions
-right after it, without an answer, so there is always a move. A slow `evaluate` therefore means fewer candidates
-searched, not a late move. The escape checks of the real states cost time too: on 4D boards at 8 worlds and more,
-easy and normal now use their whole budget and search fewer candidates than before the third pass.
+The time budget of a level (easy 0.4 s, normal 1.5 s, hard 4 s, times `aiTimeShare`) runs from the call of
+`chooseMove` and is checked in every loop that can run long: each split source while the candidates are built, each
+candidate of the pre-pass (the forcing filter, and the real-state check of an `aiView` candidate), and inside the
+evaluation of each candidate each outcome, each answer and each outcome of an answer, and the hard level's third move.
+So the computer keeps to it at 64 worlds too. When the time is spent before any candidate has a value, that candidate
+is judged by the positions right after it, without an answer, so there is always a move. When the time is spent and
+every move judged so far loses by its own outcomes, the search keeps judging the next candidates that quick way for
+at most 100 ms more (`GRACE_MS`) to find one that does not lose (a short `aiTimeShare` can otherwise leave a single
+judged move that strands a multiverse turn). A slow `evaluate` therefore means fewer candidates searched, not a late
+move. The escape checks of the real states cost time too: on 4D boards at 8 worlds and more, easy and normal now use
+their whole budget and search fewer candidates than before the third pass.
+
+At the same places the search yields to the browser whenever it has run for about 12 ms (`PACE_MS`, through a
+`MessageChannel`: about 0.06 ms per yield, where a nested `setTimeout(0)` costs 1-4 ms), and an aborted search stops
+there too, within about 30-40 ms. The longest stretch without a yield measured at 64 worlds is about 78 ms on a
+desktop (one real state after an answer: the escape rule), against up to 2 s on hyper4d and 4 s on the multiverse
+before. The outcomes of each candidate (`branches`) are computed once per search and shared by the forcing filter,
+the evaluation and the third move (`OutcomeMemo`, bounded to 2^18 board and piece entries, about 25 MB; candidates
+that are not forcing leave it once it is half full). A slow `generate` or world hook still costs candidates, but no
+longer freezes the page.
 
 ### Hidden information
 
 | Field / hook | Meaning |
 |---|---|
-| `hidden: true`, `visibility(state, side) -> Set<sq>` | squares the side can see. While the game runs: no undo, no danger line, the other sides' budgets show "?", a two-step hand-over in pass & play |
+| `hidden: true`, `visibility(state, side) -> Set<sq>` | squares the side can see. While the game runs: no undo, no danger line, the other sides' budgets read "Budget hidden" (a dashed track), a two-step hand-over in pass & play |
 | `candidateMoves(state)` | the moves a player may TRY in the UI (Kriegspiel: moves as if the enemy pieces were unknown). Each `{ code, type: 'move', from, to, promo, drop }`. The computer's fallback (see `aiView`) tries them too, so they must depend only on what the side to move knows |
 | `ownView(state, side) -> state` | the state as the side knows it; the Split, Merge and Measure modes choose their squares on it, every attempt is decided on the real state (a split, merge or Measure legal on the own view but not on the real state gets the umpire's "No") |
 | `hiddenStyle: 'fog' \| 'plain'` | how squares the viewer cannot see look (default `'fog'`; Kriegspiel: `'plain'`, a normal-looking board) |
@@ -297,10 +318,15 @@ What the board shows in a hidden game is generic (`src/variantplay/marks.js`, th
 | `actions(state) -> [{ code, label }]` | extra buttons for the side to move (multiverse: "Submit turn"); a button is enabled while `code` is legal |
 | `sideInfo(state, side, viewer) -> { text, title? } \| null` | a short text in a player row between the name and the budget pips, `title` as tooltip (three-check "Checks: 2/3"; antichess, horde: piece counters; makruk: the count) |
 | `noteText(note) -> string \| null` | the label of a follow-up roll note (`solid:…` or `end:…`), asked before the generic text. Match the END of the note (`/checks:(\d+):(\d+)$/`): games saved before the short notes hold the whole solid key |
-| `infoText(record, viewer) -> string[] \| null` | the variant's own lines under a move in the move list and in the last-move box, usually from `record.info` (Kriegspiel's announcements, "Blue is out", "White gave check 2 of 3") |
-| `codeText(code) -> string \| null` | how a move code is written in the move list. Default: the code, with a one-letter drop type upper-cased (`p@e4` → `P@e4`) |
+| `infoText(record, viewer, { brief }) -> string[] \| null` | the variant's own lines under a move in the move list and in the last-move box, usually from `record.info` (Kriegspiel's announcements, "Blue is out", "White gave check 2 of 3"). `brief: true` (the move list) asks only for the lines that carry information: Kriegspiel leaves out "… moved." and "No pawn tries." there; a hook may ignore it. A game with an umpire heads its lines "Umpire" in the move list |
+| `codeText(code, record) -> string \| null` | how a move code is written, before the generic notation. `record` is the move's history record where one exists (the move list, the pass-the-device box; `null` for a move not yet played), so a code can be written from `record.info` (the multiverse writes splits and merges in absolute board coordinates, `info.text`). Keep the record's text free of words (it is saved; add words with `t()` here). Without the hook the move list writes long algebraic notation (`moveText` in texts.js): the piece letter (none for a pawn), `x` for a capture, `Ng1-f3\|h3`, `Nf3\|h3-g5`, `N@f3`, `?f3`, `e7-e8=Q`, with square names like `A:e4` the board written once in front when every square is on it (`A: Ng1-f3\|h3`) and a space after the letter before a square name that starts with a capital (`N Bb1-Bc3`); a code it cannot parse (`O-O`) stays as it is, a one-letter drop type upper-cased (`p@e4` → `P@e4`) |
+| `moveWarning(state, code) -> string \| null` | a translated warning for a legal move: the move then waits for confirmation with the warning in the danger colour, also a certain move (button "Play anyway"; "Play and roll" with the odds when it rolls; no odds with an umpire). `null` or an empty string plays as before. Asked once per attempt: keep it cheap. The multiverse warns only when the move strands the mover's turn (a loss) or leaves the opponent stranded (a draw), never for a winning move |
+| `lastMoveMarks(state) -> number[]` | the squares marked as the last move, instead of the last record's `from` / `to` (the multiverse: every move of the opponent's last turn and of the turn in progress, on the boards those moves produced). Invalid entries and repeats are dropped; a result that is not an array marks nothing. Never asked in a `hidden` variant (it keeps its own rule: only the viewer's own last move) |
+| `flipBoard: false` | declaration flag: the view hides "Flip board" and the rotation ignores it (the multiverse: a half turn would run time right to left). Put the other side at the bottom with a `view` option instead: the New game dialog preselects `black` for a `view` option with the values `white` and `black` when the human plays Black against the computer (only when the side or the opponent changes, so the player can still choose) |
 | `resignResult(state, loser)` | the result of a resignation (default: a win for every enemy of the loser) |
 | `handOrder: [typeId, ...]` | the order of the pieces in hand (types missing from it come last, by id) |
+| `handBoards: [boardIndex, ...]` | per side, the index of its board in `layout.boards`, for a variant of more than two sides: the hands are then grouped per board under the drawing (left to right as drawn, reversed in a view turned half a turn), the hand of the seat at the top of that board first (bughouse: `[0, 1, 1, 0]`). Without it, in a two-player game the hand of the side at the top of the board sits above the board and the other below it (always shown, empty or not), and with more sides all hands sit below it |
+| `boardLegend(state) -> [{ kind, text }]` | lines under the board that explain a mark (`kind: 'hill'` draws a swatch of the hill outline; King of the Hill: "Hill: a king that reaches it wins."). Not shown behind the curtain; entries without a text are dropped |
 
 ## Piece types
 
@@ -308,7 +334,7 @@ What the board shows in a hidden game is generic (`src/variantplay/marks.js`, th
 types: {
   k: { name: () => t('quantumchess', 'King'), moves: [{ leap: KING_STEPS }], royal: true, value: 400, glyph: { sprite: 'k' } },
   u: { name: () => t('quantumchess', 'Unicorn'), moves: [{ ride: directions(3, 3) }], value: 250,
-       glyph: { text: 'U', shape: 'circle' } },
+       glyph: { sprite: 'n', horn: true } },
   p: { moves: [{ leap: [[0, 1, 0]], oriented: true, mode: 'move' }, ...], solid: true, value: 100,
        promote: { zone: (side, to, from, w) => bool, to: ['q', 'r'], optional: false, forced: (side, to, w) => bool },
        glyph: { sprite: 'p' } },
@@ -323,9 +349,14 @@ and whatever the research spec decides). `splittable` defaults to `!solid`. `val
 `resetsQuiet` (default: solid and not royal, so pawns): a move of this type that happens resets the quiet counter
 (antichess: `resetsQuiet: false` on its non-royal king; xiangqi: `resetsQuiet: false` on the soldier, so only captures
 reset it).
-Glyphs: `{ sprite: 'k'|'q'|'r'|'b'|'n'|'p', promoted?: true }` uses the cburnett set (`promoted: true` adds a small red
-"+" marker: crazyhouse `+q`); otherwise `{ text: 'A' | (side) => '帥', shape: 'circle'|'shogi'|'xiangqi',
-promoted?: true }`. Type ids are short strings without spaces, `-`, `|`, `?`, `@`, `=`; e.g. shogi can use `+p` for a
+Glyphs: `{ sprite: 'k'|'q'|'r'|'b'|'n'|'p', promoted?: true, scale?, horn?: true }` uses the cburnett set
+(`promoted: true` adds a small red "+" marker: crazyhouse `+q`; `scale` between 0 and 1 draws it smaller: makruk's met
+`{ sprite: 'q', scale: 0.8 }`; `horn: true` gives a knight a unicorn's horn: raumschach's unicorn);
+`{ sprites: ['b', 'n'] }` draws a compound piece as its two cburnett pieces side by side (capablanca's archbishop and
+chancellor); otherwise `{ text: 'A' | (side) => '帥', shape: 'circle'|'shogi'|'xiangqi', promoted?: true }`. Prefer
+a sprite form where one fits: the visual review flagged letter discs beside the cburnett set (capablanca, makruk,
+raumschach). A ghost shows a probability ring and its percentage (at least 11 px on screen; a piece under 30 px shows
+only the ring). Type ids are short strings without spaces, `-`, `|`, `?`, `@`, `=`; e.g. shogi can use `+p` for a
 tokin.
 
 ## Moves and keys
@@ -469,46 +500,76 @@ built in, with no hook:
 
 ## Which new hooks each variant uses
 
-From `handoff/CORE-CHANGES.md` (sections 2, 5 and 8) and the specs. "Inherited" = keep `orthodoxSpec()`'s `applyMiss`
-and `unifyWorlds`; every variant gets the section above for free. The flags of the classic end rules and
+From `handoff/CORE-CHANGES.md` (sections 2, 5, 8 and 10) and the specs. "Inherited" = keep `orthodoxSpec()`'s
+`applyMiss` and `unifyWorlds`; every variant gets the section above for free. The flags of the classic end rules and
 `specialMoves` of each variant are in the table of section "Classic end rules".
 
 | Id | Built on | New hooks and helpers to use |
 |---|---|---|
-| `raumschach` | own spec | `specialMoves: false` (`x` stays `{}`, no castling, no en passant); no own `worldResult` (the core's bare-kings draw) |
+| `raumschach` | own spec | `specialMoves: false` (`x` stays `{}`, no castling, no en passant); no own `worldResult` (the core's bare-kings draw); unicorn glyph `{ sprite: 'n', horn: true }` |
 | `trid` | own spec, own `generate` | castling `kind: 'castle'`, en passant `kind: 'ep'`; `applyMiss: (b) => clearEnPassant(b)`; `unifyWorlds: (bs) => unifyCastling(bs)` with rights in the `x.castle` shape (else its own `unifyWorlds`) |
-| `hyper4d` | own spec | `specialMoves: false` (no castling, no en passant); no own `worldResult` (the core's bare-kings draw) |
-| `multiverse` | own spec, `generate` / `apply` | per the final design. Playable design: none (idle worlds unchanged, `measured: () => true`, `solidExtra`, `actions`, `layout.focus` with a `key`). Faithful / quantum designs: `applyMiss` (`info.hit` is their "structural" flag), `recordInfo` + `infoText`, `replySide`, and `unifyWorlds` (faithful) or `budgetRule` (quantum). Castling and en passant on one board are certain moves |
-| `kriegspiel` | `orthodoxSpec()`, inherited | `hidden`, `hiddenStyle: 'plain'`, `umpire: true`, `ownView`, `recordInfo` (`{ announce }`) + `infoText` |
+| `hyper4d` | own spec | `specialMoves: false` (no castling, no en passant); no own `worldResult` (the core's bare-kings draw); `layoutOf` with `focus: { zoom: 1, box, key }` on the 2 × 2 boards around the mover's army (phone) |
+| `multiverse` | own spec, `generate` / `apply` | as built from multiverse-final.md: `applyMiss`, `allowQuantum`, `unifyWorlds`, `solidExtra`, `nextSide`, `actions` (Submit), `worldResult`, `stateResult` (the stuck test), `noMoves`, `reasonText`, `recordInfo` + `infoText`, `codeText(code, record)` (absolute codes from `info.text`), `sideInfo`, `moveWarning` (stranded turns), `lastMoveMarks` (from `info.cells`), `budgetRule`, `layoutOf` (`focus` with `zoom`, `box` and `key`; `kind: 'threat'` outlines), `flipBoard: false` with a `view` option; the computer's `evaluate`, `aiView` with `aiViewExact: true`, `replySide`, `aiTimeShare`; `escapeRule: false`, `bareKingsDraw: false`, `drawsWait: true`. Castling and en passant on one board are certain moves |
+| `kriegspiel` | `orthodoxSpec()`, inherited | `hidden`, `hiddenStyle: 'plain'`, `umpire: true`, `ownView`, `recordInfo` (`{ announce }`) + `infoText` (with `brief` in the move list) |
 | `darkchess` | `orthodoxSpec()`, inherited | `hidden` (fog is the default `hiddenStyle`), `recordInfo` + `infoText` (the square of a capture); `bareKingsDraw: false` |
 | `chess960` | `orthodoxSpec()`, inherited | `castlingMoves(spec, w, side, { toRook: true })` in `extraMoves`; `options[0].describe` |
 | `atomic` | `orthodoxSpec()`, inherited | nothing else (the ring counts explosions); optional blast marks through `layoutOf` with `layout.outlines`; `escapeRule: true` and `bareKingsDraw: false` (its own bare-kings rule in `worldResult`) |
 | `crazyhouse` | `orthodoxSpec()`, inherited | `solidExtra` (the hands), `handOrder: ['p', 'n', 'b', 'r', 'q']`, promoted types `+q` ... with `glyph: { sprite, promoted: true }` |
-| `bughouse` | own spec (`[file, rank, board]`) | its own per-board `applyMiss(b, action, side)` (above), `unifyWorlds: (bs) => unifyCastling(bs)`, `budgetRule: (b, side) => ({ sides: [side, (side + 2) % 4], limit: 8 })`, `replySide: (s, me) => 3 - me`, `solidExtra`, `handOrder`, `castlingMoves` and `pawnExtras` (on a per-board view of `x.ep`); `passWhenStuck: true` only if the lead chooses it; `escapeRule: false`, `bareKingsDraw: false`, `drawsWait: true` |
+| `bughouse` | own spec (`[file, rank, board]`) | its own per-board `applyMiss(b, action, side)` (above), `unifyWorlds: (bs) => unifyCastling(bs)`, `budgetRule: (b, side) => ({ sides: [side, (side + 2) % 4], limit: 8 })`, `replySide: (s, me) => 3 - me`, `solidExtra`, `handOrder`, `castlingMoves` and `pawnExtras` (on a per-board view of `x.ep`); `passWhenStuck: true` only if the lead chooses it; `escapeRule: false`, `bareKingsDraw: false`, `drawsWait: true`; `handBoards: [0, 1, 1, 0]`, the players' names as `strong` labels and `focus: { zoom: 1, box, key }` on the board of the seat to move |
 | `antichess` | `orthodoxSpec({ royalKing: false, ... })`, inherited | `compulsoryCapture: true` with its `filterMoves`, `resetsQuiet: false` on `k`, `sideInfo`; `escapeRule: false`, `bareKingsDraw: false`, `drawsWait: false` |
-| `koth` | `orthodoxSpec({ boardOpts: { shade, layout: { outlines } } })`, inherited | `layout.outlines` for the hill; `attacks` with its default options; `bareKingsDraw: false` |
+| `koth` | `orthodoxSpec({ boardOpts: { shade, layout: { outlines } } })`, inherited | `layout.outlines` with `kind: 'hill'` for the hill and `boardLegend`; `attacks` with its default options; `bareKingsDraw: false` |
 | `threecheck` | `orthodoxSpec()`, inherited | `givesCheck(spec, next, side, enemy, { royal: false })`, `solidExtra` (`'checks:W:B'`), `noteText`, `sideInfo`, `recordInfo` + `infoText` |
 | `horde` | `orthodoxSpec()`, inherited | `sideInfo`; `bareKingsDraw: false` |
 | `hexagonal` | own spec | `pawnExtras(..., { pawn, forward, captures })` with hex vectors, `applyMiss: (b) => clearEnPassant(b)` (no castling, no `unifyWorlds`) |
 | `fourplayer` | own spec | `applyMiss: (b) => clearEnPassant(b)` (also runs for a skipped player), `unifyWorlds: (bs) => unifyCastling(bs)`, `budgetRule` (FFA `{ limit }` by kings left, Teams `{ limit: 2 }`), `passWhenStuck: (s) => !s.worlds[0].b.x.teams`, `recordInfo` + `infoText` ("Blue is out"), `resignResult`; `castlingMoves` along a file and `orthodoxAfterMove` (horizontal en passant square); `escapeRule: false`, `bareKingsDraw: false` (its own FFA rule), `drawsWait: true` |
-| `capablanca` | own spec (10 × 8) | copy the orthodox hooks: `applyMiss: (b) => clearEnPassant(b)`, `unifyWorlds: (bs) => unifyCastling(bs)`; `castlingRights` (king to c or i) and the default `castlingMoves` |
+| `capablanca` | own spec (10 × 8) | copy the orthodox hooks: `applyMiss: (b) => clearEnPassant(b)`, `unifyWorlds: (bs) => unifyCastling(bs)`; `castlingRights` (king to c or i) and the default `castlingMoves`; compound glyphs `{ sprites: ['b', 'n'] }` and `['r', 'n']` |
 | `shogi` | own spec | `handOrder: ['r', 'b', 'g', 's', 'n', 'l', 'p']`, `solidExtra` (the hands), optional `codeText`; `specialMoves: false` |
 | `xiangqi` | own spec | `resetsQuiet: false` on the soldier; `specialMoves: false` |
-| `makruk` | own spec (`whiteBlack()`) | `sideInfo` (the count); `specialMoves: false`, `bareKingsDraw: false` (its own bare-Khuns rule) |
+| `makruk` | own spec (`whiteBlack()`) | `sideInfo` (the count); `specialMoves: false`, `bareKingsDraw: false` (its own bare-Khuns rule); glyphs met `{ sprite: 'q', scale: 0.8 }`, khon `{ sprite: 'b' }` |
 
 ## UI layout
 
 `rectTopology` gives a drawn 2D board. For other boards, build cells with
 `makeTopology({ coords, name, cell, layout })`:
 `cell(c) -> { x, y, w, h, shape: 'rect'|'hex'|'point', shade }` (rect: x,y = top-left; hex/point: x,y = centre),
-`layout: { width, height, labels: [{ x, y, text }], lines: [{ x1, y1, x2, y2 }], boards: [{ x, y, w, h, label }],
-areas: [{ x, y, w, h, shade: 'wood'|'river'|'frame' }] }`. Shades available in CSS: light, dark, mid, hill, hilldark,
-camp, wood. Side 0 must be at the bottom of the layout (y grows downwards). Several boards: place them side by side
-or in a grid with a gap of ~0.8 units and a `boards` entry with a short label for each. `layout.lines` are drawn under
-the cells, `layout.outlines: [{ x1, y1, x2, y2 }]` above them (the hill of King of the Hill; pass them through
-`orthodoxSpec({ boardOpts: { shade, layout: { outlines } } })`). A board gets zoom controls when `width × height` is
-over 200 or `layout.zoomable` is true; then a `layout.focus` (`{ x, y, zoom, key }`) zooms in on a point, and the board
-recentres only when the focus changes (its `key`, or without a key its point and zoom).
+`layout: { width, height, labels: [{ x, y, text, strong? }], lines: [{ x1, y1, x2, y2 }], boards: [{ x, y, w, h,
+label? }], areas: [{ x, y, w, h, shade: 'wood'|'river'|'frame' }] }`. Shades available in CSS: light, dark, mid, hill,
+hilldark, camp, wood. Side 0 must be at the bottom of the layout (y grows downwards). Several boards: place them side
+by side or in a grid with a gap of ~0.8 units and a `boards` entry with a short label for each (the label may be left
+out when labels name the boards: bughouse writes the players' names at the board edges as `strong: true` labels, bold
+and a little larger). `layout.lines` are drawn under the cells, `layout.outlines: [{ x1, y1, x2, y2, kind? }]` above
+them (the hill of King of the Hill; pass them through `orthodoxSpec({ boardOpts: { shade, layout: { outlines } } })`).
+An outline's `kind` picks its style: none as before; `'threat'` in the danger colour on a light halo with an arrowhead
+at its end (the threatened royal square; CSS `qc-vboard__outline--threat`; the multiverse's 5D check lines); `'hill'`
+thinner, in a warm dark brown (koth, explained by its `boardLegend`). Any other kind draws as none.
+
+A board gets zoom controls when `width × height` is over 200 or `layout.zoomable` is true; then a `layout.focus`
+(`{ x, y, zoom?, key?, box? }`) zooms in on a point, and the board recentres only when the focus changes (its `key`,
+or without a key its point and zoom), or when the player taps "Recentre" (offered while the focus zooms in). `zoom`
+is the zoom for a fine pointer (a mouse). `box: { w, h }` (layout units) is the part the player needs: without a
+`zoom` the board zooms to fit the box, and on a touch screen (`(pointer: coarse)`) it zooms in to at least 28 px per
+unit whatever `zoom` says. The zoom cap is 8, or more for a layout so wide that 8 gives fewer than 40 px per unit
+(used by the buttons, Ctrl + wheel, the pinch and the focus). Zoomed in, the board takes every touch gesture (one
+finger pans, two pinch around their midpoint, lifting one goes on as a pan); at zoom 1 the page scrolls over it.
+Board labels above the part shown are pinned to its top edge. The pattern for a big layout on a phone is
+`focus: { x, y, zoom: 1, box, key }`: the whole drawing with a mouse, the mover's part at 28 px per unit on a touch
+screen (hyper4d: the 2 × 2 boards around the mover's army, keyed by side and block; bughouse: the board of the seat
+to move with both names, keyed by seat). A drawing that fits a 360-390 px phone at about 28 px per unit needs no focus
+(trid is 11 × 13.9 units, shown whole at about 30 px per square). `tests/js/variants/phone-layout.vue.spec.js` checks
+these on the real board component with an emulated touch screen 366 px wide.
+
+## Saved games (record version 2)
+
+Games are saved in the browser storage by `src/variantplay/variantGames.js`; no hook is involved, but the shape of
+the worlds decides the size of a save.
+
+| Item | What it means for a variant |
+|---|---|
+| Record `v: 2` | `initial.worlds` and `current.worlds` are packed (`packWorlds`): world 0 in full, every other world as `{ w, d, n?, f? }`: `d` per array (`sq`, `ty`, `sd`, `board`) the indices that differ from world 0 with their values (`[index, value, ...]`), `n` the length of an array whose length differs, `f` every other field (`x` and anything else) whose JSON differs. So keep a world to those four arrays plus small JSON fields, as world.js builds it. A world whose field names differ from world 0's is saved in full (correct, but large). A state of 64 worlds packs to 4-18 % of its plain JSON (the multiverse's 8 × 8 at 64 worlds: 3.4 MB to about 140 KB) |
+| Loading | `loadVariantGame` reads version 1 (worlds in full) and 2 and returns records with full worlds; anything else, a record without worlds or a broken one gives null ("Game not found"). The record in memory is never packed |
+| Moves | each saved move is `{ code, i, t? }`: `i` the index of its outcome (replay and undo), `t` the type of the piece that moved (the move list's letters; the states before a move are not kept). Older moves without `t` are written without a letter |
+| A full storage | `saveVariantGame(rec)` returns false when the storage refuses the record, even after removing finished games (oldest first; a running game never): the stored copy and the index stay as they were, and the game view shows "This game could not be saved on this device." until a save works again. `createVariantGame` returns null then, and the New game dialog stays open with that notice. At most 24 games are kept (`MAX_GAMES`, finished games go first; never the game being saved) |
+| Undo | undo takes back the human's last move and the computer's moves after it (read from the sides of the history records) with one replay from `initial`, so `afterMove`, `applyMiss`, `unifyWorlds`, `recordInfo` and the end rules run once per move again: keep them pure and cheap. Undo is off when only the computer has moved |
 
 ## Style and checks (CI enforces all of these)
 

@@ -274,7 +274,10 @@ describe('Tri-D chess: board and start position', () => {
 	it('draws seven separate boards with captions, file letters and rank numbers, and nothing overlaps', () => {
 		const L = topo.layout
 		expect(L.boards).toHaveLength(7)
-		expect(L.zoomable).toBe(true)
+		// small enough to show whole on a phone (about 30 px per square at 390 px): no zoom buttons
+		expect(L.zoomable).toBeUndefined()
+		expect(L.width * L.height).toBeLessThan(200)
+		expect(L.width / L.height).toBeGreaterThan(0.7)
 		const texts = L.labels.map((l) => l.text)
 		for (const caption of ['W', 'N', 'B', 'QL1', 'KL1', 'QL6', 'KL6']) {
 			expect(texts.filter((x) => x === caption)).toHaveLength(1)
@@ -293,12 +296,37 @@ describe('Tri-D chess: board and start position', () => {
 				}
 			}
 		}
-		// a map square has the same row on every board, and the same colour on every level
+		// a map square has the same colour on every level
 		const cell = (n) => topo.cells[S(n)]
-		expect(cell('b3W').y).toBe(cell('b3N').y)
 		expect(cell('a1W').shade).toBe('dark')
 		expect(cell('a1QL1').shade).toBe('dark')
 		expect(cell('b3N').shade).toBe(cell('b3W').shade)
+		// W and B share their files, and so do the attack boards: a file runs straight up the column
+		for (const f of 'abcd') {
+			expect(new Set([`${f}1W`, `${f}4W`, `${f}5B`, `${f}8B`].map((n) => cell(n).x)).size).toBe(1)
+		}
+		expect([cell('a1QL1').x, cell('d1KL1').x, cell('a8QL6').x, cell('d8KL6').x])
+			.toEqual([cell('a1W').x, cell('d1W').x, cell('a8B').x, cell('d8B').x])
+		// each attack board abuts the corner it is pinned to, one row further out
+		expect(cell('a1QL1').y - (cell('a1W').y + 1)).toBeCloseTo(0.2, 9)
+		expect(cell('d8B').y - (cell('d8KL6').y + 1)).toBeCloseTo(0.2, 9)
+		// W's ranks continue on B above it; N stands beside them, level with its ranks (less than a fifth off)
+		expect(cell('a5B').y).toBeLessThan(cell('a4W').y - 1)
+		expect(cell('a3N').x).toBeGreaterThan(cell('d3W').x + 2)
+		for (const r of [3, 4]) {
+			expect(Math.abs(cell(`b${r}N`).y - cell(`b${r}W`).y)).toBeLessThan(0.2)
+		}
+		for (const r of [5, 6]) {
+			expect(Math.abs(cell(`b${r}N`).y - cell(`b${r}B`).y)).toBeLessThan(0.2)
+		}
+		// every rank of every board is numbered on its row, and no label sits on a cell
+		for (const c of topo.cells) {
+			const [, rank] = topo.coords[c.sq]
+			expect(L.labels.some((l) => l.text === String(rank) && Math.abs(l.y - (c.y + 0.5)) < 1e-9)).toBe(true)
+		}
+		for (const l of L.labels) {
+			expect(topo.cells.some((c) => l.x > c.x && l.x < c.x + c.w && l.y > c.y && l.y < c.y + c.h)).toBe(false)
+		}
 	})
 })
 

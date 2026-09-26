@@ -258,8 +258,9 @@ describe('Capablanca chess: board and setup', () => {
 		for (const id of ['k', 'q', 'r', 'b', 'n', 'p']) {
 			expect(V.types[id].glyph).toEqual({ sprite: id })
 		}
-		expect(V.types.a.glyph).toEqual({ text: 'A', shape: 'circle' })
-		expect(V.types.c.glyph).toEqual({ text: 'C', shape: 'circle' })
+		// the compound pieces are drawn as the two pieces they combine
+		expect(V.types.a.glyph).toEqual({ sprites: ['b', 'n'] })
+		expect(V.types.c.glyph).toEqual({ sprites: ['r', 'n'] })
 		for (const [id, value] of Object.entries(VALUES)) {
 			expect(V.types[id].value, id).toBe(value)
 		}

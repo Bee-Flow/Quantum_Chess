@@ -4,7 +4,8 @@
  */
 
 /**
- * Pure helpers for the square marks of a variant board: the squares of the last move, the piece a click selects, and
+ * Pure helpers for the square marks of a variant board: the squares of the last move (or of the last turn, with the
+ * variant's `lastMoveMarks(state)`), the squares of a move waiting for confirmation, the piece a click selects, and
  * what the board may show and let the keyboard reach without revealing hidden information (move targets and focus
  * only while the viewer is the player to move, and on a square the viewer cannot see only when the variant builds the
  * viewer's attempts from what the viewer knows).
@@ -42,6 +43,30 @@ function squaresOfCode(V, code) {
 }
 
 /**
+ * The squares of a move that is about to be played (a move waiting for confirmation): the from and target squares of
+ * the listed move with this code when there is one (`moves`, the moves of the side to move), else what the code tells
+ * (splits, merges, measurements, drops). Codes that name no squares give nothing; it never throws.
+ *
+ * @param {object} V variant
+ * @param {string} code move code
+ * @param {Array<{code: string, from: number, to: number}>} [moves] the moves of the side to move
+ * @return {{from: number[], to: number[]}}
+ */
+export function moveSquares(V, code, moves = []) {
+	const valid = (sq) => Number.isInteger(sq) && sq >= 0
+	const m = moves.find((x) => x.code === code)
+	if (m) {
+		return { from: [m.from].filter(valid), to: [m.to].filter(valid) }
+	}
+	try {
+		const squares = squaresOfCode(V, code)
+		return { from: squares.from.filter(valid), to: squares.to.filter(valid) }
+	} catch {
+		return { from: [], to: [] }
+	}
+}
+
+/**
  * The squares to mark for a history record: the record's own `from` and `to` squares when it has them, otherwise
  * what the code tells (older records). Never throws; unknown squares are left out.
  *
@@ -73,6 +98,29 @@ export function lastMoveSquares(V, record) {
 }
 
 /**
+ * The squares marked as the last move: the variant's `lastMoveMarks(state)` when it has the hook (the multiverse marks
+ * every move of the opponent's last turn and of the turn in progress, on the boards those moves produced), else the
+ * squares of the last record (`lastMoveSquares`). A hidden-information variant marks only the viewer's own last move
+ * and never asks the hook (the opponent's squares would reveal hidden pieces).
+ *
+ * @param {object} V variant
+ * @param {object} state state
+ * @param {number} viewer the side whose view is shown
+ * @return {number[]} squares without repeats
+ */
+export function lastMoveMarks(V, state, viewer) {
+	const last = state.history[state.history.length - 1]
+	if (V.hidden) {
+		return last && last.side === viewer ? lastMoveSquares(V, last) : []
+	}
+	if (V.lastMoveMarks) {
+		const list = V.lastMoveMarks(state)
+		return Array.isArray(list) ? [...new Set(list.filter((sq) => Number.isInteger(sq) && sq >= 0))] : []
+	}
+	return lastMoveSquares(V, last)
+}
+
+/**
  * The id of a piece of `side` on a square, from the first world where one stands there, or -1. Pieces of other sides
  * are ignored, so selecting a square never reveals the parts of an enemy ghost.
  *
@@ -89,6 +137,24 @@ export function sidePieceAt(state, sq, side) {
 		}
 	}
 	return -1
+}
+
+/**
+ * The type of a piece of `side` on a square, from the first world where one stands there, or null.
+ *
+ * @param {object} state state
+ * @param {number} sq square
+ * @param {number} side side index
+ * @return {string|null}
+ */
+export function sidePieceType(state, sq, side) {
+	for (const { b } of state.worlds) {
+		const id = b.board[sq]
+		if (id >= 0 && b.sd[id] === side) {
+			return b.ty[id]
+		}
+	}
+	return null
 }
 
 /**

@@ -141,7 +141,8 @@ const spec = {
 			name: () => t('quantumchess', 'Unicorn'),
 			moves: [{ ride: CORNER8 }],
 			value: 300,
-			glyph: { text: 'U', shape: 'circle' },
+			// a knight with a horn
+			glyph: { sprite: 'n', horn: true },
 		},
 		n: { name: () => t('quantumchess', 'Knight'), moves: [{ leap: KNIGHT24 }], value: 500, glyph: { sprite: 'n' } },
 		p: {

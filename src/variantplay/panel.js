@@ -6,9 +6,9 @@
 /**
  * Pure helpers behind the side panel of a variant game: the budget pips, the variant's line in a player row, the
  * result of a resignation, whether a move waits for confirmation, which notice a refused attempt gets, which records
- * the last-move box reports and the order of the pieces in hand. They read the optional variant hooks
- * `sideInfo(state, side, viewer)`, `resignResult(state, loser)`, `ownView(state, side)`, `umpire`, `hidden` and
- * `handOrder`.
+ * the last-move box reports, the rows of the move list, the order of the pieces in hand and the groups of hands at
+ * the board. They read the optional variant hooks `sideInfo(state, side, viewer)`, `resignResult(state, loser)`,
+ * `ownView(state, side)`, `umpire`, `hidden`, `handOrder` and `handBoards`.
  */
 
 import { branches, budgetInfo, parseCode } from '../variants/index.js'
@@ -128,4 +128,75 @@ export function sortHand(V, pieces) {
 		return i < 0 ? order.length : i
 	}
 	return [...pieces].sort((a, b) => rank(a.type) - rank(b.type) || a.type.localeCompare(b.type))
+}
+
+/**
+ * The rows of the move list, oldest first. A turn is every record of one side in a row (one move, or the several
+ * moves of a multiverse turn). With two sides a row is numbered like a chess move and holds the first side's turn and
+ * the second side's answer (a game that starts with the second side begins with an empty first cell); with more
+ * sides every turn is a numbered row of its own.
+ *
+ * @param {Array<{side: number}>} history history records
+ * @param {number} sideCount the number of sides
+ * @return {Array<{n: number, cells: Array<{side: number, items: number[]}|null>}>} per row its number and cells, a
+ *   cell listing the indices of its records in `history`
+ */
+export function moveRows(history, sideCount) {
+	const turns = []
+	history.forEach((h, i) => {
+		const last = turns[turns.length - 1]
+		if (last && last.side === h.side) {
+			last.items.push(i)
+		} else {
+			turns.push({ side: h.side, items: [i] })
+		}
+	})
+	if (sideCount !== 2) {
+		return turns.map((turn, k) => ({ n: k + 1, cells: [turn] }))
+	}
+	const rows = []
+	for (const turn of turns) {
+		const last = rows[rows.length - 1]
+		if (turn.side === 1 && last && last.cells[1] === null) {
+			last.cells[1] = turn
+		} else {
+			rows.push({ n: rows.length + 1, cells: turn.side === 1 ? [null, turn] : [turn, null] })
+		}
+	}
+	return rows
+}
+
+/**
+ * The hands at the board, in groups. Normally one group per side, in side order: in a two-player game the hand of
+ * the side at the top of the board (its pieces turned half a turn in this view) goes above the board, every other
+ * hand below it. A variant of more sides with `handBoards` (per side, the index of its board in `layout.boards`: the
+ * bughouse seats) gets one group per board below the drawing, left to right as the boards are drawn (the order of
+ * `layout.boards`, reversed in a view turned half a turn), each with the hand of the seat at the top of its board
+ * first.
+ *
+ * @param {object} V variant
+ * @param {number} rotation the rotation of the board in degrees
+ * @param {(side: number) => boolean} onTop whether a side sits at the top of its board in this view
+ * @return {Array<{key: string, place: 'top'|'bottom', board: boolean, sides: number[]}>}
+ */
+export function handGroups(V, rotation, onTop) {
+	const sides = V.sides.map((x, i) => i)
+	if (Array.isArray(V.handBoards) && sides.length > 2) {
+		const boards = [...new Set(V.handBoards)].sort((a, b) => a - b)
+		if (rotation === 180) {
+			boards.reverse()
+		}
+		return boards.map((bd) => ({
+			key: 'board' + bd,
+			place: 'bottom',
+			board: true,
+			sides: sides.filter((s) => V.handBoards[s] === bd).sort((a, b) => Number(onTop(b)) - Number(onTop(a))),
+		}))
+	}
+	return sides.map((side) => ({
+		key: 'side' + side,
+		place: sides.length === 2 && onTop(side) ? 'top' : 'bottom',
+		board: false,
+		sides: [side],
+	}))
 }

@@ -319,7 +319,7 @@ describe('U6: the hidden hand-over tells the mover nothing about the opponent', 
 		await w.find('[data-square="e5"]').trigger('click')
 		await flushPromises()
 		expect(w.find('.qc-vgame__box--handover').exists()).toBe(true)
-		expect(w.findAll('.qc-vgame__player')[1].find('.qc-vgame__budget--unknown').text()).toBe('?')
+		expect(w.findAll('.qc-vgame__player')[1].find('.qc-vgame__unknown-track').text()).toBe('?')
 		expect(button(w, 'Split').element.parentElement.getAttribute('title')).toBeNull()
 		expect(w.find('.qc-vgame__compulsory').exists()).toBe(false)
 		await button(w, 'Pass the device').trigger('click')

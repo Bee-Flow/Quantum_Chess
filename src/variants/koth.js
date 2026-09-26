@@ -43,12 +43,13 @@ function shade(f, r) {
 	return dark ? 'dark' : 'light'
 }
 
-// The border of the hill in layout units (x right, y down, one unit per cell), drawn above the cells.
+// The border of the hill in layout units (x right, y down, one unit per cell), drawn above the cells as a thin warm
+// line (`kind: 'hill'`), and explained by a legend under the board (`boardLegend`).
 const outlines = [
-	{ x1: 3, y1: 3, x2: 5, y2: 3 },
-	{ x1: 5, y1: 3, x2: 5, y2: 5 },
-	{ x1: 5, y1: 5, x2: 3, y2: 5 },
-	{ x1: 3, y1: 5, x2: 3, y2: 3 },
+	{ x1: 3, y1: 3, x2: 5, y2: 3, kind: 'hill' },
+	{ x1: 5, y1: 3, x2: 5, y2: 5, kind: 'hill' },
+	{ x1: 5, y1: 5, x2: 3, y2: 5, kind: 'hill' },
+	{ x1: 3, y1: 5, x2: 3, y2: 3, kind: 'hill' },
 ]
 
 // Extended in place (never spread): the orthodox hooks refer to this very object, which defineVariant completes.
@@ -179,6 +180,14 @@ Object.assign(spec, {
 		),
 		t('quantumchess', 'Capturing the enemy king also wins. Castling, en passant and promotion are unchanged.'),
 	],
+	/**
+	 * The legend under the board: what the hill is.
+	 *
+	 * @return {Array<{kind: string, text: string}>}
+	 */
+	boardLegend() {
+		return [{ kind: 'hill', text: t('quantumchess', 'Hill: a king that reaches it wins.') }]
+	},
 	/**
 	 * The hill-entry rule, per world: drop the king steps onto an attacked hill square.
 	 *

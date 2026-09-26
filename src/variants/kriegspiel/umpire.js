@@ -414,18 +414,21 @@ function directionText(dir) {
  * The umpire's lines for a move record (`record.info.announce`), the same for every viewer: who moved, each capture,
  * the check and the pawn tries of the side to move. No tries line after the move that ended the game
  * (`record.info.end`, or a king capture in a record without that mark): no turn follows it. Null for a record
- * without an announcement.
+ * without an announcement. `brief` (the move list) keeps only the lines that carry information: no "… moved." (the
+ * row is the move) and no "No pawn tries.".
  *
  * @param {object} V variant
  * @param {object} record history record
+ * @param {object} [opts] options
+ * @param {boolean} [opts.brief] only the captures, the check and the pawn tries
  * @return {string[]|null}
  */
-export function umpireLines(V, record) {
+export function umpireLines(V, record, { brief = false } = {}) {
 	const a = record?.info?.announce
 	if (!a) {
 		return null
 	}
-	const lines = [t('quantumchess', '{side} moved.', { side: sideName(V, record.side) })]
+	const lines = brief ? [] : [t('quantumchess', '{side} moved.', { side: sideName(V, record.side) })]
 	let kingTaken = false
 	for (const c of a.captures ?? []) {
 		if (c.kind === 'king') {
@@ -443,7 +446,7 @@ export function umpireLines(V, record) {
 			percent: percentText(a.check.p),
 		}))
 	}
-	if (!kingTaken && !record.info.end) {
+	if (!kingTaken && !record.info.end && (a.tries > 0 || !brief)) {
 		lines.push(a.tries > 0
 			? n('quantumchess', '%n pawn try.', '%n pawn tries.', a.tries)
 			: t('quantumchess', 'No pawn tries.'))

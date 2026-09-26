@@ -23,6 +23,18 @@
  * `boardInteractive`): a human to move, no hand-over step, no curtain, and in a hidden game the viewer to move. A
  * target on a square the viewer cannot see is shown only when it comes from what the viewer knows
  * (`blindTargetAllowed`).
+ *
+ * Optional variant hooks read here: `moveWarning(state, code)` (a text: the move waits for confirmation with it, also a
+ * certain move), `lastMoveMarks(state)` (the squares marked as the last move, instead of the last record's squares;
+ * not in hidden variants) and the declaration flag `flipBoard: false` (the board is never turned by "Flip board").
+ * Split mode marks only second targets that make a legal split with the first, Measure checks the tapped part itself
+ * (a variant may forbid some parts, `allowQuantum`). Undo takes back the human's last move and the computer's moves
+ * after it with one replay. `saveFailed` tells when the browser storage refused the record.
+ *
+ * A move waiting for confirmation (`pending`: a roll or the variant's warning) keeps its squares marked (the from
+ * square selected, the targets as targets) and carries the type of the piece that moves and whether it captures (not
+ * in a hidden game), so the view can name it. Every move played keeps the type of its piece in the saved move list
+ * (`t`), for the move list's notation.
  */
 
 import { computed, markRaw, ref, shallowRef } from 'vue'
@@ -31,6 +43,7 @@ import {
 	applyOutcome,
 	budgetInfo,
 	chooseMove,
+	isLegal,
 	legalMoves,
 	loadVariant,
 	mergesFrom,
@@ -41,7 +54,14 @@ import {
 	splitCode,
 	splitTargets,
 } from '../../variants/index.js'
-import { blindTargetAllowed, boardInteractive, lastMoveSquares, sidePieceAt } from '../marks.js'
+import {
+	blindTargetAllowed,
+	boardInteractive,
+	lastMoveMarks,
+	moveSquares,
+	sidePieceAt,
+	sidePieceType,
+} from '../marks.js'
 import { needsConfirmation, refusalKind, resignResult } from '../panel.js'
 import { rollMemoKey } from '../rolls.js'
 import { loadVariantGame, saveVariantGame } from '../variantGames.js'
@@ -81,6 +101,8 @@ export function useVariantGame(id) {
 	/** The codes the umpire refused since the turn began (Kriegspiel); not saved. */
 	const refused = ref([])
 	const flipped = ref(false)
+	/** Whether the last save of the record failed (the browser storage is full or blocked). */
+	const saveFailed = ref(false)
 	let controller = null
 
 	const players = computed(() => record.value?.players ?? [])
@@ -114,7 +136,9 @@ export function useVariantGame(id) {
 		}
 		const s = V.value.sides[viewer.value]
 		const base = s.rotate ?? (viewer.value === 0 ? 0 : 180)
-		return (base + (flipped.value ? 180 : 0)) % 360
+		// a variant that must not be turned (the multiverse: time runs to the right) ignores "Flip board"
+		const flip = flipped.value && V.value.flipBoard !== false
+		return (base + (flip ? 180 : 0)) % 360
 	})
 
 	const hidden = computed(() => {
@@ -193,8 +217,22 @@ export function useVariantGame(id) {
 		}
 	}
 
-	const canUndo = computed(() => Boolean(record.value?.moves.length && !thinking.value && !secret.value
-		&& !handover.value))
+	/**
+	 * How many moves undo takes back: the computer's moves at the end of the move list and the human's move before
+	 * them (read from the sides of the history records), or 0 when no human move is left to take back.
+	 */
+	const undoCount = computed(() => {
+		const list = record.value?.moves ?? []
+		const history = state.value?.history ?? []
+		const sideOf = (i) => (history.length === list.length ? history[i].side : null)
+		let k = 0
+		while (k < list.length && players.value[sideOf(list.length - 1 - k)]?.kind === 'computer') {
+			k++
+		}
+		return k < list.length ? k + 1 : 0
+	})
+
+	const canUndo = computed(() => Boolean(undoCount.value && !thinking.value && !secret.value && !handover.value))
 
 	/** Clear the selection and every half-made move. */
 	function clearSelection() {
@@ -204,14 +242,26 @@ export function useVariantGame(id) {
 	}
 
 	/**
+	 * The type of the piece that a move of the side to move moves (its first from square, on the real state), or null
+	 * for a code without one (a drop, whose type is in the code, or a code that names no square).
+	 *
+	 * @param {string} code move code
+	 * @return {string|null}
+	 */
+	function movedType(code) {
+		const { from } = moveSquares(V.value, code, moves.value)
+		return from.length ? sidePieceType(state.value, from[0], state.value.turn) : null
+	}
+
+	/**
 	 * Save the record with a new state.
 	 *
 	 * @param {object} next new state
-	 * @param {Array<{code: string, i: number}>} movesList the move list that produces it
+	 * @param {Array<{code: string, i: number, t?: string}>} movesList the move list that produces it
 	 */
 	function commit(next, movesList) {
 		const rec = { ...record.value, moves: movesList, current: next }
-		saveVariantGame(rec)
+		saveFailed.value = saveVariantGame(rec) === false
 		record.value = rec
 		state.value = next
 	}
@@ -234,6 +284,8 @@ export function useVariantGame(id) {
 		}
 		const index = res.outcomes.indexOf(res.branch)
 		const mover = state.value.turn
+		// the type of the piece that moved, for the move list (the states before the moves are not kept)
+		const type = movedType(code)
 		// with an umpire every own move gets the same result box: whether it rolled is hidden information
 		lastRoll.value = res.outcomes.length > 1 || res.branch.rolled || V.value.umpire
 			? {
@@ -250,7 +302,7 @@ export function useVariantGame(id) {
 		notice.value = null
 		refused.value = []
 		clearSelection()
-		commit(res.state, [...record.value.moves, { code, i: index }])
+		commit(res.state, [...record.value.moves, type ? { code, i: index, t: type } : { code, i: index }])
 		afterChange({ side: mover, code, key: res.branch.key })
 	}
 
@@ -267,11 +319,24 @@ export function useVariantGame(id) {
 	}
 
 	/**
+	 * The variant's warning for a legal move (`moveWarning(state, code)`, the multiverse's stranded turn), or null.
+	 *
+	 * @param {string} code move code
+	 * @return {string|null}
+	 */
+	function warningOf(code) {
+		const text = V.value.moveWarning ? V.value.moveWarning(state.value, code) : null
+		return typeof text === 'string' && text ? text : null
+	}
+
+	/**
 	 * Try a move on the real state: a refused attempt gets a notice (the umpire's "no" when the player could not know
-	 * it), a move that rolls waits for confirmation, except with an umpire, where an attempt is binding. In a hidden
-	 * game the pending outcomes carry no `result`: whether an outcome ends the game depends on the whole real state
-	 * (a quiet draw waits while a hidden enemy piece can capture the mover's king for certain, and the quiet counter
-	 * counts the enemy's moves in the fog), which the player must not learn before committing to the move.
+	 * it), a move that rolls waits for confirmation, except with an umpire, where an attempt is binding. A move the
+	 * variant warns about (`moveWarning`) waits for confirmation with the warning, even a certain move; with an umpire
+	 * it shows no odds. In a hidden game the pending outcomes carry no `result`: whether an outcome ends the game
+	 * depends on the whole real state (a quiet draw waits while a hidden enemy piece can capture the mover's king for
+	 * certain, and the quiet counter counts the enemy's moves in the fog), which the player must not learn before
+	 * committing to the move.
 	 *
 	 * @param {string} code move code
 	 */
@@ -286,8 +351,13 @@ export function useVariantGame(id) {
 			}
 			return
 		}
-		if (needsConfirmation(V.value, outs)) {
-			pending.value = { code, outcomes: secret.value ? outs.map(withoutResult) : outs }
+		const warning = warningOf(code)
+		const rolls = needsConfirmation(V.value, outs)
+		if (rolls || warning) {
+			const shown = V.value.umpire ? [] : secret.value ? outs.map(withoutResult) : outs
+			// whether the move might capture is hidden information while a hidden game runs
+			const capture = !secret.value && outs.some((o) => o.key === 'capture')
+			pending.value = { code, outcomes: rolls ? shown : [], warning, type: movedType(code), capture }
 			return
 		}
 		play(code)
@@ -318,9 +388,9 @@ export function useVariantGame(id) {
 		notice.value = null
 		const Vv = V.value
 		if (mode.value === 'measure') {
+			// the tapped part itself: a variant may allow a measurement from some parts only (`allowQuantum`)
 			const code = '?' + Vv.topology.names[sq]
-			const id = pieceAt(sq)
-			if (id >= 0 && legalMoves(Vv, own.value).some((m) => m.type === 'measure' && pieceAt(m.from[0]) === id)) {
+			if (pieceAt(sq) >= 0 && isLegal(Vv, own.value, code)) {
 				attempt(code)
 			} else {
 				notice.value = { kind: 'noMeasure' }
@@ -379,6 +449,23 @@ export function useVariantGame(id) {
 	}
 
 	/**
+	 * The squares a split may go to next: every split target of the piece on `f`, or after the first target `t1` only
+	 * the targets that make a legal split with it (on the own view; a variant may forbid some pairs, the multiverse
+	 * splits within one board).
+	 *
+	 * @param {number} f the piece's square
+	 * @param {number} [t1] the first target
+	 * @return {number[]}
+	 */
+	function splitChoices(f, t1) {
+		const targets = splitTargets(V.value, own.value, f)
+		if (t1 === undefined) {
+			return targets
+		}
+		return targets.filter((t) => t !== t1 && isLegal(V.value, own.value, splitCode(V.value, f, t1, t)))
+	}
+
+	/**
 	 * A click in Split mode: the piece, then two targets.
 	 *
 	 * @param {number} sq square
@@ -397,17 +484,16 @@ export function useVariantGame(id) {
 			}
 			return
 		}
-		const targets = splitTargets(V.value, own.value, f)
-		if (sq === f || !targets.includes(sq)) {
+		if (t1 !== undefined && sq === t1) {
+			sel.value = [f]
+			return
+		}
+		if (sq === f || !splitChoices(f, t1).includes(sq)) {
 			clearSelection()
 			return
 		}
 		if (t1 === undefined) {
 			sel.value = [f, sq]
-			return
-		}
-		if (sq === t1) {
-			sel.value = [f]
 			return
 		}
 		attempt(splitCode(V.value, f, t1, sq))
@@ -483,14 +569,20 @@ export function useVariantGame(id) {
 		if (!V.value || !state.value) {
 			return out
 		}
-		const last = state.value.history[state.value.history.length - 1]
-		if (last && !(V.value.hidden && last.side !== viewer.value)) {
-			for (const s of lastMoveSquares(V.value, last)) {
-				add(s, 'last')
-			}
+		for (const s of lastMoveMarks(V.value, state.value, viewer.value)) {
+			add(s, 'last')
 		}
 		// the selection and the targets belong to the viewer's own turn only
 		if (!interactive.value) {
+			return out
+		}
+		// a move waiting for confirmation keeps its squares marked: the player sees what the box is about
+		if (pending.value) {
+			const { from, to } = moveSquares(V.value, pending.value.code, moves.value)
+			from.forEach((s, i) => add(s, i === 0 ? 'selected' : 'pick'))
+			for (const s of to) {
+				add(s, 'target')
+			}
 			return out
 		}
 		const blind = hidden.value
@@ -531,7 +623,7 @@ export function useVariantGame(id) {
 				}
 			}
 		} else if (mode.value === 'split' && sel.value.length && !blocked('split')) {
-			for (const t of splitTargets(V.value, own.value, sel.value[0])) {
+			for (const t of splitChoices(sel.value[0], sel.value[1])) {
 				if (!sel.value.includes(t)) {
 					target(t, 'split')
 				}
@@ -627,14 +719,17 @@ export function useVariantGame(id) {
 		}
 	}
 
-	/** Take back the last move of the human (and the computer's answers after it). */
+	/**
+	 * Take back the last move of the human and the computer's moves after it (a turn of several moves in the
+	 * multiverse), with one replay.
+	 */
 	function undo() {
 		if (!canUndo.value) {
 			return
 		}
-		const list = record.value.moves.slice()
-		list.pop()
+		const list = record.value.moves.slice(0, record.value.moves.length - undoCount.value)
 		let s = replay(list)
+		// a record whose history does not match its moves: take back one move at a time until a human is to move
 		while (list.length && players.value[s.turn]?.kind === 'computer') {
 			list.pop()
 			s = replay(list)
@@ -709,6 +804,7 @@ export function useVariantGame(id) {
 		handover,
 		refused,
 		flipped,
+		saveFailed,
 		players,
 		humanSides,
 		isHumanTurn,

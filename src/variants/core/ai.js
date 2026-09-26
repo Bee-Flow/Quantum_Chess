@@ -12,7 +12,13 @@
  * `level` is the id of the level, `'easy'`, `'normal'` or `'hard'`), `evaluate(world, side)`, `materialSign`, and
  * `replySide(state, me)`: whose answer the normal and hard levels look at after one of my moves (default the side to
  * move next; `null` for no answer; bughouse answers with the opponent on the same board). When it is `me` (a turn of
- * several moves, as in the multiverse before Submit), the search takes my best continuation instead.
+ * several moves, as in the multiverse before Submit), the search takes my best continuation instead. Two more:
+ *
+ * - `aiTimeShare(state) -> number` in (0, 1]: the share of the level's time this ply may take (default 1; a value
+ *   outside that range counts as 1). A turn of several moves shares one level time that way.
+ * - `aiViewExact` (declaration flag, default false): every candidate of `aiView` is legal on the real state with the
+ *   same outcomes. The search then checks only the move it chose on the real state (and the next best when that one is
+ *   not legal) instead of every candidate.
  *
  * The classic "your king cannot escape" (the variant's `escapeRule`, docs/rules.md 5) is seen in three places: the
  * outcomes of my own moves are the real states of the game, so a move after which the enemy cannot escape is a win
@@ -27,9 +33,15 @@
  * best candidates (`LEVELS[i].deep` of them) with a third move of mine after each answer, my forcing moves or none
  * (`deepen`), for as long as its time budget lasts, and keeps a re-scored move only when its whole evaluation fitted.
  *
- * The search yields to the browser every few milliseconds, so the board stays responsive while the computer thinks.
- * Its time budget (`LEVELS[i].timeMs`) runs from the call of `chooseMove` and is checked inside the evaluation of each
- * candidate too (per outcome and per reply), so a move at 64 worlds on a large board keeps to it as well.
+ * The search yields to the browser whenever it has run for more than a few milliseconds (`pacer`), between any two
+ * steps that may take long at 64 worlds: each split source and each candidate of the pre-pass, and inside the
+ * evaluation of a candidate each outcome, each answer and each outcome of an answer. So the board stays responsive
+ * while the computer thinks: at 64 worlds on the largest boards the longest stretch measured on a desktop is about
+ * 70 ms, one real state after an answer (the escape rule's search), against seconds before. Its time budget (the
+ * level's `timeMs` times `aiTimeShare`) runs from the call of `chooseMove` and is checked at the same places, so a
+ * move keeps to it as well, and an aborted search stops there too. The outcomes of the candidates are computed once
+ * per search: the forcing pre-pass, the evaluation and the third move of the hard level share them (`OutcomeMemo`,
+ * within a memory limit).
  *
  * With `aiView`, the computer plays the best move of its view that is legal on the real state. When none is, it tries
  * what a player could attempt (`candidateMoves`, and the merges and measurements of its `ownView`) in random order,
@@ -64,37 +76,68 @@ export const LEVELS = Object.freeze([
 const WIN = 100000
 
 /**
- * Thrown by `SearchClock.check` inside the evaluation of a candidate when the time budget is spent.
+ * How many board and piece entries the remembered outcomes of one search may hold together (`OutcomeMemo`), about
+ * 25 MB with the facts kept per world: every candidate at a few worlds, a dozen at 64 worlds on a 4 x 4 x 4 x 4 board.
+ */
+const MEMO_ENTRIES = 1 << 18
+
+/** The search yields to the browser when it has run this many milliseconds without a break. */
+const PACE_MS = 12
+
+/**
+ * How long after its time is spent the search still looks for a move that does not lose, when the best move it has
+ * judged loses by its own outcomes (a short share of the level time can leave a single judged move, one that strands
+ * a multiverse turn). The moves judged in that time get no answer, so they are compared with the best move's value
+ * without its answer too; a move that loses only by the answer is kept.
+ */
+const GRACE_MS = 100
+
+/**
+ * Thrown by `SearchClock.check` inside the evaluation of a candidate when the time budget is spent or the search was
+ * aborted.
  */
 class OutOfTime extends Error {}
 
 /**
- * The time budget of one search.
+ * The time budget of one search. An aborted search counts as out of time, so it stops inside an evaluation too.
  */
 class SearchClock {
 	/**
 	 * @param {number} timeMs how long the search may take from now, in milliseconds
+	 * @param {AbortSignal} [signal] abort the search
 	 */
-	constructor(timeMs) {
+	constructor(timeMs, signal) {
+		this.timeMs = timeMs
 		this.deadline = Date.now() + timeMs
+		this.signal = signal
 	}
 
 	/**
-	 * Whether the time is spent.
+	 * Whether the time is spent (or the search aborted).
 	 *
 	 * @return {boolean}
 	 */
 	up() {
-		return Date.now() > this.deadline
+		return Date.now() > this.deadline || Boolean(this.signal?.aborted)
 	}
 
 	/**
-	 * Stop the evaluation of the current candidate (throw `OutOfTime`) when the time is spent.
+	 * Stop the evaluation of the current candidate (throw `OutOfTime`) when the time is spent (or the search aborted).
 	 */
 	check() {
-		if (Date.now() > this.deadline) {
+		if (this.up()) {
 			throw new OutOfTime('out of time')
 		}
+	}
+
+	/**
+	 * Whether more than `ms` milliseconds have passed since the time was spent.
+	 *
+	 * @param {number} ms milliseconds
+	 * @return {boolean}
+	 */
+	past(ms) {
+		return Date.now() > this.deadline + ms
 	}
 }
 
@@ -169,28 +212,139 @@ export function evaluateState(V, state, side) {
 }
 
 /**
- * The expected value of a move for `side`, averaged over its outcomes.
+ * The expected value of a move for `side`, averaged over its outcomes, yielding to the browser between them.
  *
  * @param {object} V variant
  * @param {object} state state
  * @param {string} code move code
- * @param {(s: object) => number} score value of a resulting state
+ * @param {object[]|null} list every outcome of the move (`branches`), null when it is illegal
+ * @param {(s: object) => number|Promise<number>} score value of a resulting state
  * @param {SearchClock|null} clock the time budget (checked before each outcome), or null for no limit
+ * @param {() => Promise<void>} pause yields to the browser now and then
  * @param {boolean} [light] whether the outcomes are the light states of the search; false for the real states of the
  *   game, with every end rule (the escape rule, no legal move, a side that sits out)
- * @return {number|null}
+ * @return {Promise<number|null>}
  */
-function expected(V, state, code, score, clock, light = true) {
-	const list = branches(V, state, code)
+async function expected(V, state, code, list, score, clock, pause, light = true) {
 	if (!list) {
 		return null
 	}
 	let v = 0
 	for (const br of list) {
 		clock?.check()
-		v += (br.weight / T) * score(stateAfter(V, state, code, br, list, { light }))
+		await pause()
+		v += (br.weight / T) * await score(stateAfter(V, state, code, br, list, { light }))
 	}
 	return v
+}
+
+/**
+ * The size of a list of outcomes as the memory it holds: the board and piece entries of its worlds.
+ *
+ * @param {object[]|null} list outcomes (`branches`), or null
+ * @return {number}
+ */
+function sizeOf(list) {
+	let size = 0
+	for (const br of list ?? []) {
+		const b = br.worlds[0].b
+		size += br.worlds.length * (b.board.length + b.sq.length)
+	}
+	return size
+}
+
+/**
+ * The outcomes of the moves of one state (`branches`), remembered for one search: the forcing pre-pass, the
+ * evaluation and the third move of the hard level ask for the outcomes of the same candidate. Every outcome holds new
+ * worlds, and the search keeps facts per world (the moves, the royal captures), so the lists kept may hold at most
+ * `limit` board and piece entries together; a list that does not fit is computed again when it is asked for again.
+ */
+class OutcomeMemo {
+	/**
+	 * @param {object} V variant
+	 * @param {object} state state
+	 * @param {number} [limit] how many board and piece entries the kept lists may hold together
+	 */
+	constructor(V, state, limit = MEMO_ENTRIES) {
+		this.V = V
+		this.state = state
+		this.limit = limit
+		this.held = 0
+		this.known = new Map()
+		this.get = this.get.bind(this)
+	}
+
+	/**
+	 * The outcomes of a move.
+	 *
+	 * @param {string} code move code
+	 * @return {object[]|null} the outcomes, null when the move is illegal
+	 */
+	get(code) {
+		let entry = this.known.get(code)
+		if (entry === undefined) {
+			const list = branches(this.V, this.state, code)
+			entry = { list, size: sizeOf(list) }
+			if (this.held + entry.size <= this.limit) {
+				this.held += entry.size
+				this.known.set(code, entry)
+			}
+		}
+		return entry.list
+	}
+
+	/**
+	 * Forget the outcomes of a move.
+	 *
+	 * @param {string} code move code
+	 */
+	drop(code) {
+		const entry = this.known.get(code)
+		if (entry !== undefined) {
+			this.held -= entry.size
+			this.known.delete(code)
+		}
+	}
+
+	/**
+	 * Whether the lists kept fill more than half of the limit.
+	 *
+	 * @return {boolean}
+	 */
+	crowded() {
+		return this.held * 2 > this.limit
+	}
+}
+
+/**
+ * Whether a candidate of the computer's view (`aiView`) is legal on the real state, remembered for one search.
+ *
+ * @param {object} V variant
+ * @param {object} real the real state
+ * @return {(code: string) => boolean}
+ */
+function legalOn(V, real) {
+	const known = new Map()
+	return (code) => {
+		let ok = known.get(code)
+		if (ok === undefined) {
+			ok = branches(V, real, code) !== null
+			known.set(code, ok)
+		}
+		return ok
+	}
+}
+
+/**
+ * The share of the level's time for this ply: the variant's `aiTimeShare`, 1 without it or when it is not in (0, 1].
+ *
+ * @param {object} V variant
+ * @param {object} state the real state
+ * @return {number}
+ */
+function timeShare(V, state) {
+	const share = V.aiTimeShare ? Number(V.aiTimeShare(state)) : 1
+	return share > 0 && share <= 1 ? share : 1
 }
 
 /**
@@ -392,9 +546,11 @@ function certainTake(V, state, d = state.turn) {
  * @param {number} splitCount how many splits to consider
  * @param {() => number} rng random numbers
  * @param {SearchClock} clock the time budget (no more split candidates once it is spent)
- * @return {string[]}
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @param {(code: string) => object[]|null} outcomesOf the outcomes of a move (`OutcomeMemo`)
+ * @return {Promise<string[]>}
  */
-function candidates(V, state, splitCount, rng, clock) {
+async function candidates(V, state, splitCount, rng, clock, pause, outcomesOf) {
 	const out = legalMoves(V, state).map((m) => m.code)
 	if (splitCount > 0) {
 		const froms = new Set()
@@ -410,7 +566,8 @@ function candidates(V, state, splitCount, rng, clock) {
 			if (clock.up()) {
 				break
 			}
-			pool.push(...aiSplits(V, state, f, rng))
+			await pause()
+			pool.push(...aiSplits(V, state, f, rng, 6, outcomesOf))
 		}
 		for (let i = 0; i < splitCount && pool.length; i++) {
 			const k = Math.floor(rng() * pool.length)
@@ -454,9 +611,11 @@ function quietMoves(V, b, side, X, f) {
  * @param {number} f from square
  * @param {() => number} rng random numbers (the search's)
  * @param {number} [max] how many targets, and how many splits at most
+ * @param {(code: string) => object[]|null} [outcomesOf] the outcomes of a move (default `branches`; the search passes
+ *   its `OutcomeMemo`)
  * @return {string[]} split codes
  */
-export function aiSplits(V, state, f, rng, max = 6) {
+export function aiSplits(V, state, f, rng, max = 6, outcomesOf = (code) => branches(V, state, code)) {
 	const budget = budgetInfo(V, state, state.turn)
 	if (budget.used >= budget.limit) {
 		return []
@@ -489,7 +648,7 @@ export function aiSplits(V, state, f, rng, max = 6) {
 	for (let i = 0; i < best.length && out.length < max; i++) {
 		for (let j = i + 1; j < best.length && out.length < max; j++) {
 			const code = splitCode(V, f, best[i], best[j])
-			if (branches(V, state, code)) {
+			if (outcomesOf(code)) {
 				out.push(code)
 			}
 		}
@@ -637,12 +796,24 @@ function safeStep(V, bs, d) {
 }
 
 /**
- * Wait for the browser to breathe.
+ * Wait for the browser to breathe: continue in a new task, so that input and drawing come first. A message on a
+ * channel starts that task at once, while `setTimeout` waits at least 1 ms (4 ms in a browser once timeouts nest), a
+ * quarter of the search time at one yield per 12 ms; `setTimeout` only where there are no channels.
  *
  * @return {Promise<void>}
  */
 function breathe() {
-	return new Promise((resolve) => setTimeout(resolve, 0))
+	if (typeof MessageChannel !== 'function') {
+		return new Promise((resolve) => setTimeout(resolve, 0))
+	}
+	return new Promise((resolve) => {
+		const channel = new MessageChannel()
+		channel.port1.onmessage = () => {
+			channel.port1.close()
+			resolve()
+		}
+		channel.port2.postMessage(null)
+	})
 }
 
 /**
@@ -656,9 +827,10 @@ function breathe() {
  * @param {object} real the real state
  * @param {number} me the computer's side
  * @param {() => number} rng random numbers (the search's)
- * @return {string|null} the first accepted code, or null when none is legal
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @return {Promise<string|null>} the first accepted code, or null when none is legal
  */
-function attemptUntilAccepted(V, real, me, rng) {
+async function attemptUntilAccepted(V, real, me, rng, pause) {
 	const codes = (V.candidateMoves ? V.candidateMoves(real) : legalMoves(V, real)).map((m) => m.code)
 	if (V.ownView) {
 		for (const m of legalMoves(V, V.ownView(real, me))) {
@@ -674,14 +846,92 @@ function attemptUntilAccepted(V, real, me, rng) {
 		list[i] = list[k]
 		list[k] = swap
 	}
-	return list.find((code) => branches(V, real, code)) ?? null
+	for (const code of list) {
+		await pause()
+		if (branches(V, real, code)) {
+			return code
+		}
+	}
+	return null
 }
 
 /**
- * Choose a move for the side to move. The level's time budget counts from this call; once it is spent, the search
- * stops, also inside the evaluation of a candidate, and keeps the best move found so far. When the time is spent
- * before any candidate has a value, the next candidate is judged by the positions right after it (no answer is
- * searched), so there is always a move and the budget is kept at 64 worlds too.
+ * The pre-pass over the candidates, while the time lasts: with a view that is not exact, the candidates that are not
+ * legal on the real state are left out, and of the others the moves that might force the game (`forces`) come first.
+ * Once the time is spent, the remaining candidates follow unchecked, in their order. The outcomes of the forcing
+ * moves, which are judged first, stay in the memo; those of the others only while it is less than half full.
+ *
+ * @param {object} V variant
+ * @param {object} state the state the search runs on
+ * @param {string[]} moves the candidates
+ * @param {SearchClock} clock the time budget
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @param {OutcomeMemo} memo the outcomes of the moves of `state`
+ * @param {((code: string) => boolean)|null} legal whether a candidate is legal on the real state, or null to keep all
+ * @param {AbortSignal} [signal] abort the search
+ * @return {Promise<{ordered: string[], forcing: Set<string>}|null>} the candidates in the order to judge them and
+ *   those that might force the game, or null when the search was aborted
+ */
+async function prePass(V, state, moves, clock, pause, memo, legal, signal) {
+	const forcing = []
+	const others = []
+	let n = 0
+	while (n < moves.length && !clock.up()) {
+		if (signal?.aborted) {
+			return null
+		}
+		await pause()
+		const code = moves[n++]
+		if (legal && !legal(code)) {
+			continue
+		}
+		const list = memo.get(code)
+		if (list && forces(V, state, code, list)) {
+			forcing.push(code)
+		} else {
+			others.push(code)
+			if (memo.crowded()) {
+				memo.drop(code)
+			}
+		}
+	}
+	return { ordered: [...forcing, ...others, ...moves.slice(n)], forcing: new Set(forcing) }
+}
+
+/**
+ * The move to play from an exact view (`aiViewExact`): the chosen move when it is legal on the real state, else the
+ * next best of the judged candidates, else the next candidate in the order of the search, else what a player could
+ * attempt (`attemptUntilAccepted`).
+ *
+ * @param {object} V variant
+ * @param {object} real the real state
+ * @param {string|null} best the chosen move
+ * @param {Array<{code: string, value: number}>} judged the candidates with a value
+ * @param {string[]} ordered every candidate, in the order of the search
+ * @param {(code: string) => boolean} legal whether a candidate is legal on the real state
+ * @param {() => number} rng random numbers
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @return {Promise<string|null>}
+ */
+async function firstLegal(V, real, best, judged, ordered, legal, rng, pause) {
+	const ranked = [...judged].sort((a, b) => b.value - a.value).map((e) => e.code)
+	for (const code of new Set([best, ...ranked, ...ordered])) {
+		if (code !== null && legal(code)) {
+			return code
+		}
+		await pause()
+	}
+	return attemptUntilAccepted(V, real, real.turn, rng, pause)
+}
+
+/**
+ * Choose a move for the side to move. The level's time budget (times `aiTimeShare`) counts from this call; once it is
+ * spent, the search stops, also inside the evaluation of a candidate, and keeps the best move found so far. When the
+ * time is spent before any candidate has a value, the next candidate is judged by the positions right after it (no
+ * answer is searched), so there is always a move and the budget is kept at 64 worlds too; while the best move judged
+ * loses by its own outcomes (not only by the answer), the next ones are judged that way as well, for at most
+ * `GRACE_MS` more, and one of them replaces it only when its value beats the best move's value without its answer.
+ * The search yields to the browser every few milliseconds throughout.
  *
  * The outcomes of my own moves are the real states of the game (`stateAfter` without light mode), so every end rule
  * of the variant counts there: a move after which the enemy cannot escape is a win, one after which the game ends
@@ -699,36 +949,51 @@ function attemptUntilAccepted(V, real, me, rng) {
  */
 export async function chooseMove(V, state, { level = 'normal', rng = Math.random, signal } = {}) {
 	const L = LEVELS.find((l) => l.id === level) ?? LEVELS[1]
-	const clock = new SearchClock(L.timeMs)
+	const clock = new SearchClock(L.timeMs * timeShare(V, state), signal)
+	const pause = pacer()
 	const me = state.turn
 	// hidden-information variants: search the position as this side sees it, then keep the moves that are legal
 	const real = state
 	if (V.aiView) {
 		state = V.aiView(state, me, L.id)
 	}
-	const moves = candidates(V, state, L.splits, rng, clock).filter((c) => real === state || branches(V, real, c))
+	const memo = new OutcomeMemo(V, state)
+	const outcomesOf = memo.get
+	const legal = real === state ? null : legalOn(V, real)
+	// a view that is not exact: every candidate is checked on the real state before it is judged
+	const checkEach = legal !== null && !V.aiViewExact
+	const moves = await candidates(V, state, L.splits, rng, clock, pause, outcomesOf)
 	if (!moves.length) {
-		return V.aiView ? attemptUntilAccepted(V, real, me, rng) : null
+		return V.aiView ? attemptUntilAccepted(V, real, me, rng, pause) : null
 	}
-	let lastBreath = Date.now()
 	// the moves that might force the game are tried first; once the time is spent, the rest keep their order
-	const forcing = moves.filter((c) => !clock.up() && mightForce(V, state, c))
-	const ordered = [...forcing, ...moves.filter((c) => !forcing.includes(c))]
+	const pass = await prePass(V, state, moves, clock, pause, memo, checkEach ? legal : null, signal)
+	if (!pass) {
+		return null
+	}
 	const now = (s) => evaluateState(V, s, me)
-	const score = (s) => (!L.reply || s.result ? now(s) : replyValue(V, s, me, L, clock))
+	const score = (s) => (!L.reply || s.result ? now(s) : replyValue(V, s, me, L, clock, pause))
 	let best = null
 	let bestValue = -Infinity
+	// the value of the best move without its answer (only asked for in the grace period; undefined: not known yet)
+	let bestQuick
 	// the candidates whose whole evaluation fitted in the budget, for the third move of the hard level
 	const scored = []
-	for (const code of ordered) {
+	// every candidate with a value
+	const judged = []
+	for (const code of pass.ordered) {
 		if (signal?.aborted) {
 			return null
+		}
+		await pause()
+		if (checkEach && !legal(code)) {
+			continue
 		}
 		let late = clock.up()
 		let value = null
 		if (!late) {
 			try {
-				value = expected(V, state, code, score, clock, false)
+				value = await expected(V, state, code, outcomesOf(code), score, clock, pause, false)
 			} catch (e) {
 				if (!(e instanceof OutOfTime)) {
 					throw e
@@ -736,37 +1001,58 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
 				late = true
 			}
 		}
+		if (signal?.aborted) {
+			return null
+		}
 		if (late) {
-			if (best !== null) {
+			// the time is spent: stop, unless no move has a value yet or the best move loses by its own outcomes (then
+			// look a little longer for one that does not; a loss that only the answer shows cannot be compared with a
+			// move judged without its answer)
+			if (best !== null && (bestValue > -WIN / 2 || clock.past(GRACE_MS))) {
 				break
 			}
-			// no move has a value yet: judge this one quickly, without the answer
-			value = expected(V, state, code, now, null)
+			if (best !== null) {
+				bestQuick ??= await expected(V, state, best, outcomesOf(best), now, null, pause)
+				if (bestQuick === null || bestQuick > -WIN / 2) {
+					break
+				}
+			}
+			// judge this one quickly, without the answer
+			value = await expected(V, state, code, outcomesOf(code), now, null, pause)
 		}
 		if (value === null) {
 			continue
 		}
 		const noisy = value + (L.noise ? (rng() - 0.5) * 2 * L.noise : rng() * 1e-3)
 		if (!late) {
-			scored.push({ code, value: noisy, forcing: forcing.includes(code) })
+			scored.push({ code, value: noisy, forcing: pass.forcing.has(code) })
 		}
-		if (noisy > bestValue) {
+		judged.push({ code, value: noisy })
+		// a move judged without its answer is compared with the best move judged that way
+		const better = late && best !== null ? value > bestQuick : noisy > bestValue
+		if (better) {
 			bestValue = noisy
 			best = code
-		}
-		if (Date.now() - lastBreath > 12) {
-			await breathe()
-			lastBreath = Date.now()
+			bestQuick = late ? value : undefined
 		}
 	}
+	if (signal?.aborted) {
+		return null
+	}
 	if (L.deep && V.sideCount === 2 && scored.length > 1 && bestValue < WIN * 0.99 && !clock.up()) {
-		const deeper = await deepen(V, state, me, L, clock, scored, rng, signal)
+		const deeper = await deepen(V, state, me, L, clock, scored, rng, signal, pause, outcomesOf)
 		if (signal?.aborted) {
 			return null
 		}
 		best = deeper ?? best
 	}
-	return best
+	if (real === state) {
+		return best
+	}
+	if (checkEach) {
+		return best ?? attemptUntilAccepted(V, real, me, rng, pause)
+	}
+	return firstLegal(V, real, best, judged, pass.ordered, legal, rng, pause)
 }
 
 /**
@@ -843,9 +1129,10 @@ function certainEnd(V, n) {
  * @param {number} me my side
  * @param {object} L level
  * @param {SearchClock} clock the time budget (checked before each answer)
- * @return {{value: number}|{them: number, r: object, answers: Array<{code: string, list: object[]}>}}
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @return {Promise<{value: number}|{them: number, r: object, answers: Array<{code: string, list: object[]}>}>}
  */
-function answersOf(V, s, me, L, clock) {
+async function answersOf(V, s, me, L, clock, pause) {
 	const them = V.replySide ? V.replySide(s, me) : s.turn
 	if (them === null || them === undefined) {
 		return { value: evaluateState(V, s, me) }
@@ -859,6 +1146,7 @@ function answersOf(V, s, me, L, clock) {
 	const answers = []
 	for (const m of legalMoves(V, r)) {
 		clock.check()
+		await pause()
 		const list = branches(V, r, m.code)
 		if (list && (L.fullReply || forces(V, r, m.code, list))) {
 			answers.push({ code: m.code, list })
@@ -877,13 +1165,17 @@ function answersOf(V, s, me, L, clock) {
  * @param {object[]} list every outcome of the answer
  * @param {number} me my side
  * @param {number} them the replying side
- * @return {{mine: number, theirs: number, leaves: Array<{n: object, p: number}>}}
+ * @param {SearchClock} clock the time budget (checked before each outcome)
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @return {Promise<{mine: number, theirs: number, leaves: Array<{n: object, p: number}>}>}
  */
-function judgeAnswer(V, r, code, list, me, them) {
+async function judgeAnswer(V, r, code, list, me, them, clock, pause) {
 	let mine = 0
 	let theirs = 0
 	const leaves = []
 	for (const br of list) {
+		clock.check()
+		await pause()
 		const n = answerState(V, r, code, br, list)
 		const p = br.weight / T
 		mine += p * evaluateState(V, n, me)
@@ -904,10 +1196,11 @@ function judgeAnswer(V, r, code, list, me, them) {
  * @param {number} me my side
  * @param {object} L level
  * @param {SearchClock} clock the time budget (checked before each reply)
- * @return {number}
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @return {Promise<number>}
  */
-function replyValue(V, s, me, L, clock) {
-	const a = answersOf(V, s, me, L, clock)
+async function replyValue(V, s, me, L, clock, pause) {
+	const a = await answersOf(V, s, me, L, clock, pause)
 	if (a.value !== undefined) {
 		return a.value
 	}
@@ -915,8 +1208,7 @@ function replyValue(V, s, me, L, clock) {
 	// below the hard level the replying side may also stand pat (make a quiet move)
 	let bestForThem = L.fullReply ? -Infinity : evaluateState(V, s, a.them)
 	for (const { code, list } of a.answers) {
-		clock.check()
-		const { mine, theirs } = judgeAnswer(V, a.r, code, list, me, a.them)
+		const { mine, theirs } = await judgeAnswer(V, a.r, code, list, me, a.them, clock, pause)
 		if (theirs > bestForThem) {
 			bestForThem = theirs
 			worst = mine
@@ -926,15 +1218,15 @@ function replyValue(V, s, me, L, clock) {
 }
 
 /**
- * A function to await often during a long evaluation: it yields to the browser when the last yield is more than a few
- * milliseconds ago.
+ * A function to await often during a long search: it yields to the browser when the last yield is more than a few
+ * milliseconds ago (`PACE_MS`).
  *
  * @return {() => Promise<void>}
  */
 function pacer() {
 	let last = Date.now()
 	return async () => {
-		if (Date.now() - last > 12) {
+		if (Date.now() - last > PACE_MS) {
 			await breathe()
 			last = Date.now()
 		}
@@ -955,15 +1247,16 @@ function pacer() {
  * @param {Array<{code: string, value: number, forcing: boolean}>} scored the candidates of the two-move pass with
  *   their values, and whether they might force the game
  * @param {() => number} rng random numbers
- * @param {AbortSignal} [signal] abort the search
+ * @param {AbortSignal|undefined} signal abort the search
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @param {(code: string) => object[]|null} outcomesOf the outcomes of a move (`OutcomeMemo`)
  * @return {Promise<string|null>}
  */
-async function deepen(V, state, me, L, clock, scored, rng, signal) {
+async function deepen(V, state, me, L, clock, scored, rng, signal, pause, outcomesOf) {
 	const top = [...scored]
 		.sort((a, b) => Math.round(b.value) - Math.round(a.value) || b.forcing - a.forcing || b.value - a.value)
 		.slice(0, L.deep)
-	const budget = new SearchClock(clock.deadline - Date.now() - L.timeMs / 10)
-	const pause = pacer()
+	const budget = new SearchClock(clock.deadline - Date.now() - clock.timeMs / 10, signal)
 	let best = null
 	let bestValue = -Infinity
 	for (const { code } of top) {
@@ -972,9 +1265,10 @@ async function deepen(V, state, me, L, clock, scored, rng, signal) {
 		}
 		let value = 0
 		try {
-			const list = branches(V, state, code)
+			const list = outcomesOf(code)
 			for (const br of list) {
 				budget.check()
+				await pause()
 				const s = stateAfter(V, state, code, br, list)
 				const v = s.result ? evaluateState(V, s, me) : await deepValue(V, s, me, L, budget, pause)
 				value += (br.weight / T) * v
@@ -1010,18 +1304,16 @@ async function deepen(V, state, me, L, clock, scored, rng, signal) {
  * @return {Promise<number>}
  */
 async function deepValue(V, s, me, L, clock, pause) {
-	const a = answersOf(V, s, me, L, clock)
+	const a = await answersOf(V, s, me, L, clock, pause)
 	if (a.value !== undefined) {
 		return a.value
 	}
 	if (a.them === me) {
-		return replyValue(V, s, me, L, clock)
+		return replyValue(V, s, me, L, clock, pause)
 	}
 	const judged = []
 	for (const { code, list } of a.answers) {
-		clock.check()
-		await pause()
-		judged.push(judgeAnswer(V, a.r, code, list, me, a.them))
+		judged.push(await judgeAnswer(V, a.r, code, list, me, a.them, clock, pause))
 	}
 	judged.sort((x, y) => x.mine - y.mine)
 	let least = Infinity

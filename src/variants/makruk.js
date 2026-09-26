@@ -328,13 +328,15 @@ const spec = {
 			name: () => t('quantumchess', 'Met'),
 			moves: [{ leap: BISHOP_DIRS }],
 			value: VALUES.m,
-			glyph: { text: 'M', shape: 'circle' },
+			// a small queen: the queen's place, one diagonal step
+			glyph: { sprite: 'q', scale: 0.8 },
 		},
 		s: {
 			name: () => t('quantumchess', 'Khon'),
 			moves: [{ leap: BISHOP_DIRS }, { leap: [[0, 1]], oriented: true }],
 			value: VALUES.s,
-			glyph: { text: 'Kh', shape: 'circle' },
+			// bishop-like, as Western sets draw the khon (a disc with "Kh" read like a king)
+			glyph: { sprite: 'b' },
 		},
 		n: {
 			name: () => t('quantumchess', 'Ma'),

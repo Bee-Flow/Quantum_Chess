@@ -127,17 +127,20 @@ describe('bughouse: boards, seats and setup', () => {
 		expect(topo.names.every((n) => /^[AB]:[a-h][1-8]$/.test(n))).toBe(true)
 		const cell = (n) => topo.cells[sq(n)]
 		// White A at the bottom-left, Black B at the bottom-right; a light square in each bottom-right corner
-		expect(cell('A:a1')).toMatchObject({ x: 0, y: 7, shade: 'dark' })
-		expect(cell('A:h1')).toMatchObject({ x: 7, y: 7, shade: 'light' })
-		expect(cell('B:h8')).toMatchObject({ x: 8.8, y: 7, shade: 'dark' })
-		expect(cell('B:a8')).toMatchObject({ x: 15.8, y: 7, shade: 'light' })
-		expect(cell('B:a1')).toMatchObject({ x: 15.8, y: 0 })
-		// the height holds the strip of file letters under the cells, and so does each board frame
-		expect(topo.layout).toMatchObject({ width: 16.8, height: 8.6, zoomable: true })
+		expect(cell('A:a1')).toMatchObject({ x: 0, y: 9.3, shade: 'dark' })
+		expect(cell('A:h1')).toMatchObject({ x: 7, y: 9.3, shade: 'light' })
+		expect(cell('B:h8')).toMatchObject({ x: 8.8, y: 9.3, shade: 'dark' })
+		expect(cell('B:a8')).toMatchObject({ x: 15.8, y: 9.3, shade: 'light' })
+		expect(cell('B:a1')).toMatchObject({ x: 15.8, y: 2.3 })
+		// each board frame holds the strip of file letters under the cells; the frames sit in the middle of a drawing
+		// three quarters as high as it is wide (see the phone test in phone-layout.vue.spec.js)
+		expect(topo.layout).toMatchObject({ width: 16.8, height: 13.2, zoomable: true })
+		// no board letters: the players' names say which board it is
 		expect(topo.layout.boards).toEqual([
-			{ x: 0, y: 0, w: 8, h: 8.6, label: 'A' },
-			{ x: 8.8, y: 0, w: 8, h: 8.6, label: 'B' },
+			{ x: 0, y: 2.3, w: 8, h: 8.6 },
+			{ x: 8.8, y: 2.3, w: 8, h: 8.6 },
 		])
+		expect(V.handBoards).toEqual([0, 1, 1, 0])
 		expect(topo.layout.labels.length).toBe(32)
 		expect(V.sides.map((s) => [s.id, s.name(), s.color, s.rotate])).toEqual([
 			['aw', 'White A', 'white', 0],
@@ -217,29 +220,48 @@ describe('bughouse: boards, seats and setup', () => {
 		expect(royalDanger(V, d, 2)).toBe(0)
 	})
 
-	it('keeps the board letters clear of the file letters in both views', () => {
-		// VariantBoard draws each board letter just above its frame and turns the whole drawing about its middle for
-		// Team 2 (rotate 180, or Flip board). The file letters must stay inside the frames in both views, so that the
-		// half turn, which puts them above the cells, never sets them next to a board letter.
-		const { width: w, height: h, boards, labels } = V.topology.layout
-		expect(boards.every((b) => b.y === 0 && b.h === h)).toBe(true)
+	it('keeps the players\' names, one per edge, clear of the file letters in both views', () => {
+		// VariantBoard turns the whole drawing about its middle for Team 2 (rotate 180, or Flip board). The file
+		// letters must stay inside the frames in both views, so that the half turn, which puts them above the cells,
+		// never sets them next to a name; each name is the only label of its edge (the boards carry no letter: the
+		// names say "White A", "Black A"), bold, in the middle of the edge just outside the frame.
+		const { width: w, height: h, boards, labels } = V.layoutOf(newGame(V)).layout
+		expect(boards.every((b) => !b.label)).toBe(true)
+		const top = boards[0].y
+		expect(boards.every((b) => b.y === top && b.h === 8.6)).toBe(true)
+		// the frames sit in the middle, so the half turn puts them back in place
+		expect(top + 8.6 + top).toBeCloseTo(h, 9)
 		const files = labels.filter((l) => /^[a-h]$/.test(l.text))
 		expect(files.length).toBe(16)
+		const names = labels.filter((l) => l.text.length > 2)
+		expect(names.map((l) => l.text).sort()).toEqual(['Black A', 'Black B', 'White A', 'White B'])
 		for (const [rotation, turn] of [[0, (x, y) => [x, y]], [180, (x, y) => [w - x, h - y]]]) {
 			for (const l of labels) {
 				const [x, y] = turn(l.x, l.y)
 				expect(y, rotation + ' ' + l.text).toBeGreaterThan(0.1)
 				expect(y, rotation + ' ' + l.text).toBeLessThan(h - 0.1)
+				const frame = boards.find((b) => x > b.x && x < b.x + b.w)
 				if (/^[a-h]$/.test(l.text)) {
 					// a file letter sits inside a frame, in the strip beside the cells (0.6 high)
-					expect(boards.some((b) => x > b.x && x < b.x + b.w)).toBe(true)
-					expect(rotation ? y < 0.6 : y > 8).toBe(true)
+					expect(frame).toBeDefined()
+					expect(rotation ? y > top && y < top + 0.6 : y > top + 8 && y < top + 8.6).toBe(true)
+				} else if (l.text.length > 2) {
+					// a name: just outside its frame, in the middle of the edge, bold
+					expect(y < top - 0.2 || y > top + 8.8).toBe(true)
+					expect(x).toBeCloseTo(frame.x + 4, 9)
+					expect(l.strong).toBe(true)
 				}
 			}
 		}
+		// White A and Black B (Team 1) sit at the bottom edge in Team 1's view, their opponents at the top
+		const at = (text) => names.find((l) => l.text === text)
+		expect([at('White A').y, at('Black B').y]).toEqual([11.2, 11.2])
+		expect([at('White B').y, at('Black A').y]).toEqual([2, 2])
+		expect(at('White A').x).toBeLessThan(8)
+		expect(at('Black B').x).toBeGreaterThan(8.8)
 		// the cells fill the rest of each frame
 		for (const c of V.topology.cells) {
-			expect(c.y >= 0 && c.y + c.h <= 8).toBe(true)
+			expect(c.y >= top && c.y + c.h <= top + 8).toBe(true)
 		}
 	})
 
@@ -253,8 +275,16 @@ describe('bughouse: boards, seats and setup', () => {
 			s = play(V, s, code)
 		}
 		expect(seen).toEqual([[-0.12, 4, 'seat0'], [8.68, 12.8, 'seat1'], [8.68, 12.8, 'seat2'], [-0.12, 4, 'seat3']])
+		// with a mouse both boards stay in view; on a touch screen the view opens on the board (its frame and names)
+		const focus = V.layoutOf(newGame(V)).layout.focus
+		expect(focus).toMatchObject({ zoom: 1, box: { w: 8.6, h: 9.9 } })
+		expect(focus.y).toBeCloseTo(2.3 + 4.3, 9)
 		const over = { ...s, result: { winner: null, winners: [0, 2], reason: 'king' } }
-		expect(V.layoutOf(over)).toBe(V.topology)
+		const plain = V.layoutOf(over)
+		expect(plain.layout.focus).toBeUndefined()
+		expect(plain.layout.areas).toBeUndefined()
+		expect(plain.layout.labels).toHaveLength(36)
+		expect(plain.cells).toBe(V.topology.cells)
 	})
 })
 

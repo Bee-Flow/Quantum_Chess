@@ -1319,3 +1319,232 @@ the multiverse team's new files.
 - U1: confirm the Kriegspiel exception (move dots on squares the viewer cannot see, built from its own pieces only).
 - `docs/variants.md` rule 9 still opens with "There is no check in Quantum Chess", while the shared rules card says
   "Check does not limit your moves" (8.4) and the computer now treats a check as a forcing move.
+
+---
+
+## 10. App and UI pass
+
+Status: implemented and verified, 2026-09-26, uncommitted on top of commit 723a820 (the multiverse module). Two
+sources of requests: the generic app and computer items of the multiverse spec (`handoff/research/multiverse-final.md`
+section 7.2, H2-H13, and its review notes in section 15), and the visual review of the variant screens
+(`handoff/screens/now/review-findings.json`: 63 findings, 8 of them high), followed by a second review of the fixed
+screens (21 findings). Files: `src/variants/core/ai.js`, `src/variantplay/variantGames.js` (package "app");
+`src/variantplay/components/VariantBoard.vue`, `VariantPiece.vue`, `composables/useVariantGame.js`, `marks.js`,
+`texts.js`, `src/views/VariantGameView.vue` and `VariantsView.vue` (package "board"); then, for the review,
+`panel.js`, `glyphs.js` and the variant modules `bughouse.js`, `hyper4d.js`, `trid/board.js`, `koth.js`,
+`kriegspiel.js` (with `kriegspiel/umpire.js`), `capablanca.js`, `makruk.js` and `raumschach.js`. No multiverse file
+was touched. Scratch files: `handoff/tmp/computer-saves/`, `handoff/tmp/board-view/`, `handoff/tmp/phone-layout/`,
+`handoff/tmp/visual-verify/`, `handoff/tmp/verify-code/` and `handoff/tmp/ui-fix3/`; new screenshots in
+`handoff/screens/after/` (harness `handoff/ui-harness/shoot.mjs`). For variant authors, `handoff/IMPLEMENTING.md`
+describes the result (sections "Computer player", "Board and texts (UI)", "UI layout" and "Saved games", and the
+glyphs under "Piece types").
+
+### 10.1 Decisions
+
+The lead's decisions for this pass:
+
+- **H5 and H10 are in scope** (the spec lists them as recommended).
+- **F10 as written**: a turn stranded by the player's own action loses (`stranded`); H4's warning asks before such a
+  move is played.
+
+Decided while building:
+
+- `aiViewExact` checks the chosen move on the real state, then the next best judged candidate, then the others in the
+  order of the search, then the existing random-attempt fallback of `aiView`.
+- The outcome memo of H2 is bounded (2^18 board and piece entries, about 25 MB): unbounded, it raised the peak memory
+  of a 64-world search on hyper4d from 49-103 MB to 365-477 MB and judged no more candidates.
+- A search whose time runs out while every move judged so far loses keeps judging quickly for up to 100 ms
+  (`GRACE_MS`), not asked for by the spec (10.2).
+- `saveVariantGame` returns true or false; `storage.js` needed no change. A new game that cannot be stored is not
+  created (`createVariantGame` returns null), and the New game dialog stays open with the notice.
+- H5: the last-move box shows no move codes, so only the move list and the pass-the-device box pass the record.
+- H6: pointer capture starts only once a drag has begun, so a tap still reaches the square.
+- H10: the view follows the human's side only when the side or the opponent changes in the dialog, so the player can
+  still choose another view.
+- H11: the rule lives in `marks.js` (`lastMoveMarks(V, state, viewer)`); a hidden variant never calls the hook.
+- The budget count still starts at 1 ("Budget 1/8"): the rules define the budget as the number of arrangements.
+- The move list uses long algebraic notation, not SAN.
+- The sticky phone controls were fixed differently from the second review's suggestion, with the same effect: a
+  slimmer bar and room reserved for it under the board (10.4).
+
+### 10.2 Package "app"
+
+- **H2 the computer yields** (`ai.js`). The search checks its clock and yields in every loop that can run long:
+  each split source while the candidates are built, each candidate of the pre-pass (which now holds both the
+  real-state filter of an `aiView` copy and the forcing filter), each outcome of a candidate, each answer and each
+  outcome of an answer, and the hard level's third move. Candidates the real-state filter did not reach before the
+  time ran out are checked just before they are judged. With `aiViewExact: true` there is no check per candidate
+  (10.1). The outcomes of each candidate are computed once per search and shared by the forcing filter, the
+  evaluation and the third move (`OutcomeMemo`; candidates that are not forcing leave it once it is half full). The
+  memo gives no measurable speed gain on these variants: at 8 worlds the number of candidates judged is the same
+  within noise.
+  - Additions beyond the spec: an aborted search stops within about 30-40 ms, also inside the evaluation of a move;
+    yields go through a `MessageChannel` (about 0.06 ms each) instead of `setTimeout(0)` (about 1 ms in Node and
+    4 ms in browsers once nested, up to a quarter of the search time); and the grace period (`GRACE_MS` = 100 ms):
+    under CPU load the multiverse self-play test failed 2 of 2 times, because with the short time share only one
+    move, a stranding one, had been judged. With the grace period it passes under load, and a replay at 1 % of the
+    level time never strands itself needlessly.
+- **H3 `aiTimeShare(state)`**: asked once per search with the real state; a value outside (0, 1] counts as 1. The
+  level time is multiplied by it, and the hard level's safety margin of a tenth is taken from the shorter time.
+- **H8 saved records of version 2** (`variantGames.js`). World 0 is saved in full; every other world as
+  `{ w, d: { sq|ty|sd|board: [index, value, ...] }, n?: { array lengths that differ }, f?: { x and the other fields
+  that differ } }`; a world whose fields differ from world 0's is saved in full. `packWorlds` and `unpackWorlds` are
+  exported. The record in memory always holds full worlds and is never modified, except `updated`.
+  `loadVariantGame` reads version 1 and 2 and returns null for anything else, a record without worlds or a broken
+  record. `saveVariantGame` returns false when the storage refuses the record (after removing finished games, oldest
+  first): the stored copy and the index are then left untouched (before, the index was updated anyway). When the
+  record fits but the index of a game not yet listed does not, the record is removed again. Bug fix: the limit of
+  24 games (`MAX_GAMES`) could evict the game being saved; it now never does. Saved moves also keep the type of the
+  piece that moved (`t`, for the move list's letters; see 10.4).
+
+### 10.3 Package "board"
+
+- **H4 `moveWarning(state, code)`**: when the hook returns a text, the move waits for confirmation even if it is
+  certain. The pending box shows the warning in the danger colour; the button reads "Play anyway" when nothing rolls,
+  otherwise "Play and roll" with the odds; with an umpire no odds are shown.
+- **H5** `codeText(V, code, record)` in texts.js passes the history record to the variant's `codeText(code, record)`,
+  in the move list and the pass-the-device box (null where there is no record).
+- **H6 focus box, zoom cap, touch** (`VariantBoard.vue`). `focus.zoom` is used with a mouse; with a `box` and no
+  `zoom` the board fits the box; on a touch screen it zooms to at least 28 px per unit. The board measures its own
+  size on screen for this. The zoom cap is `max(8, 40 px / px per unit at zoom 1)`, used by the buttons, the wheel,
+  the pinch and the focus. While zoomed in the board takes every touch gesture (`touch-action: none`); at zoom 1 the
+  page scrolls over it. Pointer capture starts once a drag has begun; a two-finger pinch zooms around the midpoint,
+  and lifting one finger goes on as a pan. Checked in Chromium with emulated touch on hyper4d and the multiverse
+  (`handoff/tmp/board-view/touch-probe.mjs`).
+- **H7**: after the first split target, only targets that make a legal split with it are marked or accepted; Measure
+  checks the tapped square itself (`allowQuantum`).
+- **H9 undo**: works out how many moves to take back from the sides of the history records (the computer's moves at
+  the end and the human's move before them), then replays once. Disabled when only the computer has moved.
+- **H10**: the New game dialog preselects the `black` view of a `view` option with the values `white` and `black` when
+  the human plays Black against the computer (10.1).
+- **H11** `lastMoveMarks(V, state, viewer)` in `marks.js`: the variant's hook when it has one (invalid squares and
+  repeats dropped), else the last record's squares; hidden variants keep their rule (only the viewer's own last move)
+  and never call the hook.
+- **H12** `flipBoard: false`: "Flip board" is hidden and the rotation ignores it.
+- **H13**: outlines keep their `kind`; `kind: 'threat'` is drawn above the cells in the danger colour
+  (`qc-vboard__outline--threat`).
+- **Save notice**: when `saveVariantGame` returns false, "This game could not be saved on this device." appears as
+  an alert and clears after the next successful save.
+
+### 10.4 Visual review
+
+First review (`handoff/screens/now/review-findings.json`). Fixed in this pass, by title:
+
+- Fogged light squares look the same as visible dark squares (high): the fog is far darker, with a stronger hatch.
+- Probability badges are about 7px on the phone (high), and the five other badge findings (too small on phone boards
+  and the bughouse boards; unreadably small and covering the glyph; ghost "50%" badges too small and the ghost fade
+  subtle; ghosts fading into the last-move yellow; the ghost's opacity shifting Red's pieces towards Yellow's orange):
+  badge text is at least 11 px on screen, a probability ring like the main board's is drawn above the fade, pieces
+  under 30 px show only the ring, and pieces drawn in their side's own colour fade only a little.
+- Crazyhouse pockets are far below the board and below the fold on a phone (high); On the phone, the pieces in hand
+  are far below the board, under all the controls (high); The hand tiles are tiny and listed in the opposite order
+  to the board; There is no pocket area until the first capture, so the layout jumps: the hands sit at the board,
+  always shown, the hand of the side at the top of the board above it.
+- Bughouse boards are too small to play on a phone (high), Tri-D board is far too small to play on a phone (high)
+  and 4D grid of 16 boards has 18 px cells on the phone (high): bughouse opens on a touch screen on the board of the
+  seat to move at 28 px per square, with the players' names (bold labels at the board edges, which replace the board
+  letters); 4D chess opens on the 2 × 2 boards around the mover's army at 28 px per square (`layoutOf` with a focus
+  box); Tri-D is redrawn as one column (W below B, N beside them level with its ranks, the attack boards at the
+  corners they are pinned to), 11 × 13.9 units, whole on a phone at about 30 px per square. With a mouse all three
+  show the whole drawing. The redraw also fixes "Attack boards are detached from the corners they are pinned to;
+  KL1 reads as part of N", and 4D now numbers the ranks of every board and letters every file ("Files b and c are
+  never labelled").
+- Phone header: title needlessly indented, wraps, and 'Rules' is cut to 'Rul…'.
+- Phone: 'to move' line and the Move/Split/Merge/Measure buttons are below the fold: on a phone the controls stay at
+  the bottom of the screen while a tall board is scrolled. On the phone, the squares are tiny and the player cards
+  push the move controls off-screen: the cards part.
+- Bughouse desktop: the panel runs past the fold while the boards leave 400 px empty.
+- The four budget-pip findings (pips vanishing on the active card, no label): outlined pips, a bordered side-info
+  pill and a visible "Budget 1/8"; with the Quantum budget meter finding, a hidden budget is a dashed track captioned
+  "Budget hidden".
+- 8x8 board uses only 298 of 390 px on the phone, and the empty gutter on the right: the drawing fits the board and
+  its coordinates with a thin margin.
+- The letter-disc pieces: Capablanca's archbishop and chancellor are drawn as their two pieces side by side, Makruk's
+  met as a small queen and its khon as a bishop, Raumschach's unicorn as a knight with a horn (new glyph forms
+  `sprites`, `scale` and `horn`).
+- 'Multiverse chess (5D)' is still plain 8×8 orthodox chess (high): replaced by the module of commit 723a820, not by
+  this pass.
+
+Findings not named here were not reported as fixed; the screens in `handoff/screens/after/` are ready for a new
+review.
+
+Second review (21 findings, all applied; three partly done or left open by decision: the move list, the sticky
+controls, four-player):
+
+- **Unreadable "could not be saved" notice** (high): both notices (save and refusal) are warning notes like
+  NcNoteCard, the main text colour on a 10 % tint of the warning colour with a 4 px left border. Contrast measured in
+  the browser: 1.49:1 before, 14.11:1 now. A new game the storage refuses keeps the New game dialog open with it.
+- **The warning and roll box does not name the move**: the waiting move keeps its squares marked (the from square
+  selected, the targets as targets), `pending` carries `type` and `capture` (no capture flag in hidden games), the box
+  starts with the move in bold (`e2-e4`, `e5xf6`, `Bc2-Bc3`), and the hint says "Confirm or cancel the move." New
+  helpers `moveSquares` and `sidePieceType` in `marks.js`.
+- **Sticky phone controls cover pieces on tall boards**: the bar is slimmer (the hint has its own area below it:
+  73 px instead of 109), the title-to-board gap is 8 px smaller, and on narrow screens the board reserves room for
+  the bar (a `dvh` max-height with a 280 px floor), so raumschach opens whole above the bar at 390 × 844. A waiting
+  move scrolls the page so its marked squares sit above the bar (checked in the browser on raumschach, trid, atomic
+  and horde). Not done: raumschach does not open on the mover's levels (no longer needed), and the box did not move
+  into a bottom sheet.
+- **Bughouse pockets in turn order**: the new declaration hook `handBoards` (bughouse `[0, 1, 1, 0]`) and
+  `handGroups` in `panel.js`: each board has its two hands under it in a fixed half, the seat at the top of that board
+  first, and the groups follow "Flip board". The team chips still have no colour.
+- **Move list is bare coordinates, newest first** (mostly fixed): oldest first and numbered, a column per side in
+  two-player games (a multiverse turn of several moves shares one cell), one numbered row per turn with four sides,
+  scrolled to the newest move. Long algebraic notation (`moveText` in texts.js): the piece letter, `x` for a capture,
+  and the quantum forms `Ng1-f3|h3`, `Nf3|h3-g5`, `N@f3`; bughouse writes the board once (`A: Ng1-f3|h3`), and a
+  space keeps the letter apart from a level name (`N Bb1-Bc3`). Moves saved before the piece type was kept are
+  written without a letter.
+- Further fixes, each with a component test in `core-review.vue.spec.js`: Kriegspiel heads its announcements "Umpire"
+  and the move list keeps only the informative lines (`infoText(record, viewer, { brief })`); King of the Hill draws
+  its hill as a thin warm outline (`kind: 'hill'`) explained by a legend with a swatch (`boardLegend`); threat lines
+  get a light halo and an arrowhead that stops before the threatened square; the board keeps the part it shows in
+  view when it turns while zoomed in, ends a mouse pan whose button was let go outside it, pins the names of the
+  boards in view to the top of a zoomed view and offers "Recentre" while the focus zooms in; the bughouse names are
+  bold and larger (`strong` labels); the badge of a text token sits in the corner of its square, without the "%".
+
+### 10.5 Verification and measurements
+
+- **Responsiveness.** At 64 worlds the longest stretch without a yield is now tens of milliseconds: about 78 ms at
+  most in the package's measurement (desktop, Node 22), where a single stretch lasted up to 2 s on hyper4d and up to
+  4 s on the multiverse before. The final timing run (`handoff/tmp/computer-saves/final-timing.log`, the saved large
+  states of hyper4d, raumschach and bughouse at 64 worlds, and of the multiverse) gives a longest stretch of 17-92 ms
+  per variant and level, and every search within its budget (at most 409 / 1502 / 4007 ms on hyper4d). Scripts:
+  `timing.mjs`, `yieldgap.mjs`, `yieldcost.mjs` and `mem.mjs` in the same folder.
+- **Save size.** Saved 64-world states are 4-18 % of their plain JSON size (`packbench.mjs`).
+- **Tests.** The variant suite without the multiverse files passes: 38 files, 1017 tests (run again for this report;
+  36 files and 987 tests after the "app" package, 37 and 991 before the second review). The "app" package also passed
+  three runs in parallel and one under double load. The multiverse suite passed alongside (4 files, 163 tests, in the
+  review's run). `npx eslint .`, `node tools/check-line-length.mjs` and `node tools/check-references.mjs` report no
+  problems.
+- **Browser checks.** Touch pan and pinch in Chromium with emulated touch (`handoff/tmp/board-view/touch-probe.mjs`);
+  the phone layouts (`handoff/tmp/phone-layout/`); the notices' contrast, the sticky bar and the scroll of a waiting
+  move (`handoff/tmp/ui-fix3/`).
+
+### 10.6 Tests
+
+New: `core-app.spec.js` 17 tests (H2 yields and abort, H3, the end of the time and the grace period, `aiViewExact`,
+H8 packing, versions 1 and 2, a full storage, a refused index entry, `MAX_GAMES`), `core-board.spec.js` 11 (H5, H11,
+the move list's notation and rows, the hands at the board, the squares of a waiting move), `core-board.vue.spec.js`
+28 (H4-H7, H9-H13, the failed save, the badges and the ring, the fitted drawing, the hands, the header outside the
+panel, the budget count), `core-review.vue.spec.js` 17 (the second review) and `phone-layout.vue.spec.js` 3 (Tri-D,
+4D and bughouse on a 366 px touch screen). Changed to follow the new behaviour: `bughouse.spec.js` (the names instead
+of board letters, `handBoards`), `hyper4d.spec.js` (the focus, the labels), `trid.spec.js` (the new drawing),
+`koth.spec.js` (`kind: 'hill'`, `boardLegend`), `kriegspiel.spec.js` (`brief`), `capablanca.spec.js` and
+`raumschach.spec.js` (the glyphs), `core-ai-ui.vue.spec.js` and `core-ui-ai.vue.spec.js` ("Budget hidden", the
+pass-the-device box in the move list's notation).
+
+### 10.7 Open for the lead
+
+- Commit `ai.js` and `variantGames.js` with the view files: `useVariantGame.js` and `VariantsView.vue` rely on
+  `saveVariantGame` returning a boolean and `createVariantGame` returning null.
+- The new texts are not yet in `translationfiles/templates` ("This game could not be saved on this device.",
+  "Budget {used}/{max}", "Budget hidden", "Umpire", "Recentre", "Confirm or cancel the move.", "Hill: a king that
+  reaches it wins." and others): run `node tools/l10n.mjs extract`.
+- The 64-world timing test of `core-ai2.spec.js` failed once in a run of the whole `tests/js` suite under load; it
+  passes alone and in later runs of the variant suite.
+- The `variant.js` header lists the hooks the quantum layer reads; the UI and computer hooks of this pass are
+  documented in the headers of the files that read them and in `handoff/IMPLEMENTING.md`, which now also lists
+  `allowQuantum`.
+- The second review left three findings partly open: the move list (long algebraic, not SAN), the sticky controls
+  (no bottom sheet) and four-player.
+- Not from this pass: `README.md`, `CHANGELOG.md` and `appinfo/info.xml` also have uncommitted changes (the variant
+  release notes), which none of the reports of this pass describes.

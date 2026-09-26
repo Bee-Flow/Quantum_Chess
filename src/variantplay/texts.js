@@ -5,9 +5,10 @@
 
 /**
  * The texts of variant games: outcome labels, follow-up rolls, results, the lines a variant adds to a move record,
- * option values, move codes and the rules shared by every variant. A variant may add its own texts with the optional
- * hooks `noteText(note)`, `reasonText(reason)`, `infoText(record, viewer)` and `codeText(code)`, and describe option
- * values with `options[i].describe(value)`.
+ * option values, move codes (and the move list's long algebraic notation) and the rules shared by every variant. A
+ * variant may add its own texts with the optional hooks `noteText(note)`, `reasonText(reason)`,
+ * `infoText(record, viewer, { brief })` and `codeText(code, record)`, and describe option values with
+ * `options[i].describe(value)`.
  */
 
 import { n, t } from '@nextcloud/l10n'
@@ -207,17 +208,20 @@ export function sharedRules(V = null) {
 
 /**
  * The lines a move record adds to the move list and the last-move box: the variant's own lines
- * (`infoText(record, viewer)`: announcements, "Blue is out", a check mark) and one line per side that could not move
- * and sat out.
+ * (`infoText(record, viewer, { brief })`: announcements, "Blue is out", a check mark) and one line per side that could
+ * not move and sat out. `brief` asks for the lines that carry information only (the move list; Kriegspiel leaves out
+ * "White moved." and "No pawn tries." there, which the umpire box still says).
  *
  * @param {object} V variant
  * @param {object} record history record
  * @param {number} viewer the side whose view is shown
+ * @param {object} [opts] options
+ * @param {boolean} [opts.brief] only the lines that carry information
  * @return {string[]}
  */
-export function recordLines(V, record, viewer) {
+export function recordLines(V, record, viewer, { brief = false } = {}) {
 	const out = []
-	const own = V.infoText ? V.infoText(record, viewer) : null
+	const own = V.infoText ? V.infoText(record, viewer, { brief }) : null
 	if (Array.isArray(own)) {
 		out.push(...own.filter((line) => typeof line === 'string' && line))
 	}
@@ -267,18 +271,76 @@ export function optionLines(V, options = {}) {
 }
 
 /**
- * A move code for the move list: the variant's own `codeText(code)` first; otherwise a drop of a one-letter piece
- * type is written with a capital letter (`p@e4` → `P@e4`) and every other code as stored.
+ * A move code for the move list: the variant's own `codeText(code, record)` first, with the history record of the
+ * move when there is one (the multiverse writes a split or merge in absolute board coordinates from `record.info`);
+ * otherwise a drop of a one-letter piece type is written with a capital letter (`p@e4` → `P@e4`) and every other code
+ * as stored.
  *
  * @param {object} V variant
  * @param {string} code move code
+ * @param {object|null} [record] the history record of the move, or null
  * @return {string}
  */
-export function codeText(V, code) {
-	const own = V.codeText ? V.codeText(code) : null
+export function codeText(V, code, record = null) {
+	const own = V.codeText ? V.codeText(code, record) : null
 	if (typeof own === 'string' && own) {
 		return own
 	}
 	const m = /^([a-z])@(.+)$/.exec(code)
 	return m ? m[1].toUpperCase() + '@' + m[2] : code
+}
+
+/** A square name on one of several boards, with the board in front (`A:e4` in bughouse). */
+const BOARD_NAME = /^([A-Z0-9]+):(.+)$/
+
+/**
+ * A move in long algebraic notation for the move list and the move waiting for confirmation: the letter of the piece
+ * that moved (none for a pawn), the from square, `-` or `x` (something was captured), the target, and the promotion:
+ * `Ng1-f3`, `e4xd5`, `e7-e8=Q`, with the quantum moves written the same way: a split `Ng1-f3|h3`, a merge
+ * `Nf3|h3-g5`, a drop `N@f3` and a measurement `?f3`. On several boards whose squares are named `A:e4` (bughouse), the
+ * board is written once, in front (`A: Ng1-f3|h3`). Where square names begin with a capital letter (the levels of 3D
+ * and 4D chess, `Bc2`), a space keeps the piece letter apart (`N Bb1-Bc3`). The variant's own
+ * `codeText(code, record)` comes first; a code that is none of these (castling `O-O`) is written by `codeText`. A move
+ * whose piece is not known (games saved before the move list kept it) is written without a letter.
+ *
+ * @param {object} V variant
+ * @param {string} code move code
+ * @param {object} [opts] options
+ * @param {object|null} [opts.record] the history record of the move (its captures), or null
+ * @param {string|null} [opts.type] the type of the piece that moved, or null when it is not known
+ * @param {boolean} [opts.capture] without a record: whether the move captures
+ * @return {string}
+ */
+export function moveText(V, code, { record = null, type = null, capture = false } = {}) {
+	const own = V.codeText ? V.codeText(code, record) : null
+	if (typeof own === 'string' && own) {
+		return own
+	}
+	const plain = codeText(V, code, record)
+	const m = /^([^|@?=]+?)(?:\|([^|@?=]+?))?-([^|@?=]+?)(?:\|([^|@?=]+?))?(?:=(.+))?$/.exec(code)
+	const drop = /^(\+?[a-z]+)@(.+)$/.exec(code)
+	if (!m && !drop) {
+		return plain
+	}
+	const names = drop ? [drop[2]] : [m[1], m[2], m[3], m[4]].filter(Boolean)
+	if (names.some((name) => V.topology.byName(name) < 0)) {
+		return plain
+	}
+	// one board for every square: write it once, in front
+	const boards = new Set(names.map((name) => BOARD_NAME.exec(name)?.[1] ?? ''))
+	const board = boards.size === 1 ? [...boards][0] : ''
+	const bare = (name) => (board ? name.slice(board.length + 1) : name)
+	const tag = board ? board + ': ' : ''
+	if (drop) {
+		return tag + drop[1].toUpperCase() + '@' + bare(drop[2])
+	}
+	// no letter for a pawn, nor when the piece is not known
+	const letter = !type || type === 'p' ? '' : type.toUpperCase()
+	const first = bare(m[1])
+	const gap = letter && /^[A-Z]/.test(first) ? ' ' : ''
+	const took = record ? (record.captures?.length ?? 0) > 0 : capture
+	const from = m[2] ? first + '|' + bare(m[2]) : first
+	const to = m[4] ? bare(m[3]) + '|' + bare(m[4]) : bare(m[3])
+	const promo = m[5] ? '=' + m[5].toUpperCase() : ''
+	return tag + letter + gap + from + (took ? 'x' : '-') + to + promo
 }

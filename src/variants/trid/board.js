@@ -25,38 +25,76 @@ export const LEVELS = ['W', 'QL1', 'KL1', 'N', 'B', 'QL6', 'KL6']
 const MAP_W = 6
 const MAP_H = 10
 
-/**
- * Every board: its first and last file, its lowest and highest rank, and the x of its left edge in the drawing (the
- * boards share one rank axis, rank 9 at the top, so a map square's rank reads the same on every board).
+/*
+ * The drawing, White's view (rank 9 at the top): W and B form one column on a shared rank axis, W (ranks 1-4) below B
+ * (ranks 5-8) with a thin gap, so a file runs straight up through both. N (ranks 3-6) stands to their right, level
+ * with the ranks it shares with them (half the gap off, as it lies across it). Each attack board abuts the corner it
+ * is pinned to, one row further out: QL1 under W's a1, its a file under W's a file, KL1 under W's d1, QL6 and KL6
+ * over B's a8 and d8. One map column is one x in the left column (`z` = 0 … `e` = 5); N's files a-d are at 7-10.
+ * The drawing is 11 × 13.9 units, so a phone shows it whole at about 30 px per square and a desktop at about 54.
  */
-const BOARDS = {
-	W: { files: [1, 4], ranks: [1, 4], left: 2.5 },
-	QL1: { files: [0, 1], ranks: [0, 1], left: 0 },
-	KL1: { files: [4, 5], ranks: [0, 1], left: 7 },
-	N: { files: [1, 4], ranks: [3, 6], left: 7 },
-	B: { files: [1, 4], ranks: [5, 8], left: 12 },
-	QL6: { files: [0, 1], ranks: [8, 9], left: 9.5 },
-	KL6: { files: [4, 5], ranks: [8, 9], left: 16.5 },
+
+/** Gap between an attack board and the main board it is pinned to. */
+const PIN_GAP = 0.2
+/** Gap between W and B. */
+const LEVEL_GAP = 0.3
+/** Room for the file letters above and below the left column. */
+const LETTERS = 0.6
+/** The y of the highest rank of QL6 and KL6, of B, of W, and of QL1 and KL1. */
+const TOP6 = LETTERS
+const TOP_B = TOP6 + 2 + PIN_GAP
+const TOP_W = TOP_B + 4 + LEVEL_GAP
+const TOP1 = TOP_W + 4 + PIN_GAP
+/** The top of N: its rank 6 half the gap below B's, its rank 3 half the gap above W's. */
+const TOP_N = TOP_B + 2 + LEVEL_GAP / 2
+/** The x of N's file a. */
+const N_LEFT = 7
+/** Width and height of the drawing. */
+const WIDTH = N_LEFT + 4
+const HEIGHT = round(TOP1 + 2 + LETTERS)
+
+/**
+ * A layout coordinate without floating-point noise.
+ *
+ * @param {number} v value
+ * @return {number}
+ */
+function round(v) {
+	return Math.round(v * 1000) / 1000
 }
 
 /**
- * Rank numbers beside the boards: `[x, ranks]`. Every rank of a main board is numbered next to that board, except
- * the rows it shares with an attack board (numbered at the outer ends of the row).
+ * Every board: its first and last file, its lowest and highest rank, the x of file index 0 (`z`) and the y of the
+ * top of its highest rank in the drawing.
  */
-const RANK_LABELS = [
-	[-0.3, [0, 1]],
-	[2.2, [2, 3, 4]],
-	[6.75, [2, 3, 4, 5, 6]],
-	[9.3, [0, 1]],
-	[9.2, [8, 9]],
-	[11.5, [3, 4, 5, 6]],
-	[16.3, [5, 6, 7]],
-	[18.8, [8, 9]],
-]
+const BOARDS = {
+	W: { files: [1, 4], ranks: [1, 4], x0: 0, top: TOP_W },
+	QL1: { files: [0, 1], ranks: [0, 1], x0: 0, top: TOP1 },
+	KL1: { files: [4, 5], ranks: [0, 1], x0: 0, top: TOP1 },
+	N: { files: [1, 4], ranks: [3, 6], x0: N_LEFT - 1, top: TOP_N },
+	B: { files: [1, 4], ranks: [5, 8], x0: 0, top: TOP_B },
+	QL6: { files: [0, 1], ranks: [8, 9], x0: 0, top: TOP6 },
+	KL6: { files: [4, 5], ranks: [8, 9], x0: 0, top: TOP6 },
+}
 
 /**
- * The drawing of the boards: a frame per board, its name above it, the file letters under it, the rank numbers
- * beside it, and a short line from each attack board to the corner of the main level it hangs over.
+ * The top-left corner of the cell of a file and rank on a board.
+ *
+ * @param {string} id board
+ * @param {number} x file index
+ * @param {number} y rank
+ * @return {{x: number, y: number}}
+ */
+function cellAt(id, x, y) {
+	const b = BOARDS[id]
+	return { x: b.x0 + x, y: round(b.top + b.ranks[1] - y) }
+}
+
+/**
+ * The drawing of the boards: a frame per board, the rank numbers left of every row (the attack boards' outside the
+ * column, the main boards' in the void `z` column), the file letters above and below the left column and under N,
+ * the names of W and B in the void `e` column beside them, N's above it, and those of the attack boards in the gap
+ * between the two attack boards of a side, on their outer row.
  *
  * @return {object} layout extras for `makeTopology`
  */
@@ -64,28 +102,35 @@ function drawing() {
 	const boards = []
 	const labels = []
 	for (const [id, b] of Object.entries(BOARDS)) {
+		const { x, y } = cellAt(id, b.files[0], b.ranks[1])
 		const w = b.files[1] - b.files[0] + 1
 		const h = b.ranks[1] - b.ranks[0] + 1
-		const top = MAP_H - 1 - b.ranks[1]
-		boards.push({ x: b.left, y: top, w, h })
-		labels.push({ x: b.left + w / 2, y: top - 0.32, text: id })
-		for (let f = b.files[0]; f <= b.files[1]; f++) {
-			labels.push({ x: b.left + f - b.files[0] + 0.5, y: top + h + 0.32, text: FILES[f] })
+		boards.push({ x, y, w, h })
+		// a main board's numbers sit right beside its file a (N's in the gap left of it); the two attack boards of a
+		// side share their rows, numbered once, outside the column
+		if (w === 4 || b.files[0] === 0) {
+			for (let r = b.ranks[0]; r <= b.ranks[1]; r++) {
+				labels.push({ x: w === 4 ? b.x0 + 0.7 : -0.3, y: round(cellAt(id, 0, r).y + 0.5), text: String(r) })
+			}
 		}
 	}
-	for (const [x, ranks] of RANK_LABELS) {
-		for (const r of ranks) {
-			labels.push({ x, y: MAP_H - 0.5 - r, text: String(r) })
-		}
+	for (let f = 0; f < MAP_W; f++) {
+		labels.push({ x: f + 0.5, y: round(TOP6 - 0.3), text: FILES[f] })
+		labels.push({ x: f + 0.5, y: round(HEIGHT - LETTERS + 0.3), text: FILES[f] })
 	}
-	// the pins: QL1 a1 to W a1, W d1 to KL1 d1, QL6 a8 to B a8, B d8 to KL6 d8
-	const lines = [
-		{ x1: 2, y1: 8.5, x2: 2.5, y2: 8.5 },
-		{ x1: 6.5, y1: 8.5, x2: 7, y2: 8.5 },
-		{ x1: 11.5, y1: 1.5, x2: 12, y2: 1.5 },
-		{ x1: 16, y1: 1.5, x2: 16.5, y2: 1.5 },
-	]
-	return { width: 18.5, height: MAP_H, boards, labels, lines, zoomable: true }
+	for (let f = 1; f <= 4; f++) {
+		labels.push({ x: N_LEFT + f - 0.5, y: round(TOP_N + 4.3), text: FILES[f] })
+	}
+	labels.push(
+		{ x: 5.45, y: round(TOP_W + 2), text: 'W' },
+		{ x: 5.45, y: round(TOP_B + 2), text: 'B' },
+		{ x: N_LEFT + 2, y: round(TOP_N - 0.35), text: 'N' },
+		{ x: 2.45, y: round(TOP1 + 1.5), text: 'QL1' },
+		{ x: 3.55, y: round(TOP1 + 1.5), text: 'KL1' },
+		{ x: 2.45, y: round(TOP6 + 0.5), text: 'QL6' },
+		{ x: 3.55, y: round(TOP6 + 0.5), text: 'KL6' },
+	)
+	return { width: WIDTH, height: HEIGHT, boards, labels }
 }
 
 /**
@@ -111,8 +156,7 @@ export const topology = makeTopology({
 	coords: squareCoords(),
 	name: ([x, y, h]) => FILES[x] + y + LEVELS[h],
 	cell: ([x, y, h]) => ({
-		x: BOARDS[LEVELS[h]].left + x - BOARDS[LEVELS[h]].files[0],
-		y: MAP_H - 1 - y,
+		...cellAt(LEVELS[h], x, y),
 		w: 1,
 		h: 1,
 		shape: 'rect',

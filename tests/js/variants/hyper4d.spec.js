@@ -290,12 +290,43 @@ describe('4D chess: board and setup', () => {
 			expect(c.y - b.y).toBeCloseTo(4 - Number(n[3]), 9)
 			expect(c).toMatchObject({ w: 1, h: 1, shape: 'rect' })
 		}
-		expect(L.labels.filter((l) => /^[1-4]$/.test(l.text))).toHaveLength(16)
-		expect(L.labels.filter((l) => /^[a-d]$/.test(l.text)).map((l) => l.text).join('')).toBe('adadadad')
+		// the rank numbers left of every board, in the gap before it
+		const ranks = L.labels.filter((l) => /^[1-4]$/.test(l.text))
+		expect(ranks).toHaveLength(64)
+		for (const l of ranks) {
+			const board = L.boards.find((b) => l.y > b.y && l.y < b.y + b.h && l.x < b.x && l.x > b.x - 0.8)
+			expect(board, l.x + ' ' + l.y).toBeDefined()
+			expect(board.x - l.x).toBeCloseTo(0.3, 9)
+		}
+		// every file letter under every board of the bottom row, far enough below it that Black's view (the drawing
+		// turned round) puts them a line above the board labels, which are drawn just above the frames
+		const files = L.labels.filter((l) => /^[a-d]$/.test(l.text))
+		expect(files.map((l) => l.text).join('')).toBe('abcdabcdabcdabcd')
+		for (const l of files) {
+			expect(l.y - L.height).toBeGreaterThanOrEqual(0.8)
+			expect(L.height - l.y).toBeLessThan(-0.6)
+		}
 		for (const l of L.labels) {
 			expect(l.x).toBeGreaterThan(-0.7)
-			expect(l.y).toBeLessThan(L.height + 0.7)
+			expect(l.y).toBeLessThan(L.height + 0.9)
 		}
+	})
+
+	it('opens on the 2 × 2 boards around the pieces of the side to move on a touch screen, whole with a mouse', () => {
+		const start = newGame(V)
+		const white = V.layoutOf(start)
+		expect(white.cells).toBe(topo.cells)
+		// White's pieces and pawns stand on the two lowest board rows: the block of B1, C1, B2 and C2
+		expect(white.layout.focus).toEqual({ x: 9.2, y: 14, zoom: 1, box: { w: 9.8, h: 9.8 }, key: '0:1:2' })
+		const s = play(V, start, 'B2b2-B2b3')
+		expect(V.layoutOf(s).layout.focus).toMatchObject({ x: 9.2, y: 4.4, key: '1:1:0' })
+		// the same layout object for the same focus (the view recentres only when the key changes)
+		expect(V.layoutOf(s)).toBe(V.layoutOf(play(V, start, 'B2c2-B2c3')))
+		// an army that moved over to the queen's side of the hypercube: the focus follows it
+		const west = stateOf(V, [[{ A1a1: '0:k', A2b2: '0:p', B1a1: '0:q', D4d4: '1:k' }, 1]])
+		expect(V.layoutOf(west).layout.focus).toMatchObject({ x: 4.4, y: 14 })
+		const over = { ...s, result: { winner: 0, reason: 'king' } }
+		expect(V.layoutOf(over)).toBe(topo)
 	})
 
 	it('starts with every piece on its TessChess square (H1)', () => {

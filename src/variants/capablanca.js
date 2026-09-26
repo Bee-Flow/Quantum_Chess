@@ -73,12 +73,14 @@ const types = orthodoxTypes({ lastRank: board.lastRank, promoteTo: [...PROMOTE_T
 types.a = {
 	name: () => t('quantumchess', 'Archbishop'),
 	moves: [{ ride: BISHOP_DIRS }, { leap: KNIGHT_JUMPS }],
-	glyph: { text: 'A', shape: 'circle' },
+	// a bishop and a knight side by side, the pieces it combines
+	glyph: { sprites: ['b', 'n'] },
 }
 types.c = {
 	name: () => t('quantumchess', 'Chancellor'),
 	moves: [{ ride: ROOK_DIRS }, { leap: KNIGHT_JUMPS }],
-	glyph: { text: 'C', shape: 'circle' },
+	// a rook and a knight side by side
+	glyph: { sprites: ['r', 'n'] },
 }
 // orthodoxTypes() builds fresh objects, so these values do not reach the other variants
 for (const [id, value] of Object.entries(VALUES)) {

@@ -8,6 +8,10 @@
  *
  * - `{ sprite: 'k' }`: a piece of the cburnett set (the orthodox pieces). Sides whose colour is not white or black
  *   (four-player chess) get the white piece tinted in their colour; `promoted: true` adds a small red "+" marker;
+ *   `scale` (0 to 1) draws it smaller (Makruk's met, a small queen); `horn: true` gives a knight a unicorn's horn
+ *   (the unicorn of 3D chess);
+ * - `{ sprites: ['b', 'n'] }`: a compound piece drawn as its two cburnett pieces side by side, the second in front
+ *   (Capablanca's archbishop, bishop and knight, and chancellor, rook and knight);
  * - `{ text, shape }`: a character or short text on a token: `circle` (a round token in the side's colour),
  *   `shogi` (a wooden pentagon that points at the opponent) or `xiangqi` (a round wooden disc). `text` may be a
  *   function of the side (xiangqi writes several pieces differently for Red and Black).
@@ -49,8 +53,10 @@ export function darkTextOn(hex) {
 }
 
 /**
- * How to draw a piece: `{ kind: 'sprite', symbol, tint, promoted? }` or `{ kind: 'text', text, shape, fill, ink }`.
- * A sprite glyph with `promoted: true` (a promoted pawn in the drop variants, `+q`) carries a small red "+" marker.
+ * How to draw a piece: `{ kind: 'sprite', symbol, tint, promoted?, scale?, horn? }` (`horn`: the colour of the
+ * horn, white or black), `{ kind: 'compound', parts: [{ symbol }, { symbol }], tint }` or
+ * `{ kind: 'text', text, shape, fill, ink }`. A sprite glyph with `promoted: true` (a promoted pawn in the drop
+ * variants, `+q`) carries a small red "+" marker.
  *
  * @param {object} V variant
  * @param {string} type piece type
@@ -61,12 +67,22 @@ export function glyphOf(V, type, side) {
 	const T = V.types[type]
 	const g = T?.glyph ?? { text: type.toUpperCase(), shape: 'circle' }
 	const sd = V.sides[side]
+	const color = sd.color === 'black' ? 'b' : 'w'
+	const tint = sd.color === 'white' || sd.color === 'black' ? null : sideFill(sd)
+	if (Array.isArray(g.sprites) && g.sprites.length === 2) {
+		const parts = g.sprites.map((s) => ({ symbol: 'qc-piece-cburnett-' + color + s.toUpperCase() }))
+		return { kind: 'compound', parts, tint }
+	}
 	if (g.sprite) {
-		const color = sd.color === 'black' ? 'b' : 'w'
-		const tint = sd.color === 'white' || sd.color === 'black' ? null : sideFill(sd)
 		const out = { kind: 'sprite', symbol: 'qc-piece-cburnett-' + color + g.sprite.toUpperCase(), tint }
 		if (g.promoted) {
 			out.promoted = true
+		}
+		if (g.scale > 0 && g.scale < 1) {
+			out.scale = g.scale
+		}
+		if (g.horn) {
+			out.horn = color === 'b' ? 'black' : 'white'
 		}
 		return out
 	}
