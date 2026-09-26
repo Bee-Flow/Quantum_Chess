@@ -17,7 +17,7 @@ msgstr "Quantum Chess"
 msgid "Quantum Chess navigation"
 msgstr "Navigation de Quantum Chess"
 
-#: src/app/components/AppNavigation.vue:13 src/app/components/NewGameDialog.vue:12 src/game/components/GameOverDialog.vue:56 src/game/components/LocalGameHost.vue:17 src/online/components/InvitationPanel.vue:74 src/views/HomeView.vue:60 src/views/VariantGameView.vue:471 lib/Dashboard/GamesWidget.php:100
+#: src/app/components/AppNavigation.vue:13 src/app/components/NewGameDialog.vue:12 src/game/components/GameOverDialog.vue:56 src/game/components/LocalGameHost.vue:17 src/online/components/InvitationPanel.vue:74 src/views/HomeView.vue:60 src/views/VariantGameView.vue:475 lib/Dashboard/GamesWidget.php:100
 msgid "New game"
 msgstr "Nouvelle partie"
 
@@ -25,7 +25,7 @@ msgstr "Nouvelle partie"
 msgid "Home"
 msgstr "Accueil"
 
-#: src/app/components/AppNavigation.vue:23 src/home/components/PlayTiles.vue:78 src/views/VariantGameView.vue:54 src/views/VariantsView.vue:17
+#: src/app/components/AppNavigation.vue:23 src/home/components/PlayTiles.vue:78 src/views/VariantGameView.vue:56 src/views/VariantsView.vue:17
 msgid "Chess variants"
 msgstr "Variantes d'échecs"
 
@@ -33,7 +33,7 @@ msgstr "Variantes d'échecs"
 msgid "Trainer"
 msgstr "Entraînement"
 
-#: src/app/components/AppNavigation.vue:33 src/views/VariantGameView.vue:68
+#: src/app/components/AppNavigation.vue:33 src/views/VariantGameView.vue:70
 msgid "Rules"
 msgstr "Règles"
 
@@ -133,7 +133,7 @@ msgstr "Afficher le nombre de possibilités"
 msgid "Physics names (superposition, measurement, entanglement)"
 msgstr "Termes de physique (superposition, mesure, intrication)"
 
-#: src/app/components/AppSettingsDialog.vue:102 src/game/components/GamePanel.vue:86 src/game/components/MoveList.vue:17 src/game/components/MoveStrip.vue:8 src/views/ReviewView.vue:127 src/views/VariantGameView.vue:417
+#: src/app/components/AppSettingsDialog.vue:102 src/game/components/GamePanel.vue:86 src/game/components/MoveList.vue:17 src/game/components/MoveStrip.vue:8 src/views/ReviewView.vue:127 src/views/VariantGameView.vue:421
 msgid "Moves"
 msgstr "Coups"
 
@@ -229,7 +229,7 @@ msgstr "Panneau des possibilités"
 msgid "Describe the position"
 msgstr "Décrire la position"
 
-#: src/app/components/AppSettingsDialog.vue:213 src/app/components/NewGameDialog.vue:113 src/board/components/BoardControls.vue:36 src/llm/components/AiNoticeDialog.vue:26 src/online/components/OnlineGameHost.vue:95 src/online/components/lobby/LobbyOnlineSections.vue:79 src/views/VariantGameView.vue:340 src/views/VariantGameView.vue:355
+#: src/app/components/AppSettingsDialog.vue:213 src/app/components/NewGameDialog.vue:113 src/board/components/BoardControls.vue:36 src/llm/components/AiNoticeDialog.vue:26 src/online/components/OnlineGameHost.vue:95 src/online/components/lobby/LobbyOnlineSections.vue:79 src/views/VariantGameView.vue:344 src/views/VariantGameView.vue:359
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -313,7 +313,7 @@ msgstr "Coups avec lancer"
 msgid "Slow"
 msgstr "Lent"
 
-#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:926 src/views/VariantsView.vue:217
+#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:934 src/views/VariantsView.vue:220
 msgid "Normal"
 msgstr "Normal"
 
@@ -333,15 +333,15 @@ msgstr "Standard"
 msgid "Your colour"
 msgstr "Votre couleur"
 
-#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:152
+#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:155
 msgid "Random"
 msgstr "Au hasard"
 
-#: src/app/components/ColorChoice.vue:39 src/app/components/NewGameDialog.vue:78 src/app/components/NewGameDialog.vue:308 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:25 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:58 src/game/resultText.js:35 src/game/resultText.js:115 src/online/onlinePlayers.js:74 src/review/reviewGame.js:52 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:27 src/variants/multiverse.js:160 src/variants/multiverse.js:206 src/views/LocalGameView.vue:119
+#: src/app/components/ColorChoice.vue:39 src/app/components/NewGameDialog.vue:78 src/app/components/NewGameDialog.vue:308 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:25 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:58 src/game/resultText.js:35 src/game/resultText.js:115 src/online/onlinePlayers.js:74 src/review/reviewGame.js:52 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:27 src/variants/multiverse.js:240 src/variants/multiverse.js:288 src/views/LocalGameView.vue:119
 msgid "White"
 msgstr "Blancs"
 
-#: src/app/components/ColorChoice.vue:40 src/app/components/NewGameDialog.vue:83 src/app/components/NewGameDialog.vue:309 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:28 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:59 src/game/resultText.js:36 src/game/resultText.js:116 src/online/onlinePlayers.js:74 src/review/reviewGame.js:53 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:28 src/variants/multiverse.js:161 src/variants/multiverse.js:207 src/variants/xiangqi.js:353 src/views/LocalGameView.vue:120
+#: src/app/components/ColorChoice.vue:40 src/app/components/NewGameDialog.vue:83 src/app/components/NewGameDialog.vue:309 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:28 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:59 src/game/resultText.js:36 src/game/resultText.js:116 src/online/onlinePlayers.js:74 src/review/reviewGame.js:53 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:28 src/variants/multiverse.js:241 src/variants/multiverse.js:289 src/variants/xiangqi.js:358 src/views/LocalGameView.vue:120
 msgid "Black"
 msgstr "Noirs"
 
@@ -393,7 +393,7 @@ msgstr "Créer le défi"
 msgid "Send invitation"
 msgstr "Envoyer l'invitation"
 
-#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:174
+#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:177
 msgid "Start game"
 msgstr "Commencer la partie"
 
@@ -447,7 +447,7 @@ msgstr "Contraste élevé"
 msgid "Blue"
 msgstr "Bleu"
 
-#: src/board/components/BoardControls.vue:15 src/views/VariantGameView.vue:255
+#: src/board/components/BoardControls.vue:15 src/views/VariantGameView.vue:259
 msgid "Move type"
 msgstr "Type de coup"
 
@@ -455,22 +455,22 @@ msgstr "Type de coup"
 msgid "Play"
 msgstr "Jouer"
 
-#: src/board/components/BoardControls.vue:70 src/game/components/MoveList.vue:22 src/views/VariantGameView.vue:595
+#: src/board/components/BoardControls.vue:70 src/game/components/MoveList.vue:22 src/views/VariantGameView.vue:599
 msgid "Move"
 msgstr "Coup"
 
 #. TRANSLATORS: move type that makes a piece a ghost on two squares (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:72 src/trainer/lessons/L02-split.js:15 src/variantplay/texts.js:60 src/views/VariantGameView.vue:596
+#: src/board/components/BoardControls.vue:72 src/trainer/lessons/L02-split.js:15 src/variantplay/texts.js:60 src/views/VariantGameView.vue:600
 msgid "Split"
 msgstr "Diviser"
 
 #. TRANSLATORS: move type that joins two parts of a ghost (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:74 src/views/VariantGameView.vue:597
+#: src/board/components/BoardControls.vue:74 src/views/VariantGameView.vue:601
 msgid "Merge"
 msgstr "Fusionner"
 
 #. TRANSLATORS: move type that settles where a ghost really is (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:76 src/rules/sections.js:422 src/views/VariantGameView.vue:598
+#: src/board/components/BoardControls.vue:76 src/rules/sections.js:422 src/views/VariantGameView.vue:602
 msgid "Measure"
 msgstr "Mesurer"
 
@@ -571,7 +571,7 @@ msgstr[0] "%n possibilité"
 msgstr[1] "%n possibilités"
 msgstr[2] "%n possibilités"
 
-#: src/board/components/PromotionPicker.vue:14 src/views/VariantGameView.vue:290
+#: src/board/components/PromotionPicker.vue:14 src/views/VariantGameView.vue:294
 msgid "Promote to"
 msgstr "Promouvoir en"
 
@@ -591,7 +591,7 @@ msgstr "Votre roi pourrait être pris à {risk}. {move} le rendrait {safer}."
 msgid "Show the safer move"
 msgstr "Montrer le coup plus sûr"
 
-#: src/board/components/SafetyNetDialog.vue:81 src/views/VariantGameView.vue:345 src/views/VariantGameView.vue:352
+#: src/board/components/SafetyNetDialog.vue:81 src/views/VariantGameView.vue:349 src/views/VariantGameView.vue:356
 msgid "Play anyway"
 msgstr "Jouer quand même"
 
@@ -1170,7 +1170,7 @@ msgstr "Les deux chemins sont bloqués dans toutes les possibilités."
 msgid "A piece can stand on at most 4 squares."
 msgstr "Une pièce peut se trouver sur 4 cases au maximum."
 
-#: src/engine/ui/reasons.js:73 src/views/VariantGameView.vue:593
+#: src/engine/ui/reasons.js:73 src/views/VariantGameView.vue:597
 msgid "Budget full: merge or measure a piece first."
 msgstr "Budget plein : fusionnez ou mesurez d'abord une pièce."
 
@@ -1178,7 +1178,7 @@ msgstr "Budget plein : fusionnez ou mesurez d'abord une pièce."
 msgid "One of the parts can't reach that square."
 msgstr "Une des parts ne peut pas atteindre cette case."
 
-#: src/engine/ui/reasons.js:79 src/views/VariantGameView.vue:738
+#: src/engine/ui/reasons.js:79 src/views/VariantGameView.vue:742
 msgid "That move is not possible."
 msgstr "Ce coup n'est pas possible."
 
@@ -1433,11 +1433,11 @@ msgstr "Paramètres…"
 msgid "Undo takes the move back. The dice remember: the same move here gives the same result."
 msgstr "Annuler reprend le coup. Les dés s'en souviennent : le même coup donne ici le même résultat."
 
-#: src/game/components/ControlsRow.vue:73 src/game/components/GameScreen.vue:154 src/online/onlineBanners.js:51 src/views/VariantGameView.vue:285 src/views/VariantGameView.vue:462
+#: src/game/components/ControlsRow.vue:73 src/game/components/GameScreen.vue:154 src/online/onlineBanners.js:51 src/views/VariantGameView.vue:289 src/views/VariantGameView.vue:466
 msgid "Undo"
 msgstr "Annuler le coup"
 
-#: src/game/components/ControlsRow.vue:79 src/game/components/GameScreen.vue:164 src/game/components/GameScreen.vue:197 src/online/components/OnlineGameHost.vue:160 src/online/components/OnlineGameHost.vue:180 src/views/VariantGameView.vue:468
+#: src/game/components/ControlsRow.vue:79 src/game/components/GameScreen.vue:164 src/game/components/GameScreen.vue:197 src/online/components/OnlineGameHost.vue:160 src/online/components/OnlineGameHost.vue:180 src/views/VariantGameView.vue:472
 msgid "Resign"
 msgstr "Abandonner"
 
@@ -1561,7 +1561,7 @@ msgstr "Continuer à jouer"
 msgid "Move {n} of {total}"
 msgstr "Coup {n} sur {total}"
 
-#: src/game/components/LocalGameHost.vue:13 src/views/VariantGameView.vue:50
+#: src/game/components/LocalGameHost.vue:13 src/views/VariantGameView.vue:52
 msgid "Game not found"
 msgstr "Partie introuvable"
 
@@ -1740,7 +1740,7 @@ msgstr "Fort"
 msgid "Expert"
 msgstr "Expert"
 
-#: src/game/localPlayers.js:33 src/llm/components/AiChat.vue:21 src/online/components/GameChat.vue:174 src/views/VariantGameView.vue:931
+#: src/game/localPlayers.js:33 src/llm/components/AiChat.vue:21 src/online/components/GameChat.vue:174 src/views/VariantGameView.vue:939
 msgid "You"
 msgstr "Vous"
 
@@ -3099,7 +3099,7 @@ msgstr "FAQ"
 
 #: src/rules/sections.js:369
 msgid "Is there check or checkmate?"
-msgstr "Y a-t-il échec et échec et mat ?"
+msgstr "Y a-t-il échec ou échec et mat ?"
 
 #: src/rules/sections.js:369
 msgid "There is no check: you win by capturing the king. The nearest thing to checkmate is a king that cannot escape: the game ends at once."
@@ -3789,7 +3789,7 @@ msgstr[0] "Personne n'est encore listé. Les joueurs apparaissent après %n part
 msgstr[1] "Personne n'est encore listé. Les joueurs apparaissent après %n parties classées."
 msgstr[2] "Personne n'est encore listé. Les joueurs apparaissent après %n parties classées."
 
-#: src/stats/components/LeaderboardTable.vue:36 src/views/VariantGameView.vue:931
+#: src/stats/components/LeaderboardTable.vue:36 src/views/VariantGameView.vue:939
 msgid "Player"
 msgstr "Joueur"
 
@@ -4711,46 +4711,46 @@ msgstr "Bloquer avec la tour entière ne suffit pas."
 msgid "Split instead, with one part on e8 and the other where it can fight back: on the e-file it can recapture on e8, and on b7 it threatens White's king on b3."
 msgstr "Divisez plutôt, avec une part en e8 et l'autre là où elle peut riposter : sur la colonne e, elle peut reprendre en e8, et en b7 elle menace le roi blanc en b3."
 
-#: src/variantplay/components/VariantBoard.vue:55 src/variantplay/components/VariantBoard.vue:56
+#: src/variantplay/components/VariantBoard.vue:57 src/variantplay/components/VariantBoard.vue:58
 msgid "Previous board to play"
 msgstr "Échiquier précédent à jouer"
 
-#: src/variantplay/components/VariantBoard.vue:63 src/variantplay/components/VariantBoard.vue:64
+#: src/variantplay/components/VariantBoard.vue:65 src/variantplay/components/VariantBoard.vue:66
 msgid "Next board to play"
 msgstr "Échiquier suivant à jouer"
 
-#: src/variantplay/components/VariantBoard.vue:72
+#: src/variantplay/components/VariantBoard.vue:74
 msgid "Zoom out"
 msgstr "Zoom arrière"
 
-#: src/variantplay/components/VariantBoard.vue:79
+#: src/variantplay/components/VariantBoard.vue:81
 msgid "Zoom in"
 msgstr "Zoom avant"
 
-#: src/variantplay/components/VariantBoard.vue:85
+#: src/variantplay/components/VariantBoard.vue:87
 msgid "Whole board"
 msgstr "Tout l'échiquier"
 
-#: src/variantplay/components/VariantBoard.vue:92
+#: src/variantplay/components/VariantBoard.vue:94
 msgid "Recentre"
 msgstr "Recentrer"
 
-#: src/variantplay/components/VariantBoard.vue:908
+#: src/variantplay/components/VariantBoard.vue:932
 msgid "{count} target outside the view"
 msgid_plural "{count} targets outside the view"
 msgstr[0] "{count} cible hors de la zone affichée"
 msgstr[1] "{count} cibles hors de la zone affichée"
 msgstr[2] "{count} cibles hors de la zone affichée"
 
-#: src/variantplay/components/VariantBoard.vue:1488
+#: src/variantplay/components/VariantBoard.vue:1516
 msgid "{square}: hidden"
 msgstr "{square} : cachée"
 
-#: src/variantplay/components/VariantBoard.vue:1495
+#: src/variantplay/components/VariantBoard.vue:1523
 msgid "{piece} ({percent} %)"
 msgstr "{piece} ({percent} %)"
 
-#: src/variantplay/texts.js:32 src/variants/kriegspiel/umpire.js:385 src/variants/multiverse/texts.js:574
+#: src/variantplay/texts.js:32 src/variants/kriegspiel/umpire.js:385 src/variants/multiverse/texts.js:573
 msgid "{percent} %"
 msgstr "{percent} %"
 
@@ -5309,27 +5309,27 @@ msgstr "Le roque ignore les attaques : vous pouvez roquer alors que votre roi e
 msgid "The game is a draw when only the two kings are left, unless the player to move can capture the other king."
 msgstr "La partie est nulle quand il ne reste que les deux rois, sauf si le joueur au trait peut prendre l'autre roi."
 
-#: src/variants/core/orthodox.js:41 src/variants/hyper4d.js:259 src/variants/multiverse/pieces.js:76 src/variants/raumschach.js:131 src/variants/shogi.js:203 src/variants/trid.js:302
+#: src/variants/core/orthodox.js:41 src/variants/hyper4d.js:259 src/variants/multiverse/pieces.js:76 src/variants/raumschach.js:131 src/variants/shogi.js:203 src/variants/trid.js:537
 msgid "King"
 msgstr "Roi"
 
-#: src/variants/core/orthodox.js:49 src/variants/hyper4d.js:267 src/variants/multiverse/pieces.js:79 src/variants/raumschach.js:137 src/variants/trid.js:303
+#: src/variants/core/orthodox.js:49 src/variants/hyper4d.js:267 src/variants/multiverse/pieces.js:79 src/variants/raumschach.js:137 src/variants/trid.js:538
 msgid "Queen"
 msgstr "Dame"
 
-#: src/variants/core/orthodox.js:55 src/variants/hyper4d.js:273 src/variants/multiverse/pieces.js:81 src/variants/raumschach.js:138 src/variants/shogi.js:210 src/variants/trid.js:304
+#: src/variants/core/orthodox.js:55 src/variants/hyper4d.js:273 src/variants/multiverse/pieces.js:81 src/variants/raumschach.js:138 src/variants/shogi.js:210 src/variants/trid.js:539
 msgid "Rook"
 msgstr "Tour"
 
-#: src/variants/core/orthodox.js:61 src/variants/hyper4d.js:279 src/variants/multiverse/pieces.js:82 src/variants/raumschach.js:139 src/variants/shogi.js:217 src/variants/trid.js:305
+#: src/variants/core/orthodox.js:61 src/variants/hyper4d.js:279 src/variants/multiverse/pieces.js:82 src/variants/raumschach.js:139 src/variants/shogi.js:217 src/variants/trid.js:540
 msgid "Bishop"
 msgstr "Fou"
 
-#: src/variants/core/orthodox.js:67 src/variants/hyper4d.js:285 src/variants/multiverse/pieces.js:83 src/variants/raumschach.js:147 src/variants/shogi.js:232 src/variants/trid.js:306
+#: src/variants/core/orthodox.js:67 src/variants/hyper4d.js:285 src/variants/multiverse/pieces.js:83 src/variants/raumschach.js:147 src/variants/shogi.js:232 src/variants/trid.js:541
 msgid "Knight"
 msgstr "Cavalier"
 
-#: src/variants/core/orthodox.js:73 src/variants/hyper4d.js:291 src/variants/multiverse/pieces.js:86 src/variants/raumschach.js:149 src/variants/shogi.js:246 src/variants/trid.js:308
+#: src/variants/core/orthodox.js:73 src/variants/hyper4d.js:291 src/variants/multiverse/pieces.js:86 src/variants/raumschach.js:149 src/variants/shogi.js:246 src/variants/trid.js:543
 msgid "Pawn"
 msgstr "Pion"
 
@@ -5401,12 +5401,12 @@ msgstr "Deux rois seuls ne donnent pas la nulle : un roi qui se place à côté
 msgid "In pass & play each player sees only their own view: hand the device over when asked. Undo is off until the game ends, and then the whole board is revealed."
 msgstr "En jeu à deux, chaque joueur n'a accès qu'à sa propre vue : passez l'appareil quand on vous le demande. L'annulation des coups est désactivée jusqu'à la fin de la partie, puis tout l'échiquier est révélé."
 
-#: src/variants/darkchess.js:491 src/views/VariantGameView.vue:825
+#: src/variants/darkchess.js:491 src/views/VariantGameView.vue:833
 msgid "Capture on {squares}"
 msgstr "Prise sur {squares}"
 
 #. TRANSLATORS: a player of four-player chess, named after its colour (Xiangqi's first player is Red too)
-#: src/variants/fourplayer.js:499 src/variants/xiangqi.js:352
+#: src/variants/fourplayer.js:499 src/variants/xiangqi.js:357
 msgid "Red"
 msgstr "Rouge"
 
@@ -5816,196 +5816,300 @@ msgid "Small with the king in the centre"
 msgstr "Petit, avec le roi au centre"
 
 #: src/variants/multiverse.js:57
+msgid "Small, flipped: the kings in opposite corners"
+msgstr "Petit, inversé : les rois dans des coins opposés"
+
+#: src/variants/multiverse.js:58
+msgid "Small and open: three pawns each, one on the back rank"
+msgstr "Petit et ouvert : trois pions par camp, dont un sur la première rangée"
+
+#: src/variants/multiverse.js:59
 msgid "Very small"
 msgstr "Très petit"
 
-#: src/variants/multiverse.js:58
+#: src/variants/multiverse.js:60
 msgid "Simple, no queens"
 msgstr "Simple, sans dames"
 
-#: src/variants/multiverse.js:59
+#: src/variants/multiverse.js:61
+msgid "Simple, no bishops"
+msgstr "Simple, sans fous"
+
+#: src/variants/multiverse.js:62
+msgid "Simple, no knights"
+msgstr "Simple, sans cavaliers"
+
+#: src/variants/multiverse.js:63
+msgid "Simple, no rooks"
+msgstr "Simple, sans tours"
+
+#: src/variants/multiverse.js:64
+msgid "Knights against bishops: White has knights, Black bishops"
+msgstr "Cavaliers contre fous : les Blancs ont des cavaliers, les Noirs des fous"
+
+#: src/variants/multiverse.js:65
+msgid "Simple set: one bishop and one knight each"
+msgstr "Jeu de pièces simple : un fou et un cavalier par camp"
+
+#: src/variants/multiverse.js:66
 msgid "Standard with turn zero: Black can travel back to turn 0"
 msgstr "Standard avec tour zéro : les Noirs peuvent remonter dans le temps jusqu'au tour 0"
 
-#: src/variants/multiverse.js:60
+#: src/variants/multiverse.js:67
 msgid "Standard on two timelines, −0 and +0"
 msgstr "Standard sur deux lignes temporelles, −0 et +0"
 
-#: src/variants/multiverse.js:61
+#: src/variants/multiverse.js:68
 msgid "Standard with princesses"
 msgstr "Standard avec princesses"
 
-#: src/variants/multiverse.js:62
+#: src/variants/multiverse.js:69
 msgid "Reversed royalty: the queen is royal, the king is not"
 msgstr "Royauté inversée : la dame est royale, le roi ne l'est pas"
 
-#: src/variants/multiverse.js:63
+#: src/variants/multiverse.js:70
 msgid "Defended pawn: queen and knight swapped"
 msgstr "Pion défendu : dame et cavalier échangés"
 
-#: src/variants/multiverse.js:64
+#: src/variants/multiverse.js:71
 msgid "Half reflected: Black's king and queen swapped"
 msgstr "Demi-miroir : roi et dame des Noirs échangés"
 
-#: src/variants/multiverse.js:65
+#: src/variants/multiverse.js:72
+msgid "Only kings"
+msgstr "Rois uniquement"
+
+#: src/variants/multiverse.js:73
+msgid "Kings and pawns"
+msgstr "Rois et pions"
+
+#: src/variants/multiverse.js:74
 msgid "Kings and knights"
 msgstr "Rois et cavaliers"
 
-#: src/variants/multiverse.js:66
+#: src/variants/multiverse.js:75
+msgid "Kings and bishops"
+msgstr "Rois et fous"
+
+#: src/variants/multiverse.js:76
+msgid "Kings and rooks"
+msgstr "Rois et tours"
+
+#: src/variants/multiverse.js:77
+msgid "Kings and queens"
+msgstr "Rois et dames"
+
+#: src/variants/multiverse.js:78
 msgid "Kings and unicorns"
 msgstr "Rois et licornes"
 
-#: src/variants/multiverse.js:67
+#: src/variants/multiverse.js:79
 msgid "Kings and dragons"
 msgstr "Rois et dragons"
 
-#: src/variants/multiverse.js:68
+#: src/variants/multiverse.js:80
 msgid "Kings and brawns"
 msgstr "Rois et pions costauds"
 
-#: src/variants/multiverse.js:69
+#: src/variants/multiverse.js:81
 msgid "King of kings: a king and four common kings"
 msgstr "Roi des rois : un roi et quatre rois ordinaires"
 
-#: src/variants/multiverse.js:70
+#: src/variants/multiverse.js:82
 msgid "Royal queen showdown"
 msgstr "Duel de dames royales"
 
-#: src/variants/multiverse.js:71
+#: src/variants/multiverse.js:83
 msgid "Excessive: three kings each, with unicorns and dragons"
 msgstr "Excessif : trois rois par camp, avec licornes et dragons"
 
-#: src/variants/multiverse.js:72
+#: src/variants/multiverse.js:84
 msgid "Timeline marauders: three timelines"
 msgstr "Maraudeurs temporels : trois lignes temporelles"
 
-#: src/variants/multiverse.js:73
+#: src/variants/multiverse.js:85
+msgid "Timeline battlegrounds: three timelines, large armies"
+msgstr "Champs de bataille temporels : trois lignes temporelles, grandes armées"
+
+#: src/variants/multiverse.js:86
 msgid "Timeline invasion: two timelines"
 msgstr "Invasion temporelle : deux lignes temporelles"
 
-#: src/variants/multiverse.js:107
+#: src/variants/multiverse.js:87
+msgid "Timeline formations: your king on one timeline, your pawns on the other"
+msgstr "Formations temporelles : votre roi sur une ligne temporelle, vos pions sur une autre"
+
+#: src/variants/multiverse.js:88
+msgid "Timeline tactician: each army on its own timeline"
+msgstr "Tacticien temporel : chaque armée sur sa propre ligne temporelle"
+
+#: src/variants/multiverse.js:89
+msgid "Timeline strategos: each army on its own timeline, with a unicorn"
+msgstr "Stratège temporel : chaque armée sur sa propre ligne temporelle, avec une licorne"
+
+#: src/variants/multiverse.js:90
+msgid "Timeline skirmish: two timelines, small armies"
+msgstr "Escarmouche temporelle : deux lignes temporelles, petites armées"
+
+#: src/variants/multiverse.js:91
+msgid "Timeline fragments: two timelines, one starting half a turn later"
+msgstr "Fragments temporels : deux lignes temporelles, dont une commence un demi-tour plus tard"
+
+#: src/variants/multiverse.js:92
+msgid "Checkmate practice: a knight against a lone king"
+msgstr "Exercice de mat : un cavalier contre un roi seul"
+
+#: src/variants/multiverse.js:93
+msgid "Checkmate practice: a bishop against a lone king"
+msgstr "Exercice de mat : un fou contre un roi seul"
+
+#: src/variants/multiverse.js:94
+msgid "Checkmate practice: a rook against a lone king"
+msgstr "Exercice de mat : une tour contre un roi seul"
+
+#: src/variants/multiverse.js:95
+msgid "Checkmate practice: a queen against a lone king"
+msgstr "Exercice de mat : une dame contre un roi seul"
+
+#: src/variants/multiverse.js:96
+msgid "Checkmate practice: three pawns against a lone king"
+msgstr "Exercice de mat : trois pions contre un roi seul"
+
+#: src/variants/multiverse.js:154
 msgid "Brawns (W) are pawns that also capture sideways or one rank forward together with one timeline forward, or one rank forward and one turn back."
 msgstr "Les pions costauds (W) sont des pions qui prennent aussi de côté ou d'une rangée vers l'avant en avançant en même temps d'une ligne temporelle, ou bien d'une rangée vers l'avant et d'un tour en arrière."
 
-#: src/variants/multiverse.js:115
-msgid "The princess (S) moves like a rook or a bishop."
-msgstr "La princesse (S) se déplace comme une tour ou un fou."
-
-#: src/variants/multiverse.js:116
-msgid "The royal queen (Y) moves like a queen and is royal; the common king (C) moves like a king but is not royal."
-msgstr "La dame royale (Y) se déplace comme une dame et est royale ; le roi ordinaire (C) se déplace comme un roi mais n'est pas royal."
-
-#: src/variants/multiverse.js:120
-msgid "The queen and a knight swap places."
-msgstr "La dame et un cavalier échangent leurs places."
-
-#: src/variants/multiverse.js:121
-msgid "Black's king and queen swap places."
-msgstr "Le roi et la dame des Noirs échangent leurs places."
-
-#: src/variants/multiverse.js:122
+#: src/variants/multiverse.js:166
 msgid "Unicorns (U) move along three axes at once."
 msgstr "Les licornes (U) se déplacent selon trois axes à la fois."
 
-#: src/variants/multiverse.js:123
+#: src/variants/multiverse.js:176
+msgid "Black has no king to lose: Black wins by capturing the white king, White draws by capturing the attackers or by holding out. Play Black to practise."
+msgstr "Les Noirs, sans roi, ne peuvent pas perdre : ils gagnent en prenant le roi blanc ; les Blancs font nulle en prenant les attaquants ou en tenant bon. Jouez avec les Noirs pour vous entraîner."
+
+#: src/variants/multiverse.js:184
+msgid "The princess (S) moves like a rook or a bishop."
+msgstr "La princesse (S) se déplace comme une tour ou un fou."
+
+#: src/variants/multiverse.js:185
+msgid "The royal queen (Y) moves like a queen and is royal; the common king (C) moves like a king but is not royal."
+msgstr "La dame royale (Y) se déplace comme une dame et est royale ; le roi ordinaire (C) se déplace comme un roi mais n'est pas royal."
+
+#: src/variants/multiverse.js:189
+msgid "The queen and a knight swap places."
+msgstr "La dame et un cavalier échangent leurs places."
+
+#: src/variants/multiverse.js:190
+msgid "Black's king and queen swap places."
+msgstr "Le roi et la dame des Noirs échangent leurs places."
+
+#: src/variants/multiverse.js:192
 msgid "Dragons (D) move along all four axes at once."
 msgstr "Les dragons (D) se déplacent selon les quatre axes à la fois."
 
-#: src/variants/multiverse.js:125
+#: src/variants/multiverse.js:194
 msgid "Common kings (C) move like kings but are not royal."
 msgstr "Les rois ordinaires (C) se déplacent comme des rois mais ne sont pas royaux."
 
-#: src/variants/multiverse.js:126
+#: src/variants/multiverse.js:195
 msgid "A royal queen (Y) moves like a queen and is royal like a king."
 msgstr "Une dame royale (Y) se déplace comme une dame et est royale comme un roi."
 
-#: src/variants/multiverse.js:127
+#: src/variants/multiverse.js:196
 msgid "Unicorns (U) move along three axes at once, dragons (D) along all four. Losing any one king loses."
 msgstr "Les licornes (U) se déplacent selon trois axes à la fois, les dragons (D) selon les quatre. Perdre un seul roi, quel qu'il soit, fait perdre la partie."
 
+#: src/variants/multiverse.js:202
+msgid "Timeline −0 starts half a turn later, with Black to move, so White first moves on +0 alone. Unicorns (U) move along three axes at once."
+msgstr "La ligne temporelle −0 commence un demi-tour plus tard, avec les Noirs au trait : les Blancs jouent donc leur premier tour sur +0 seulement. Les licornes (U) se déplacent selon trois axes à la fois."
+
 #. TRANSLATORS: a 5D start position: label, official English name, board size: "Very small (Very Small, 4 × 4)"
-#: src/variants/multiverse.js:147
+#: src/variants/multiverse.js:227
 msgid "{label} ({name}, {size} × {size})"
 msgstr "{label} ({name}, {size} × {size})"
 
-#: src/variants/multiverse.js:169
+#: src/variants/multiverse.js:249
 msgid "Start position"
 msgstr "Position de départ"
 
-#: src/variants/multiverse.js:177
+#: src/variants/multiverse.js:257
 msgid "Maximum new timelines per player"
 msgstr "Nombre maximal de nouvelles lignes temporelles par joueur"
 
-#: src/variants/multiverse.js:180
+#: src/variants/multiverse.js:260
 msgid "One"
 msgstr "Une"
 
-#: src/variants/multiverse.js:181
+#: src/variants/multiverse.js:261
 msgid "Two"
 msgstr "Deux"
 
-#: src/variants/multiverse.js:182
+#: src/variants/multiverse.js:262
 msgid "Three"
 msgstr "Trois"
 
-#: src/variants/multiverse.js:188
+#: src/variants/multiverse.js:264
+msgid "Four (laptop)"
+msgstr "Quatre (ordinateur portable)"
+
+#: src/variants/multiverse.js:270
 msgid "How far back pieces can travel"
 msgstr "Jusqu'où les pièces peuvent remonter dans le temps"
 
-#: src/variants/multiverse.js:193
+#: src/variants/multiverse.js:275
 msgid "Automatic (2 turns on boards up to 5 × 5, 4 on larger ones)"
 msgstr "Automatique (2 tours sur les échiquiers jusqu'à 5 × 5, 4 sur les plus grands)"
 
-#: src/variants/multiverse.js:195
+#: src/variants/multiverse.js:277
 msgid "2 turns (lighter on the device)"
 msgstr "2 tours (plus léger pour l'appareil)"
 
-#: src/variants/multiverse.js:196
+#: src/variants/multiverse.js:278
 msgid "4 turns (enough for most games)"
 msgstr "4 tours (suffisant pour la plupart des parties)"
 
 #. TRANSLATORS: 5D chess option: whose timelines are shown at the bottom, White or Black (not a drawn game)
-#: src/variants/multiverse.js:203
+#: src/variants/multiverse.js:285
 msgid "Drawn at the bottom"
 msgstr "Camp affiché en bas"
 
-#: src/variants/multiverse.js:213
+#: src/variants/multiverse.js:295
 msgid "Each row is a timeline and time runs to the right. You play only on the latest board of a timeline, when it is your move there (○ White, light frame; ● Black, dark frame). Every move adds a new board; the old ones stay as the past."
 msgstr "Chaque rangée d'échiquiers est une ligne temporelle, et le temps s'écoule vers la droite. Vous ne jouez que sur le dernier échiquier d'une ligne temporelle, quand c'est à vous d'y jouer (○ Blancs, cadre clair ; ● Noirs, cadre foncé). Chaque coup ajoute un nouvel échiquier ; les anciens restent et forment le passé."
 
-#: src/variants/multiverse.js:214
+#: src/variants/multiverse.js:296
 msgid "On your turn move once on every board marked “must move” (gold, in the present, “Now”); boards marked “optional” (blue) you may play too. The turn ends by itself when no board is left, otherwise press Submit turn. Each move is played at once (and rolled if its result is uncertain); Undo never changes a roll."
 msgstr "Pendant votre tour, jouez une fois sur chaque échiquier marqué « obligatoire » (doré, dans le présent, « Maintenant ») ; vous pouvez aussi jouer sur les échiquiers marqués « facultatif » (bleus). Le tour se termine de lui-même quand il ne reste plus d'échiquier à jouer, sinon appuyez sur Valider le tour. Chaque coup est joué immédiatement (avec un lancer si son résultat est incertain) ; annuler un coup ne change jamais un lancer."
 
-#: src/variants/multiverse.js:215
+#: src/variants/multiverse.js:297
 msgid "Pieces move along files, ranks, back in time (one step is one turn) and across timelines, keeping their pattern: the rook along one axis, the bishop two, the unicorn (U) three, the dragon (D) four, the queen any; the king steps one along any axes, the knight two along one and one along another; the princess (S) moves as rook or bishop, the royal queen (Y) as a queen, the common king (C) as a king. Landing on the latest board of another timeline jumps there; landing on an older board opens a new timeline that only your piece enters."
 msgstr "Les pièces se déplacent le long des colonnes, des rangées, en arrière dans le temps (un pas vaut un tour) et d'une ligne temporelle à l'autre, en gardant leur façon de se déplacer : la tour selon un axe, le fou selon deux, la licorne (U) selon trois, le dragon (D) selon quatre, la dame selon un nombre quelconque d'axes ; le roi se déplace d'un pas selon un nombre quelconque d'axes, le cavalier de deux selon un axe et d'un selon un autre ; la princesse (S) se déplace comme une tour ou un fou, la dame royale (Y) comme une dame, le roi ordinaire (C) comme un roi. Arriver sur le dernier échiquier d'une autre ligne temporelle est un saut vers celle-ci ; arriver sur un échiquier plus ancien ouvre une nouvelle ligne temporelle dans laquelle seule votre pièce entre."
 
-#: src/variants/multiverse.js:216
+#: src/variants/multiverse.js:298
 msgid "Pawns and brawns (W) step forward or one timeline towards the opponent, capture diagonally or one timeline forward and one turn back or ahead, and become queens; a brawn also captures sideways or one rank forward together with one timeline forward, or one rank forward and one turn back. Capture any enemy king or royal queen, also one in the past, to win."
 msgstr "Les pions et les pions costauds (W) avancent d'une case ou d'une ligne temporelle vers l'adversaire, prennent en diagonale ou d'une ligne temporelle vers l'avant et d'un tour en arrière ou en avant, et deviennent des dames ; un pion costaud prend aussi de côté ou d'une rangée vers l'avant en avançant en même temps d'une ligne temporelle, ou bien d'une rangée vers l'avant et d'un tour en arrière. Prenez n'importe quel roi ou n'importe quelle dame royale adverse, même dans le passé, pour gagner."
 
-#: src/variants/multiverse.js:217
-msgid "Each player may open at most the number of new timelines set for the game (1 to 3). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Pieces can travel back only as far as the game allows (2 or 4 turns); older boards are sealed: they are no longer shown, and nothing can travel there."
-msgstr "Chaque joueur peut ouvrir au plus le nombre de nouvelles lignes temporelles fixé pour la partie (1 à 3). Votre n-ième nouvelle ligne temporelle est active (elle compte pour le présent) tant que votre adversaire en a ouvert au moins n − 1 ; on peut toujours jouer sur les lignes temporelles inactives (hachurées). Les pièces ne peuvent remonter dans le temps qu'aussi loin que la partie le permet (2 ou 4 tours) ; les échiquiers plus anciens sont scellés : ils ne sont plus affichés, et rien ne peut y voyager."
+#: src/variants/multiverse.js:299
+msgid "Each player may open at most the number of new timelines set for the game (1 to 4; at most 3 when the game starts with three timelines, or with two on 8 × 8). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Pieces can travel back only as far as the game allows (2 or 4 turns); older boards are sealed: they are no longer shown, and nothing can travel there."
+msgstr "Chaque joueur peut ouvrir au plus le nombre de nouvelles lignes temporelles fixé pour la partie (1 à 4 ; au plus 3 quand la partie commence avec trois lignes temporelles, ou avec deux sur des échiquiers de 8 × 8). Votre n-ième nouvelle ligne temporelle est active (elle compte pour le présent) tant que votre adversaire en a ouvert au moins n − 1 ; on peut toujours jouer sur les lignes temporelles inactives (hachurées). Les pièces ne peuvent remonter dans le temps qu'aussi loin que la partie le permet (2 ou 4 tours) ; les échiquiers plus anciens sont scellés : ils ne sont plus affichés, et rien ne peut y voyager."
 
-#: src/variants/multiverse.js:218
+#: src/variants/multiverse.js:300
 msgid "Boards are certain, pieces are quantum: which boards exist, the present and whose turn it is are the same in every possibility. Timelines are AND, possibilities are OR. Kings, royal queens, common kings, pawns and brawns are solid: they never split."
 msgstr "Les échiquiers sont certains, les pièces sont quantiques : les échiquiers qui existent, le présent et le camp au trait sont les mêmes dans toutes les possibilités. Les lignes temporelles sont un ET, les possibilités un OU. Les rois, les dames royales, les rois ordinaires, les pions et les pions costauds sont solides : ils ne se divisent jamais."
 
-#: src/variants/multiverse.js:219
+#: src/variants/multiverse.js:301
 msgid "A move always makes its boards; the dice only decide what happens to the piece. So a ghost can travel: where it really stood it arrives, elsewhere the new boards appear without it. A Missed move still uses its board, and a Measure is your move on the board of the part you measure; the rest of your turn goes on."
 msgstr "Un coup crée toujours ses échiquiers ; les dés ne décident que de ce qui arrive à la pièce. Un fantôme peut donc voyager : là où il se trouvait vraiment, il arrive ; ailleurs, les nouveaux échiquiers apparaissent sans lui. Un coup Raté utilise quand même son échiquier, et une mesure est votre coup sur l'échiquier de la part que vous mesurez ; le reste de votre tour continue."
 
-#: src/variants/multiverse.js:220
+#: src/variants/multiverse.js:302
 msgid "Both halves of a split land on one board: yours, another timeline’s latest board, or a board in the past. Merges start from one board. You measure only a part on a board you may play. The past is quantum too: new timelines copy ghosts as twins, and after a merge the past remembers both paths until those boards are sealed."
 msgstr "Les deux moitiés d'une division arrivent sur un même échiquier : le vôtre, le dernier échiquier d'une autre ligne temporelle, ou un échiquier du passé. Une fusion part d'un seul échiquier. Vous ne pouvez mesurer qu'une part située sur un échiquier où vous pouvez jouer. Le passé est lui aussi quantique : les nouvelles lignes temporelles copient les fantômes sous forme de jumeaux, et après une fusion, le passé garde en mémoire les deux chemins jusqu'à ce que ces échiquiers soient scellés."
 
-#: src/variants/multiverse.js:221
+#: src/variants/multiverse.js:303
 msgid "If your turn cannot be finished from its start, the game ends at once: you lose if a king or royal queen of yours can be taken for certain (checkmate), otherwise it is a draw (stalemate). A move after which you could not finish your turn loses; the game asks before you play it. Red lines show what could take your royal pieces if you passed now (5D check); arrows show the travel of the last turns."
 msgstr "Si votre tour ne peut pas être terminé dès son début, la partie s'arrête immédiatement : vous perdez si l'adversaire peut prendre à coup sûr l'un de vos rois ou l'une de vos dames royales (échec et mat), sinon la partie est nulle (pat). Un coup après lequel vous ne pourriez pas terminer votre tour fait perdre ; le jeu vous demande confirmation avant que vous le jouiez. Les lignes rouges montrent ce qui pourrait prendre vos pièces royales si vous passiez votre tour maintenant (échec 5D) ; les flèches montrent les voyages des derniers tours."
 
-#: src/variants/multiverse.js:222
+#: src/variants/multiverse.js:304
 msgid "Moves are written with their board, timeline and turn: (0T2)Nc3>(+1T2)c3 jumps to another timeline, (0T2)Nc3>>(0T1)a3 opens a new one, x marks a capture; the piece letters are K, Q, R, B, N, U, D, S, Y, C and W (brawn), none for a pawn."
 msgstr "Les coups s'écrivent avec leur échiquier, leur ligne temporelle et leur tour : (0T2)Nc3>(+1T2)c3 saute vers une autre ligne temporelle, (0T2)Nc3>>(0T1)a3 en ouvre une nouvelle, x marque une prise ; les lettres des pièces sont K, Q, R, B, N, U, D, S, Y, C et W (pion costaud), aucune pour un pion."
 
@@ -6028,32 +6132,32 @@ msgid "Depending on the roll, your opponent may not be able to finish their turn
 msgstr "Selon le lancer, il se peut que votre adversaire ne puisse pas terminer son tour après ce coup : la partie est alors nulle"
 
 #. TRANSLATORS: a board label of the multiverse, "L+1 T5 ● · must move": you have to move on it this turn
-#: src/variants/multiverse/layout.js:342
+#: src/variants/multiverse/layout.js:341
 msgid "{board} · must move"
 msgstr "{board} · obligatoire"
 
 #. TRANSLATORS: a board label of the multiverse: you may move on it; its timeline does not hold the present
-#: src/variants/multiverse/layout.js:347
+#: src/variants/multiverse/layout.js:346
 msgid "{board} · optional, inactive"
 msgstr "{board} · facultatif, inactif"
 
 #. TRANSLATORS: a board label of the multiverse, "L+1 T5 ● · optional": you may move on it this turn
-#: src/variants/multiverse/layout.js:350
+#: src/variants/multiverse/layout.js:349
 msgid "{board} · optional"
 msgstr "{board} · facultatif"
 
 #. TRANSLATORS: a board label of the multiverse: its timeline is inactive (it does not hold back the present)
-#: src/variants/multiverse/layout.js:354
+#: src/variants/multiverse/layout.js:353
 msgid "{board} · inactive"
 msgstr "{board} · inactif"
 
 #. TRANSLATORS: read out for a board of the multiverse, then ": c3" (its timeline, its turn, whose move)
-#: src/variants/multiverse/layout.js:370
+#: src/variants/multiverse/layout.js:369
 msgid "Timeline {line}, turn {turn}, Black to move"
 msgstr "Ligne temporelle {line}, tour {turn}, trait aux Noirs"
 
 #. TRANSLATORS: read out for a board of the multiverse, then ": c3" (its timeline, its turn, whose move)
-#: src/variants/multiverse/layout.js:373
+#: src/variants/multiverse/layout.js:372
 msgid "Timeline {line}, turn {turn}, White to move"
 msgstr "Ligne temporelle {line}, tour {turn}, trait aux Blancs"
 
@@ -6068,32 +6172,32 @@ msgid "new"
 msgstr "nouvelle"
 
 #. TRANSLATORS: above the column of the multiverse that is the present
-#: src/variants/multiverse/layout.js:667
+#: src/variants/multiverse/layout.js:670
 msgid "Now"
 msgstr "Maintenant"
 
 #. TRANSLATORS: the legend of the multiverse: the gold halo marks the boards you must move on this turn
-#: src/variants/multiverse/layout.js:799
+#: src/variants/multiverse/layout.js:802
 msgid "Must move"
 msgstr "Obligatoire"
 
 #. TRANSLATORS: the legend of the multiverse: the blue halo marks the boards you may move on this turn
-#: src/variants/multiverse/layout.js:803
+#: src/variants/multiverse/layout.js:806
 msgid "Optional"
 msgstr "Facultatif"
 
 #. TRANSLATORS: the legend of the multiverse: a hatched row is a timeline that does not hold back the present
-#: src/variants/multiverse/layout.js:807
+#: src/variants/multiverse/layout.js:810
 msgid "Inactive timeline"
 msgstr "Ligne temporelle inactive"
 
 #. TRANSLATORS: the legend of the multiverse: a red line joins a piece to a royal piece it could take (5D check)
-#: src/variants/multiverse/layout.js:813
+#: src/variants/multiverse/layout.js:816
 msgid "Could take a royal piece if its owner passed now (5D check)"
 msgstr "Pourrait prendre une pièce royale si son propriétaire passait son tour maintenant (échec 5D)"
 
 #. TRANSLATORS: the legend of the multiverse: a blue arrow shows a piece's travel through time or timelines
-#: src/variants/multiverse/layout.js:818
+#: src/variants/multiverse/layout.js:821
 msgid "Travel in the last turns"
 msgstr "Voyages des derniers tours"
 
@@ -6121,155 +6225,155 @@ msgstr "Dragon"
 msgid "Brawn"
 msgstr "Pion costaud"
 
-#: src/variants/multiverse/texts.js:368 src/variants/multiverse/texts.js:586
+#: src/variants/multiverse/texts.js:367 src/variants/multiverse/texts.js:585
 msgid "Submit turn"
 msgstr "Valider le tour"
 
-#: src/variants/multiverse/texts.js:435
+#: src/variants/multiverse/texts.js:434
 msgid "Missed: timeline {line} opened anyway, nobody arrived"
 msgstr "Raté : la ligne temporelle {line} s'est quand même ouverte, personne n'est arrivé"
 
-#: src/variants/multiverse/texts.js:442
+#: src/variants/multiverse/texts.js:441
 msgid "Opened timeline {line} (a copy of {board})"
 msgstr "Ligne temporelle {line} ouverte (copie de {board})"
 
-#: src/variants/multiverse/texts.js:446
+#: src/variants/multiverse/texts.js:445
 msgid "Opened timeline {line}"
 msgstr "Ligne temporelle {line} ouverte"
 
 #. TRANSLATORS: a line of the move list of the multiverse: this move moved the present back to an earlier time
-#: src/variants/multiverse/texts.js:450
+#: src/variants/multiverse/texts.js:449
 msgid "The present moved back to {time}"
 msgstr "Le présent a reculé jusqu'à {time}"
 
-#: src/variants/multiverse/texts.js:453
+#: src/variants/multiverse/texts.js:452
 msgid "The past still remembers both paths until {board} is sealed"
 msgstr "Le passé garde en mémoire les deux chemins jusqu'à ce que {board} soit scellé"
 
 #. TRANSLATORS: in a player's row of the multiverse: the new timelines this player opened, of the most allowed
-#: src/variants/multiverse/texts.js:470
+#: src/variants/multiverse/texts.js:469
 msgid "New timelines {count}/{max}"
 msgstr "Nouvelles lignes temporelles {count}/{max}"
 
-#: src/variants/multiverse/texts.js:476
+#: src/variants/multiverse/texts.js:475
 msgid "{timelines} · Must move: {count} board"
 msgid_plural "{timelines} · Must move: {count} boards"
 msgstr[0] "{timelines} · Obligatoire : {count} échiquier"
 msgstr[1] "{timelines} · Obligatoire : {count} échiquiers"
 msgstr[2] "{timelines} · Obligatoire : {count} échiquiers"
 
-#: src/variants/multiverse/texts.js:484
+#: src/variants/multiverse/texts.js:483
 msgid "{timelines} · Must move: {boards}"
 msgstr "{timelines} · Obligatoire : {boards}"
 
-#: src/variants/multiverse/texts.js:491
+#: src/variants/multiverse/texts.js:490
 msgid "New timelines opened by this side, of {max}. Its next one counts for the present (is active) while the other side has opened at least as many."
 msgstr "Nouvelles lignes temporelles ouvertes par ce camp, sur {max}. Sa prochaine compte pour le présent (elle est active) tant que l'autre camp en a ouvert au moins autant."
 
 #. TRANSLATORS: above the multiverse: how many new timelines each player has opened, of the most allowed
-#: src/variants/multiverse/texts.js:508
+#: src/variants/multiverse/texts.js:507
 msgid "New timelines: White {white}/{max} · Black {black}/{max}"
 msgstr "Nouvelles lignes temporelles : Blancs {white}/{max} · Noirs {black}/{max}"
 
 #. TRANSLATORS: above the multiverse, after the new timelines: how many turns back pieces can travel
-#: src/variants/multiverse/texts.js:515
+#: src/variants/multiverse/texts.js:514
 msgid "Travel back: {turns} turn"
 msgid_plural "Travel back: {turns} turns"
 msgstr[0] "Voyage dans le passé : {turns} tour"
 msgstr[1] "Voyage dans le passé : {turns} tours"
 msgstr[2] "Voyage dans le passé : {turns} tours"
 
-#: src/variants/multiverse/texts.js:577
+#: src/variants/multiverse/texts.js:576
 msgid "Submit turn (your royal queen can be taken: {percent})"
 msgstr "Valider le tour (votre dame royale peut être prise : {percent})"
 
-#: src/variants/multiverse/texts.js:579
+#: src/variants/multiverse/texts.js:578
 msgid "Submit turn (a king or royal queen of yours can be taken: {percent})"
 msgstr "Valider le tour (l'un de vos rois ou dames royales peut être pris : {percent})"
 
-#: src/variants/multiverse/texts.js:583
+#: src/variants/multiverse/texts.js:582
 msgid "Submit turn (a king of yours can be taken: {percent})"
 msgstr "Valider le tour (l'un de vos rois peut être pris : {percent})"
 
 #. TRANSLATORS: the Submit button of the multiverse while must-move boards are left; keep it short (phones)
-#: src/variants/multiverse/texts.js:590
+#: src/variants/multiverse/texts.js:589
 msgid "Submit turn ({count} more board first)"
 msgid_plural "Submit turn ({count} more boards first)"
 msgstr[0] "Valider le tour (encore {count} échiquier)"
 msgstr[1] "Valider le tour (encore {count} échiquiers)"
 msgstr[2] "Valider le tour (encore {count} échiquiers)"
 
-#: src/variants/multiverse/texts.js:648
+#: src/variants/multiverse/texts.js:647
 msgid "Your king or royal queen is in danger on {boards}: {percent}"
 msgstr "Votre roi ou votre dame royale est en danger sur {boards} : {percent}"
 
-#: src/variants/multiverse/texts.js:651
+#: src/variants/multiverse/texts.js:650
 msgid "Your royal queen is in danger on {boards}: {percent}"
 msgstr "Votre dame royale est en danger sur {boards} : {percent}"
 
 #. TRANSLATORS: the danger line of the multiverse (5D check), "Your king is in danger on (0T2) ○: 100 %"
-#: src/variants/multiverse/texts.js:654
+#: src/variants/multiverse/texts.js:653
 msgid "Your king is in danger on {boards}: {percent}"
 msgstr "Votre roi est en danger sur {boards} : {percent}"
 
 #. TRANSLATORS: under the result of a multiverse game won by capturing a king or royal queen
-#: src/variants/multiverse/texts.js:676
+#: src/variants/multiverse/texts.js:675
 msgid "The royal piece on {square} was captured."
 msgstr "La pièce royale sur {square} a été prise."
 
 #. TRANSLATORS: under the result of a multiverse game lost by checkmate: where the royal piece could be taken
-#: src/variants/multiverse/texts.js:683
+#: src/variants/multiverse/texts.js:682
 msgid "A royal piece could be taken for certain on {boards}."
 msgstr "Une pièce royale pouvait être prise à coup sûr sur {boards}."
 
 #. TRANSLATORS: the hint of the multiverse once every must-move board of the turn is played
-#: src/variants/multiverse/texts.js:700
+#: src/variants/multiverse/texts.js:699
 msgid "Required boards done: move on an optional board (blue), or press Submit turn."
 msgstr "Échiquiers obligatoires joués : jouez sur un échiquier facultatif (bleu), ou appuyez sur Valider le tour."
 
-#: src/variants/multiverse/texts.js:715
+#: src/variants/multiverse/texts.js:714
 msgid "Measure through a part on a board you may play now (gold or blue)."
 msgstr "Mesurez au moyen d'une part située sur un échiquier où vous pouvez jouer maintenant (doré ou bleu)."
 
-#: src/variants/multiverse/texts.js:717
+#: src/variants/multiverse/texts.js:716
 msgid "Both parts must stand on one board you may play now (gold or blue)."
 msgstr "Les deux parts doivent se trouver sur un même échiquier où vous pouvez jouer maintenant (doré ou bleu)."
 
-#: src/variants/multiverse/texts.js:722
+#: src/variants/multiverse/texts.js:721
 msgid "This piece has no move now."
 msgstr "Cette pièce n'a aucun coup possible pour le moment."
 
-#: src/variants/multiverse/texts.js:724
+#: src/variants/multiverse/texts.js:723
 msgid "You can move only on the boards marked must move or optional (gold or blue)."
 msgstr "Vous ne pouvez jouer que sur les échiquiers marqués « obligatoire » ou « facultatif » (dorés ou bleus)."
 
 #. TRANSLATORS: why a multiverse game ended: a royal piece (a king or a royal queen) was captured
-#: src/variants/multiverse/texts.js:741
+#: src/variants/multiverse/texts.js:740
 msgid "a king or royal queen was captured"
 msgstr "prise d'un roi ou d'une dame royale"
 
 #. TRANSLATORS: why a multiverse game ended: the loser could not finish its turn, a royal piece would fall
-#: src/variants/multiverse/texts.js:744
+#: src/variants/multiverse/texts.js:743
 msgid "checkmate: the turn could not be finished and a king or royal queen would certainly be captured"
 msgstr "échec et mat : le tour ne pouvait pas être terminé, et la prise d'un roi ou d'une dame royale était certaine"
 
 #. TRANSLATORS: why a multiverse game was drawn: the player to move could not finish its turn
-#: src/variants/multiverse/texts.js:750
+#: src/variants/multiverse/texts.js:749
 msgid "stalemate: the turn could not be finished"
 msgstr "pat : le tour ne pouvait pas être terminé"
 
 #. TRANSLATORS: why a multiverse game ended: the loser's own move left its turn impossible to finish
-#: src/variants/multiverse/texts.js:753
+#: src/variants/multiverse/texts.js:752
 msgid "stranded: the loser's own move left its turn impossible to finish"
 msgstr "tour bloqué : par son propre coup, le perdant ne pouvait plus terminer son tour"
 
 #. TRANSLATORS: why a multiverse game was drawn; a brawn is a kind of pawn
-#: src/variants/multiverse/texts.js:756
+#: src/variants/multiverse/texts.js:755
 msgid "300 moves in a row (Submit turn counts) without a capture or a pawn or brawn move"
 msgstr "300 coups d'affilée (y compris « Valider le tour ») sans prise ni coup de pion ou de pion costaud"
 
 #. TRANSLATORS: why a multiverse game was drawn: the game reached its move limit
-#: src/variants/multiverse/texts.js:762
+#: src/variants/multiverse/texts.js:761
 msgid "1,200 moves in the game (Submit turn counts)"
 msgstr "1 200 coups dans la partie (y compris « Valider le tour »)"
 
@@ -6436,114 +6540,128 @@ msgstr "Un échec maintenu compte de nouveau après chacun de vos coups, tant qu
 msgid "The counters next to the player names show how many checks each side has given."
 msgstr "Les compteurs à côté des noms des joueurs indiquent combien d'échecs chaque camp a donnés."
 
-#: src/variants/trid.js:363
-msgid "Three 4 × 4 main levels, White's (W, lowest), Neutral (N) and Black's (B, highest), and four 2 × 2 attack boards at the back corners: QL1 and KL1 on the queen's and king's side of White, QL6 and KL6 of Black. The attack boards never move in this version."
-msgstr "Trois niveaux principaux de 4 × 4, celui des Blancs (W, le plus bas), le neutre (N) et celui des Noirs (B, le plus haut), et quatre échiquiers d'attaque de 2 × 2 aux coins arrière : QL1 et KL1 côté dame et côté roi des Blancs, QL6 et KL6 pour les Noirs. Les échiquiers d'attaque ne bougent jamais dans cette version."
+#: src/variants/trid.js:610
+msgid "To move an attack board, tap its pin name, then the name of a free pin (dashed)."
+msgstr "Pour déplacer un échiquier d'attaque, touchez le nom de son emplacement, puis celui d'un emplacement libre (en pointillés)."
 
-#: src/variants/trid.js:367
-msgid "A square is named file, rank and board, such as b3N or z0QL1. Seen from above, all boards form one map with files z to e and ranks 0 to 9: b3W and b3N are the two levels of map square b3."
-msgstr "Une case se nomme par sa colonne, sa rangée et son échiquier, comme b3N ou z0QL1. Vus d'en haut, tous les échiquiers forment une seule carte, avec les colonnes z à e et les rangées 0 à 9 : b3W et b3N sont les deux niveaux de la case b3 de la carte."
+#: src/variants/trid.js:613
+msgid "Three 4 × 4 main levels, White's (W, lowest), Neutral (N) and Black's (B, highest), and four 2 × 2 attack boards on pins at the corners of the main levels: QL1 to QL6 on the queen's side and KL1 to KL6 on the king's side, numbered from White's end. White's boards start on QL1 and KL1, Black's on QL6 and KL6."
+msgstr "Trois niveaux principaux de 4 × 4, celui des Blancs (W, le plus bas), le neutre (N) et celui des Noirs (B, le plus haut), et quatre échiquiers d'attaque de 2 × 2 posés sur des emplacements aux coins des niveaux principaux : QL1 à QL6 côté dame et KL1 à KL6 côté roi, numérotés en partant du camp des Blancs. Au départ, les échiquiers des Blancs sont sur QL1 et KL1, ceux des Noirs sur QL6 et KL6."
 
-#: src/variants/trid.js:371
-msgid "Every move is an ordinary chess move on that map and may stop on any level of the target map square. Moving straight up or down is not a move."
-msgstr "Chaque coup est un coup d'échecs ordinaire sur cette carte et peut s'arrêter sur n'importe quel niveau de la case cible de la carte. Monter ou descendre tout droit n'est pas un coup."
+#: src/variants/trid.js:617
+msgid "A square is named file, rank and board, such as b3N or z0QL1. Seen from above, all boards form one map with files z to e and ranks 0 to 9: b3W and b3N are the two levels of map square b3. The squares of a pin exist only while a board stands on it."
+msgstr "Une case se nomme par sa colonne, sa rangée et son échiquier, comme b3N ou z0QL1. Vus d'en haut, tous les échiquiers forment une seule carte, avec les colonnes z à e et les rangées 0 à 9 : b3W et b3N sont les deux niveaux de la case b3 de la carte. Les cases d'un emplacement n'existent que tant qu'un échiquier s'y trouve."
 
-#: src/variants/trid.js:375
-msgid "A piece on any level of a map square in between blocks the move. Gaps without a board are empty: pieces fly across them but cannot stop there."
-msgstr "Une pièce sur n'importe quel niveau d'une case intermédiaire de la carte bloque le coup. Les espaces sans échiquier sont vides : les pièces les survolent mais ne peuvent pas s'y arrêter."
+#: src/variants/trid.js:621
+msgid "Every move is an ordinary chess move on that map and may stop on any level of the target map square. Moving straight up or down is not a move. A piece on any level of a map square in between blocks the move; gaps without a board are empty: pieces fly across them but cannot stop there."
+msgstr "Chaque coup est un coup d'échecs ordinaire sur cette carte et peut s'arrêter sur n'importe quel niveau de la case cible de la carte. Monter ou descendre tout droit n'est pas un coup. Une pièce sur n'importe quel niveau d'une case intermédiaire de la carte bloque le coup ; les espaces sans échiquier sont vides : les pièces les survolent mais ne peuvent pas s'y arrêter."
 
-#: src/variants/trid.js:379
-msgid "Pawns step forward (two map squares on their first move) and capture diagonally forward, onto any level. En passant lands on either level of the skipped square."
-msgstr "Les pions avancent (de deux cases de la carte à leur premier coup) et prennent en diagonale vers l'avant, sur n'importe quel niveau. La prise en passant arrive sur l'un ou l'autre niveau de la case sautée."
+#: src/variants/trid.js:625
+msgid "Instead of a piece you may move an attack board that holds at most one piece to a free pin next to it: one or two numbers up or down on the same side (QL3 reaches QL1, QL2, QL4 and QL5), or across to the same number (KL3). An empty board belongs to the side it started with, a board with a piece to that piece's side and carries it along; only an empty board may move backwards."
+msgstr "Au lieu de jouer une pièce, vous pouvez déplacer un échiquier d'attaque qui porte au plus une pièce vers un emplacement libre voisin : du même côté, à un ou deux numéros d'écart (QL3 atteint QL1, QL2, QL4 et QL5), ou de l'autre côté, au même numéro (KL3). Un échiquier vide appartient au camp qui le possédait au départ, un échiquier portant une pièce au camp de cette pièce, qu'il transporte avec lui ; seul un échiquier vide peut reculer."
 
-#: src/variants/trid.js:383
-msgid "A pawn promotes on the last rank of its file: rank 8 on files b and c, rank 9 on files z, a, d and e (for Black rank 1 and rank 0)."
-msgstr "Un pion est promu sur la dernière rangée de sa colonne : rangée 8 sur les colonnes b et c, rangée 9 sur les colonnes z, a, d et e (pour les Noirs, rangée 1 et rangée 0)."
+#: src/variants/trid.js:629
+msgid "Pawns step forward (two map squares on their first move, but not after riding a board) and capture diagonally forward, onto any level. En passant lands on either level of the skipped square."
+msgstr "Les pions avancent (de deux cases de la carte à leur premier coup, sauf s'ils ont déjà été transportés par un échiquier) et prennent en diagonale vers l'avant, sur n'importe quel niveau. La prise en passant arrive sur l'un ou l'autre niveau de la case sautée."
 
-#: src/variants/trid.js:387
+#: src/variants/trid.js:633
+msgid "A pawn promotes on the last rank of its file: rank 8 on files b and c, rank 9 on files z and e, and on files a and d rank 9 while a board stands on the pin over the far corner (QL6, KL6), else rank 8 (for Black rank 1 and rank 0, with QL1 and KL1). A pawn that a board move takes to its last rank, or leaves on it, promotes at once: your own to the piece you pick, the other side's to a queen."
+msgstr "Un pion est promu sur la dernière rangée de sa colonne : rangée 8 sur les colonnes b et c, rangée 9 sur les colonnes z et e, et sur les colonnes a et d, rangée 9 tant qu'un échiquier occupe l'emplacement au-dessus du coin le plus éloigné (QL6, KL6), sinon rangée 8 (pour les Noirs, rangée 1 et rangée 0, avec QL1 et KL1). Un pion qu'un déplacement d'échiquier amène sur sa dernière rangée, ou y laisse, est promu immédiatement : le vôtre devient la pièce de votre choix, celui de l'adversaire devient une dame."
+
+#: src/variants/trid.js:637
 msgid "You may castle from your second move on, if neither the king nor that rook has moved in any possibility. On the king's side the king and the rook next to it swap places; on the queen's side, once the queen's square is empty, the king goes there and the corner rook goes to the king's square."
 msgstr "Vous pouvez roquer à partir de votre deuxième coup, si ni le roi ni cette tour n'ont joué dans aucune possibilité. Côté roi, le roi et la tour voisine échangent leurs places ; côté dame, une fois la case de la dame vide, le roi s'y rend et la tour du coin va sur la case du roi."
 
-#: src/variants/trid.js:391
-msgid "Quantum tip: a ghost on either level of a map square blocks moves across it in its possibilities, and a piece split over both levels of one map square blocks it for certain. A ghost on the other level of your target square does not matter."
-msgstr "Astuce quantique : un fantôme sur l'un ou l'autre niveau d'une case de la carte bloque les coups qui la traversent dans ses possibilités, et une pièce divisée sur les deux niveaux d'une même case de la carte la bloque à coup sûr. Un fantôme sur l'autre niveau de votre case cible n'a pas d'importance."
+#: src/variants/trid.js:641
+msgid "Quantum tip: a ghost on either level of a map square blocks moves across it in its possibilities, and a piece split over both levels of one map square blocks it for certain. A ghost on the other level of your target square does not matter. Attack boards are never ghosts: a ghost on a moving board rides along where it stands, and a board move that a ghost prevents in some possibilities is settled by a roll."
+msgstr "Astuce quantique : un fantôme sur l'un ou l'autre niveau d'une case de la carte bloque les coups qui la traversent dans ses possibilités, et une pièce divisée sur les deux niveaux d'une même case de la carte la bloque à coup sûr. Un fantôme sur l'autre niveau de votre case cible n'a pas d'importance. Les échiquiers d'attaque ne sont jamais des fantômes : un fantôme sur un échiquier qui se déplace est emporté avec lui dans les possibilités où il s'y trouve, et un déplacement d'échiquier qu'un fantôme empêche dans certaines possibilités est décidé par un lancer."
 
-#: src/variants/xiangqi.js:358
+#. TRANSLATORS: Tri-D chess, read out by screen readers; {pin} is the name of a pin, such as QL1
+#: src/variants/trid/layout.js:265
+msgid "Attack board on {pin}"
+msgstr "Échiquier d'attaque sur {pin}"
+
+#. TRANSLATORS: Tri-D chess, read out by screen readers; {pin} is the name of a pin, such as QL3
+#: src/variants/trid/layout.js:267
+msgid "Free pin {pin}"
+msgstr "Emplacement libre {pin}"
+
+#: src/variants/xiangqi.js:363
 msgid "General"
 msgstr "Général"
 
-#: src/variants/xiangqi.js:365
+#: src/variants/xiangqi.js:370
 msgid "Advisor"
 msgstr "Conseiller"
 
-#: src/variants/xiangqi.js:371
+#: src/variants/xiangqi.js:376
 msgid "Elephant"
 msgstr "Éléphant"
 
-#: src/variants/xiangqi.js:378
+#: src/variants/xiangqi.js:383
 msgid "Horse"
 msgstr "Cheval"
 
-#: src/variants/xiangqi.js:388
+#: src/variants/xiangqi.js:393
 msgid "Chariot"
 msgstr "Char"
 
-#: src/variants/xiangqi.js:394
+#: src/variants/xiangqi.js:399
 msgid "Cannon"
 msgstr "Canon"
 
-#: src/variants/xiangqi.js:400
+#: src/variants/xiangqi.js:405
 msgid "Soldier"
 msgstr "Soldat"
 
-#: src/variants/xiangqi.js:413
+#: src/variants/xiangqi.js:418
 msgid "Pieces stand on the points where the lines cross. Red moves first. The river divides the board, and each side has a palace: the 3 × 3 points marked with two diagonal lines."
 msgstr "Les pièces se placent sur les points où les lignes se croisent. Rouge joue en premier. La rivière divise l'échiquier, et chaque camp a un palais : les 3 × 3 points marqués de deux diagonales."
 
-#: src/variants/xiangqi.js:414
+#: src/variants/xiangqi.js:419
 msgid "The general 帥/將 steps one point straight and never leaves its palace. Advisors 仕/士 step one point diagonally along the palace's diagonal lines."
 msgstr "Le général 帥/將 se déplace d'un point en ligne droite et ne quitte jamais son palais. Les conseillers 仕/士 se déplacent d'un point en diagonale, le long des diagonales du palais."
 
-#: src/variants/xiangqi.js:415
+#: src/variants/xiangqi.js:420
 msgid "Elephants 相/象 move exactly two points diagonally and never cross the river. Horses 傌/馬 move one point straight, then one diagonally outwards. Both are blocked by a piece on the point they pass, and a ghost blocks them only where it really is."
 msgstr "Les éléphants 相/象 se déplacent d'exactement deux points en diagonale et ne traversent jamais la rivière. Les chevaux 傌/馬 se déplacent d'un point en ligne droite, puis d'un point en diagonale vers l'extérieur. Les uns et les autres sont bloqués par une pièce sur le point qu'ils franchissent, et un fantôme ne les bloque que là où il se trouve vraiment."
 
-#: src/variants/xiangqi.js:416
+#: src/variants/xiangqi.js:421
 msgid "Chariots 俥/車 move like rooks. Cannons 炮/砲 move like rooks too, but capture only by jumping over exactly one piece of either colour. A ghost works as that screen only in the possibilities where it is really there."
 msgstr "Les chars 俥/車 se déplacent comme des tours. Les canons 炮/砲 se déplacent aussi comme des tours, mais ne prennent qu'en sautant par-dessus exactement une pièce, de n'importe quelle couleur. Un fantôme ne sert d'écran que dans les possibilités où il se trouve vraiment."
 
-#: src/variants/xiangqi.js:417
+#: src/variants/xiangqi.js:422
 msgid "Soldiers 兵/卒 step one point forward, and also sideways once they have crossed the river. They never move back and never promote. Generals and soldiers are always solid; every other piece can split."
 msgstr "Les soldats 兵/卒 avancent d'un point, et aussi de côté une fois la rivière traversée. Ils ne reculent jamais et ne sont jamais promus. Les généraux et les soldats sont toujours solides ; toutes les autres pièces peuvent se diviser."
 
-#: src/variants/xiangqi.js:418
+#: src/variants/xiangqi.js:423
 msgid "Capture the enemy general to win. If the two generals stand on one file with nothing between them, the player to move may fly along the file and capture the other general. A ghost between them shields only where it really is."
 msgstr "Prenez le général adverse pour gagner. Si les deux généraux sont sur la même colonne sans rien entre eux, le joueur au trait peut traverser la colonne d'un bond et prendre l'autre général. Un fantôme entre eux ne protège que là où il se trouve vraiment."
 
-#: src/variants/xiangqi.js:419
+#: src/variants/xiangqi.js:424
 msgid "You lose at once if every move you have would let your general be captured for certain, or if you have no move at all. It is a draw when no chariot, horse, cannon or soldier is left and the generals do not face each other, or after 50 moves by each side without a capture."
 msgstr "Vous perdez immédiatement si chacun de vos coups laisse votre général se faire prendre à coup sûr, ou si vous n'avez aucun coup. La partie est nulle quand il ne reste ni char, ni cheval, ni canon, ni soldat et que les généraux ne se font pas face, ou après 50 coups de chaque camp sans prise."
 
-#: src/variants/xiangqi.js:420
+#: src/variants/xiangqi.js:425
 msgid "Unlike standard xiangqi, there is no repetition rule: perpetual check does not lose."
 msgstr "Contrairement au xiangqi standard, il n'y a pas de règle de répétition : l'échec perpétuel ne fait pas perdre."
 
-#: src/variants/xiangqi.js:476
+#: src/variants/xiangqi.js:481
 msgid "a general was captured"
 msgstr "un général a été pris"
 
 #. TRANSLATORS: Xiangqi: every move of the loser would have let its general be captured for certain
-#: src/variants/xiangqi.js:479
+#: src/variants/xiangqi.js:484
 msgid "the general could not escape"
 msgstr "le général ne pouvait pas s'échapper"
 
 #. TRANSLATORS: Xiangqi, why the game was drawn: no chariot, horse, cannon or soldier is left
-#: src/variants/xiangqi.js:482
+#: src/variants/xiangqi.js:487
 msgid "no piece left that can cross the river"
 msgstr "plus aucune pièce ne peut traverser la rivière"
 
 #. TRANSLATORS: Xiangqi, why the game was drawn
-#: src/variants/xiangqi.js:485
+#: src/variants/xiangqi.js:490
 msgid "50 moves by each side without a capture"
 msgstr "50 coups de chaque camp sans prise"
 
@@ -6832,193 +6950,193 @@ msgstr "Diplôme"
 msgid "one full game"
 msgstr "une partie complète"
 
-#: src/views/VariantGameView.vue:51
+#: src/views/VariantGameView.vue:53
 msgid "This game is not stored on this device."
 msgstr "Cette partie n'est pas enregistrée sur cet appareil."
 
-#: src/views/VariantGameView.vue:68
+#: src/views/VariantGameView.vue:70
 msgid "Hide rules"
 msgstr "Masquer les règles"
 
-#: src/views/VariantGameView.vue:79
+#: src/views/VariantGameView.vue:81
 msgid "The quantum rules of every variant"
 msgstr "Les règles quantiques de toutes les variantes"
 
 #. TRANSLATORS: pieces held in hand; {side} is White, Black, Sente, Gote or White A
-#: src/views/VariantGameView.vue:116
+#: src/views/VariantGameView.vue:118
 msgid "In hand: {side}"
 msgstr "Réserve : {side}"
 
-#: src/views/VariantGameView.vue:127
+#: src/views/VariantGameView.vue:129
 msgid "Drop {piece}"
 msgstr "Parachuter : {piece}"
 
 #. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
-#: src/views/VariantGameView.vue:142
+#: src/views/VariantGameView.vue:145
 msgid "Pass the device to {side}."
 msgstr "Passez l'appareil au joueur suivant : {side}."
 
 #. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
-#: src/views/VariantGameView.vue:144
+#: src/views/VariantGameView.vue:147
 msgid "I am {side}: show my board"
 msgstr "C'est moi ({side}) : afficher mon échiquier"
 
-#: src/views/VariantGameView.vue:149
+#: src/views/VariantGameView.vue:153
 msgid "Fog: squares you cannot see."
 msgstr "Brouillard : cases que vous ne voyez pas."
 
-#: src/views/VariantGameView.vue:165
+#: src/views/VariantGameView.vue:169
 msgid "Game options"
 msgstr "Options de la partie"
 
-#: src/views/VariantGameView.vue:191
+#: src/views/VariantGameView.vue:195
 msgid "Quantum budget: {used} of {max}"
 msgstr "Budget quantique : {used} sur {max}"
 
-#: src/views/VariantGameView.vue:202
+#: src/views/VariantGameView.vue:206
 msgid "Budget {used}/{max}"
 msgstr "Budget {used}/{max}"
 
-#: src/views/VariantGameView.vue:210
+#: src/views/VariantGameView.vue:214
 msgid "Quantum budget: unknown"
 msgstr "Budget quantique : inconnu"
 
-#: src/views/VariantGameView.vue:212
+#: src/views/VariantGameView.vue:216
 msgid "Budget hidden"
 msgstr "Budget caché"
 
 #. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
-#: src/views/VariantGameView.vue:227
+#: src/views/VariantGameView.vue:231
 msgid "{side} is thinking…"
 msgstr "{side} : réflexion en cours…"
 
 #. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
-#: src/views/VariantGameView.vue:232
+#: src/views/VariantGameView.vue:236
 msgid "{side} to move"
 msgstr "Trait : {side}"
 
-#: src/views/VariantGameView.vue:235
+#: src/views/VariantGameView.vue:239
 msgid "You must capture: only moves that might capture are allowed."
 msgstr "Vous devez prendre : seuls les coups qui peuvent prendre sont autorisés."
 
-#: src/views/VariantGameView.vue:244
+#: src/views/VariantGameView.vue:248
 msgid "Your move: {result}"
 msgstr "Votre coup : {result}"
 
-#: src/views/VariantGameView.vue:247
+#: src/views/VariantGameView.vue:251
 msgid "Pass the device"
 msgstr "Passer l'appareil"
 
-#: src/views/VariantGameView.vue:295
+#: src/views/VariantGameView.vue:299
 msgid "Do not promote"
 msgstr "Ne pas promouvoir"
 
-#: src/views/VariantGameView.vue:324
+#: src/views/VariantGameView.vue:328
 msgid "This move is settled by a roll:"
 msgstr "Ce coup est décidé par un lancer :"
 
-#: src/views/VariantGameView.vue:344 src/views/VariantGameView.vue:351
+#: src/views/VariantGameView.vue:348 src/views/VariantGameView.vue:355
 msgid "Play and roll"
 msgstr "Jouer et lancer les dés"
 
-#: src/views/VariantGameView.vue:364 src/views/VariantsView.vue:170
+#: src/views/VariantGameView.vue:368 src/views/VariantsView.vue:173
 msgid "This game could not be saved on this device."
 msgstr "Cette partie n'a pas pu être enregistrée sur cet appareil."
 
-#: src/views/VariantGameView.vue:375
+#: src/views/VariantGameView.vue:379
 msgid "Result: {result}"
 msgstr "Résultat : {result}"
 
-#: src/views/VariantGameView.vue:381
+#: src/views/VariantGameView.vue:385
 msgid "Roll: {result} ({percent})"
 msgstr "Lancer : {result} ({percent})"
 
-#: src/views/VariantGameView.vue:397
+#: src/views/VariantGameView.vue:401
 msgid "Umpire"
 msgstr "Arbitre"
 
-#: src/views/VariantGameView.vue:465
+#: src/views/VariantGameView.vue:469
 msgid "Flip board"
 msgstr "Retourner l'échiquier"
 
-#: src/views/VariantGameView.vue:592
+#: src/views/VariantGameView.vue:596
 msgid "Not now: a capture is compulsory."
 msgstr "Pas maintenant : la prise est obligatoire."
 
-#: src/views/VariantGameView.vue:651
+#: src/views/VariantGameView.vue:655
 msgid "Confirm or cancel the move."
 msgstr "Confirmez ou annulez le coup."
 
-#: src/views/VariantGameView.vue:655
+#: src/views/VariantGameView.vue:659
 msgid "Choose a piece, then two empty squares."
 msgstr "Choisissez une pièce, puis deux cases vides."
 
-#: src/views/VariantGameView.vue:657
+#: src/views/VariantGameView.vue:661
 msgid "Choose two parts of one ghost, then the square where they meet."
 msgstr "Choisissez deux parts d'un même fantôme, puis la case où elles se rejoignent."
 
-#: src/views/VariantGameView.vue:659
+#: src/views/VariantGameView.vue:663
 msgid "Choose one of your ghosts to find out where it really is."
 msgstr "Choisissez un de vos fantômes pour découvrir où il se trouve vraiment."
 
-#: src/views/VariantGameView.vue:663
+#: src/views/VariantGameView.vue:667
 msgid "Choose a piece, then its target square."
 msgstr "Choisissez une pièce, puis sa case cible."
 
-#: src/views/VariantGameView.vue:704
+#: src/views/VariantGameView.vue:708
 msgid "Board of {variant}"
 msgstr "Échiquier ({variant})"
 
-#: src/views/VariantGameView.vue:736
+#: src/views/VariantGameView.vue:740
 msgid "The umpire says: that move is not possible. Try another one."
 msgstr "L'arbitre dit : ce coup n'est pas possible. Tentez-en un autre."
 
-#: src/views/VariantGameView.vue:740
+#: src/views/VariantGameView.vue:744
 msgid "This piece cannot split: it needs two empty squares it could move to, within the budget."
 msgstr "Cette pièce ne peut pas se diviser : il lui faut deux cases vides où elle pourrait aller, dans les limites du budget."
 
-#: src/views/VariantGameView.vue:745
+#: src/views/VariantGameView.vue:749
 msgid "Choose a part of one of your ghosts."
 msgstr "Choisissez une part de l'un de vos fantômes."
 
-#: src/views/VariantGameView.vue:747
+#: src/views/VariantGameView.vue:751
 msgid "Choose one of your ghosts."
 msgstr "Choisissez un de vos fantômes."
 
-#: src/views/VariantGameView.vue:749
+#: src/views/VariantGameView.vue:753
 msgid "This ghost cannot be measured from this square."
 msgstr "Ce fantôme ne peut pas être mesuré depuis cette case."
 
-#: src/views/VariantGameView.vue:751
+#: src/views/VariantGameView.vue:755
 msgid "These parts cannot merge from here."
 msgstr "Ces parts ne peuvent pas fusionner d'ici."
 
-#: src/views/VariantGameView.vue:753
+#: src/views/VariantGameView.vue:757
 msgid "Choose one of your pieces."
 msgstr "Choisissez une de vos pièces."
 
-#: src/views/VariantGameView.vue:761
+#: src/views/VariantGameView.vue:765
 msgid "Refused this turn: {moves}"
 msgstr "Coups refusés ce tour-ci : {moves}"
 
 #. TRANSLATORS: above the moves of a player's last turn in 5D chess; {side} is White or Black
-#: src/views/VariantGameView.vue:786
+#: src/views/VariantGameView.vue:794
 msgid "Last turn of {side}"
 msgstr "Dernier tour des {side}"
 
-#: src/views/VariantGameView.vue:830
+#: src/views/VariantGameView.vue:838
 msgid "A move"
 msgstr "Un coup"
 
-#: src/views/VariantGameView.vue:925 src/views/VariantsView.vue:216
+#: src/views/VariantGameView.vue:933 src/views/VariantsView.vue:219
 msgid "Easy"
 msgstr "Facile"
 
-#: src/views/VariantGameView.vue:927 src/views/VariantsView.vue:218
+#: src/views/VariantGameView.vue:935 src/views/VariantsView.vue:221
 msgid "Hard"
 msgstr "Difficile"
 
-#: src/views/VariantGameView.vue:929
+#: src/views/VariantGameView.vue:937
 msgid "Computer ({level})"
 msgstr "Ordinateur ({level})"
 
@@ -7041,7 +7159,7 @@ msgstr[2] "%n joueurs"
 msgid "You play"
 msgstr "Votre camp"
 
-#: src/views/VariantsView.vue:167
+#: src/views/VariantsView.vue:170
 msgid "Turn the board to the player to move"
 msgstr "Tourner l'échiquier vers le joueur au trait"
 
@@ -7490,6 +7608,30 @@ msgstr "Le document de progression est trop volumineux."
 #: lib/Service/Player/TrainerProgressService.php:63
 msgid "The progress must be an object."
 msgstr "La progression doit être un objet."
+
+#~ msgid "Each player may open at most the number of new timelines set for the game (1 to 3). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Pieces can travel back only as far as the game allows (2 or 4 turns); older boards are sealed: they are no longer shown, and nothing can travel there."
+#~ msgstr "Chaque joueur peut ouvrir au plus le nombre de nouvelles lignes temporelles fixé pour la partie (1 à 3). Votre n-ième nouvelle ligne temporelle est active (elle compte pour le présent) tant que votre adversaire en a ouvert au moins n − 1 ; on peut toujours jouer sur les lignes temporelles inactives (hachurées). Les pièces ne peuvent remonter dans le temps qu'aussi loin que la partie le permet (2 ou 4 tours) ; les échiquiers plus anciens sont scellés : ils ne sont plus affichés, et rien ne peut y voyager."
+
+#~ msgid "Three 4 × 4 main levels, White's (W, lowest), Neutral (N) and Black's (B, highest), and four 2 × 2 attack boards at the back corners: QL1 and KL1 on the queen's and king's side of White, QL6 and KL6 of Black. The attack boards never move in this version."
+#~ msgstr "Trois niveaux principaux de 4 × 4, celui des Blancs (W, le plus bas), le neutre (N) et celui des Noirs (B, le plus haut), et quatre échiquiers d'attaque de 2 × 2 aux coins arrière : QL1 et KL1 côté dame et côté roi des Blancs, QL6 et KL6 pour les Noirs. Les échiquiers d'attaque ne bougent jamais dans cette version."
+
+#~ msgid "A square is named file, rank and board, such as b3N or z0QL1. Seen from above, all boards form one map with files z to e and ranks 0 to 9: b3W and b3N are the two levels of map square b3."
+#~ msgstr "Une case se nomme par sa colonne, sa rangée et son échiquier, comme b3N ou z0QL1. Vus d'en haut, tous les échiquiers forment une seule carte, avec les colonnes z à e et les rangées 0 à 9 : b3W et b3N sont les deux niveaux de la case b3 de la carte."
+
+#~ msgid "Every move is an ordinary chess move on that map and may stop on any level of the target map square. Moving straight up or down is not a move."
+#~ msgstr "Chaque coup est un coup d'échecs ordinaire sur cette carte et peut s'arrêter sur n'importe quel niveau de la case cible de la carte. Monter ou descendre tout droit n'est pas un coup."
+
+#~ msgid "A piece on any level of a map square in between blocks the move. Gaps without a board are empty: pieces fly across them but cannot stop there."
+#~ msgstr "Une pièce sur n'importe quel niveau d'une case intermédiaire de la carte bloque le coup. Les espaces sans échiquier sont vides : les pièces les survolent mais ne peuvent pas s'y arrêter."
+
+#~ msgid "Pawns step forward (two map squares on their first move) and capture diagonally forward, onto any level. En passant lands on either level of the skipped square."
+#~ msgstr "Les pions avancent (de deux cases de la carte à leur premier coup) et prennent en diagonale vers l'avant, sur n'importe quel niveau. La prise en passant arrive sur l'un ou l'autre niveau de la case sautée."
+
+#~ msgid "A pawn promotes on the last rank of its file: rank 8 on files b and c, rank 9 on files z, a, d and e (for Black rank 1 and rank 0)."
+#~ msgstr "Un pion est promu sur la dernière rangée de sa colonne : rangée 8 sur les colonnes b et c, rangée 9 sur les colonnes z, a, d et e (pour les Noirs, rangée 1 et rangée 0)."
+
+#~ msgid "Quantum tip: a ghost on either level of a map square blocks moves across it in its possibilities, and a piece split over both levels of one map square blocks it for certain. A ghost on the other level of your target square does not matter."
+#~ msgstr "Astuce quantique : un fantôme sur l'un ou l'autre niveau d'une case de la carte bloque les coups qui la traversent dans ses possibilités, et une pièce divisée sur les deux niveaux d'une même case de la carte la bloque à coup sûr. Un fantôme sur l'autre niveau de votre case cible n'a pas d'importance."
 
 #~ msgid "Measure: spend your turn to find out where one of your ghosts really is."
 #~ msgstr "Mesurer : utilisez votre tour pour découvrir où se trouve vraiment un de vos fantômes."

@@ -49,7 +49,10 @@ texts (du) so that formal-German users never see English. A translator who turns
 |---|---|---|---|
 | king, queen, rook, bishop, knight, pawn | koning, dame, toren, loper, paard, pion | König, Dame, Turm, Läufer, Springer, Bauer | roi, dame, tour, fou, cavalier, pion |
 | White / Black (the sides) | Wit / Zwart | Weiß / Schwarz | les Blancs / les Noirs |
+| side / each (per side: *three kings each*) | kant / per kant | Seite / je | camp / par camp |
+| army (all pieces of one side) | leger | Armee | armée |
 | check / checkmate | schaak / schaakmat | Schach / Schachmatt | échec / échec et mat |
+| Checkmate practice (5D setup names) | Matoefening | Schachmatt-Übung | Exercice de mat |
 | capture | slaan, slag | schlagen | prendre, prise |
 | castling (kingside / queenside) | rokade (kort / lang) | Rochade (kurz / lang) | roque (petit / grand) |
 | promotion / to promote | promotie / promoveren | Umwandlung / umwandeln | promotion / promouvoir |
@@ -69,13 +72,17 @@ texts (du) so that formal-German users never see English. A translator who turns
 | en passant | en passant | en passant | en passant |
 | stalemate | pat | Patt | pat |
 | double check / perpetual check | dubbelschaak / eeuwig schaak | Doppelschach / Dauerschach | échec double / échec perpétuel |
-| bare king | kale koning | blanker König | roi seul |
+| bare king / lone king | kale koning | blanker König | roi seul |
 | castle out of, through or into attack (variant rules) | rokeren als de koning aangevallen wordt, of als hij een aangevallen veld passeert of bereikt | aus, durch oder in einen Angriff rochieren | roquer alors que votre roi est attaqué, en passant par une case attaquée ou en arrivant sur une case attaquée |
 
 The castling row is the wording of the Capablanca chess and Chess960 rules; Kriegspiel says the same about check. The
 classic rules text still has the older Dutch and French wording (*rokeren uit, door of in een aanval*, *roquer en étant
 attaqué, à travers ou vers une case attaquée*). The German wording is kept in all three places for now; if it changes,
 it changes in all three together.
+
+*Checkmate practice* is an agreed exception to *schaakmat* and *échec et mat*: Dutch and French chess compounds use
+*mat* (*matnet*, *matvoering*; *exercice de mat*), and *Schaakmatoefening* would sound unnatural. German keeps
+*Schachmatt-Übung*.
 
 ## App terms
 
@@ -155,11 +162,19 @@ Pieces that move like chess pieces keep the chess words, also in shogi (king, ro
 | main level / attack board (Tri-Dimensional chess) | hoofdniveau / aanvalsbord | Hauptebene / Angriffsbrett | niveau principal / échiquier d'attaque |
 | map square (Tri-Dimensional chess) | kaartveld | Kartenfeld | case de la carte |
 | king's side / queen's side (Tri-Dimensional chess) | koningsvleugel / damevleugel | Königsflügel / Damenflügel | côté roi / côté dame |
+| pin / free pin (Tri-Dimensional chess: where an attack board stands, QL1 to KL6) | pen / vrije pen | Pin / freier Pin | emplacement / emplacement libre |
+| board move (moving an attack board) | bordzet | Brettzug | déplacement d'échiquier |
+| dashed (the mark of a free pin) | gestippeld | gestrichelt | en pointillés |
 | cell (3D, 4D, hexagonal; the same word as square) | veld | Feld | case |
 | touching cell (the king's step) | aangrenzend veld | angrenzendes Feld | case contiguë |
 | the kings touch / do not touch | naast elkaar staan / niet naast elkaar staan | sich berühren / sich nicht berühren | se toucher / ne pas se toucher |
 | hexagon (a cell of the hexagonal board) | zeshoek | Sechseck | hexagone |
 | point (xiangqi: where the lines cross) | punt | Punkt | point |
+
+German *Pin* is the word of Jens Meder's German tournament rules, which Tri-Dimensional chess follows
+([`docs/variants.md`](../docs/variants.md)). Dutch has no Tri-D term: *pen* is a peg, and *pin* would suggest a card
+payment. Dutch *gestippeld* serves for dotted and dashed alike (the rules page has *stippellijn*); *gestreept* would
+mean striped.
 
 ### Time and timelines (5D)
 
@@ -191,6 +206,7 @@ the app. The 5D texts do not say *branch*: in the rules page *branch/world* is a
 | twins (a ghost copied to a new timeline) | tweelingen | Zwillinge | jumeaux |
 | paths (the past remembers both paths) | wegen | Wege | chemins |
 | Timelines are AND, possibilities are OR | Tijdlijnen zijn EN, mogelijkheden zijn OF | Zeitlinien sind UND, Möglichkeiten sind ODER | Les lignes temporelles sont un ET, les possibilités un OU |
+| Timeline … (setup names: *Timeline marauders*, *Timeline skirmish*) | one word: *Tijdlijnplunderaars*, *Tijdlijnschermutseling* | with a hyphen: *Zeitlinien-Plünderer*, *Zeitlinien-Scharmützel* | *… temporel*: *Maraudeurs temporels*, *Escarmouche temporelle* |
 
 *Pass* here ends a turn without moving. It is not the *pass* of *land = roll, pass = link* (*passeren*,
 *vorbeiziehen*, *passer*), so French always writes *passer son tour*.
@@ -303,8 +319,8 @@ The French colours are singular; *Bleu* is the same msgid as the blue board them
 ## Never translated
 
 - Move codes and square names: `g1-f3|h3`, `?a6`, `e4`, `f3-e5`.
-- The names of cells, boards, levels, timelines and turns in the variants (`Cc3`, `B2c3`, `b3N`, `L0`, `L+1`, `T3`),
-  drop codes (`P@e4`) and the promotion mark `+`.
+- The names of cells, boards, levels, pins, timelines and turns in the variants (`Cc3`, `B2c3`, `b3N`, `z0QL1`, `QL1`,
+  `KL6`, `L0`, `L+1`, `T3`), board moves (`QL1>QL3`), drop codes (`P@e4`) and the promotion mark `+`.
 - The 5D move notation (`(0T2)Nc3>(+1T2)c3`, `>>`, `x`), the timeline labels `−0` and `+0`, and the piece letters
   K, Q, R, B, N, U, D, S, Y, C and W, also in brackets after a piece name (*de eenhoorn (U)*).
 - Sente and Gote (the sides in shogi), the Thai names of the makruk pieces, and the kanji and hanzi on the shogi and
