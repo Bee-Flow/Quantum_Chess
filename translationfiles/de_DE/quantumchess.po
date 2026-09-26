@@ -9,7 +9,7 @@ msgstr ""
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/App.vue:13 src/App.vue:90 src/settings/components/AdminSettings.vue:13 src/settings/components/AdminSettings.vue:16 src/settings/components/PersonalSettings.vue:12 src/settings/components/PersonalSettings.vue:17 src/views/VariantsView.vue:51 lib/Dashboard/GamesWidget.php:62 lib/Notification/Notifier.php:53 lib/Settings/Section.php:32
+#: src/App.vue:13 src/App.vue:90 src/settings/components/AdminSettings.vue:13 src/settings/components/AdminSettings.vue:16 src/settings/components/PersonalSettings.vue:12 src/settings/components/PersonalSettings.vue:17 src/views/VariantsView.vue:54 lib/Dashboard/GamesWidget.php:62 lib/Notification/Notifier.php:53 lib/Settings/Section.php:32
 msgid "Quantum Chess"
 msgstr "Quantum Chess"
 
@@ -17,7 +17,7 @@ msgstr "Quantum Chess"
 msgid "Quantum Chess navigation"
 msgstr "Quantum-Chess-Navigation"
 
-#: src/app/components/AppNavigation.vue:13 src/app/components/NewGameDialog.vue:12 src/game/components/GameOverDialog.vue:56 src/game/components/LocalGameHost.vue:17 src/online/components/InvitationPanel.vue:74 src/views/HomeView.vue:60 src/views/VariantGameView.vue:318 lib/Dashboard/GamesWidget.php:100
+#: src/app/components/AppNavigation.vue:13 src/app/components/NewGameDialog.vue:12 src/game/components/GameOverDialog.vue:56 src/game/components/LocalGameHost.vue:17 src/online/components/InvitationPanel.vue:74 src/views/HomeView.vue:60 src/views/VariantGameView.vue:471 lib/Dashboard/GamesWidget.php:100
 msgid "New game"
 msgstr "Neue Partie"
 
@@ -25,7 +25,7 @@ msgstr "Neue Partie"
 msgid "Home"
 msgstr "Start"
 
-#: src/app/components/AppNavigation.vue:23 src/home/components/PlayTiles.vue:78 src/views/VariantGameView.vue:27 src/views/VariantsView.vue:14
+#: src/app/components/AppNavigation.vue:23 src/home/components/PlayTiles.vue:78 src/views/VariantGameView.vue:54 src/views/VariantsView.vue:17
 msgid "Chess variants"
 msgstr "Schachvarianten"
 
@@ -33,7 +33,7 @@ msgstr "Schachvarianten"
 msgid "Trainer"
 msgstr "Trainer"
 
-#: src/app/components/AppNavigation.vue:33 src/views/VariantGameView.vue:62
+#: src/app/components/AppNavigation.vue:33 src/views/VariantGameView.vue:68
 msgid "Rules"
 msgstr "Regeln"
 
@@ -57,7 +57,7 @@ msgstr "Warte auf Gegner"
 msgid "On this device"
 msgstr "Auf diesem Gerät"
 
-#: src/app/components/AppNavigation.vue:113 src/views/VariantsView.vue:36
+#: src/app/components/AppNavigation.vue:113 src/views/VariantsView.vue:39
 msgid "Delete from this device"
 msgstr "Von diesem Gerät löschen"
 
@@ -69,7 +69,7 @@ msgstr "Einstellungen"
 msgid "Open challenge"
 msgstr "Offene Herausforderung"
 
-#: src/app/components/AppNavigation.vue:208 src/views/VariantsView.vue:30
+#: src/app/components/AppNavigation.vue:208 src/views/VariantsView.vue:33
 msgid "Finished"
 msgstr "Beendet"
 
@@ -133,7 +133,7 @@ msgstr "Anzahl der Möglichkeiten zeigen"
 msgid "Physics names (superposition, measurement, entanglement)"
 msgstr "Physikalische Begriffe (Superposition, Messung, Verschränkung)"
 
-#: src/app/components/AppSettingsDialog.vue:102 src/game/components/GamePanel.vue:86 src/game/components/MoveList.vue:17 src/game/components/MoveStrip.vue:8 src/views/ReviewView.vue:127 src/views/VariantGameView.vue:291
+#: src/app/components/AppSettingsDialog.vue:102 src/game/components/GamePanel.vue:86 src/game/components/MoveList.vue:17 src/game/components/MoveStrip.vue:8 src/views/ReviewView.vue:127 src/views/VariantGameView.vue:417
 msgid "Moves"
 msgstr "Züge"
 
@@ -229,7 +229,7 @@ msgstr "Bereich der Möglichkeiten"
 msgid "Describe the position"
 msgstr "Die Stellung beschreiben"
 
-#: src/app/components/AppSettingsDialog.vue:213 src/app/components/NewGameDialog.vue:113 src/board/components/BoardControls.vue:36 src/llm/components/AiNoticeDialog.vue:26 src/online/components/OnlineGameHost.vue:95 src/online/components/lobby/LobbyOnlineSections.vue:79 src/views/VariantGameView.vue:254
+#: src/app/components/AppSettingsDialog.vue:213 src/app/components/NewGameDialog.vue:113 src/board/components/BoardControls.vue:36 src/llm/components/AiNoticeDialog.vue:26 src/online/components/OnlineGameHost.vue:95 src/online/components/lobby/LobbyOnlineSections.vue:79 src/views/VariantGameView.vue:340 src/views/VariantGameView.vue:355
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -313,7 +313,7 @@ msgstr "Züge mit Wurf"
 msgid "Slow"
 msgstr "Langsam"
 
-#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:574 src/views/VariantsView.vue:210
+#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:926 src/views/VariantsView.vue:217
 msgid "Normal"
 msgstr "Normal"
 
@@ -333,15 +333,15 @@ msgstr "Standard"
 msgid "Your colour"
 msgstr "Deine Farbe"
 
-#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:149
+#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:152
 msgid "Random"
 msgstr "Zufällig"
 
-#: src/app/components/ColorChoice.vue:39 src/app/components/NewGameDialog.vue:78 src/app/components/NewGameDialog.vue:308 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:25 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:58 src/game/resultText.js:35 src/game/resultText.js:115 src/online/onlinePlayers.js:74 src/review/reviewGame.js:52 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:27 src/views/LocalGameView.vue:119
+#: src/app/components/ColorChoice.vue:39 src/app/components/NewGameDialog.vue:78 src/app/components/NewGameDialog.vue:308 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:25 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:58 src/game/resultText.js:35 src/game/resultText.js:115 src/online/onlinePlayers.js:74 src/review/reviewGame.js:52 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:27 src/variants/multiverse.js:160 src/variants/multiverse.js:206 src/views/LocalGameView.vue:119
 msgid "White"
 msgstr "Weiß"
 
-#: src/app/components/ColorChoice.vue:40 src/app/components/NewGameDialog.vue:83 src/app/components/NewGameDialog.vue:309 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:28 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:59 src/game/resultText.js:36 src/game/resultText.js:116 src/online/onlinePlayers.js:74 src/review/reviewGame.js:53 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:28 src/variants/xiangqi.js:353 src/views/LocalGameView.vue:120
+#: src/app/components/ColorChoice.vue:40 src/app/components/NewGameDialog.vue:83 src/app/components/NewGameDialog.vue:309 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:28 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:59 src/game/resultText.js:36 src/game/resultText.js:116 src/online/onlinePlayers.js:74 src/review/reviewGame.js:53 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:28 src/variants/multiverse.js:161 src/variants/multiverse.js:207 src/variants/xiangqi.js:353 src/views/LocalGameView.vue:120
 msgid "Black"
 msgstr "Schwarz"
 
@@ -349,7 +349,7 @@ msgstr "Schwarz"
 msgid "Mode"
 msgstr "Modus"
 
-#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:102
+#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:105
 msgid "Level"
 msgstr "Stufe"
 
@@ -373,7 +373,7 @@ msgstr "Nachricht (optional)"
 msgid "Online"
 msgstr "Online"
 
-#: src/app/components/NewGameDialog.vue:165 src/game/localPlayers.js:27 src/game/localPlayers.js:50 src/home/components/PlayTiles.vue:55 src/views/VariantsView.vue:91
+#: src/app/components/NewGameDialog.vue:165 src/game/localPlayers.js:27 src/game/localPlayers.js:50 src/home/components/PlayTiles.vue:55 src/views/VariantsView.vue:94
 msgid "Computer"
 msgstr "Computer"
 
@@ -381,7 +381,7 @@ msgstr "Computer"
 msgid "AI opponent"
 msgstr "KI-Gegner"
 
-#: src/app/components/NewGameDialog.vue:173 src/home/components/PlayTiles.vue:72 src/views/VariantsView.vue:98
+#: src/app/components/NewGameDialog.vue:173 src/home/components/PlayTiles.vue:72 src/views/VariantsView.vue:101
 msgid "Pass & play"
 msgstr "Zu zweit"
 
@@ -393,7 +393,7 @@ msgstr "Herausforderung erstellen"
 msgid "Send invitation"
 msgstr "Einladung senden"
 
-#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:167
+#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:174
 msgid "Start game"
 msgstr "Partie starten"
 
@@ -441,11 +441,12 @@ msgstr "Quanten"
 msgid "High contrast"
 msgstr "Hoher Kontrast"
 
-#: src/board/boardThemes.js:38 src/variants/fourplayer.js:499
+#. TRANSLATORS: a player of four-player chess, named after its colour (the same word names a board theme)
+#: src/board/boardThemes.js:38 src/variants/fourplayer.js:501
 msgid "Blue"
 msgstr "Blau"
 
-#: src/board/components/BoardControls.vue:15 src/views/VariantGameView.vue:159
+#: src/board/components/BoardControls.vue:15 src/views/VariantGameView.vue:255
 msgid "Move type"
 msgstr "Zugart"
 
@@ -453,22 +454,22 @@ msgstr "Zugart"
 msgid "Play"
 msgstr "Spielen"
 
-#: src/board/components/BoardControls.vue:70 src/game/components/MoveList.vue:22 src/views/VariantGameView.vue:383
+#: src/board/components/BoardControls.vue:70 src/game/components/MoveList.vue:22 src/views/VariantGameView.vue:595
 msgid "Move"
 msgstr "Zug"
 
 #. TRANSLATORS: move type that makes a piece a ghost on two squares (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:72 src/trainer/lessons/L02-split.js:15 src/variantplay/texts.js:51 src/views/VariantGameView.vue:384
+#: src/board/components/BoardControls.vue:72 src/trainer/lessons/L02-split.js:15 src/variantplay/texts.js:60 src/views/VariantGameView.vue:596
 msgid "Split"
 msgstr "Teilen"
 
 #. TRANSLATORS: move type that joins two parts of a ghost (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:74 src/views/VariantGameView.vue:385
+#: src/board/components/BoardControls.vue:74 src/views/VariantGameView.vue:597
 msgid "Merge"
 msgstr "Vereinen"
 
 #. TRANSLATORS: move type that settles where a ghost really is (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:76 src/rules/sections.js:422 src/views/VariantGameView.vue:386
+#: src/board/components/BoardControls.vue:76 src/rules/sections.js:422 src/views/VariantGameView.vue:598
 msgid "Measure"
 msgstr "Messen"
 
@@ -566,7 +567,7 @@ msgid_plural "%n possibilities"
 msgstr[0] "%n Möglichkeit"
 msgstr[1] "%n Möglichkeiten"
 
-#: src/board/components/PromotionPicker.vue:14 src/views/VariantGameView.vue:219
+#: src/board/components/PromotionPicker.vue:14 src/views/VariantGameView.vue:290
 msgid "Promote to"
 msgstr "Umwandeln in"
 
@@ -586,7 +587,7 @@ msgstr "Dein König wäre zu {risk} schlagbar. {move} macht ihn {safer}."
 msgid "Show the safer move"
 msgstr "Sichereren Zug zeigen"
 
-#: src/board/components/SafetyNetDialog.vue:81
+#: src/board/components/SafetyNetDialog.vue:81 src/views/VariantGameView.vue:345 src/views/VariantGameView.vue:352
 msgid "Play anyway"
 msgstr "Trotzdem spielen"
 
@@ -1068,8 +1069,8 @@ msgstr "Turm"
 msgid "bishop"
 msgstr "Läufer"
 
-#. TRANSLATORS: Kriegspiel, the direction of a check: the shorter of the two diagonals through the king
-#: src/engine/ui/pieces.js:75 src/variants/kriegspiel/umpire.js:409 lib/Notification/MoveDescriber.php:35
+#. TRANSLATORS: the piece; Kriegspiel also uses it as the direction of a check given by a knight
+#: src/engine/ui/pieces.js:75 src/variants/kriegspiel/umpire.js:410 lib/Notification/MoveDescriber.php:35
 msgid "knight"
 msgstr "Springer"
 
@@ -1163,7 +1164,7 @@ msgstr "Beide Wege sind in jeder Möglichkeit versperrt."
 msgid "A piece can stand on at most 4 squares."
 msgstr "Eine Figur kann auf höchstens 4 Feldern stehen."
 
-#: src/engine/ui/reasons.js:73 src/views/VariantGameView.vue:381
+#: src/engine/ui/reasons.js:73 src/views/VariantGameView.vue:593
 msgid "Budget full: merge or measure a piece first."
 msgstr "Budget voll: Vereine oder miss zuerst eine Figur."
 
@@ -1171,7 +1172,7 @@ msgstr "Budget voll: Vereine oder miss zuerst eine Figur."
 msgid "One of the parts can't reach that square."
 msgstr "Einer der Teile kann dieses Feld nicht erreichen."
 
-#: src/engine/ui/reasons.js:79 src/views/VariantGameView.vue:501
+#: src/engine/ui/reasons.js:79 src/views/VariantGameView.vue:738
 msgid "That move is not possible."
 msgstr "Dieser Zug ist nicht möglich."
 
@@ -1198,17 +1199,17 @@ msgid "Roll"
 msgstr "Wurf"
 
 #. TRANSLATORS: result of a roll: the move did not happen (glossary: "Captured / Moved / Missed")
-#: src/engine/ui/reasons.js:133 src/rules/sections.js:166 src/variantplay/texts.js:45
+#: src/engine/ui/reasons.js:133 src/rules/sections.js:166 src/variantplay/texts.js:54
 msgid "Missed"
 msgstr "Verfehlt"
 
 #. TRANSLATORS: result of a roll: the piece moved without capturing (see the glossary)
-#: src/engine/ui/reasons.js:136 src/rules/sections.js:163 src/variantplay/texts.js:47
+#: src/engine/ui/reasons.js:136 src/rules/sections.js:163 src/variantplay/texts.js:56
 msgid "Moved"
 msgstr "Gezogen"
 
 #. TRANSLATORS: result of a roll: the piece captured (see the glossary)
-#: src/engine/ui/reasons.js:139 src/rules/sections.js:159 src/variantplay/texts.js:49
+#: src/engine/ui/reasons.js:139 src/rules/sections.js:159 src/variantplay/texts.js:58
 msgid "Captured"
 msgstr "Geschlagen"
 
@@ -1426,11 +1427,11 @@ msgstr "Einstellungen…"
 msgid "Undo takes the move back. The dice remember: the same move here gives the same result."
 msgstr "Rückgängig nimmt den Zug zurück. Die Würfel merken es sich: Derselbe Zug ergibt hier dasselbe Ergebnis."
 
-#: src/game/components/ControlsRow.vue:73 src/game/components/GameScreen.vue:154 src/online/onlineBanners.js:51 src/views/VariantGameView.vue:309
+#: src/game/components/ControlsRow.vue:73 src/game/components/GameScreen.vue:154 src/online/onlineBanners.js:51 src/views/VariantGameView.vue:285 src/views/VariantGameView.vue:462
 msgid "Undo"
 msgstr "Rückgängig"
 
-#: src/game/components/ControlsRow.vue:79 src/game/components/GameScreen.vue:164 src/game/components/GameScreen.vue:197 src/online/components/OnlineGameHost.vue:160 src/online/components/OnlineGameHost.vue:180 src/views/VariantGameView.vue:315
+#: src/game/components/ControlsRow.vue:79 src/game/components/GameScreen.vue:164 src/game/components/GameScreen.vue:197 src/online/components/OnlineGameHost.vue:160 src/online/components/OnlineGameHost.vue:180 src/views/VariantGameView.vue:468
 msgid "Resign"
 msgstr "Aufgeben"
 
@@ -1551,7 +1552,7 @@ msgstr "Weiterspielen"
 msgid "Move {n} of {total}"
 msgstr "Zug {n} von {total}"
 
-#: src/game/components/LocalGameHost.vue:13 src/views/VariantGameView.vue:23
+#: src/game/components/LocalGameHost.vue:13 src/views/VariantGameView.vue:50
 msgid "Game not found"
 msgstr "Partie nicht gefunden"
 
@@ -1729,7 +1730,7 @@ msgstr "Stark"
 msgid "Expert"
 msgstr "Experte"
 
-#: src/game/localPlayers.js:33 src/llm/components/AiChat.vue:21 src/online/components/GameChat.vue:174 src/views/VariantGameView.vue:579
+#: src/game/localPlayers.js:33 src/llm/components/AiChat.vue:21 src/online/components/GameChat.vue:174 src/views/VariantGameView.vue:931
 msgid "You"
 msgstr "Du"
 
@@ -1857,7 +1858,7 @@ msgstr "Deine Stellung und deine Fragen werden an {provider} gesendet. Namen ode
 msgid "Continue"
 msgstr "Weiter"
 
-#: src/llm/components/PersonaPicker.vue:12 src/online/components/OpponentPicker.vue:17 src/views/StatsView.vue:97 src/views/VariantsView.vue:85
+#: src/llm/components/PersonaPicker.vue:12 src/online/components/OpponentPicker.vue:17 src/views/StatsView.vue:97 src/views/VariantsView.vue:88
 msgid "Opponent"
 msgstr "Gegner"
 
@@ -2355,7 +2356,7 @@ msgstr "Die Partie konnte nicht geladen werden"
 msgid "Try again"
 msgstr "Erneut versuchen"
 
-#: src/online/components/OnlineGameHost.vue:35
+#: src/online/components/OnlineGameHost.vue:35 src/views/ReviewView.vue:22
 msgid "Loading the game…"
 msgstr "Partie wird geladen…"
 
@@ -2583,7 +2584,7 @@ msgstr "Du spielst Schwarz"
 msgid "Colours are drawn at the start"
 msgstr "Die Farben werden beim Start ausgelost"
 
-#: src/online/summaryText.js:77 src/views/HomeView.vue:132 src/views/VariantsView.vue:31
+#: src/online/summaryText.js:77 src/views/HomeView.vue:132 src/views/VariantsView.vue:34
 msgid "Move {n}"
 msgstr "Zug {n}"
 
@@ -2655,7 +2656,7 @@ msgstr "Die Partie konnte nicht nachgespielt werden."
 msgid "Result"
 msgstr "Ergebnis"
 
-#: src/rules/components/RulesBoard.vue:70 src/variantplay/texts.js:55
+#: src/rules/components/RulesBoard.vue:70 src/variantplay/texts.js:65
 msgid "On {square}"
 msgstr "Auf {square}"
 
@@ -3767,7 +3768,7 @@ msgid_plural "Nobody is listed yet. Players appear after %n rated games."
 msgstr[0] "Noch niemand ist gelistet. Spieler erscheinen nach %n gewerteten Partie."
 msgstr[1] "Noch niemand ist gelistet. Spieler erscheinen nach %n gewerteten Partien."
 
-#: src/stats/components/LeaderboardTable.vue:36 src/views/VariantGameView.vue:579
+#: src/stats/components/LeaderboardTable.vue:36 src/views/VariantGameView.vue:931
 msgid "Player"
 msgstr "Spieler"
 
@@ -4687,150 +4688,175 @@ msgstr "Mit dem ganzen Turm zu blockieren reicht nicht."
 msgid "Split instead, with one part on e8 and the other where it can fight back: on the e-file it can recapture on e8, and on b7 it threatens White's king on b3."
 msgstr "Teile stattdessen, mit einem Teil auf e8 und dem anderen dort, wo er zurückschlagen kann: Auf der e-Linie kann er auf e8 zurückschlagen, und auf b7 bedroht er den weißen König auf b3."
 
-#: src/variantplay/components/VariantBoard.vue:19
+#: src/variantplay/components/VariantBoard.vue:55 src/variantplay/components/VariantBoard.vue:56
+msgid "Previous board to play"
+msgstr "Vorheriges spielbares Brett"
+
+#: src/variantplay/components/VariantBoard.vue:63 src/variantplay/components/VariantBoard.vue:64
+msgid "Next board to play"
+msgstr "Nächstes spielbares Brett"
+
+#: src/variantplay/components/VariantBoard.vue:72
 msgid "Zoom out"
 msgstr "Verkleinern"
 
-#: src/variantplay/components/VariantBoard.vue:26
+#: src/variantplay/components/VariantBoard.vue:79
 msgid "Zoom in"
 msgstr "Vergrößern"
 
-#: src/variantplay/components/VariantBoard.vue:32
+#: src/variantplay/components/VariantBoard.vue:85
 msgid "Whole board"
 msgstr "Ganzes Brett"
 
-#: src/variantplay/components/VariantBoard.vue:498
+#: src/variantplay/components/VariantBoard.vue:92
+msgid "Recentre"
+msgstr "Zentrieren"
+
+#: src/variantplay/components/VariantBoard.vue:908
+msgid "{count} target outside the view"
+msgid_plural "{count} targets outside the view"
+msgstr[0] "{count} Zugziel außerhalb der Ansicht"
+msgstr[1] "{count} Zugziele außerhalb der Ansicht"
+
+#: src/variantplay/components/VariantBoard.vue:1488
 msgid "{square}: hidden"
 msgstr "{square}: verdeckt"
 
-#: src/variantplay/components/VariantBoard.vue:505
+#: src/variantplay/components/VariantBoard.vue:1495
 msgid "{piece} ({percent} %)"
 msgstr "{piece} ({percent} %)"
 
-#: src/variantplay/texts.js:30 src/variants/kriegspiel/umpire.js:385
+#: src/variantplay/texts.js:32 src/variants/kriegspiel/umpire.js:385 src/variants/multiverse/texts.js:574
 msgid "{percent} %"
 msgstr "{percent} %"
 
-#: src/variantplay/texts.js:45
+#: src/variantplay/texts.js:54
 msgid "Missed: the piece stays in hand"
 msgstr "Verfehlt: Die Figur bleibt in der Hand"
 
-#: src/variantplay/texts.js:47
+#: src/variantplay/texts.js:56
 msgid "Dropped"
 msgstr "Eingesetzt"
 
-#: src/variantplay/texts.js:53
+#: src/variantplay/texts.js:62
 msgid "No longer on the board"
 msgstr "Nicht mehr auf dem Brett"
 
-#: src/variantplay/texts.js:73
+#: src/variantplay/texts.js:85
+msgid "Your king is in danger: {percent}"
+msgstr "Dein König ist in Gefahr: {percent}"
+
+#: src/variantplay/texts.js:102
 msgid "A piece that is always solid was settled"
 msgstr "Eine Figur, die immer fest steht, wurde festgelegt"
 
-#: src/variantplay/texts.js:79
+#: src/variantplay/texts.js:108 src/variantplay/texts.js:127
 msgid "The game ends: {result}"
 msgstr "Die Partie endet: {result}"
 
-#: src/variantplay/texts.js:80
+#: src/variantplay/texts.js:109
 msgid "The game goes on"
 msgstr "Die Partie geht weiter"
 
-#: src/variantplay/texts.js:99
+#: src/variantplay/texts.js:144
 msgid "a king was captured"
 msgstr "ein König wurde geschlagen"
 
-#: src/variantplay/texts.js:101
+#: src/variantplay/texts.js:146
 msgid "resignation"
 msgstr "Aufgabe"
 
-#: src/variantplay/texts.js:103
+#: src/variantplay/texts.js:148
 msgid "50 moves without a capture or a pawn move"
 msgstr "50 Züge ohne Schlag oder Bauernzug"
 
-#: src/variantplay/texts.js:105
+#: src/variantplay/texts.js:150
 msgid "the move limit"
 msgstr "Zuglimit erreicht"
 
-#: src/variantplay/texts.js:107
+#: src/variantplay/texts.js:152
 msgid "no legal move"
 msgstr "kein möglicher Zug"
 
-#: src/variantplay/texts.js:109
+#: src/variantplay/texts.js:154
 msgid "only the two kings are left"
 msgstr "nur die beiden Könige sind übrig"
 
 #. TRANSLATORS: why a game ended: every move of the loser would have let its king be captured for certain
-#: src/variantplay/texts.js:112
+#: src/variantplay/texts.js:157
 msgid "the king could not escape"
 msgstr "der König konnte nicht entkommen"
 
-#: src/variantplay/texts.js:128
+#. TRANSLATORS: {side} is a side: White, Black, Red, Blue, Yellow, Green, Sente, Gote or White A (Bughouse)
+#: src/variantplay/texts.js:174
 msgid "{side} wins ({reason})"
 msgstr "{side} gewinnt ({reason})"
 
-#: src/variantplay/texts.js:132
+#. TRANSLATORS: a team's win; {sides} names its players, such as "Red & Yellow" or "White A & Black B"
+#: src/variantplay/texts.js:179
 msgid "{sides} wins ({reason})"
 msgid_plural "{sides} win ({reason})"
 msgstr[0] "{sides} gewinnt ({reason})"
 msgstr[1] "{sides} gewinnen ({reason})"
 
-#: src/variantplay/texts.js:140
+#: src/variantplay/texts.js:187
 msgid "Draw ({reason})"
 msgstr "Remis ({reason})"
 
-#: src/variantplay/texts.js:155
+#: src/variantplay/texts.js:202
 msgid "Split: a piece that is not a king or pawn may move to two empty squares at once and becomes a ghost, 50 % on each."
 msgstr "Teilen: Eine Figur, die kein König und kein Bauer ist, darf gleichzeitig auf zwei leere Felder ziehen und wird zum Geist, zu 50 % auf jedem."
 
-#: src/variantplay/texts.js:156
+#: src/variantplay/texts.js:203
 msgid "Merge: bring two parts of a ghost together on one square."
 msgstr "Vereinen: Bring zwei Teile eines Geists auf einem Feld zusammen."
 
-#: src/variantplay/texts.js:157
+#: src/variantplay/texts.js:204
 msgid "Land = roll, pass = link: landing where a piece might be is settled by a roll; sliding past such a square links the pieces."
 msgstr "Landen = würfeln, vorbeiziehen = verknüpfen: Landet ein Zug, wo eine Figur stehen könnte, entscheidet ein Wurf; zieht er an einem solchen Feld vorbei, werden die Figuren verknüpft."
 
-#: src/variantplay/texts.js:161
+#: src/variantplay/texts.js:208
 msgid "Kings and pawns (and the pieces the variant names) are always solid: their moves are settled at once."
 msgstr "Könige und Bauern (und die Figuren, die die Variante nennt) stehen immer fest: Ihre Züge werden sofort entschieden."
 
-#: src/variantplay/texts.js:165
-msgid "Measure: spend your turn to find out where one of your ghosts really is."
-msgstr "Messen: Nutze deinen Zug, um herauszufinden, wo einer deiner Geister wirklich steht."
+#: src/variantplay/texts.js:212
+msgid "Measure: instead of a move, find out where one of your ghosts really is."
+msgstr "Messen: Finde statt eines Zugs heraus, wo einer deiner Geister wirklich steht."
 
-#: src/variantplay/texts.js:168
-msgid "Castling and en passant are only possible when they are possible in every possibility, and they are never rolled."
-msgstr "Rochade und en passant sind nur erlaubt, wenn sie in jeder Möglichkeit möglich sind, und werden nie ausgewürfelt."
+#: src/variantplay/texts.js:215
+msgid "Castling and en passant are allowed only when they are possible in every possibility; they are never rolled."
+msgstr "Rochade und en passant sind nur erlaubt, wenn sie in jeder Möglichkeit möglich sind; sie werden nie ausgewürfelt."
 
-#: src/variantplay/texts.js:174
+#: src/variantplay/texts.js:221
 msgid "If the game might be over in some possibilities but not in others, a roll decides."
 msgstr "Wenn die Partie in manchen Möglichkeiten vorbei sein könnte, in anderen aber nicht, entscheidet ein Wurf."
 
-#: src/variantplay/texts.js:175
+#: src/variantplay/texts.js:222
 msgid "Each side has a budget of 8 possible arrangements of its pieces."
 msgstr "Jede Seite hat ein Budget von 8 möglichen Aufstellungen ihrer Figuren."
 
-#: src/variantplay/texts.js:178
+#: src/variantplay/texts.js:225
 msgid "Check does not limit your moves: you win by capturing the enemy king, unless the variant has its own goal."
 msgstr "Schach schränkt deine Züge nicht ein: Du gewinnst, indem du den gegnerischen König schlägst, es sei denn, die Variante hat ein eigenes Ziel."
 
-#: src/variantplay/texts.js:183
+#: src/variantplay/texts.js:230
 msgid "Your king cannot escape: if every move you could make would leave your king to be captured for certain, you lose at once, unless one of your moves could still capture the enemy king."
 msgstr "Dein König kann nicht entkommen: Wenn jeder deiner möglichen Züge deinen König sicher schlagbar lässt, verlierst du sofort, es sei denn, einer deiner Züge könnte noch den gegnerischen König schlagen."
 
-#: src/variantplay/texts.js:209
+#. TRANSLATORS: {side} is a player of four-player chess (Red, Blue, Yellow, Green) or Bughouse (White A …)
+#: src/variantplay/texts.js:260
 msgid "{side} cannot move and sits out"
 msgstr "{side} kann nicht ziehen und setzt aus"
 
-#: src/variantplay/texts.js:234
+#: src/variantplay/texts.js:285
 msgid "Yes"
 msgstr "Ja"
 
-#: src/variantplay/texts.js:234
+#: src/variantplay/texts.js:285
 msgid "No"
 msgstr "Nein"
 
-#: src/variantplay/texts.js:247
+#: src/variantplay/texts.js:298
 msgid "{option}: {value}"
 msgstr "{option}: {value}"
 
@@ -4847,8 +4873,8 @@ msgid "While you must capture, you cannot split or measure, and you may merge on
 msgstr "Solange du schlagen musst, kannst du weder teilen noch messen, und vereinen darfst du nur, wenn die Vereinigung schlagen könnte."
 
 #: src/variants/antichess.js:143
-msgid "Where a capture try finds nothing to take, it is an ordinary move if you had no capture in that possibility, and it misses if you had one. A pawn's diagonal try misses."
-msgstr "Wo ein Schlagversuch nichts zu schlagen findet, ist er ein gewöhnlicher Zug, wenn du in dieser Möglichkeit keinen Schlag hattest, und er verfehlt, wenn du einen hattest. Ein diagonaler Schlagversuch eines Bauern verfehlt."
+msgid "Where a capture attempt finds nothing to take, it counts as an ordinary move if you had no other capture in that possibility, and it misses if you had one. A pawn's diagonal capture attempt always misses there."
+msgstr "Wo ein Schlagversuch nichts zu schlagen findet, zählt er als gewöhnlicher Zug, wenn du in dieser Möglichkeit keinen anderen Schlag hattest, und er verfehlt, wenn du einen hattest. Ein diagonaler Schlagversuch eines Bauern verfehlt dort immer."
 
 #: src/variants/antichess.js:147
 msgid "The king is an ordinary piece: there is no check, kings can be captured, and losing yours does not end the game. Kings are still always solid."
@@ -4866,23 +4892,26 @@ msgstr "Die Partie ist remis, wenn nie wieder ein Schlag möglich ist: Nur Läuf
 msgid "If whether you can move depends on where a ghost really is (yours or your opponent's), a roll decides whether you have no move and win."
 msgstr "Ob du ziehen kannst, hängt manchmal davon ab, wo ein Geist wirklich steht (deiner oder einer deines Gegners): Dann entscheidet ein Wurf, ob du keinen Zug hast und gewinnst."
 
-#: src/variants/antichess.js:200
-msgid "it has no pieces left"
-msgstr "keine Figuren mehr übrig"
+#. TRANSLATORS: Antichess, why the game was won: the winner has lost all its pieces
+#: src/variants/antichess.js:201
+msgid "the winner has no pieces left"
+msgstr "der Sieger hat keine Figuren mehr"
 
-#: src/variants/antichess.js:202
-msgid "it has no move left"
-msgstr "kein Zug mehr möglich"
-
+#. TRANSLATORS: Antichess, why the game was won: the winner was to move and could not move (stalemate)
 #: src/variants/antichess.js:204
+msgid "the winner has no move left"
+msgstr "der Sieger hat keinen Zug mehr"
+
+#. TRANSLATORS: Antichess, why the game was drawn: the pieces left can never capture anything again
+#: src/variants/antichess.js:207
 msgid "no capture can ever happen again"
 msgstr "kein Schlag mehr möglich"
 
-#: src/variants/antichess.js:213
+#: src/variants/antichess.js:216
 msgid "Pieces: {count}"
 msgstr "Figuren: {count}"
 
-#: src/variants/antichess.js:214
+#: src/variants/antichess.js:217
 msgid "Pieces on the board: lose them all to win"
 msgstr "Figuren auf dem Brett: Verliere alle, um zu gewinnen"
 
@@ -4914,7 +4943,7 @@ msgstr "Bei en passant erfolgt die Explosion rund um das Feld, auf das der schla
 msgid "A ghost caught in an explosion is destroyed only in the possibilities where it really stood there. It survives with the chance of its other parts, and no dice are rolled for it."
 msgstr "Ein Geist, der in eine Explosion gerät, wird nur in den Möglichkeiten zerstört, in denen er wirklich dort stand. Er überlebt mit der Chance seiner anderen Teile, und für ihn wird nicht gewürfelt."
 
-#: src/variants/atomic.js:148 src/variants/threecheck.js:273
+#: src/variants/atomic.js:148 src/variants/threecheck.js:276
 msgid "The game is a draw when only the two kings are left."
 msgstr "Die Partie ist remis, wenn nur die beiden Könige übrig sind."
 
@@ -4922,83 +4951,84 @@ msgstr "Die Partie ist remis, wenn nur die beiden Könige übrig sind."
 msgid "a king was blown up"
 msgstr "ein König wurde gesprengt"
 
-#: src/variants/bughouse.js:146 src/variants/crazyhouse.js:29
+#: src/variants/bughouse.js:190 src/variants/crazyhouse.js:29
 msgid "Promoted queen"
 msgstr "Umgewandelte Dame"
 
-#: src/variants/bughouse.js:147 src/variants/crazyhouse.js:30
+#: src/variants/bughouse.js:191 src/variants/crazyhouse.js:30
 msgid "Promoted rook"
 msgstr "Umgewandelter Turm"
 
-#: src/variants/bughouse.js:148 src/variants/crazyhouse.js:31
+#: src/variants/bughouse.js:192 src/variants/crazyhouse.js:31
 msgid "Promoted bishop"
 msgstr "Umgewandelter Läufer"
 
-#: src/variants/bughouse.js:149 src/variants/crazyhouse.js:32 src/variants/shogi.js:266
+#: src/variants/bughouse.js:193 src/variants/crazyhouse.js:32 src/variants/shogi.js:266
 msgid "Promoted knight"
 msgstr "Umgewandelter Springer"
 
-#: src/variants/bughouse.js:230
+#: src/variants/bughouse.js:274
 msgid "White A"
 msgstr "Weiß A"
 
-#: src/variants/bughouse.js:231
+#: src/variants/bughouse.js:275
 msgid "White B"
 msgstr "Weiß B"
 
-#: src/variants/bughouse.js:232
+#: src/variants/bughouse.js:276
 msgid "Black B"
 msgstr "Schwarz B"
 
-#: src/variants/bughouse.js:233
+#: src/variants/bughouse.js:277
 msgid "Black A"
 msgstr "Schwarz A"
 
-#: src/variants/bughouse.js:254
+#: src/variants/bughouse.js:300
 msgid "Two teams play on two boards: White A and Black B against White B and Black A."
 msgstr "Zwei Teams spielen auf zwei Brettern: Weiß A und Schwarz B gegen Weiß B und Schwarz A."
 
-#: src/variants/bughouse.js:255
-msgid "The seats move in turn: White A, White B, Black B, Black A. A player who cannot move sits out."
-msgstr "Die Plätze ziehen reihum: Weiß A, Weiß B, Schwarz B, Schwarz A. Wer nicht ziehen kann, setzt aus."
+#: src/variants/bughouse.js:301
+msgid "The seats take turns in this order: White A, White B, Black B, Black A. A player who cannot move sits out."
+msgstr "Die Plätze sind in dieser Reihenfolge am Zug: Weiß A, Weiß B, Schwarz B, Schwarz A. Wer nicht ziehen kann, setzt aus."
 
-#: src/variants/bughouse.js:259
+#: src/variants/bughouse.js:305
 msgid "What you capture goes to your partner, who may drop it on an empty square of their own board instead of moving. Pawns are never dropped on the first or last rank."
 msgstr "Was du schlägst, geht an deinen Partner, der es statt eines Zugs auf ein leeres Feld seines eigenen Bretts einsetzen darf. Bauern werden nie auf der ersten oder letzten Reihe eingesetzt."
 
-#: src/variants/bughouse.js:263
+#: src/variants/bughouse.js:309
 msgid "A captured promoted piece (marked +) is passed on as a pawn."
 msgstr "Eine geschlagene umgewandelte Figur (mit + markiert) wird als Bauer weitergegeben."
 
-#: src/variants/bughouse.js:264
+#: src/variants/bughouse.js:310
 msgid "Capturing a king on either board ends the whole game: that king's team loses. A king that cannot escape does not lose at once: it must be captured."
 msgstr "Wird auf einem der beiden Bretter ein König geschlagen, endet die ganze Partie: Das Team dieses Königs verliert. Ein König, der nicht entkommen kann, verliert nicht sofort: Er muss geschlagen werden."
 
-#: src/variants/bughouse.js:268
+#: src/variants/bughouse.js:314
 msgid "Your team shares one budget of 8, not 8 per player: your partner's ghosts count too."
 msgstr "Dein Team teilt sich ein Budget von 8, nicht 8 pro Spieler: Die Geister deines Partners zählen mit."
 
-#: src/variants/bughouse.js:272
+#: src/variants/bughouse.js:318
 msgid "A drop onto a square where a ghost might stand is a roll. If the square is taken, the piece stays in your hand."
 msgstr "Das Einsetzen auf ein Feld, auf dem ein Geist stehen könnte, ist ein Wurf. Ist das Feld besetzt, bleibt die Figur in deiner Hand."
 
-#: src/variants/bughouse.js:276
+#: src/variants/bughouse.js:322
 msgid "A pawn dropped on your second rank may move two squares. A dropped rook never castles. En passant is only possible on the next turn of that board."
 msgstr "Ein auf deiner zweiten Reihe eingesetzter Bauer darf zwei Felder ziehen. Ein eingesetzter Turm rochiert nie. En passant ist nur im nächsten Zug auf diesem Brett möglich."
 
-#: src/variants/bughouse.js:496
+#: src/variants/bughouse.js:542
 msgid "50 moves by each player without a capture, a pawn move or a drop"
 msgstr "50 Züge jedes Spielers ohne Schlag, Bauernzug oder Einsetzen"
 
-#: src/variants/bughouse.js:508
+#: src/variants/bughouse.js:554
 msgid "Team 1"
 msgstr "Team 1"
 
-#: src/variants/bughouse.js:508
+#: src/variants/bughouse.js:554
 msgid "Team 2"
 msgstr "Team 2"
 
-#: src/variants/bughouse.js:509
+#. TRANSLATORS: Bughouse, a player's partner: White A, White B, Black B or Black A
+#: src/variants/bughouse.js:556
 msgid "Partner: {side}"
 msgstr "Partner: {side}"
 
@@ -5006,35 +5036,35 @@ msgstr "Partner: {side}"
 msgid "Archbishop"
 msgstr "Erzbischof"
 
-#: src/variants/capablanca.js:79
+#: src/variants/capablanca.js:80
 msgid "Chancellor"
 msgstr "Kanzler"
 
-#: src/variants/capablanca.js:141
+#: src/variants/capablanca.js:143
 msgid "The board is 10 squares wide (files a to j), and each side has two extra pawns and two new pieces."
 msgstr "Das Brett ist 10 Felder breit (Linien a bis j), und jede Seite hat zwei zusätzliche Bauern und zwei neue Figuren."
 
-#: src/variants/capablanca.js:145
+#: src/variants/capablanca.js:147
 msgid "The archbishop (A) moves like a bishop or like a knight; the chancellor (C) moves like a rook or like a knight."
 msgstr "Der Erzbischof (A) zieht wie ein Läufer oder wie ein Springer; der Kanzler (C) zieht wie ein Turm oder wie ein Springer."
 
-#: src/variants/capablanca.js:149
+#: src/variants/capablanca.js:151
 msgid "From a to j the back rank is rook, knight, archbishop, bishop, queen, king, bishop, chancellor, knight, rook, so the king starts on f1 (f8 for Black)."
 msgstr "Von a bis j stehen auf der Grundreihe Turm, Springer, Erzbischof, Läufer, Dame, König, Läufer, Kanzler, Springer, Turm; der König beginnt also auf f1 (Schwarz: f8)."
 
-#: src/variants/capablanca.js:153
+#: src/variants/capablanca.js:155
 msgid "To castle, the king moves three squares towards its rook, to i1 or c1 (i8 or c8 for Black), and the rook lands on the square next to it on the other side (h1 or d1, h8 or d8). As in chess, neither the king nor that rook may have moved before, and every square between them must be empty."
 msgstr "Bei der Rochade zieht der König drei Felder in Richtung seines Turms, nach i1 oder c1 (Schwarz: i8 oder c8), und der Turm landet auf dem Feld neben ihm auf der anderen Seite (h1 oder d1, h8 oder d8). Wie im Schach dürfen weder der König noch dieser Turm vorher gezogen haben, und jedes Feld zwischen ihnen muss leer sein."
 
-#: src/variants/capablanca.js:157
+#: src/variants/capablanca.js:159
 msgid "Pawns move as in chess, with the double step and en passant, and promote to a queen, chancellor, archbishop, rook, bishop or knight."
 msgstr "Bauern ziehen wie im Schach, mit Doppelschritt und en passant, und werden in eine Dame, einen Kanzler, Erzbischof, Turm, Läufer oder Springer umgewandelt."
 
-#: src/variants/capablanca.js:161
+#: src/variants/capablanca.js:163
 msgid "The archbishop and the chancellor can split and merge like a queen: their knight jump flies over ghosts, but their slides can be blocked."
 msgstr "Erzbischof und Kanzler können sich wie eine Dame teilen und vereinen: Ihr Springersprung fliegt über Geister hinweg, ihre Läufer- und Turmzüge können aber blockiert werden."
 
-#: src/variants/capablanca.js:165
+#: src/variants/capablanca.js:167
 msgid "Castling never rolls: a ghost on any square between the king and the rook blocks it, and the right is lost for good as soon as the king or that rook is not 100 % on its starting square. There is no check, so you may castle out of, through or into attack."
 msgstr "Die Rochade wird nie ausgewürfelt: Ein Geist auf einem der Felder zwischen König und Turm verhindert sie, und das Recht ist endgültig verloren, sobald der König oder dieser Turm nicht zu 100 % auf seinem Ausgangsfeld steht. Es gibt kein Schach, also darfst du aus, durch oder in einen Angriff rochieren."
 
@@ -5099,8 +5129,8 @@ msgid "Atomic"
 msgstr "Atomschach"
 
 #: src/variants/catalog.js:87
-msgid "Every capture explodes and takes the pieces around it along."
-msgstr "Jeder Schlag explodiert und reißt die Figuren ringsum mit."
+msgid "Every capture explodes and removes the pieces around it."
+msgstr "Jeder Schlag explodiert und entfernt die Figuren ringsum."
 
 #: src/variants/catalog.js:93
 msgid "Crazyhouse"
@@ -5254,27 +5284,27 @@ msgstr "Die Rochade ignoriert Angriffe: Du darfst aus, durch oder in einen Angri
 msgid "The game is a draw when only the two kings are left, unless the player to move can capture the other king."
 msgstr "Die Partie ist remis, wenn nur die beiden Könige übrig sind, es sei denn, wer am Zug ist, kann den anderen König schlagen."
 
-#: src/variants/core/orthodox.js:41 src/variants/hyper4d.js:188 src/variants/raumschach.js:131 src/variants/shogi.js:203 src/variants/trid.js:302
+#: src/variants/core/orthodox.js:41 src/variants/hyper4d.js:259 src/variants/multiverse/pieces.js:76 src/variants/raumschach.js:131 src/variants/shogi.js:203 src/variants/trid.js:302
 msgid "King"
 msgstr "König"
 
-#: src/variants/core/orthodox.js:49 src/variants/hyper4d.js:196 src/variants/raumschach.js:137 src/variants/trid.js:303
+#: src/variants/core/orthodox.js:49 src/variants/hyper4d.js:267 src/variants/multiverse/pieces.js:79 src/variants/raumschach.js:137 src/variants/trid.js:303
 msgid "Queen"
 msgstr "Dame"
 
-#: src/variants/core/orthodox.js:55 src/variants/hyper4d.js:202 src/variants/raumschach.js:138 src/variants/shogi.js:210 src/variants/trid.js:304
+#: src/variants/core/orthodox.js:55 src/variants/hyper4d.js:273 src/variants/multiverse/pieces.js:81 src/variants/raumschach.js:138 src/variants/shogi.js:210 src/variants/trid.js:304
 msgid "Rook"
 msgstr "Turm"
 
-#: src/variants/core/orthodox.js:61 src/variants/hyper4d.js:208 src/variants/raumschach.js:139 src/variants/shogi.js:217 src/variants/trid.js:305
+#: src/variants/core/orthodox.js:61 src/variants/hyper4d.js:279 src/variants/multiverse/pieces.js:82 src/variants/raumschach.js:139 src/variants/shogi.js:217 src/variants/trid.js:305
 msgid "Bishop"
 msgstr "Läufer"
 
-#: src/variants/core/orthodox.js:67 src/variants/hyper4d.js:214 src/variants/raumschach.js:146 src/variants/shogi.js:232 src/variants/trid.js:306
+#: src/variants/core/orthodox.js:67 src/variants/hyper4d.js:285 src/variants/multiverse/pieces.js:83 src/variants/raumschach.js:147 src/variants/shogi.js:232 src/variants/trid.js:306
 msgid "Knight"
 msgstr "Springer"
 
-#: src/variants/core/orthodox.js:73 src/variants/hyper4d.js:220 src/variants/raumschach.js:148 src/variants/shogi.js:246 src/variants/trid.js:308
+#: src/variants/core/orthodox.js:73 src/variants/hyper4d.js:291 src/variants/multiverse/pieces.js:86 src/variants/raumschach.js:149 src/variants/shogi.js:246 src/variants/trid.js:308
 msgid "Pawn"
 msgstr "Bauer"
 
@@ -5327,102 +5357,108 @@ msgid "A ghost sees from every square it might be on, so splitting a piece also 
 msgstr "Ein Geist sieht von jedem Feld aus, auf dem er stehen könnte; wenn du eine Figur teilst, siehst du also auch weiter."
 
 #: src/variants/darkchess.js:48
-msgid "A dark square right in front of your pawn means something is standing there."
-msgstr "Ein Feld im Nebel direkt vor deinem Bauern bedeutet, dass dort etwas steht."
+msgid "A pawn sees the square in front of it only when that square is empty: a hidden square right in front of your pawn means something is standing there."
+msgstr "Ein Bauer sieht das Feld vor sich nur, wenn es leer ist: Ein verdecktes Feld direkt vor deinem Bauern bedeutet, dass dort etwas steht."
 
-#: src/variants/darkchess.js:49
+#: src/variants/darkchess.js:52
 msgid "En passant shows you the passing pawn for that one turn only."
 msgstr "Einen gegnerischen Bauern, den du en passant schlagen kannst, siehst du nur in dem einen Zug, in dem das möglich ist."
 
-#: src/variants/darkchess.js:50
+#: src/variants/darkchess.js:53
 msgid "Nobody warns you of danger: your king can be taken, or left without escape, by pieces you never saw."
 msgstr "Niemand warnt dich vor Gefahr: Figuren, die du nie gesehen hast, können deinen König schlagen oder ihm jedes Entkommen nehmen."
 
-#: src/variants/darkchess.js:54
-msgid "Two bare kings are no draw: a king that steps next to the unseen enemy king can be taken."
+#: src/variants/darkchess.js:57
+msgid "Two bare kings are not a draw: a king that steps next to the unseen enemy king can be taken."
 msgstr "Zwei blanke Könige sind kein Remis: Ein König, der neben den unsichtbaren gegnerischen König tritt, kann geschlagen werden."
 
-#: src/variants/darkchess.js:55
+#: src/variants/darkchess.js:61
 msgid "In pass & play each player sees only their own view: hand the device over when asked. Undo is off until the game ends, and then the whole board is revealed."
 msgstr "Beim Spiel zu zweit an einem Gerät sieht jeder Spieler nur seine eigene Ansicht: Gib das Gerät weiter, wenn du dazu aufgefordert wirst. Rückgängig ist bis zum Ende der Partie ausgeschaltet, dann wird das ganze Brett aufgedeckt."
 
-#: src/variants/darkchess.js:485 src/views/VariantGameView.vue:544
+#: src/variants/darkchess.js:491 src/views/VariantGameView.vue:825
 msgid "Capture on {squares}"
 msgstr "Schlag auf {squares}"
 
-#: src/variants/fourplayer.js:498 src/variants/xiangqi.js:352
+#. TRANSLATORS: a player of four-player chess, named after its colour (Xiangqi's first player is Red too)
+#: src/variants/fourplayer.js:499 src/variants/xiangqi.js:352
 msgid "Red"
 msgstr "Rot"
 
-#: src/variants/fourplayer.js:500
+#. TRANSLATORS: a player of four-player chess, named after its colour
+#: src/variants/fourplayer.js:503
 msgid "Yellow"
 msgstr "Gelb"
 
-#: src/variants/fourplayer.js:501
+#. TRANSLATORS: a player of four-player chess, named after its colour
+#: src/variants/fourplayer.js:505
 msgid "Green"
 msgstr "Grün"
 
-#: src/variants/fourplayer.js:510
+#: src/variants/fourplayer.js:514
 msgid "Game mode"
 msgstr "Spielmodus"
 
-#: src/variants/fourplayer.js:512
+#: src/variants/fourplayer.js:516
 msgid "Free for all"
 msgstr "Jeder gegen jeden"
 
-#: src/variants/fourplayer.js:513
+#: src/variants/fourplayer.js:517
 msgid "Teams: Red and Yellow against Blue and Green"
 msgstr "Teams: Rot und Gelb gegen Blau und Grün"
 
-#: src/variants/fourplayer.js:726
+#. TRANSLATORS: four-player chess, a player whose king was captured; {side} is Red, Blue, Yellow or Green
+#: src/variants/fourplayer.js:731
 msgid "{side} is out"
 msgstr "{side} scheidet aus"
 
-#: src/variants/fourplayer.js:740
+#. TRANSLATORS: four-player chess, next to a player's name: its partner, Red, Blue, Yellow or Green
+#: src/variants/fourplayer.js:746
 msgid "with {partner}"
 msgstr "mit {partner}"
 
-#: src/variants/fourplayer.js:741
+#. TRANSLATORS: four-player chess in Teams, the tooltip of a player's partner
+#: src/variants/fourplayer.js:748
 msgid "Partners cannot capture each other; the first king captured loses for its team."
 msgstr "Partner können sich nicht gegenseitig schlagen; der erste geschlagene König verliert für sein Team."
 
-#: src/variants/fourplayer.js:747
+#: src/variants/fourplayer.js:754
 msgid "out"
 msgstr "ausgeschieden"
 
-#: src/variants/fourplayer.js:775
+#: src/variants/fourplayer.js:782
 msgid "200 moves in a row without a capture or a pawn move"
 msgstr "200 Züge in Folge ohne Schlag oder Bauernzug"
 
-#: src/variants/fourplayer.js:807
+#: src/variants/fourplayer.js:814
 msgid "Four armies take turns clockwise: Red, Blue, Yellow, Green. The board is 14 × 14 squares without its four 3 × 3 corners."
 msgstr "Vier Armeen ziehen reihum im Uhrzeigersinn: Rot, Blau, Gelb, Grün. Das Brett hat 14 × 14 Felder ohne die vier Ecken aus je 3 × 3 Feldern."
 
-#: src/variants/fourplayer.js:808
+#: src/variants/fourplayer.js:815
 msgid "Pawns walk towards the opposite side. In free for all they promote on their 8th rank, just past the middle of the board; in Teams, on their 11th rank. A pawn becomes a queen, rook, bishop or knight."
 msgstr "Bauern ziehen zur gegenüberliegenden Seite. Bei „Jeder gegen jeden“ werden sie auf ihrer 8. Reihe umgewandelt, knapp hinter der Brettmitte; bei „Teams“ auf ihrer 11. Reihe. Ein Bauer wird zur Dame, zum Turm, Läufer oder Springer."
 
-#: src/variants/fourplayer.js:809
+#: src/variants/fourplayer.js:816
 msgid "Castling works as usual for every army. A pawn that has just moved two squares may be taken en passant only by the next player, with a pawn standing next to it."
 msgstr "Die Rochade funktioniert für jede Armee wie gewohnt. Ein Bauer, der gerade einen Doppelschritt gemacht hat, darf nur vom nächsten Spieler en passant geschlagen werden, und zwar mit einem Bauern, der neben ihm steht."
 
-#: src/variants/fourplayer.js:810
+#: src/variants/fourplayer.js:817
 msgid "Free for all: capture a king and that player is out. Their whole army, ghosts included, leaves the board. The last king standing wins."
 msgstr "Jeder gegen jeden: Schlage einen König, und dieser Spieler scheidet aus. Seine ganze Armee, Geister eingeschlossen, verlässt das Brett. Der letzte verbliebene König gewinnt."
 
-#: src/variants/fourplayer.js:811
+#: src/variants/fourplayer.js:818
 msgid "Teams: Red and Yellow play against Blue and Green. Your partner's pieces block you like your own and cannot be captured. The first king captured loses the game for its team."
 msgstr "Teams: Rot und Gelb spielen gegen Blau und Grün. Die Figuren deines Partners blockieren dich wie deine eigenen und können nicht geschlagen werden. Der erste geschlagene König verliert die Partie für sein Team."
 
-#: src/variants/fourplayer.js:812
+#: src/variants/fourplayer.js:819
 msgid "A king that cannot escape does not lose at once, as it would in classic Quantum Chess: it must be captured."
 msgstr "Ein König, der nicht entkommen kann, verliert nicht sofort wie im klassischen Quantum Chess: Er muss geschlagen werden."
 
-#: src/variants/fourplayer.js:816
+#: src/variants/fourplayer.js:823
 msgid "The quantum budget is not 8 here but shared fairly: each player's budget is 2 while four players are in the game, 4 with three and 8 with two."
 msgstr "Das Quantenbudget ist hier nicht 8, sondern wird fair aufgeteilt: Das Budget jedes Spielers ist 2, solange vier Spieler in der Partie sind, 4 bei drei und 8 bei zwei."
 
-#: src/variants/fourplayer.js:820
+#: src/variants/fourplayer.js:827
 msgid "A player who cannot move sits out in free for all; in Teams, the game is drawn. 200 moves in a row (all players together) without a capture or a pawn move is a draw, and so are two lone kings that are not next to each other."
 msgstr "Wer nicht ziehen kann, setzt bei „Jeder gegen jeden“ aus; bei „Teams“ endet die Partie remis. 200 Züge in Folge (alle Spieler zusammen) ohne Schlag oder Bauernzug sind remis, ebenso zwei blanke Könige, die nicht nebeneinander stehen."
 
@@ -5455,19 +5491,19 @@ msgid "A pawn promotes at the far end of its file, to a queen, rook, bishop or k
 msgstr "Ein Bauer wird am anderen Ende seiner Linie umgewandelt, in eine Dame, einen Turm, Läufer oder Springer. Es gibt keine Rochade."
 
 #: src/variants/hexagonal.js:238
-msgid "Stalemate is not a draw: a king that cannot escape loses even when it is not attacked, so the player who stalemates wins, in line with Gliński's scoring. A player with no move at all loses too. Only the two kings left is a draw, unless the player to move can capture the other king."
-msgstr "Patt ist kein Remis: Ein König, der nicht entkommen kann, verliert auch dann, wenn er nicht angegriffen ist; wer den Gegner patt setzt, gewinnt also, wie in Glińskis Wertung. Wer gar keinen Zug hat, verliert ebenfalls. Sind nur die beiden Könige übrig, ist es remis, es sei denn, wer am Zug ist, kann den anderen König schlagen."
+msgid "Stalemate is not a draw: a king that cannot escape loses even when it is not attacked, so the player who stalemates wins (Gliński's own rules give that player ¾ of a point). A player with no move at all loses too. Only the two kings left is a draw, unless the player to move can capture the other king."
+msgstr "Patt ist kein Remis: Ein König, der nicht entkommen kann, verliert auch dann, wenn er nicht angegriffen ist; wer den Gegner patt setzt, gewinnt also (nach Glińskis eigenen Regeln bekommt er dafür ¾ Punkt). Wer gar keinen Zug hat, verliert ebenfalls. Sind nur die beiden Könige übrig, ist es remis, es sei denn, wer am Zug ist, kann den anderen König schlagen."
 
 #: src/variants/horde.js:107
 msgid "White has 36 pawns and no king. Black has the ordinary army and moves second."
 msgstr "Weiß hat 36 Bauern und keinen König. Schwarz hat die normale Armee und zieht als Zweites."
 
 #: src/variants/horde.js:108
-msgid "White has no king to lose. It wins as usual against the Black king: by capturing it, or when it cannot escape."
+msgid "White has no king to lose. It wins as usual against the black king: by capturing it, or when it cannot escape."
 msgstr "Weiß hat keinen König, den es verlieren kann. Es gewinnt wie üblich gegen den schwarzen König: indem es ihn schlägt oder wenn er nicht entkommen kann."
 
 #: src/variants/horde.js:112
-msgid "Black wins by capturing every White piece, including pieces White got by promotion."
+msgid "Black wins by capturing every white piece, including pieces White got by promotion."
 msgstr "Schwarz gewinnt, indem es jede weiße Figur schlägt, auch Figuren, die Weiß durch Umwandlung bekommen hat."
 
 #: src/variants/horde.js:113
@@ -5490,72 +5526,77 @@ msgstr "Patt ist remis: Kann die Seite am Zug keine Figur ziehen, endet die Part
 msgid "the horde was destroyed"
 msgstr "die Horde wurde vernichtet"
 
-#. TRANSLATORS: Makruk: every move of the loser would have let its Khun (king) be captured for certain
-#: src/variants/horde.js:179 src/variants/makruk.js:439
+#. TRANSLATORS: Horde, why the game was drawn: the player to move could not move any piece (stalemate)
+#. TRANSLATORS: Makruk, why the game was drawn: the Khun was not attacked, but each move would expose it
+#: src/variants/horde.js:180 src/variants/makruk.js:442
 msgid "stalemate"
 msgstr "Patt"
 
-#: src/variants/horde.js:191
+#: src/variants/horde.js:192
 msgid "Horde: {count}"
 msgstr "Horde: {count}"
 
-#: src/variants/horde.js:192
+#: src/variants/horde.js:193
 msgid "White pieces left. Black wins by capturing all of them."
 msgstr "Verbleibende weiße Figuren. Schwarz gewinnt, wenn es alle schlägt."
 
-#: src/variants/hyper4d.js:241
+#: src/variants/hyper4d.js:312
 msgid "The board is a 4 × 4 grid of small 4 × 4 boards, and a cell is named board, then square: B2c3 is square c3 on board B2. Stepping to the same square on the next board (left, right, up or down) counts as one step, just like stepping to the next square."
 msgstr "Das Brett besteht aus 4 × 4 kleinen Brettern mit je 4 × 4 Feldern, und ein Feldname nennt erst das Brett, dann das Feld: B2c3 ist das Feld c3 auf dem Brett B2. Ein Schritt auf dasselbe Feld des nächsten Bretts (links, rechts, oben oder unten) zählt als ein Schritt, genau wie ein Schritt auf das nächste Feld."
 
-#: src/variants/hyper4d.js:245
+#: src/variants/hyper4d.js:316
 msgid "A rook moves straight along a rank or file of its board, or to the same square on the other boards of its row or column of boards. It may also move one square diagonally and one board straight at once, or one square straight and one board diagonally, step after step."
 msgstr "Ein Turm zieht gerade entlang einer Reihe oder Linie seines Bretts oder auf dasselbe Feld der anderen Bretter in seiner Brettreihe oder Brettspalte. Er darf auch gleichzeitig ein Feld diagonal und ein Brett gerade ziehen oder ein Feld gerade und ein Brett diagonal, Schritt für Schritt."
 
-#: src/variants/hyper4d.js:249
+#: src/variants/hyper4d.js:320
 msgid "A bishop moves diagonally on its board, to the same square on a diagonal line of boards, or one square and one board straight at once. It may also move one square diagonally and one board diagonally at once. It never leaves its colour."
 msgstr "Ein Läufer zieht diagonal auf seinem Brett, auf dasselbe Feld entlang einer diagonalen Linie von Brettern oder gleichzeitig ein Feld und ein Brett gerade. Er darf auch gleichzeitig ein Feld diagonal und ein Brett diagonal ziehen. Er verlässt nie seine Farbe."
 
-#: src/variants/hyper4d.js:253
+#: src/variants/hyper4d.js:324
 msgid "The queen moves like a rook or a bishop: in any direction a king can step, as far as the way is free."
 msgstr "Die Dame zieht wie ein Turm oder ein Läufer: in jede Richtung, in die ein König gehen kann, so weit der Weg frei ist."
 
-#: src/variants/hyper4d.js:257
+#: src/variants/hyper4d.js:328
 msgid "The king steps to any touching cell (up to 80): the squares around it, and the same square and the squares around it on each board next to its board, diagonal neighbours included. The knight jumps 2 steps one way and 1 step another, also between boards."
 msgstr "Der König geht auf jedes angrenzende Feld (bis zu 80): auf die Felder um ihn herum sowie auf dasselbe Feld und die Felder darum auf jedem Nachbarbrett seines Bretts, diagonale Nachbarn eingeschlossen. Der Springer springt 2 Schritte in eine Richtung und 1 Schritt in eine andere, auch zwischen Brettern."
 
-#: src/variants/hyper4d.js:261
+#: src/variants/hyper4d.js:332
 msgid "A pawn moves one square up its board, or to the same square one board up (Black: down). It captures one step forward plus one step sideways (a square or a board to the left or right), never straight ahead. There is no double step, no en passant and no castling."
 msgstr "Ein Bauer zieht ein Feld auf seinem Brett nach oben oder auf dasselbe Feld ein Brett weiter oben (Schwarz: nach unten). Er schlägt einen Schritt vorwärts plus einen Schritt seitwärts (ein Feld oder ein Brett nach links oder rechts), nie geradeaus. Es gibt keinen Doppelschritt, kein en passant und keine Rochade."
 
-#: src/variants/hyper4d.js:265
+#: src/variants/hyper4d.js:336
 msgid "A pawn must promote on rank 4 of the top boards A4–D4 (Black: rank 1 of A1–D1), to a queen, rook, bishop or knight."
 msgstr "Ein Bauer muss auf der 4. Reihe der obersten Bretter A4–D4 (Schwarz: 1. Reihe von A1–D1) umgewandelt werden, in eine Dame, einen Turm, Läufer oder Springer."
 
-#: src/variants/hyper4d.js:269
+#: src/variants/hyper4d.js:340
 msgid "The game is drawn when only the two kings are left and they do not touch."
 msgstr "Die Partie endet remis, wenn nur die beiden Könige übrig sind und sie sich nicht berühren."
 
-#: src/variants/koth.js:167
+#: src/variants/koth.js:168
 msgid "Move your king onto one of the four centre squares (d4, e4, d5, e5) and you win at once."
 msgstr "Zieh deinen König auf eines der vier Zentrumsfelder (d4, e4, d5, e5), und du gewinnst sofort."
 
-#: src/variants/koth.js:168
+#: src/variants/koth.js:169
 msgid "Your king may not step onto a centre square that an enemy piece would attack once your king stands there. This is the only place where attacks limit your king."
 msgstr "Dein König darf kein Zentrumsfeld betreten, das eine gegnerische Figur angreifen würde, sobald dein König dort steht. Nur hier schränken Angriffe deinen König ein."
 
-#: src/variants/koth.js:172
+#: src/variants/koth.js:173
 msgid "Capturing an enemy piece on a centre square with your king also wins, if no other enemy piece attacks that square afterwards."
 msgstr "Mit deinem König eine gegnerische Figur auf einem Zentrumsfeld zu schlagen gewinnt ebenfalls, wenn danach keine andere gegnerische Figur dieses Feld angreift."
 
-#: src/variants/koth.js:176
+#: src/variants/koth.js:177
 msgid "If a ghost means a centre square would be attacked in only some possibilities, a king step onto it is a roll: either your king arrives and you win, or the move is Missed and your king stays where it was."
 msgstr "Wäre ein Zentrumsfeld wegen eines Geists nur in manchen Möglichkeiten angegriffen, ist ein Königsschritt dorthin ein Wurf: Entweder kommt dein König an und du gewinnst, oder der Zug verfehlt und dein König bleibt, wo er war."
 
-#: src/variants/koth.js:180
+#: src/variants/koth.js:181
 msgid "Capturing the enemy king also wins. Castling, en passant and promotion are unchanged."
 msgstr "Den gegnerischen König zu schlagen gewinnt ebenfalls. Rochade, en passant und Umwandlung bleiben unverändert."
 
-#: src/variants/koth.js:228
+#: src/variants/koth.js:189
+msgid "Hill: a king that reaches it wins."
+msgstr "Hügel: Ein König, der ihn erreicht, gewinnt."
+
+#: src/variants/koth.js:237
 msgid "a king reached the hill"
 msgstr "ein König hat den Hügel erreicht"
 
@@ -5572,12 +5613,12 @@ msgid "Any other move is played at once, rolled if needed, and you see only its 
 msgstr "Jeder andere Zug wird sofort gespielt, wenn nötig ausgewürfelt, und du siehst nur sein Ergebnis. Ein verfehlter Zug verbraucht trotzdem deinen Zug."
 
 #: src/variants/kriegspiel.js:41
-msgid "After every move both players hear each capture (its square, and whether a pawn or a piece was taken) and check with its directions and the chance that one enemy move, a merge included, could capture the king."
-msgstr "Nach jedem Zug erfahren beide Spieler jeden Schlag (sein Feld und ob ein Bauer oder eine Figur geschlagen wurde) und jedes Schach mit seinen Richtungen und der Chance, dass ein gegnerischer Zug, eine Vereinigung eingeschlossen, den König schlagen könnte."
+msgid "After every move both players hear each capture (its square, and whether a pawn or a piece was taken) and any check, with its directions and the chance that one enemy move, a merge included, could capture the king."
+msgstr "Nach jedem Zug erfahren beide Spieler jeden Schlag (sein Feld und ob ein Bauer oder eine Figur geschlagen wurde) und jedes Schach, mit seinen Richtungen und der Chance, dass ein gegnerischer Zug, eine Vereinigung eingeschlossen, den König schlagen könnte."
 
 #: src/variants/kriegspiel.js:45
-msgid "Before each turn both players hear how many pawn captures the player to move might be able to make, en passant included."
-msgstr "Vor jedem Zug erfahren beide Spieler, wie viele Bauernschläge der Spieler am Zug möglicherweise ausführen kann, en passant eingeschlossen."
+msgid "Before each turn both players hear the number of pawn tries: the pawn captures the player to move might be able to make, en passant included."
+msgstr "Vor jedem Zug erfahren beide Spieler die Zahl der Bauernschlagversuche, also der Bauernschläge, die der Spieler am Zug möglicherweise ausführen kann, en passant eingeschlossen."
 
 #: src/variants/kriegspiel.js:49
 msgid "The umpire never refuses a move because of check: moving into check and castling out of, through or into check are allowed. The umpire also ends the game when a king cannot escape or a draw comes, even if you could not see it coming. Promotions, castling and en passant as such are never announced: an en passant capture is heard like any other capture of a pawn."
@@ -5611,33 +5652,36 @@ msgstr "lange Diagonale"
 msgid "short diagonal"
 msgstr "kurze Diagonale"
 
-#: src/variants/kriegspiel/umpire.js:428
+#. TRANSLATORS: Kriegspiel, the umpire's first line after a move; {side} is White or Black
+#: src/variants/kriegspiel/umpire.js:433
 msgid "{side} moved."
 msgstr "{side} hat gezogen."
 
-#: src/variants/kriegspiel/umpire.js:433
+#: src/variants/kriegspiel/umpire.js:438
 msgid "The king on {square} is captured."
 msgstr "Der König auf {square} wurde geschlagen."
 
-#: src/variants/kriegspiel/umpire.js:435
+#: src/variants/kriegspiel/umpire.js:440
 msgid "Capture on {square}: a pawn."
 msgstr "Schlag auf {square}: ein Bauer."
 
-#: src/variants/kriegspiel/umpire.js:437
+#: src/variants/kriegspiel/umpire.js:442
 msgid "Capture on {square}: a piece."
 msgstr "Schlag auf {square}: eine Figur."
 
-#: src/variants/kriegspiel/umpire.js:441
+#: src/variants/kriegspiel/umpire.js:446
 msgid "Check: {directions} ({percent})."
 msgstr "Schach: {directions} ({percent})."
 
-#: src/variants/kriegspiel/umpire.js:448
+#. TRANSLATORS: Kriegspiel, the umpire: a pawn try is a pawn capture the player to move might be able to make
+#: src/variants/kriegspiel/umpire.js:454
 msgid "%n pawn try."
 msgid_plural "%n pawn tries."
 msgstr[0] "%n Bauernschlagversuch."
 msgstr[1] "%n Bauernschlagversuche."
 
-#: src/variants/kriegspiel/umpire.js:449
+#. TRANSLATORS: Kriegspiel, the umpire: a pawn try is a pawn capture the player to move might be able to make
+#: src/variants/kriegspiel/umpire.js:455
 msgid "No pawn tries."
 msgstr "Keine Bauernschlagversuche."
 
@@ -5649,112 +5693,582 @@ msgstr "Khun"
 msgid "Met"
 msgstr "Met"
 
-#: src/variants/makruk.js:334
+#: src/variants/makruk.js:335
 msgid "Khon"
 msgstr "Khon"
 
-#: src/variants/makruk.js:340
+#: src/variants/makruk.js:342
 msgid "Ma"
 msgstr "Ma"
 
-#: src/variants/makruk.js:346
+#: src/variants/makruk.js:348
 msgid "Rua"
 msgstr "Rua"
 
-#: src/variants/makruk.js:352
+#: src/variants/makruk.js:354
 msgid "Bia"
 msgstr "Bia"
 
-#: src/variants/makruk.js:367
+#: src/variants/makruk.js:369
 msgid "The Khun (king) starts on d1 for White and on e8 for Black, with the Met beside it, and never castles; the Bia (pawns) start on each side's third rank."
 msgstr "Der Khun (König) beginnt für Weiß auf d1 und für Schwarz auf e8, mit dem Met daneben, und rochiert nie; die Bia (Bauern) beginnen auf der dritten Reihe ihrer Seite."
 
-#: src/variants/makruk.js:368
+#: src/variants/makruk.js:370
 msgid "The Met steps one square diagonally, the Khon one square diagonally or straight forward, and the Ma, Rua and Khun move like the knight, rook and king."
 msgstr "Der Met zieht ein Feld diagonal, der Khon ein Feld diagonal oder geradeaus nach vorn, und Ma, Rua und Khun ziehen wie Springer, Turm und König."
 
-#: src/variants/makruk.js:369
+#: src/variants/makruk.js:371
 msgid "A Bia moves one square forward and captures one square diagonally forward; it never moves two squares (so there is no en passant), and on its sixth rank it always becomes a Met."
 msgstr "Ein Bia zieht ein Feld nach vorn und schlägt ein Feld schräg nach vorn; er zieht nie zwei Felder (es gibt also kein en passant) und wird auf seiner sechsten Reihe immer zum Met."
 
-#: src/variants/makruk.js:370
+#: src/variants/makruk.js:372
 msgid "Stalemate (not attacked, but every move would expose the Khun) is a draw, and if it is a stalemate in only some possibilities, a roll decides."
 msgstr "Patt (nicht angegriffen, aber jeder Zug würde den Khun preisgeben) ist remis, und ist es nur in manchen Möglichkeiten ein Patt, entscheidet ein Wurf."
 
-#: src/variants/makruk.js:371
+#: src/variants/makruk.js:373
 msgid "When no Bia is left and one side has only its Khun, the other side must capture that Khun within a set number of its moves, counted from the lone Khun's first move after the last capture or promotion, or the game is drawn."
 msgstr "Wenn kein Bia mehr übrig ist und eine Seite nur noch ihren Khun hat, muss die andere Seite diesen Khun innerhalb einer festgelegten Anzahl ihrer Züge schlagen, gezählt ab dem ersten Zug des blanken Khun nach dem letzten Schlag oder der letzten Umwandlung; sonst endet die Partie remis."
 
-#: src/variants/makruk.js:372
+#: src/variants/makruk.js:374
 msgid "That number is the first that applies of 8 (two Rua), 16 (one Rua), 22 (two Khon), 32 (two Ma), 44 (one Khon) and 64, minus the number of pieces on the board (both Khuns included), plus one, and at least one."
 msgstr "Diese Anzahl ist der erste zutreffende Wert von 8 (zwei Rua), 16 (ein Rua), 22 (zwei Khon), 32 (zwei Ma), 44 (ein Khon) und 64, minus der Anzahl der Figuren auf dem Brett (beide Khuns eingeschlossen), plus eins, mindestens aber eins."
 
-#: src/variants/makruk.js:373
+#: src/variants/makruk.js:375
 msgid "When no Bia is left, the game is also drawn after 65 moves by each side without a capture or promotion, and it is drawn when only the two Khuns are left."
 msgstr "Wenn kein Bia mehr übrig ist, endet die Partie auch nach 65 Zügen jeder Seite ohne Schlag oder Umwandlung remis, und sie ist remis, wenn nur die beiden Khuns übrig sind."
 
-#: src/variants/makruk.js:374
-msgid "These draws wait while the player to move can capture the enemy Khun for certain."
-msgstr "Diese Remisregeln greifen nicht, solange die Seite am Zug den gegnerischen Khun sicher schlagen kann."
+#: src/variants/makruk.js:376
+msgid "These draws are put off while the player to move can capture the enemy Khun for certain."
+msgstr "Diese Remisfälle werden aufgeschoben, solange die Seite am Zug den gegnerischen Khun sicher schlagen kann."
 
-#: src/variants/makruk.js:434
+#: src/variants/makruk.js:436
 msgid "a Khun was captured"
 msgstr "ein Khun wurde geschlagen"
 
 #. TRANSLATORS: Makruk: every move of the loser would have let its Khun (king) be captured for certain
-#: src/variants/makruk.js:437
+#: src/variants/makruk.js:439
 msgid "the Khun could not escape"
 msgstr "der Khun konnte nicht entkommen"
 
-#: src/variants/makruk.js:441
+#. TRANSLATORS: Makruk, why the game was drawn; a Khun is the king
+#: src/variants/makruk.js:445
 msgid "only the two Khuns are left"
 msgstr "nur die beiden Khuns sind übrig"
 
-#: src/variants/makruk.js:443
+#. TRANSLATORS: Makruk, why the game was drawn: the lone Khun (king) survived the counted moves
+#: src/variants/makruk.js:448
 msgid "the counting rule: the lone Khun was not captured in time"
 msgstr "die Zählregel: Der blanke Khun wurde nicht rechtzeitig geschlagen"
 
-#: src/variants/makruk.js:445
+#. TRANSLATORS: Makruk, why the game was drawn; a Bia is a pawn
+#: src/variants/makruk.js:451
 msgid "65 moves by each side since the last capture or promotion, with no Bia left"
 msgstr "65 Züge jeder Seite seit dem letzten Schlag oder der letzten Umwandlung, ohne Bia auf dem Brett"
 
-#: src/variants/makruk.js:460
+#: src/variants/makruk.js:466
 msgid "Counting: {done} of {allow} moves to capture the lone Khun"
 msgstr "Zählung: {done} von {allow} Zügen, um den blanken Khun zu schlagen"
 
-#: src/variants/makruk.js:469
+#: src/variants/makruk.js:475
 msgid "Moves without a capture: {n} of 65"
 msgstr "Züge ohne Schlag: {n} von 65"
 
-#: src/variants/raumschach.js:141
+#: src/variants/multiverse.js:53
+msgid "Small: quick, best on phones"
+msgstr "Klein: schnell, am besten auf dem Smartphone"
+
+#: src/variants/multiverse.js:54
+msgid "Very small and open: the easiest start for learning"
+msgstr "Sehr klein und offen: der leichteste Einstieg zum Lernen"
+
+#: src/variants/multiverse.js:55
+msgid "Standard: the full game, long, best on a laptop"
+msgstr "Standard: das ganze Spiel, lang, am besten auf dem Laptop"
+
+#: src/variants/multiverse.js:56
+msgid "Small with the king in the centre"
+msgstr "Klein mit dem König in der Mitte"
+
+#: src/variants/multiverse.js:57
+msgid "Very small"
+msgstr "Sehr klein"
+
+#: src/variants/multiverse.js:58
+msgid "Simple, no queens"
+msgstr "Einfach, ohne Damen"
+
+#: src/variants/multiverse.js:59
+msgid "Standard with turn zero: Black can travel back to turn 0"
+msgstr "Standard mit Zug null: Schwarz kann bis zu Zug 0 zurückreisen"
+
+#: src/variants/multiverse.js:60
+msgid "Standard on two timelines, −0 and +0"
+msgstr "Standard auf zwei Zeitlinien, −0 und +0"
+
+#: src/variants/multiverse.js:61
+msgid "Standard with princesses"
+msgstr "Standard mit Prinzessinnen"
+
+#: src/variants/multiverse.js:62
+msgid "Reversed royalty: the queen is royal, the king is not"
+msgstr "Vertauschte Königswürde: Die Dame ist königlich, der König nicht"
+
+#: src/variants/multiverse.js:63
+msgid "Defended pawn: queen and knight swapped"
+msgstr "Gedeckter Bauer: Dame und Springer vertauscht"
+
+#: src/variants/multiverse.js:64
+msgid "Half reflected: Black's king and queen swapped"
+msgstr "Halb gespiegelt: König und Dame von Schwarz vertauscht"
+
+#: src/variants/multiverse.js:65
+msgid "Kings and knights"
+msgstr "Könige und Springer"
+
+#: src/variants/multiverse.js:66
+msgid "Kings and unicorns"
+msgstr "Könige und Einhörner"
+
+#: src/variants/multiverse.js:67
+msgid "Kings and dragons"
+msgstr "Könige und Drachen"
+
+#: src/variants/multiverse.js:68
+msgid "Kings and brawns"
+msgstr "Könige und Kraftbauern"
+
+#: src/variants/multiverse.js:69
+msgid "King of kings: a king and four common kings"
+msgstr "König der Könige: ein König und vier gewöhnliche Könige"
+
+#: src/variants/multiverse.js:70
+msgid "Royal queen showdown"
+msgstr "Duell der königlichen Damen"
+
+#: src/variants/multiverse.js:71
+msgid "Excessive: three kings each, with unicorns and dragons"
+msgstr "Maßlos: je drei Könige, mit Einhörnern und Drachen"
+
+#: src/variants/multiverse.js:72
+msgid "Timeline marauders: three timelines"
+msgstr "Zeitlinien-Plünderer: drei Zeitlinien"
+
+#: src/variants/multiverse.js:73
+msgid "Timeline invasion: two timelines"
+msgstr "Zeitlinien-Invasion: zwei Zeitlinien"
+
+#: src/variants/multiverse.js:107
+msgid "Brawns (W) are pawns that also capture sideways or one rank forward together with one timeline forward, or one rank forward and one turn back."
+msgstr "Kraftbauern (W) sind Bauern, die außerdem schlagen können: seitwärts oder eine Reihe vorwärts, jeweils zusammen mit einer Zeitlinie vorwärts, oder eine Reihe vorwärts und einen Zug zurück."
+
+#: src/variants/multiverse.js:115
+msgid "The princess (S) moves like a rook or a bishop."
+msgstr "Die Prinzessin (S) zieht wie ein Turm oder ein Läufer."
+
+#: src/variants/multiverse.js:116
+msgid "The royal queen (Y) moves like a queen and is royal; the common king (C) moves like a king but is not royal."
+msgstr "Die königliche Dame (Y) zieht wie eine Dame und ist königlich; der gewöhnliche König (C) zieht wie ein König, ist aber nicht königlich."
+
+#: src/variants/multiverse.js:120
+msgid "The queen and a knight swap places."
+msgstr "Die Dame und ein Springer tauschen die Plätze."
+
+#: src/variants/multiverse.js:121
+msgid "Black's king and queen swap places."
+msgstr "König und Dame von Schwarz tauschen die Plätze."
+
+#: src/variants/multiverse.js:122
+msgid "Unicorns (U) move along three axes at once."
+msgstr "Einhörner (U) ziehen gleichzeitig auf drei Achsen."
+
+#: src/variants/multiverse.js:123
+msgid "Dragons (D) move along all four axes at once."
+msgstr "Drachen (D) ziehen gleichzeitig auf allen vier Achsen."
+
+#: src/variants/multiverse.js:125
+msgid "Common kings (C) move like kings but are not royal."
+msgstr "Gewöhnliche Könige (C) ziehen wie Könige, sind aber nicht königlich."
+
+#: src/variants/multiverse.js:126
+msgid "A royal queen (Y) moves like a queen and is royal like a king."
+msgstr "Eine königliche Dame (Y) zieht wie eine Dame und ist königlich wie ein König."
+
+#: src/variants/multiverse.js:127
+msgid "Unicorns (U) move along three axes at once, dragons (D) along all four. Losing any one king loses."
+msgstr "Einhörner (U) ziehen gleichzeitig auf drei Achsen, Drachen (D) auf allen vier. Wer auch nur einen König verliert, verliert die Partie."
+
+#. TRANSLATORS: a 5D start position: label, official English name, board size: "Very small (Very Small, 4 × 4)"
+#: src/variants/multiverse.js:147
+msgid "{label} ({name}, {size} × {size})"
+msgstr "{label} ({name}, {size} × {size})"
+
+#: src/variants/multiverse.js:169
+msgid "Start position"
+msgstr "Startstellung"
+
+#: src/variants/multiverse.js:177
+msgid "Maximum new timelines per player"
+msgstr "Höchstzahl neuer Zeitlinien pro Spieler"
+
+#: src/variants/multiverse.js:180
+msgid "One"
+msgstr "Eine"
+
+#: src/variants/multiverse.js:181
+msgid "Two"
+msgstr "Zwei"
+
+#: src/variants/multiverse.js:182
+msgid "Three"
+msgstr "Drei"
+
+#: src/variants/multiverse.js:188
+msgid "How far back pieces can travel"
+msgstr "Wie weit Figuren zurückreisen können"
+
+#: src/variants/multiverse.js:193
+msgid "Automatic (2 turns on boards up to 5 × 5, 4 on larger ones)"
+msgstr "Automatisch (2 Züge auf Brettern bis 5 × 5, 4 auf größeren)"
+
+#: src/variants/multiverse.js:195
+msgid "2 turns (lighter on the device)"
+msgstr "2 Züge (schont das Gerät)"
+
+#: src/variants/multiverse.js:196
+msgid "4 turns (enough for most games)"
+msgstr "4 Züge (genug für die meisten Partien)"
+
+#. TRANSLATORS: 5D chess option: whose timelines are shown at the bottom, White or Black (not a drawn game)
+#: src/variants/multiverse.js:203
+msgid "Drawn at the bottom"
+msgstr "Unten dargestellt"
+
+#: src/variants/multiverse.js:213
+msgid "Each row is a timeline and time runs to the right. You play only on the latest board of a timeline, when it is your move there (○ White, light frame; ● Black, dark frame). Every move adds a new board; the old ones stay as the past."
+msgstr "Jede Zeile ist eine Zeitlinie, und die Zeit läuft nach rechts. Du spielst nur auf dem neuesten Brett einer Zeitlinie, wenn du dort am Zug bist (○ Weiß, heller Rahmen; ● Schwarz, dunkler Rahmen). Jeder Zug fügt ein neues Brett hinzu; die alten bleiben als Vergangenheit erhalten."
+
+#: src/variants/multiverse.js:214
+msgid "On your turn move once on every board marked “must move” (gold, in the present, “Now”); boards marked “optional” (blue) you may play too. The turn ends by itself when no board is left, otherwise press Submit turn. Each move is played at once (and rolled if its result is uncertain); Undo never changes a roll."
+msgstr "In deinem Zug ziehst du einmal auf jedem Brett mit „Zugpflicht“ (gold, in der Gegenwart, „Jetzt“); auf Brettern mit „optional“ (blau) darfst du ebenfalls spielen. Der Zug endet von selbst, wenn kein Brett mehr übrig ist, sonst drücke „Zug beenden“. Jeder einzelne Zug wird sofort gespielt (und ausgewürfelt, wenn sein Ergebnis unsicher ist); Rückgängig ändert nie einen Wurf."
+
+#: src/variants/multiverse.js:215
+msgid "Pieces move along files, ranks, back in time (one step is one turn) and across timelines, keeping their pattern: the rook along one axis, the bishop two, the unicorn (U) three, the dragon (D) four, the queen any; the king steps one along any axes, the knight two along one and one along another; the princess (S) moves as rook or bishop, the royal queen (Y) as a queen, the common king (C) as a king. Landing on the latest board of another timeline jumps there; landing on an older board opens a new timeline that only your piece enters."
+msgstr "Figuren ziehen entlang der Linien, der Reihen, in der Zeit zurück (ein Schritt ist ein Zug) und über Zeitlinien hinweg; dabei behalten sie ihr Muster: der Turm auf einer Achse, der Läufer auf zwei, das Einhorn (U) auf drei, der Drache (D) auf vier, die Dame auf beliebig vielen; der König geht einen Schritt auf beliebigen Achsen, der Springer zwei auf einer und einen auf einer anderen; die Prinzessin (S) zieht wie Turm oder Läufer, die königliche Dame (Y) wie eine Dame, der gewöhnliche König (C) wie ein König. Landet eine Figur auf dem neuesten Brett einer anderen Zeitlinie, springt sie dorthin; landet sie auf einem älteren Brett, öffnet sie eine neue Zeitlinie, die nur deine Figur betritt."
+
+#: src/variants/multiverse.js:216
+msgid "Pawns and brawns (W) step forward or one timeline towards the opponent, capture diagonally or one timeline forward and one turn back or ahead, and become queens; a brawn also captures sideways or one rank forward together with one timeline forward, or one rank forward and one turn back. Capture any enemy king or royal queen, also one in the past, to win."
+msgstr "Bauern und Kraftbauern (W) ziehen einen Schritt vorwärts oder eine Zeitlinie in Richtung des Gegners, schlagen diagonal oder eine Zeitlinie vorwärts und dabei einen Zug zurück oder voraus und werden in Damen umgewandelt; ein Kraftbauer schlägt außerdem seitwärts oder eine Reihe vorwärts, jeweils zusammen mit einer Zeitlinie vorwärts, oder eine Reihe vorwärts und einen Zug zurück. Schlage einen beliebigen gegnerischen König oder eine gegnerische königliche Dame, auch in der Vergangenheit, um zu gewinnen."
+
+#: src/variants/multiverse.js:217
+msgid "Each player may open at most the number of new timelines set for the game (1 to 3). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Pieces can travel back only as far as the game allows (2 or 4 turns); older boards are sealed: they are no longer shown, and nothing can travel there."
+msgstr "Jeder Spieler darf höchstens so viele neue Zeitlinien öffnen, wie für die Partie eingestellt ist (1 bis 3). Deine n-te neue Zeitlinie ist aktiv (sie zählt für die Gegenwart), solange dein Gegner mindestens n − 1 geöffnet hat; auf inaktiven Zeitlinien (schraffiert) kann trotzdem gespielt werden. Figuren können nur so weit zurückreisen, wie die Partie es erlaubt (2 oder 4 Züge); ältere Bretter sind versiegelt: Sie werden nicht mehr gezeigt, und nichts kann dorthin reisen."
+
+#: src/variants/multiverse.js:218
+msgid "Boards are certain, pieces are quantum: which boards exist, the present and whose turn it is are the same in every possibility. Timelines are AND, possibilities are OR. Kings, royal queens, common kings, pawns and brawns are solid: they never split."
+msgstr "Bretter sind sicher, Figuren sind quantenhaft: Welche Bretter es gibt, die Gegenwart und wer am Zug ist, sind in jeder Möglichkeit gleich. Zeitlinien sind UND, Möglichkeiten sind ODER. Könige, königliche Damen, gewöhnliche Könige, Bauern und Kraftbauern stehen fest: Sie teilen sich nie."
+
+#: src/variants/multiverse.js:219
+msgid "A move always makes its boards; the dice only decide what happens to the piece. So a ghost can travel: where it really stood it arrives, elsewhere the new boards appear without it. A Missed move still uses its board, and a Measure is your move on the board of the part you measure; the rest of your turn goes on."
+msgstr "Ein Zug erzeugt immer seine Bretter; die Würfel entscheiden nur, was mit der Figur geschieht. So kann ein Geist reisen: Wo er wirklich stand, kommt er an, anderswo erscheinen die neuen Bretter ohne ihn. Ein verfehlter Zug verbraucht trotzdem sein Brett, und eine Messung ist dein Zug auf dem Brett des Teils, den du misst; der Rest deines Zugs geht weiter."
+
+#: src/variants/multiverse.js:220
+msgid "Both halves of a split land on one board: yours, another timeline’s latest board, or a board in the past. Merges start from one board. You measure only a part on a board you may play. The past is quantum too: new timelines copy ghosts as twins, and after a merge the past remembers both paths until those boards are sealed."
+msgstr "Beide Hälften einer Teilung landen auf demselben Brett: deinem, dem neuesten Brett einer anderen Zeitlinie oder einem Brett in der Vergangenheit. Eine Vereinigung startet von einem einzigen Brett. Messen kannst du nur einen Teil auf einem Brett, auf dem du spielen darfst. Auch die Vergangenheit ist quantenhaft: Neue Zeitlinien kopieren Geister als Zwillinge, und nach einer Vereinigung erinnert sich die Vergangenheit an beide Wege, bis diese Bretter versiegelt sind."
+
+#: src/variants/multiverse.js:221
+msgid "If your turn cannot be finished from its start, the game ends at once: you lose if a king or royal queen of yours can be taken for certain (checkmate), otherwise it is a draw (stalemate). A move after which you could not finish your turn loses; the game asks before you play it. Red lines show what could take your royal pieces if you passed now (5D check); arrows show the travel of the last turns."
+msgstr "Lässt sich dein Zug schon zu Beginn nicht zu Ende spielen, ist die Partie sofort vorbei: Du verlierst, wenn einer deiner Könige oder eine deiner königlichen Damen sicher geschlagen werden kann (Schachmatt), sonst ist sie remis (Patt). Ein Zug, nach dem du deinen Zug nicht mehr beenden könntest, verliert; das Spiel fragt nach, bevor du ihn spielst. Rote Linien zeigen, was deine königlichen Figuren schlagen könnte, wenn du jetzt passen würdest (Schach in 5D); Pfeile zeigen die Reisen der letzten Züge."
+
+#: src/variants/multiverse.js:222
+msgid "Moves are written with their board, timeline and turn: (0T2)Nc3>(+1T2)c3 jumps to another timeline, (0T2)Nc3>>(0T1)a3 opens a new one, x marks a capture; the piece letters are K, Q, R, B, N, U, D, S, Y, C and W (brawn), none for a pawn."
+msgstr "Züge werden mit Brett, Zeitlinie und Zug notiert: (0T2)Nc3>(+1T2)c3 springt auf eine andere Zeitlinie, (0T2)Nc3>>(0T1)a3 öffnet eine neue, x kennzeichnet einen Schlag; die Figurenbuchstaben sind K, Q, R, B, N, U, D, S, Y, C und W (Kraftbauer), ein Bauer hat keinen."
+
+#: src/variants/multiverse/engine.js:653
+msgid "After this move you cannot finish your turn: you lose"
+msgstr "Nach diesem Zug kannst du deinen Zug nicht beenden: Du verlierst"
+
+#. TRANSLATORS: a warning before a move of multiverse chess whose roll decides whether the mover loses
+#: src/variants/multiverse/engine.js:657
+msgid "Depending on the roll, you may not be able to finish your turn after this move: then you lose"
+msgstr "Je nach Wurf kannst du nach diesem Zug deinen Zug vielleicht nicht beenden: Dann verlierst du"
+
+#: src/variants/multiverse/engine.js:663
+msgid "After this move your opponent cannot finish their turn: the game ends in a draw"
+msgstr "Nach diesem Zug kann dein Gegner seinen Zug nicht beenden: Die Partie endet remis"
+
+#. TRANSLATORS: a warning before a move of multiverse chess whose roll decides whether the game is drawn
+#: src/variants/multiverse/engine.js:667
+msgid "Depending on the roll, your opponent may not be able to finish their turn after this move: then the game ends in a draw"
+msgstr "Je nach Wurf kann dein Gegner nach diesem Zug seinen Zug vielleicht nicht beenden: Dann endet die Partie remis"
+
+#. TRANSLATORS: a board label of the multiverse, "L+1 T5 ● · must move": you have to move on it this turn
+#: src/variants/multiverse/layout.js:342
+msgid "{board} · must move"
+msgstr "{board} · Zugpflicht"
+
+#. TRANSLATORS: a board label of the multiverse: you may move on it; its timeline does not hold the present
+#: src/variants/multiverse/layout.js:347
+msgid "{board} · optional, inactive"
+msgstr "{board} · optional, inaktiv"
+
+#. TRANSLATORS: a board label of the multiverse, "L+1 T5 ● · optional": you may move on it this turn
+#: src/variants/multiverse/layout.js:350
+msgid "{board} · optional"
+msgstr "{board} · optional"
+
+#. TRANSLATORS: a board label of the multiverse: its timeline is inactive (it does not hold back the present)
+#: src/variants/multiverse/layout.js:354
+msgid "{board} · inactive"
+msgstr "{board} · inaktiv"
+
+#. TRANSLATORS: read out for a board of the multiverse, then ": c3" (its timeline, its turn, whose move)
+#: src/variants/multiverse/layout.js:370
+msgid "Timeline {line}, turn {turn}, Black to move"
+msgstr "Zeitlinie {line}, Zug {turn}, Schwarz am Zug"
+
+#. TRANSLATORS: read out for a board of the multiverse, then ": c3" (its timeline, its turn, whose move)
+#: src/variants/multiverse/layout.js:373
+msgid "Timeline {line}, turn {turn}, White to move"
+msgstr "Zeitlinie {line}, Zug {turn}, Weiß am Zug"
+
+#. TRANSLATORS: under the name of an inactive timeline of the multiverse (it does not hold back the present)
+#: src/variants/multiverse/layout.js:455
+msgid "inactive"
+msgstr "inaktiv"
+
+#. TRANSLATORS: under the name of a timeline of the multiverse that was opened in the last two turns
+#: src/variants/multiverse/layout.js:461
+msgid "new"
+msgstr "neu"
+
+#. TRANSLATORS: above the column of the multiverse that is the present
+#: src/variants/multiverse/layout.js:667
+msgid "Now"
+msgstr "Jetzt"
+
+#. TRANSLATORS: the legend of the multiverse: the gold halo marks the boards you must move on this turn
+#: src/variants/multiverse/layout.js:799
+msgid "Must move"
+msgstr "Zugpflicht"
+
+#. TRANSLATORS: the legend of the multiverse: the blue halo marks the boards you may move on this turn
+#: src/variants/multiverse/layout.js:803
+msgid "Optional"
+msgstr "Optional"
+
+#. TRANSLATORS: the legend of the multiverse: a hatched row is a timeline that does not hold back the present
+#: src/variants/multiverse/layout.js:807
+msgid "Inactive timeline"
+msgstr "Inaktive Zeitlinie"
+
+#. TRANSLATORS: the legend of the multiverse: a red line joins a piece to a royal piece it could take (5D check)
+#: src/variants/multiverse/layout.js:813
+msgid "Could take a royal piece if its owner passed now (5D check)"
+msgstr "Könnte eine königliche Figur schlagen, wenn deren Besitzer jetzt passen würde (Schach in 5D)"
+
+#. TRANSLATORS: the legend of the multiverse: a blue arrow shows a piece's travel through time or timelines
+#: src/variants/multiverse/layout.js:818
+msgid "Travel in the last turns"
+msgstr "Reisen der letzten Züge"
+
+#: src/variants/multiverse/pieces.js:77
+msgid "Royal queen"
+msgstr "Königliche Dame"
+
+#: src/variants/multiverse/pieces.js:78
+msgid "Common king"
+msgstr "Gewöhnlicher König"
+
+#: src/variants/multiverse/pieces.js:80
+msgid "Princess"
+msgstr "Prinzessin"
+
+#: src/variants/multiverse/pieces.js:84 src/variants/raumschach.js:141
 msgid "Unicorn"
 msgstr "Einhorn"
 
-#: src/variants/raumschach.js:199
+#: src/variants/multiverse/pieces.js:85
+msgid "Dragon"
+msgstr "Drache"
+
+#: src/variants/multiverse/pieces.js:87
+msgid "Brawn"
+msgstr "Kraftbauer"
+
+#: src/variants/multiverse/texts.js:368 src/variants/multiverse/texts.js:586
+msgid "Submit turn"
+msgstr "Zug beenden"
+
+#: src/variants/multiverse/texts.js:435
+msgid "Missed: timeline {line} opened anyway, nobody arrived"
+msgstr "Verfehlt: Zeitlinie {line} trotzdem geöffnet, niemand ist angekommen"
+
+#: src/variants/multiverse/texts.js:442
+msgid "Opened timeline {line} (a copy of {board})"
+msgstr "Zeitlinie {line} geöffnet (eine Kopie von {board})"
+
+#: src/variants/multiverse/texts.js:446
+msgid "Opened timeline {line}"
+msgstr "Zeitlinie {line} geöffnet"
+
+#. TRANSLATORS: a line of the move list of the multiverse: this move moved the present back to an earlier time
+#: src/variants/multiverse/texts.js:450
+msgid "The present moved back to {time}"
+msgstr "Die Gegenwart ist auf {time} zurückgegangen"
+
+#: src/variants/multiverse/texts.js:453
+msgid "The past still remembers both paths until {board} is sealed"
+msgstr "Die Vergangenheit erinnert sich noch an beide Wege, bis {board} versiegelt ist"
+
+#. TRANSLATORS: in a player's row of the multiverse: the new timelines this player opened, of the most allowed
+#: src/variants/multiverse/texts.js:470
+msgid "New timelines {count}/{max}"
+msgstr "Neue Zeitlinien {count}/{max}"
+
+#: src/variants/multiverse/texts.js:476
+msgid "{timelines} · Must move: {count} board"
+msgid_plural "{timelines} · Must move: {count} boards"
+msgstr[0] "{timelines} · Zugpflicht: {count} Brett"
+msgstr[1] "{timelines} · Zugpflicht: {count} Bretter"
+
+#: src/variants/multiverse/texts.js:484
+msgid "{timelines} · Must move: {boards}"
+msgstr "{timelines} · Zugpflicht: {boards}"
+
+#: src/variants/multiverse/texts.js:491
+msgid "New timelines opened by this side, of {max}. Its next one counts for the present (is active) while the other side has opened at least as many."
+msgstr "Neue Zeitlinien, die diese Seite geöffnet hat, von höchstens {max}. Ihre nächste zählt für die Gegenwart (ist aktiv), solange die andere Seite mindestens gleich viele geöffnet hat."
+
+#. TRANSLATORS: above the multiverse: how many new timelines each player has opened, of the most allowed
+#: src/variants/multiverse/texts.js:508
+msgid "New timelines: White {white}/{max} · Black {black}/{max}"
+msgstr "Neue Zeitlinien: Weiß {white}/{max} · Schwarz {black}/{max}"
+
+#. TRANSLATORS: above the multiverse, after the new timelines: how many turns back pieces can travel
+#: src/variants/multiverse/texts.js:515
+msgid "Travel back: {turns} turn"
+msgid_plural "Travel back: {turns} turns"
+msgstr[0] "Zeitreise: {turns} Zug zurück"
+msgstr[1] "Zeitreise: {turns} Züge zurück"
+
+#: src/variants/multiverse/texts.js:577
+msgid "Submit turn (your royal queen can be taken: {percent})"
+msgstr "Zug beenden (deine königliche Dame kann geschlagen werden: {percent})"
+
+#: src/variants/multiverse/texts.js:579
+msgid "Submit turn (a king or royal queen of yours can be taken: {percent})"
+msgstr "Zug beenden (eine deiner königlichen Figuren kann geschlagen werden: {percent})"
+
+#: src/variants/multiverse/texts.js:583
+msgid "Submit turn (a king of yours can be taken: {percent})"
+msgstr "Zug beenden (einer deiner Könige kann geschlagen werden: {percent})"
+
+#. TRANSLATORS: the Submit button of the multiverse while must-move boards are left; keep it short (phones)
+#: src/variants/multiverse/texts.js:590
+msgid "Submit turn ({count} more board first)"
+msgid_plural "Submit turn ({count} more boards first)"
+msgstr[0] "Zug beenden (erst noch {count} Brett)"
+msgstr[1] "Zug beenden (erst noch {count} Bretter)"
+
+#: src/variants/multiverse/texts.js:648
+msgid "Your king or royal queen is in danger on {boards}: {percent}"
+msgstr "Dein König oder deine königliche Dame ist auf {boards} in Gefahr: {percent}"
+
+#: src/variants/multiverse/texts.js:651
+msgid "Your royal queen is in danger on {boards}: {percent}"
+msgstr "Deine königliche Dame ist auf {boards} in Gefahr: {percent}"
+
+#. TRANSLATORS: the danger line of the multiverse (5D check), "Your king is in danger on (0T2) ○: 100 %"
+#: src/variants/multiverse/texts.js:654
+msgid "Your king is in danger on {boards}: {percent}"
+msgstr "Dein König ist auf {boards} in Gefahr: {percent}"
+
+#. TRANSLATORS: under the result of a multiverse game won by capturing a king or royal queen
+#: src/variants/multiverse/texts.js:676
+msgid "The royal piece on {square} was captured."
+msgstr "Die königliche Figur auf {square} wurde geschlagen."
+
+#. TRANSLATORS: under the result of a multiverse game lost by checkmate: where the royal piece could be taken
+#: src/variants/multiverse/texts.js:683
+msgid "A royal piece could be taken for certain on {boards}."
+msgstr "Auf {boards} konnte eine königliche Figur sicher geschlagen werden."
+
+#. TRANSLATORS: the hint of the multiverse once every must-move board of the turn is played
+#: src/variants/multiverse/texts.js:700
+msgid "Required boards done: move on an optional board (blue), or press Submit turn."
+msgstr "Pflichtbretter erledigt: Zieh auf einem optionalen Brett (blau) oder drücke „Zug beenden“."
+
+#: src/variants/multiverse/texts.js:715
+msgid "Measure through a part on a board you may play now (gold or blue)."
+msgstr "Miss einen Teil auf einem Brett, auf dem du jetzt spielen darfst (gold oder blau)."
+
+#: src/variants/multiverse/texts.js:717
+msgid "Both parts must stand on one board you may play now (gold or blue)."
+msgstr "Beide Teile müssen auf demselben Brett stehen, auf dem du jetzt spielen darfst (gold oder blau)."
+
+#: src/variants/multiverse/texts.js:722
+msgid "This piece has no move now."
+msgstr "Diese Figur hat jetzt keinen Zug."
+
+#: src/variants/multiverse/texts.js:724
+msgid "You can move only on the boards marked must move or optional (gold or blue)."
+msgstr "Du kannst nur auf Brettern ziehen, die mit „Zugpflicht“ oder „optional“ markiert sind (gold oder blau)."
+
+#. TRANSLATORS: why a multiverse game ended: a royal piece (a king or a royal queen) was captured
+#: src/variants/multiverse/texts.js:741
+msgid "a king or royal queen was captured"
+msgstr "ein König oder eine königliche Dame wurde geschlagen"
+
+#. TRANSLATORS: why a multiverse game ended: the loser could not finish its turn, a royal piece would fall
+#: src/variants/multiverse/texts.js:744
+msgid "checkmate: the turn could not be finished and a king or royal queen would certainly be captured"
+msgstr "Schachmatt: Der Zug konnte nicht beendet werden, und ein König oder eine königliche Dame wäre sicher geschlagen worden"
+
+#. TRANSLATORS: why a multiverse game was drawn: the player to move could not finish its turn
+#: src/variants/multiverse/texts.js:750
+msgid "stalemate: the turn could not be finished"
+msgstr "Patt: Der Zug konnte nicht beendet werden"
+
+#. TRANSLATORS: why a multiverse game ended: the loser's own move left its turn impossible to finish
+#: src/variants/multiverse/texts.js:753
+msgid "stranded: the loser's own move left its turn impossible to finish"
+msgstr "festgefahren: Nach seinem eigenen Zug konnte der Verlierer seinen Zug nicht mehr beenden"
+
+#. TRANSLATORS: why a multiverse game was drawn; a brawn is a kind of pawn
+#: src/variants/multiverse/texts.js:756
+msgid "300 moves in a row (Submit turn counts) without a capture or a pawn or brawn move"
+msgstr "300 Züge in Folge („Zug beenden“ zählt mit) ohne Schlag, Bauernzug oder Kraftbauernzug"
+
+#. TRANSLATORS: why a multiverse game was drawn: the game reached its move limit
+#: src/variants/multiverse/texts.js:762
+msgid "1,200 moves in the game (Submit turn counts)"
+msgstr "1.200 Züge in der Partie („Zug beenden“ zählt mit)"
+
+#: src/variants/raumschach.js:200
 msgid "The board is a cube of five levels, from A at the bottom (White's home) to E at the top (Black's home); a cell is named level, file, rank, so Cc3 is the centre."
 msgstr "Das Brett ist ein Würfel aus fünf Ebenen, von A unten (Heimat von Weiß) bis E oben (Heimat von Schwarz); ein Feld wird nach Ebene, Linie und Reihe benannt, Cc3 ist also die Mitte."
 
-#: src/variants/raumschach.js:203
+#: src/variants/raumschach.js:204
 msgid "Rooks move straight, also up and down; bishops move diagonally within any flat slice of the cube; unicorns move through the corners, changing level, file and rank at once."
 msgstr "Türme ziehen gerade, auch nach oben und unten; Läufer ziehen diagonal innerhalb jeder flachen Schicht des Würfels; Einhörner ziehen durch die Ecken und wechseln dabei gleichzeitig Ebene, Linie und Reihe."
 
-#: src/variants/raumschach.js:207
+#: src/variants/raumschach.js:208
 msgid "The queen moves like a rook, bishop or unicorn, the king steps to any of the 26 touching cells, and the knight jumps 2 cells one way and 1 another, also across levels."
 msgstr "Die Dame zieht wie ein Turm, Läufer oder Einhorn, der König geht auf jedes der 26 angrenzenden Felder, und der Springer springt 2 Felder in eine Richtung und 1 in eine andere, auch über Ebenen hinweg."
 
-#: src/variants/raumschach.js:211
+#: src/variants/raumschach.js:212
 msgid "Pawns step one cell forward or one level up, and capture one cell forward and sideways, up and sideways, or forward and up, never straight ahead or straight up. For Black, forward is towards rank 1 and up is towards level A."
 msgstr "Bauern gehen ein Feld nach vorn oder eine Ebene nach oben und schlagen ein Feld nach vorn und zur Seite, nach oben und zur Seite oder nach vorn und oben, nie geradeaus oder senkrecht nach oben. Für Schwarz ist vorn Richtung Reihe 1 und oben Richtung Ebene A."
 
-#: src/variants/raumschach.js:215
+#: src/variants/raumschach.js:216
 msgid "A pawn that reaches the far rank of the opponent's home level (White: rank 5 of E; Black: rank 1 of A) must become a queen, rook, bishop, knight or unicorn."
 msgstr "Ein Bauer, der die hinterste Reihe der gegnerischen Heimatebene erreicht (Weiß: Reihe 5 von E; Schwarz: Reihe 1 von A), muss in eine Dame, einen Turm, Läufer, Springer oder ein Einhorn umgewandelt werden."
 
-#: src/variants/raumschach.js:219
+#: src/variants/raumschach.js:220
 msgid "There is no castling, no double step and no en passant."
 msgstr "Es gibt keine Rochade, keinen Doppelschritt und kein en passant."
 
-#: src/variants/raumschach.js:221
+#: src/variants/raumschach.js:222
 msgid "If only the two kings are left and they do not touch, the game is drawn."
 msgstr "Sind nur die beiden Könige übrig und berühren sie sich nicht, endet die Partie remis."
 
@@ -5827,8 +6341,8 @@ msgid "You also win by impasse: start your turn with your king, unattacked, and 
 msgstr "Du gewinnst auch durch Impasse: Beginne deinen Zug mit deinem nicht angegriffenen König und mindestens zehn weiteren Figuren im gegnerischen Lager sowie mit mindestens 28 Punkten als Sente oder 27 als Gote; gezählt werden deine Figuren im gegnerischen Lager und in deiner Hand (Türme und Läufer, umgewandelt oder nicht, 5; andere Figuren 1; der König 0)."
 
 #: src/variants/shogi.js:306
-msgid "A player who has no move at all loses. 50 moves each without a capture, a drop or a pawn move that happens, or 500 moves in total, is a draw."
-msgstr "Wer gar keinen Zug hat, verliert. 50 Züge pro Seite, ohne dass tatsächlich geschlagen, eingesetzt oder ein Bauer gezogen wird, oder insgesamt 500 Züge sind remis."
+msgid "A player who has no move at all loses. The game is drawn after 50 moves by each side without a capture, a drop or a pawn move actually happening, or after 500 moves in total."
+msgstr "Wer gar keinen Zug hat, verliert. Die Partie endet remis nach 50 Zügen pro Seite, ohne dass tatsächlich geschlagen, eingesetzt oder ein Bauer gezogen wird, oder nach insgesamt 500 Zügen."
 
 #: src/variants/shogi.js:461
 msgid "impasse: the 27-point rule"
@@ -5846,47 +6360,50 @@ msgstr "die andere Seite kann nicht ziehen"
 msgid "three checks"
 msgstr "dreimal Schach"
 
-#: src/variants/threecheck.js:220
+#. TRANSLATORS: Three-check, the result of a roll that ended the game; {side} is White or Black
+#: src/variants/threecheck.js:221
 msgid "Third check: {side} wins"
 msgstr "Drittes Schach: {side} gewinnt"
 
-#: src/variants/threecheck.js:221
+#. TRANSLATORS: Three-check, the result of a roll that decided a check: how many checks each side has given
+#: src/variants/threecheck.js:223
 msgid "Checks: White {white}, Black {black}"
 msgstr "Schach: Weiß {white}, Schwarz {black}"
 
-#: src/variants/threecheck.js:227
+#: src/variants/threecheck.js:229
 msgid "Checks: {count}/3"
 msgstr "Schach: {count}/3"
 
-#: src/variants/threecheck.js:228
+#: src/variants/threecheck.js:230
 msgid "Checks given: {count} of 3"
 msgstr "Schach geboten: {count} von 3"
 
-#: src/variants/threecheck.js:241
-msgid "{side} gave check {count} of 3"
+#. TRANSLATORS: Three-check, a line of the move list, "White gave check (2 of 3)"; {side} is White or Black
+#: src/variants/threecheck.js:244
+msgid "{side} gave check ({count} of 3)"
 msgstr "{side} hat Schach geboten ({count} von 3)"
 
-#: src/variants/threecheck.js:256
+#: src/variants/threecheck.js:259
 msgid "Give check three times to win. Capturing the king also wins."
 msgstr "Biete dreimal Schach, um zu gewinnen. Den König zu schlagen gewinnt ebenfalls."
 
-#: src/variants/threecheck.js:257
+#: src/variants/threecheck.js:260
 msgid "A check is a move after which one of your pieces (not your king) attacks the enemy king; a double check counts once."
 msgstr "Ein Schach ist ein Zug, nach dem eine deiner Figuren (nicht dein König) den gegnerischen König angreift; ein Doppelschach zählt nur einmal."
 
-#: src/variants/threecheck.js:261
-msgid "Checks are always certain: a check in some possibilities only is rolled at once, even after castling or en passant."
-msgstr "Ein Schach ist immer sicher: Besteht es nur in manchen Möglichkeiten, wird sofort ausgewürfelt, auch nach einer Rochade oder einem Schlag en passant."
+#: src/variants/threecheck.js:264
+msgid "Checks are always certain: if a move gives check in only some possibilities, a roll settles it at once, even after castling or en passant."
+msgstr "Ein Schach ist immer sicher: Bietet ein Zug nur in manchen Möglichkeiten Schach, wird sofort ausgewürfelt, auch nach einer Rochade oder einem Schlag en passant."
 
-#: src/variants/threecheck.js:265
+#: src/variants/threecheck.js:268
 msgid "A move that misses gives no check, even if the enemy king is attacked. Measuring never gives check."
 msgstr "Ein verfehlter Zug bietet kein Schach, auch wenn der gegnerische König angegriffen ist. Messen bietet nie Schach."
 
-#: src/variants/threecheck.js:269
+#: src/variants/threecheck.js:272
 msgid "A check left standing counts again after each of your moves, as long as the enemy king is still attacked."
 msgstr "Ein Schach, das bestehen bleibt, zählt nach jedem deiner Züge erneut, solange der gegnerische König noch angegriffen ist."
 
-#: src/variants/threecheck.js:274
+#: src/variants/threecheck.js:277
 msgid "The counters next to the player names show how many checks each side has given."
 msgstr "Die Zähler neben den Spielernamen zeigen, wie oft jede Seite Schach geboten hat."
 
@@ -5915,8 +6432,8 @@ msgid "A pawn promotes on the last rank of its file: rank 8 on files b and c, ra
 msgstr "Ein Bauer wird auf der letzten Reihe seiner Linie umgewandelt: Reihe 8 auf den Linien b und c, Reihe 9 auf den Linien z, a, d und e (für Schwarz Reihe 1 und Reihe 0)."
 
 #: src/variants/trid.js:387
-msgid "Castling from your second move on, if the king and that rook have not moved (in any possibility): on the king's side the king and the rook next to it swap places; on the queen's side, once the queen's square is empty, the king goes there and the corner rook to the king's square."
-msgstr "Rochade ab deinem zweiten Zug, wenn der König und dieser Turm (in keiner Möglichkeit) gezogen haben: Am Königsflügel tauschen der König und der Turm neben ihm die Plätze; am Damenflügel geht der König, sobald das Feld der Dame leer ist, dorthin und der Eckturm auf das Feld des Königs."
+msgid "You may castle from your second move on, if neither the king nor that rook has moved in any possibility. On the king's side the king and the rook next to it swap places; on the queen's side, once the queen's square is empty, the king goes there and the corner rook goes to the king's square."
+msgstr "Du darfst ab deinem zweiten Zug rochieren, wenn weder der König noch dieser Turm in irgendeiner Möglichkeit gezogen hat. Am Königsflügel tauschen der König und der Turm neben ihm die Plätze; am Damenflügel geht der König, sobald das Feld der Dame leer ist, dorthin, und der Eckturm geht auf das Feld des Königs."
 
 #: src/variants/trid.js:391
 msgid "Quantum tip: a ghost on either level of a map square blocks moves across it in its possibilities, and a piece split over both levels of one map square blocks it for certain. A ghost on the other level of your target square does not matter."
@@ -5991,16 +6508,17 @@ msgstr "ein General wurde geschlagen"
 msgid "the general could not escape"
 msgstr "der General konnte nicht entkommen"
 
-#. TRANSLATORS: Xiangqi: every move of the loser would have let its general be captured for certain
-#: src/variants/xiangqi.js:481
+#. TRANSLATORS: Xiangqi, why the game was drawn: no chariot, horse, cannon or soldier is left
+#: src/variants/xiangqi.js:482
 msgid "no piece left that can cross the river"
 msgstr "keine Figur mehr, die den Fluss überqueren kann"
 
-#: src/variants/xiangqi.js:483
+#. TRANSLATORS: Xiangqi, why the game was drawn
+#: src/variants/xiangqi.js:485
 msgid "50 moves by each side without a capture"
 msgstr "50 Züge jeder Seite ohne Schlag"
 
-#: src/views/HomeView.vue:24 src/views/VariantsView.vue:21
+#: src/views/HomeView.vue:24 src/views/VariantsView.vue:24
 msgid "Continue on this device"
 msgstr "Auf diesem Gerät fortsetzen"
 
@@ -6116,10 +6634,6 @@ msgstr "Nächstes Rätsel"
 msgid "Back to the lobby"
 msgstr "Zurück zur Übersicht"
 
-#: src/views/ReviewView.vue:22
-msgid "Loading the game …"
-msgstr "Partie wird geladen …"
-
 #: src/views/ReviewView.vue:29
 msgid "Back"
 msgstr "Zurück"
@@ -6145,8 +6659,8 @@ msgid "End"
 msgstr "Ende"
 
 #: src/views/ReviewView.vue:103
-msgid "Analysing the game … {done} of {total} moves"
-msgstr "Die Partie wird analysiert … {done} von {total} Zügen"
+msgid "Analysing the game… {done} of {total} moves"
+msgstr "Die Partie wird analysiert… {done} von {total} Zügen"
 
 #: src/views/ReviewView.vue:111
 msgid "Analysis progress"
@@ -6286,173 +6800,215 @@ msgstr "Abschluss"
 msgid "one full game"
 msgstr "eine ganze Partie"
 
-#: src/views/VariantGameView.vue:24
+#: src/views/VariantGameView.vue:51
 msgid "This game is not stored on this device."
 msgstr "Diese Partie ist nicht auf diesem Gerät gespeichert."
 
-#: src/views/VariantGameView.vue:45
-msgid "Pass the device to {side}."
-msgstr "Gib das Gerät an {side} weiter."
-
-#: src/views/VariantGameView.vue:47
-msgid "I am {side}: show my board"
-msgstr "Ich bin {side}: mein Brett zeigen"
-
-#: src/views/VariantGameView.vue:51
-msgid "Fog: squares you cannot see."
-msgstr "Nebel: Felder, die du nicht sehen kannst."
-
-#: src/views/VariantGameView.vue:62
+#: src/views/VariantGameView.vue:68
 msgid "Hide rules"
 msgstr "Regeln ausblenden"
 
-#: src/views/VariantGameView.vue:73
+#: src/views/VariantGameView.vue:79
 msgid "The quantum rules of every variant"
 msgstr "Die Quantenregeln aller Varianten"
 
-#: src/views/VariantGameView.vue:106
-msgid "Quantum budget: {used} of {max}"
-msgstr "Quantenbudget: {used} von {max}"
-
-#: src/views/VariantGameView.vue:119
-msgid "Quantum budget: unknown"
-msgstr "Quantenbudget: unbekannt"
-
-#: src/views/VariantGameView.vue:129
-msgid "{side} is thinking …"
-msgstr "{side} denkt nach …"
-
-#: src/views/VariantGameView.vue:133
-msgid "{side} to move"
-msgstr "{side} ist am Zug"
-
-#: src/views/VariantGameView.vue:136
-msgid "You must capture: only moves that might capture are allowed."
-msgstr "Du musst schlagen: Nur Züge, die schlagen könnten, sind erlaubt."
-
-#: src/views/VariantGameView.vue:139
-msgid "Your king is in danger: {percent}"
-msgstr "Dein König ist in Gefahr: {percent}"
-
-#: src/views/VariantGameView.vue:149
-msgid "Your move: {result}"
-msgstr "Dein Zug: {result}"
-
-#: src/views/VariantGameView.vue:152
-msgid "Pass the device"
-msgstr "Gerät weitergeben"
-
-#: src/views/VariantGameView.vue:193
+#. TRANSLATORS: pieces held in hand; {side} is White, Black, Sente, Gote or White A
+#: src/views/VariantGameView.vue:116
 msgid "In hand: {side}"
 msgstr "In der Hand von {side}"
 
-#: src/views/VariantGameView.vue:204
+#: src/views/VariantGameView.vue:127
 msgid "Drop {piece}"
 msgstr "{piece} einsetzen"
 
-#: src/views/VariantGameView.vue:224
+#. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
+#: src/views/VariantGameView.vue:142
+msgid "Pass the device to {side}."
+msgstr "Gib das Gerät an {side} weiter."
+
+#. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
+#: src/views/VariantGameView.vue:144
+msgid "I am {side}: show my board"
+msgstr "Ich bin {side}: mein Brett zeigen"
+
+#: src/views/VariantGameView.vue:149
+msgid "Fog: squares you cannot see."
+msgstr "Nebel: Felder, die du nicht sehen kannst."
+
+#: src/views/VariantGameView.vue:165
+msgid "Game options"
+msgstr "Partieoptionen"
+
+#: src/views/VariantGameView.vue:191
+msgid "Quantum budget: {used} of {max}"
+msgstr "Quantenbudget: {used} von {max}"
+
+#: src/views/VariantGameView.vue:202
+msgid "Budget {used}/{max}"
+msgstr "Budget {used}/{max}"
+
+#: src/views/VariantGameView.vue:210
+msgid "Quantum budget: unknown"
+msgstr "Quantenbudget: unbekannt"
+
+#: src/views/VariantGameView.vue:212
+msgid "Budget hidden"
+msgstr "Budget verdeckt"
+
+#. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
+#: src/views/VariantGameView.vue:227
+msgid "{side} is thinking…"
+msgstr "{side} denkt nach…"
+
+#. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
+#: src/views/VariantGameView.vue:232
+msgid "{side} to move"
+msgstr "{side} ist am Zug"
+
+#: src/views/VariantGameView.vue:235
+msgid "You must capture: only moves that might capture are allowed."
+msgstr "Du musst schlagen: Nur Züge, die schlagen könnten, sind erlaubt."
+
+#: src/views/VariantGameView.vue:244
+msgid "Your move: {result}"
+msgstr "Dein Zug: {result}"
+
+#: src/views/VariantGameView.vue:247
+msgid "Pass the device"
+msgstr "Gerät weitergeben"
+
+#: src/views/VariantGameView.vue:295
 msgid "Do not promote"
 msgstr "Nicht umwandeln"
 
-#: src/views/VariantGameView.vue:242
+#: src/views/VariantGameView.vue:324
 msgid "This move is settled by a roll:"
 msgstr "Dieser Zug wird ausgewürfelt:"
 
-#: src/views/VariantGameView.vue:251
+#: src/views/VariantGameView.vue:344 src/views/VariantGameView.vue:351
 msgid "Play and roll"
 msgstr "Ziehen und würfeln"
 
-#: src/views/VariantGameView.vue:261
+#: src/views/VariantGameView.vue:364 src/views/VariantsView.vue:170
+msgid "This game could not be saved on this device."
+msgstr "Diese Partie konnte auf diesem Gerät nicht gespeichert werden."
+
+#: src/views/VariantGameView.vue:375
 msgid "Result: {result}"
 msgstr "Ergebnis: {result}"
 
-#: src/views/VariantGameView.vue:267
+#: src/views/VariantGameView.vue:381
 msgid "Roll: {result} ({percent})"
 msgstr "Wurf: {result} ({percent})"
 
-#: src/views/VariantGameView.vue:312
+#: src/views/VariantGameView.vue:397
+msgid "Umpire"
+msgstr "Schiedsrichter"
+
+#: src/views/VariantGameView.vue:465
 msgid "Flip board"
 msgstr "Brett drehen"
 
-#: src/views/VariantGameView.vue:380
+#: src/views/VariantGameView.vue:592
 msgid "Not now: a capture is compulsory."
 msgstr "Jetzt nicht: Es herrscht Schlagzwang."
 
-#: src/views/VariantGameView.vue:418
+#: src/views/VariantGameView.vue:651
+msgid "Confirm or cancel the move."
+msgstr "Bestätige den Zug oder brich ihn ab."
+
+#: src/views/VariantGameView.vue:655
 msgid "Choose a piece, then two empty squares."
 msgstr "Wähle eine Figur, dann zwei leere Felder."
 
-#: src/views/VariantGameView.vue:420
+#: src/views/VariantGameView.vue:657
 msgid "Choose two parts of one ghost, then the square where they meet."
 msgstr "Wähle zwei Teile eines Geists, dann das Feld, auf dem sie zusammenkommen."
 
-#: src/views/VariantGameView.vue:422
+#: src/views/VariantGameView.vue:659
 msgid "Choose one of your ghosts to find out where it really is."
 msgstr "Wähle einen deiner Geister, um herauszufinden, wo er wirklich steht."
 
-#: src/views/VariantGameView.vue:424
+#: src/views/VariantGameView.vue:663
 msgid "Choose a piece, then its target square."
 msgstr "Wähle eine Figur, dann ihr Zielfeld."
 
-#: src/views/VariantGameView.vue:481
+#: src/views/VariantGameView.vue:704
 msgid "Board of {variant}"
 msgstr "Brett: {variant}"
 
-#: src/views/VariantGameView.vue:499
+#: src/views/VariantGameView.vue:736
 msgid "The umpire says: that move is not possible. Try another one."
 msgstr "Der Schiedsrichter sagt: Dieser Zug ist nicht möglich. Versuche einen anderen."
 
-#: src/views/VariantGameView.vue:503
+#: src/views/VariantGameView.vue:740
 msgid "This piece cannot split: it needs two empty squares it could move to, within the budget."
 msgstr "Diese Figur kann sich nicht teilen: Sie braucht zwei leere Felder, auf die sie ziehen könnte, und das Budget muss reichen."
 
-#: src/views/VariantGameView.vue:508
+#: src/views/VariantGameView.vue:745
 msgid "Choose a part of one of your ghosts."
 msgstr "Wähle einen Teil eines deiner Geister."
 
-#: src/views/VariantGameView.vue:510
+#: src/views/VariantGameView.vue:747
 msgid "Choose one of your ghosts."
 msgstr "Wähle einen deiner Geister."
 
-#: src/views/VariantGameView.vue:518
+#: src/views/VariantGameView.vue:749
+msgid "This ghost cannot be measured from this square."
+msgstr "Dieser Geist kann nicht von diesem Feld aus gemessen werden."
+
+#: src/views/VariantGameView.vue:751
+msgid "These parts cannot merge from here."
+msgstr "Diese Teile können sich von hier aus nicht vereinen."
+
+#: src/views/VariantGameView.vue:753
+msgid "Choose one of your pieces."
+msgstr "Wähle eine deiner Figuren."
+
+#: src/views/VariantGameView.vue:761
 msgid "Refused this turn: {moves}"
 msgstr "In diesem Zug abgelehnt: {moves}"
 
-#: src/views/VariantGameView.vue:549
+#. TRANSLATORS: above the moves of a player's last turn in 5D chess; {side} is White or Black
+#: src/views/VariantGameView.vue:786
+msgid "Last turn of {side}"
+msgstr "Letzter Zug von {side}"
+
+#: src/views/VariantGameView.vue:830
 msgid "A move"
 msgstr "Ein Zug"
 
-#: src/views/VariantGameView.vue:573 src/views/VariantsView.vue:209
+#: src/views/VariantGameView.vue:925 src/views/VariantsView.vue:216
 msgid "Easy"
 msgstr "Leicht"
 
-#: src/views/VariantGameView.vue:575 src/views/VariantsView.vue:211
+#: src/views/VariantGameView.vue:927 src/views/VariantsView.vue:218
 msgid "Hard"
 msgstr "Schwer"
 
-#: src/views/VariantGameView.vue:577
+#: src/views/VariantGameView.vue:929
 msgid "Computer ({level})"
 msgstr "Computer ({level})"
 
-#: src/views/VariantsView.vue:16
-msgid "Twenty ways to play, from 3D and 4D chess to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link."
-msgstr "Zwanzig Arten zu spielen, von 3D- und 4D-Schach bis Shogi und Xiangqi. Jede Variante behält die Quantenregeln: teilen, vereinen, messen und landen = würfeln, vorbeiziehen = verknüpfen."
+#: src/views/VariantsView.vue:19
+msgid "Twenty ways to play, from 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link."
+msgstr "Zwanzig Arten zu spielen, von 3D-, 4D- und 5D-Schach mit Zeitreisen bis Shogi und Xiangqi. Jede Variante behält die Quantenregeln: teilen, vereinen, messen und landen = würfeln, vorbeiziehen = verknüpfen."
 
-#: src/views/VariantsView.vue:52
+#: src/views/VariantsView.vue:55
 msgid "The classic: chess with superposition. Also online against other players."
 msgstr "Der Klassiker: Schach mit Superposition. Auch online gegen andere Spieler."
 
-#: src/views/VariantsView.vue:67
+#: src/views/VariantsView.vue:70
 msgid "%n player"
 msgid_plural "%n players"
 msgstr[0] "%n Spieler"
 msgstr[1] "%n Spieler"
 
-#: src/views/VariantsView.vue:114
+#: src/views/VariantsView.vue:117
 msgid "You play"
 msgstr "Du spielst"
 
-#: src/views/VariantsView.vue:163
+#: src/views/VariantsView.vue:167
 msgid "Turn the board to the player to move"
 msgstr "Brett zum Spieler am Zug drehen"
 
@@ -6900,6 +7456,75 @@ msgstr "Das Fortschrittsdokument ist zu groß."
 #: lib/Service/Player/TrainerProgressService.php:63
 msgid "The progress must be an object."
 msgstr "Der Fortschritt muss ein Objekt sein."
+
+#~ msgid "Measure: spend your turn to find out where one of your ghosts really is."
+#~ msgstr "Messen: Nutze deinen Zug, um herauszufinden, wo einer deiner Geister wirklich steht."
+
+#~ msgid "Castling and en passant are only possible when they are possible in every possibility, and they are never rolled."
+#~ msgstr "Rochade und en passant sind nur erlaubt, wenn sie in jeder Möglichkeit möglich sind, und werden nie ausgewürfelt."
+
+#~ msgid "Where a capture try finds nothing to take, it is an ordinary move if you had no capture in that possibility, and it misses if you had one. A pawn's diagonal try misses."
+#~ msgstr "Wo ein Schlagversuch nichts zu schlagen findet, ist er ein gewöhnlicher Zug, wenn du in dieser Möglichkeit keinen Schlag hattest, und er verfehlt, wenn du einen hattest. Ein diagonaler Schlagversuch eines Bauern verfehlt."
+
+#~ msgid "it has no pieces left"
+#~ msgstr "keine Figuren mehr übrig"
+
+#~ msgid "it has no move left"
+#~ msgstr "kein Zug mehr möglich"
+
+#~ msgid "The seats move in turn: White A, White B, Black B, Black A. A player who cannot move sits out."
+#~ msgstr "Die Plätze ziehen reihum: Weiß A, Weiß B, Schwarz B, Schwarz A. Wer nicht ziehen kann, setzt aus."
+
+#~ msgid "Every capture explodes and takes the pieces around it along."
+#~ msgstr "Jeder Schlag explodiert und reißt die Figuren ringsum mit."
+
+#~ msgid "A dark square right in front of your pawn means something is standing there."
+#~ msgstr "Ein Feld im Nebel direkt vor deinem Bauern bedeutet, dass dort etwas steht."
+
+#~ msgid "Two bare kings are no draw: a king that steps next to the unseen enemy king can be taken."
+#~ msgstr "Zwei blanke Könige sind kein Remis: Ein König, der neben den unsichtbaren gegnerischen König tritt, kann geschlagen werden."
+
+#~ msgid "Stalemate is not a draw: a king that cannot escape loses even when it is not attacked, so the player who stalemates wins, in line with Gliński's scoring. A player with no move at all loses too. Only the two kings left is a draw, unless the player to move can capture the other king."
+#~ msgstr "Patt ist kein Remis: Ein König, der nicht entkommen kann, verliert auch dann, wenn er nicht angegriffen ist; wer den Gegner patt setzt, gewinnt also, wie in Glińskis Wertung. Wer gar keinen Zug hat, verliert ebenfalls. Sind nur die beiden Könige übrig, ist es remis, es sei denn, wer am Zug ist, kann den anderen König schlagen."
+
+#~ msgid "White has no king to lose. It wins as usual against the Black king: by capturing it, or when it cannot escape."
+#~ msgstr "Weiß hat keinen König, den es verlieren kann. Es gewinnt wie üblich gegen den schwarzen König: indem es ihn schlägt oder wenn er nicht entkommen kann."
+
+#~ msgid "Black wins by capturing every White piece, including pieces White got by promotion."
+#~ msgstr "Schwarz gewinnt, indem es jede weiße Figur schlägt, auch Figuren, die Weiß durch Umwandlung bekommen hat."
+
+#~ msgid "After every move both players hear each capture (its square, and whether a pawn or a piece was taken) and check with its directions and the chance that one enemy move, a merge included, could capture the king."
+#~ msgstr "Nach jedem Zug erfahren beide Spieler jeden Schlag (sein Feld und ob ein Bauer oder eine Figur geschlagen wurde) und jedes Schach mit seinen Richtungen und der Chance, dass ein gegnerischer Zug, eine Vereinigung eingeschlossen, den König schlagen könnte."
+
+#~ msgid "Before each turn both players hear how many pawn captures the player to move might be able to make, en passant included."
+#~ msgstr "Vor jedem Zug erfahren beide Spieler, wie viele Bauernschläge der Spieler am Zug möglicherweise ausführen kann, en passant eingeschlossen."
+
+#~ msgid "These draws wait while the player to move can capture the enemy Khun for certain."
+#~ msgstr "Diese Remisregeln greifen nicht, solange die Seite am Zug den gegnerischen Khun sicher schlagen kann."
+
+#~ msgid "A player who has no move at all loses. 50 moves each without a capture, a drop or a pawn move that happens, or 500 moves in total, is a draw."
+#~ msgstr "Wer gar keinen Zug hat, verliert. 50 Züge pro Seite, ohne dass tatsächlich geschlagen, eingesetzt oder ein Bauer gezogen wird, oder insgesamt 500 Züge sind remis."
+
+#~ msgid "{side} gave check {count} of 3"
+#~ msgstr "{side} hat Schach geboten ({count} von 3)"
+
+#~ msgid "Checks are always certain: a check in some possibilities only is rolled at once, even after castling or en passant."
+#~ msgstr "Ein Schach ist immer sicher: Besteht es nur in manchen Möglichkeiten, wird sofort ausgewürfelt, auch nach einer Rochade oder einem Schlag en passant."
+
+#~ msgid "Castling from your second move on, if the king and that rook have not moved (in any possibility): on the king's side the king and the rook next to it swap places; on the queen's side, once the queen's square is empty, the king goes there and the corner rook to the king's square."
+#~ msgstr "Rochade ab deinem zweiten Zug, wenn der König und dieser Turm (in keiner Möglichkeit) gezogen haben: Am Königsflügel tauschen der König und der Turm neben ihm die Plätze; am Damenflügel geht der König, sobald das Feld der Dame leer ist, dorthin und der Eckturm auf das Feld des Königs."
+
+#~ msgid "Loading the game …"
+#~ msgstr "Partie wird geladen …"
+
+#~ msgid "Analysing the game … {done} of {total} moves"
+#~ msgstr "Die Partie wird analysiert … {done} von {total} Zügen"
+
+#~ msgid "{side} is thinking …"
+#~ msgstr "{side} denkt nach …"
+
+#~ msgid "Twenty ways to play, from 3D and 4D chess to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link."
+#~ msgstr "Zwanzig Arten zu spielen, von 3D- und 4D-Schach bis Shogi und Xiangqi. Jede Variante behält die Quantenregeln: teilen, vereinen, messen und landen = würfeln, vorbeiziehen = verknüpfen."
 
 #~ msgid "You have played enough rated games against each other for now."
 #~ msgstr "Ihr habt vorerst genug gewertete Partien gegeneinander gespielt."

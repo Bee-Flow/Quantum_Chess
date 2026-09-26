@@ -84,7 +84,7 @@ export const CATALOG = [
 		category: 'rules',
 		players: 2,
 		name: () => t('quantumchess', 'Atomic'),
-		summary: () => t('quantumchess', 'Every capture explodes and takes the pieces around it along.'),
+		summary: () => t('quantumchess', 'Every capture explodes and removes the pieces around it.'),
 	},
 	{
 		id: 'crazyhouse',

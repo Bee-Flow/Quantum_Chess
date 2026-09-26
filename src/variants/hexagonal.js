@@ -237,7 +237,7 @@ const spec = {
 		// shared card; this entry only says what it means for stalemate here
 		t(
 			'quantumchess',
-			'Stalemate is not a draw: a king that cannot escape loses even when it is not attacked, so the player who stalemates wins, in line with Gliński\'s scoring. A player with no move at all loses too. Only the two kings left is a draw, unless the player to move can capture the other king.',
+			'Stalemate is not a draw: a king that cannot escape loses even when it is not attacked, so the player who stalemates wins (Gliński\'s own rules give that player ¾ of a point). A player with no move at all loses too. Only the two kings left is a draw, unless the player to move can capture the other king.',
 		),
 	],
 	setup() {

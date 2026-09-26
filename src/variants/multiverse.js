@@ -51,12 +51,12 @@ import {
 /** The plain-language labels of the setups. */
 const SETUP_LABELS = {
 	small: () => t('quantumchess', 'Small: quick, best on phones'),
-	verysmallopen: () => t('quantumchess', 'Very small and open: the easiest start, learn here'),
-	standard: () => t('quantumchess', 'Standard: the real game, long; best on a laptop'),
+	verysmallopen: () => t('quantumchess', 'Very small and open: the easiest start for learning'),
+	standard: () => t('quantumchess', 'Standard: the full game, long, best on a laptop'),
 	smallcentered: () => t('quantumchess', 'Small with the king in the centre'),
 	verysmall: () => t('quantumchess', 'Very small'),
 	noqueens: () => t('quantumchess', 'Simple, no queens'),
-	turnzero: () => t('quantumchess', 'Standard with turn zero: Black may travel to T0'),
+	turnzero: () => t('quantumchess', 'Standard with turn zero: Black can travel back to turn 0'),
 	twotimelines: () => t('quantumchess', 'Standard on two timelines, −0 and +0'),
 	princess: () => t('quantumchess', 'Standard with princesses'),
 	reversed: () => t('quantumchess', 'Reversed royalty: the queen is royal, the king is not'),
@@ -66,7 +66,7 @@ const SETUP_LABELS = {
 	justunicorns: () => t('quantumchess', 'Kings and unicorns'),
 	justdragons: () => t('quantumchess', 'Kings and dragons'),
 	justbrawns: () => t('quantumchess', 'Kings and brawns'),
-	kingofkings: () => t('quantumchess', 'King of kings: common kings'),
+	kingofkings: () => t('quantumchess', 'King of kings: a king and four common kings'),
 	royalqueens: () => t('quantumchess', 'Royal queen showdown'),
 	excessive: () => t('quantumchess', 'Excessive: three kings each, with unicorns and dragons'),
 	marauders: () => t('quantumchess', 'Timeline marauders: three timelines'),
@@ -143,8 +143,7 @@ function describeSetup(id) {
 	if (!S) {
 		return null
 	}
-	// TRANSLATORS: a 5D chess start position: its label, its official (English) name and its board size, e.g. "Small:
-	// quick, best on phones (Small, 5 × 5)"
+	// TRANSLATORS: a 5D start position: label, official English name, board size: "Very small (Very Small, 4 × 4)"
 	const main = t('quantumchess', '{label} ({name}, {size} × {size})', {
 		label: SETUP_LABELS[id](),
 		name: OFFICIAL[id],
@@ -175,7 +174,7 @@ const spec = {
 		{
 			id: 'timelines',
 			type: 'choice',
-			label: () => t('quantumchess', 'New timelines per player'),
+			label: () => t('quantumchess', 'Maximum new timelines per player'),
 			default: '3',
 			values: [
 				{ id: '1', label: () => t('quantumchess', 'One') },
@@ -189,14 +188,18 @@ const spec = {
 			label: () => t('quantumchess', 'How far back pieces can travel'),
 			default: 'auto',
 			values: [
-				{ id: 'auto', label: () => t('quantumchess', 'Automatic (2 turns up to 5 × 5, 4 on larger boards)') },
-				{ id: '2', label: () => t('quantumchess', '2 turns (lighter)') },
-				{ id: '4', label: () => t('quantumchess', '4 turns (as far as real games go)') },
+				{
+					id: 'auto',
+					label: () => t('quantumchess', 'Automatic (2 turns on boards up to 5 × 5, 4 on larger ones)'),
+				},
+				{ id: '2', label: () => t('quantumchess', '2 turns (lighter on the device)') },
+				{ id: '4', label: () => t('quantumchess', '4 turns (enough for most games)') },
 			],
 		},
 		{
 			id: 'view',
 			type: 'choice',
+			// TRANSLATORS: 5D chess option: whose timelines are shown at the bottom, White or Black (not a drawn game)
 			label: () => t('quantumchess', 'Drawn at the bottom'),
 			default: 'white',
 			values: [
@@ -211,7 +214,7 @@ const spec = {
 		t('quantumchess', 'On your turn move once on every board marked “must move” (gold, in the present, “Now”); boards marked “optional” (blue) you may play too. The turn ends by itself when no board is left, otherwise press Submit turn. Each move is played at once (and rolled if its result is uncertain); Undo never changes a roll.'),
 		t('quantumchess', 'Pieces move along files, ranks, back in time (one step is one turn) and across timelines, keeping their pattern: the rook along one axis, the bishop two, the unicorn (U) three, the dragon (D) four, the queen any; the king steps one along any axes, the knight two along one and one along another; the princess (S) moves as rook or bishop, the royal queen (Y) as a queen, the common king (C) as a king. Landing on the latest board of another timeline jumps there; landing on an older board opens a new timeline that only your piece enters.'),
 		t('quantumchess', 'Pawns and brawns (W) step forward or one timeline towards the opponent, capture diagonally or one timeline forward and one turn back or ahead, and become queens; a brawn also captures sideways or one rank forward together with one timeline forward, or one rank forward and one turn back. Capture any enemy king or royal queen, also one in the past, to win.'),
-		t('quantumchess', 'Each player may open at most the number of new timelines set for the game (1 to 3). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Boards older than the travel reach are sealed: no longer shown, and nothing can travel there.'),
+		t('quantumchess', 'Each player may open at most the number of new timelines set for the game (1 to 3). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Pieces can travel back only as far as the game allows (2 or 4 turns); older boards are sealed: they are no longer shown, and nothing can travel there.'),
 		t('quantumchess', 'Boards are certain, pieces are quantum: which boards exist, the present and whose turn it is are the same in every possibility. Timelines are AND, possibilities are OR. Kings, royal queens, common kings, pawns and brawns are solid: they never split.'),
 		t('quantumchess', 'A move always makes its boards; the dice only decide what happens to the piece. So a ghost can travel: where it really stood it arrives, elsewhere the new boards appear without it. A Missed move still uses its board, and a Measure is your move on the board of the part you measure; the rest of your turn goes on.'),
 		t('quantumchess', 'Both halves of a split land on one board: yours, another timeline’s latest board, or a board in the past. Merges start from one board. You measure only a part on a board you may play. The past is quantum too: new timelines copy ghosts as twins, and after a merge the past remembers both paths until those boards are sealed.'),

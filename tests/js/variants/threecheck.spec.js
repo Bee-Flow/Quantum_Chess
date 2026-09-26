@@ -215,7 +215,7 @@ describe('three-check: what counts as a check', () => {
 		const h = s.history
 		expect(h[4].info).toEqual({ check: 1 })
 		expect(h.slice(0, 4).every((r) => !('info' in r))).toBe(true)
-		expect(V.infoText(h[4], 0)).toEqual(['White gave check 1 of 3'])
+		expect(V.infoText(h[4], 0)).toEqual(['White gave check (1 of 3)'])
 		expect(V.infoText(h[3], 0)).toBeNull()
 		expect(V.sideInfo(s, 0, 1)).toEqual({ text: 'Checks: 1/3', title: 'Checks given: 1 of 3' })
 		expect(V.sideInfo(s, 1, 1).text).toBe('Checks: 0/3')

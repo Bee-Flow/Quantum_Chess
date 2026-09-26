@@ -495,9 +495,13 @@ const spec = {
 	id: 'fourplayer',
 	category: 'boards',
 	sides: [
+		// TRANSLATORS: a player of four-player chess, named after its colour (Xiangqi's first player is Red too)
 		{ id: 'r', name: () => t('quantumchess', 'Red'), color: 'red', rotate: 0 },
+		// TRANSLATORS: a player of four-player chess, named after its colour (the same word names a board theme)
 		{ id: 'b', name: () => t('quantumchess', 'Blue'), color: 'blue', rotate: 270 },
+		// TRANSLATORS: a player of four-player chess, named after its colour
 		{ id: 'y', name: () => t('quantumchess', 'Yellow'), color: 'yellow', rotate: 180 },
+		// TRANSLATORS: a player of four-player chess, named after its colour
 		{ id: 'g', name: () => t('quantumchess', 'Green'), color: 'green', rotate: 90 },
 	],
 	topology,
@@ -723,6 +727,7 @@ const spec = {
 		if (!Array.isArray(out)) {
 			return null
 		}
+		// TRANSLATORS: four-player chess, a player whose king was captured; {side} is Red, Blue, Yellow or Green
 		return out.map((side) => t('quantumchess', '{side} is out', { side: sideName(spec, side) }))
 	},
 
@@ -737,7 +742,9 @@ const spec = {
 		const b = state.worlds[0].b
 		if (isTeams(b)) {
 			return {
+				// TRANSLATORS: four-player chess, next to a player's name: its partner, Red, Blue, Yellow or Green
 				text: t('quantumchess', 'with {partner}', { partner: sideName(spec, (side + 2) % 4) }),
+				// TRANSLATORS: four-player chess in Teams, the tooltip of a player's partner
 				title: t(
 					'quantumchess',
 					'Partners cannot capture each other; the first king captured loses for its team.',

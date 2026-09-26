@@ -19,7 +19,7 @@
 			</NcButton>
 		</template>
 	</NcEmptyContent>
-	<NcEmptyContent v-else-if="!game" :name="t('quantumchess', 'Loading the game …')">
+	<NcEmptyContent v-else-if="!game" :name="t('quantumchess', 'Loading the game…')">
 		<template #icon>
 			<NcLoadingIcon />
 		</template>
@@ -102,7 +102,7 @@
 					<p>
 						{{ t(
 							'quantumchess',
-							'Analysing the game … {done} of {total} moves',
+							'Analysing the game… {done} of {total} moves',
 							{ done: plies.length, total: game.moves.length },
 						) }}
 					</p>

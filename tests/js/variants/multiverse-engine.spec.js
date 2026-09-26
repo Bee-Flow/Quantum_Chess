@@ -229,7 +229,7 @@ describe('setups and options', () => {
 		expect(V.options[0].describe('defended'))
 			.toBe('Defended pawn: queen and knight swapped (Standard – Defended Pawn, 8 × 8) The queen and a knight swap places.')
 		expect(V.options[0].describe('marauders')).toContain('Brawns (W) are pawns that also capture sideways')
-		expect(V.options[2].values[0].label()).toBe('Automatic (2 turns up to 5 × 5, 4 on larger boards)')
+		expect(V.options[2].values[0].label()).toBe('Automatic (2 turns on boards up to 5 × 5, 4 on larger ones)')
 		const rules = V.rules()
 		expect(rules).toHaveLength(10)
 		// the pieces with their letters, active timelines, the solid pieces, the notation, royal queens

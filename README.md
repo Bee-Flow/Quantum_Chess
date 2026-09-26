@@ -12,6 +12,8 @@
 **Chess in which a piece can stand on two squares at once, until something asks where it really is.**
 Quantum Chess lives inside your Nextcloud: challenge colleagues and family with the notifications, avatars and
 dashboard you already use, play the computer or an AI opponent, or learn the game in ten minutes with the trainer.
+Twenty chess variants, from 5D chess with multiverse time travel to shogi and xiangqi, bring the same quantum rules to
+other boards.
 
 ![A game in progress: a knight split over two squares, with its odds, a queen linked to it and a king in danger](screenshots/01-game-ghosts.png)
 
@@ -32,6 +34,25 @@ dashboard you already use, play the computer or an AI opponent, or learn the gam
   API key (OpenAI-compatible services such as OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama or LocalAI, and
   Anthropic)
 - 🪑 **Pass & play** on one device
+
+**Chess variants**
+
+- **Multiverse chess (5D)**, the quantum version of *5D Chess With Multiverse Time Travel*: timelines side by side,
+  pieces that travel back in time and to other timelines, turns with a move on every board that must move, and ghosts
+  across the whole multiverse, past boards included; every official piece and all 21 official start positions, starting
+  on the quick *Small* 5 × 5 board
+- Nineteen more variants: *other dimensions* (3D chess, Tri-Dimensional chess, 4D chess), *hidden information*
+  (Kriegspiel, Fog of war), *different rules* (Chess960, Atomic, Crazyhouse, Bughouse, Antichess, King of the Hill,
+  Three-check, Horde), *different boards and more players* (Hexagonal, Four-player and Capablanca chess) and the
+  *regional relatives* Shogi, Xiangqi and Makruk
+- Every variant keeps the quantum rules (split, merge, measure, "land = roll, pass = link", solid kings and pawns, the
+  budget of 8) and, where they fit, the classic end rules: capture the king, or leave it no escape
+- Against the built-in computer player (*Easy*, *Normal* or *Hard*) or as pass & play for two or four players; in
+  Kriegspiel and Fog of war a hand-over screen keeps each player's view private until the game ends
+- Made for phones too: large boards zoom with a pinch and pan with a finger; 4D chess, 5D chess and Bughouse open on
+  the boards you play
+- Played on your own device: online play and ratings stay with classic Quantum Chess. Every variant's rules:
+  [`docs/variants.md`](docs/variants.md)
 
 **Learn**
 
@@ -83,7 +104,8 @@ The screenshots are produced from a seeded demo on a real Nextcloud with `npm ru
 7. Each side has a **budget of 8** possible arrangements, so at most three 50/50 ghosts at a time.
 
 The complete rules, with examples and a glossary: [`docs/rules.md`](docs/rules.md). The in-app *Rules* page shows the
-same rules with live mini-boards, and the trainer teaches them hands-on.
+same rules with live mini-boards, and the trainer teaches them hands-on. The chess variants and their rules:
+[`docs/variants.md`](docs/variants.md).
 
 ## Installation
 
@@ -146,8 +168,8 @@ chat and cleans up AI bookkeeping.
 - A **distributed cache** (`memcache.distributed`, for example Redis or APCu locally) is recommended: with it, AI
   requests are limited to one at a time per user, provider model lists are cached for an hour and unsupported
   parameters are remembered. Without a cache these optimisations are silently off.
-- The computer player runs in the browser (in a web worker), and so do the rules of local games; the server only
-  validates and applies online moves.
+- The computer player runs in the browser (in a web worker), and so do the rules of local games and of the chess
+  variants; the server only validates and applies online moves.
 
 ## AI opponents and the AI coach
 
@@ -253,7 +275,7 @@ For your records of processing activities:
 | Chat | `qchess_chat` | both players | 90 days after the game (configurable) |
 | Rating and record | `qchess_ratings` | self, opponents, the leaderboard only if listed | account lifetime |
 | Preferences, trainer progress, local statistics | user settings | self | account lifetime |
-| Local games and roll memo | browser `localStorage` | self (this browser) | until deleted |
+| Local games (classic and variants) and roll memo | browser `localStorage` | self (this browser) | until deleted |
 | Personal API key | user settings, encrypted, marked sensitive | no page or API ever returns it | until removed |
 | AI prompts and answers | not stored; the temporary TaskProcessing task is deleted after reading | – | – |
 | AI usage counters | app settings, per day and source, aggregated, no per-user logs | admins | 30 days |
@@ -303,6 +325,7 @@ the rules-engine fixtures and the conventions.
 **Documentation for contributors**
 
 - [`docs/rules.md`](docs/rules.md): the rules for players
+- [`docs/variants.md`](docs/variants.md): the chess variants for players
 - [`docs/engine-rules.md`](docs/engine-rules.md): the normative rules for the JavaScript and PHP rules engines
 - [`docs/development/architecture.md`](docs/development/architecture.md): how the app is built, and its conventions
 - [`docs/development/api.md`](docs/development/api.md): the HTTP API and the database schema

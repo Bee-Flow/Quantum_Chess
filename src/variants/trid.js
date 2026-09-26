@@ -386,7 +386,7 @@ const spec = {
 		),
 		t(
 			'quantumchess',
-			'Castling from your second move on, if the king and that rook have not moved (in any possibility): on the king\'s side the king and the rook next to it swap places; on the queen\'s side, once the queen\'s square is empty, the king goes there and the corner rook to the king\'s square.',
+			'You may castle from your second move on, if neither the king nor that rook has moved in any possibility. On the king\'s side the king and the rook next to it swap places; on the queen\'s side, once the queen\'s square is empty, the king goes there and the corner rook goes to the king\'s square.',
 		),
 		t(
 			'quantumchess',

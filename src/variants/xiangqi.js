@@ -478,8 +478,10 @@ const spec = {
 				// TRANSLATORS: Xiangqi: every move of the loser would have let its general be captured for certain
 				return t('quantumchess', 'the general could not escape')
 			case 'noAttackers':
+				// TRANSLATORS: Xiangqi, why the game was drawn: no chariot, horse, cannon or soldier is left
 				return t('quantumchess', 'no piece left that can cross the river')
 			case 'quiet':
+				// TRANSLATORS: Xiangqi, why the game was drawn
 				return t('quantumchess', '50 moves by each side without a capture')
 			default:
 				return null

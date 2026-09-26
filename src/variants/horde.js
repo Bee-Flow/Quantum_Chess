@@ -107,9 +107,9 @@ Object.assign(spec, {
 		t('quantumchess', 'White has 36 pawns and no king. Black has the ordinary army and moves second.'),
 		t(
 			'quantumchess',
-			'White has no king to lose. It wins as usual against the Black king: by capturing it, or when it cannot escape.',
+			'White has no king to lose. It wins as usual against the black king: by capturing it, or when it cannot escape.',
 		),
-		t('quantumchess', 'Black wins by capturing every White piece, including pieces White got by promotion.'),
+		t('quantumchess', 'Black wins by capturing every white piece, including pieces White got by promotion.'),
 		t(
 			'quantumchess',
 			'White pawns on the first or the second rank may move two squares if both squares are free, even if they have moved before. A pawn that moves two squares from the first rank cannot be captured en passant.',
@@ -176,6 +176,7 @@ Object.assign(spec, {
 			case 'horde':
 				return t('quantumchess', 'the horde was destroyed')
 			case 'stalemate':
+				// TRANSLATORS: Horde, why the game was drawn: the player to move could not move any piece (stalemate)
 				return t('quantumchess', 'stalemate')
 			default:
 				return null

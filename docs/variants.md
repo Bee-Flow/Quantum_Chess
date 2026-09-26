@@ -10,8 +10,13 @@ boards with more players, and the regional relatives of chess. **Every variant k
 can be in two places at once until something finds out where they really are.
 
 You find them under **Chess variants** in the navigation or on the home page. Each one can be played against the
-computer (Easy, Normal or Hard) or as pass & play on one device. Games are stored on your device; online play and
-ratings stay with classic Quantum Chess.
+computer (Easy, Normal or Hard) or as pass & play on one device; in the four-player games the computer plays every seat
+but yours. Games are stored on your device; online play and ratings stay with classic Quantum Chess.
+
+The large boards (3D, 4D and 5D chess, Bughouse and Four-player chess) can be zoomed with the buttons above the board,
+Ctrl + wheel or a two-finger pinch, and moved by dragging with the mouse or one finger. On a touch screen 4D chess and
+Bughouse open on the boards of the player to move, and on any screen 5D chess frames the boards you have to play;
+*Whole board* shows everything and *Recentre* goes back.
 
 > The classic game and its exact rules are described in [`rules.md`](rules.md). This page explains how those rules
 > carry over to every variant, and what is special in each one.
@@ -98,9 +103,10 @@ the draws, follows [the quantum rules of every variant](#the-quantum-rules-of-ev
   officers stand on rank 1 of levels A and B and its ten pawns on rank 2 of both; Black's army is White's turned
   through the centre of the cube.
 - **Pieces.** Rooks move straight through the faces of a cell, also up and down; bishops move diagonally through its
-  edges, within any flat slice of the cube; the **unicorn** moves through its corners, changing level, file and rank
-  at once. The queen combines all three, and the king steps to any of the 26 touching cells. The knight jumps 2 cells
-  one way and 1 another, across levels too, and jumps over anything in between.
+  edges, within any flat slice of the cube; the **unicorn** (drawn as a knight with a horn) moves through its
+  corners, changing level, file and rank at once. The queen combines all three, and the king steps to any of the 26
+  touching cells. The knight jumps 2 cells one way and 1 another, across levels too, and jumps over anything in
+  between.
 - **Pawns.** A pawn steps one cell forward or one level up, and captures one cell forward and sideways, up and
   sideways, or forward and up; never straight ahead or straight up. For Black, forward is towards rank 1 and up is
   towards level A. A pawn that reaches rank 5 of level E (Black: rank 1 of level A) must become a queen, rook,
@@ -125,8 +131,9 @@ the draws, follows [the quantum rules of every variant](#the-quantum-rules-of-ev
   squares in all. In this version the attack boards never move. Board by Franz Joseph (1975), rules after Jens
   Meder's tournament rules.
 - **Map squares.** Seen from above, all boards form one map with files z, a–d, e and ranks 0–9. A square is named by
-  file, rank and level, so b3W and b3N are the two levels of map square b3. On screen the boards stand side by side,
-  and every map square keeps its rank row on every board.
+  file, rank and level, so b3W and b3N are the two levels of map square b3. On screen W and B form one column with
+  the attack boards at its corners, and N stands to the right of it; a rank is drawn at the same height on every
+  board, so the levels of a map square stand side by side.
 - **Moving.** Every move is an ordinary chess move on the map, and the piece may stop on any level of the target map
   square. Moving straight up or down is not a move. A piece on any level of a map square in between blocks a queen,
   rook, bishop or a pawn's double step. Gaps without a board count as empty: pieces fly across them but cannot stop
@@ -178,8 +185,77 @@ the draws, follows [the quantum rules of every variant](#the-quantum-rules-of-ev
 <!-- multiverse -->
 #### Multiverse chess (5D)
 
-Travel back in time and create new timelines; capture a king on any of them. The rules of this variant are being
-written and will appear here.
+*5D Chess With Multiverse Time Travel*, with ghosts. All 21 official start positions are there. A new game starts on
+**Small** (5 × 5); **Very small and open** (4 × 4) is the easiest start, and **Standard** (8 × 8) is the real, long
+game and is best on a laptop.
+
+- **Timelines and turns.** Each row is a timeline and time runs to the right. You play only on the latest board of a
+  timeline, when it is your move there (○ White, ● Black); every move adds a new board, and the old ones stay as the
+  past. On your turn you move once on every board marked *must move* (the present, *Now*) and may move on your
+  *optional* boards. The turn ends by itself when no board is left, otherwise with **Submit turn**. A board takes part
+  in at most one move per turn.
+- **Time travel.** Pieces also move back in time (one step is one turn) and across timelines. Landing on another
+  timeline's latest board jumps there; landing on an older board opens a new timeline, a copy of that board that only
+  your piece enters. Each player may open 1, 2 or 3 new timelines (an option, 3 by default); after that, jumps still
+  work and a king in the past can still be captured. Pieces can travel back 2 turns on boards up to 5 × 5 and 4 on
+  larger ones (an option: 2 or 4); older boards are sealed.
+- **Active timelines and the present.** Your n-th new timeline is *active* while your opponent has opened at least
+  n − 1; an inactive timeline can still be played. The present is the earliest latest board of the active timelines,
+  so an active timeline opened in the past moves the present back to its board, which becomes a must-move board.
+- **All official pieces.** Rook, bishop, queen, king and knight keep their pattern in all four directions (file, rank,
+  time and timeline): the rook moves along one of them, the bishop along two at once, the **unicorn** along three, the
+  **dragon** along all four, and the queen along any number; the king steps one along any number of them, and the knight
+  jumps two along one and one along another. The **princess** moves like a rook or a bishop, the **royal queen** like a
+  queen but is royal, and the **common king** like a king but is not royal. The unusual pieces are drawn as letters: U
+  unicorn, D dragon, S princess, Y royal queen, C common king; the **brawn** is a pawn with a crossbar (W in the move
+  list).
+- **Pawns and brawns.** They step one rank forward or one timeline towards the opponent's timelines, make a double
+  step while unmoved (on the board or across two timelines), and capture diagonally forward on their board, or one
+  timeline forward and one turn back or ahead on the same square. A brawn also captures sideways or one rank forward
+  together with one timeline forward, or one rank forward and one turn back. Both become queens on the last rank. En
+  passant works on one board only, on the move right after the double step. Kings castle on their own board.
+- **Boards are certain, pieces are quantum.** Which boards exist, the present and whose turn it is are the same in
+  every possibility; only the pieces on them, now and in the past, can be ghosts. Timelines are AND, possibilities
+  are OR. Kings, royal queens, common kings, pawns and brawns are solid: they never split.
+- **A move always makes its boards.** The dice only decide what happens to the piece: a ghost that travels arrives
+  where it really stood and stays home elsewhere, linked. A Missed move still uses its board and still opens its
+  timeline, and a Measure is your move on the board of the part you measure; the rest of your turn goes on.
+- **One board per split.** Both halves of a split land on one board: yours, another timeline's latest board, or a
+  past board, which opens one timeline. A merge starts from two parts on one board, and you measure a ghost through a
+  part on a board you may play now.
+- **The quantum past.** Old boards show ghosts with their chances, and landing on them is a roll. New timelines copy
+  ghosts as *twins*: separate pieces, each there in exactly the possibilities in which the original stood on its
+  square, so finding one settles all. After a merge the past remembers both paths (and they count for your budget of
+  8) until those boards are sealed.
+- **Winning.** Capture a king or royal queen on any board, also in the past; with several kings, losing any one
+  loses. The danger line is 5D's check: the chance that your opponent could take a king or royal queen of yours if
+  you passed your must-move boards now, with the boards where it stands. The threatened squares are tinted and joined
+  by a red line to the attacker, drawn on the board the capture would be made from. In pass & play the line always
+  speaks for the player to move.
+- **A turn that cannot be finished.** If your turn cannot be finished from its start, the game ends: checkmate when a
+  king or royal queen of yours can be taken for certain, otherwise stalemate (a draw). A move after which you cannot
+  finish your turn loses, also when its roll decides it; the game asks before you play it.
+- **Draws.** Stalemate as above, 300 moves in a row without a capture or a pawn or brawn move, and 1,200 moves in the
+  game (Submit turn counts as a move in both). The quiet-move draw waits while the player to move can capture an enemy
+  king or royal queen for certain. Two bare kings are not a draw: kings can still reach each other through time. The
+  shared escape rule does not apply: a turn that cannot be finished takes its place.
+- **Reading the board.** Boards where White is to move have a light frame, Black's a dark one. Must-move boards have
+  a gold halo, optional ones a blue halo, and an inactive timeline is hatched. Dashed outlines show where the next
+  board of a timeline will appear, and blue arrows the travel of your turn so far and of your opponent's last turn.
+  The header counts the new timelines of each player and says how far back pieces can travel. Black's timelines are
+  drawn above White's; the option *Drawn at the bottom* puts Black at the bottom and turns the boards (against the
+  computer it follows your side), and time still runs to the right, so there is no *Flip board*.
+- **Finding your boards.** The view zooms in on the boards you have to play and follows them as the turn goes on:
+  ‹ and › step from one board to play to the next, *Recentre* goes back to them, and *Whole board* shows the whole
+  multiverse. Pinch or Ctrl + wheel to zoom, drag to pan.
+- **Notation.** Moves are written with their board, timeline and turn, in the manner of 5dpgn:
+  `(0T2)Nc3>(+1T2)c3` jumps to another timeline, `(0T2)Nc3>>(0T1)a3` opens a new one, and `x` marks a capture.
+- **Differences from the original.** Capture the king instead of the check rule, so the original stalemate (not in
+  check, but every turn would leave a king in check) is not a draw here: you play your turn and your king can be
+  taken. Castling is allowed out of, through and into danger. Moves inside a turn are played and rolled one by one and
+  cannot be rearranged before you submit, so a move that strands your own turn loses. At most 3 new timelines per
+  player and a travel reach; castling and en passant only when certain; Undo replays the same rolls. As in 5D, pawns
+  and brawns always become queens (in Quantum Chess you would choose).
 
 <!-- /multiverse -->
 
@@ -304,7 +380,7 @@ written and will appear here.
 #### Crazyhouse
 
 - **Board and pieces.** The ordinary 8 × 8 board and start position. Castling, en passant and promotion work as in
-  chess. Each player also has a **hand**, shown beside the board, which starts empty.
+  chess. Each player also has a **hand**, shown on their side of the board (above or below it), which starts empty.
 - **Captures change sides.** A piece you capture changes colour and goes into your hand. A captured king never
   does: capturing it ends the game.
 - **Drops.** Instead of moving, you may take a piece from your hand and drop it onto any empty square. Pawns may not
@@ -334,8 +410,9 @@ written and will appear here.
   sit side by side, as over the board: against the computer your team is at the bottom; in pass & play Team 1 is, or
   the team to move when "Turn the board to the player to move" is on.
 - **Turn order.** White A, White B, Black B, Black A, then again. Each board still alternates White and Black, and
-  the teams alternate on every move, so two people can play by passing the device. The board of the player to move
-  is framed.
+  the teams alternate on every move, so two people can play by passing the device. Each player's name stands at the
+  edge of the board where they sit, the board of the player to move has a wooden rim, and the pieces in hand are
+  shown under their board.
 - **Captures and drops.** Whatever you capture goes straight into your partner's hand, in its own colour. Instead of
   moving, a player may drop a piece from their hand on any empty square of their own board. Pawns are never dropped
   on the first or last rank. A pawn dropped on its own second rank may still move two squares; a rook dropped in its
@@ -522,7 +599,8 @@ written and will appear here.
   knight, archbishop, bishop, queen, king, bishop, chancellor, knight, rook, so the kings start on f1 and f8. Each
   side has ten pawns on its second rank.
 - **The new pieces.** The archbishop (A) moves like a bishop or like a knight, the chancellor (C) like a rook or like
-  a knight. Each move is either a slide or a jump, never both. Both are drawn as round tokens marked "A" and "C".
+  a knight. Each move is either a slide or a jump, never both. The archbishop is drawn as a bishop and a knight side
+  by side, the chancellor as a rook and a knight.
 - **Castling.** The king moves three squares towards its rook, to i1 or c1 (i8 or c8 for Black), and the rook lands
   next to it on the other side (h1 or d1, h8 or d8). Neither may have moved before, and every square between them
   must be empty: three pieces have to leave on the j-side and four on the a-side.
@@ -625,7 +703,7 @@ written and will appear here.
   is Rua, Ma, Khon from each corner inwards. The Bia (pawns) start on each side's third rank (rank 3 and rank 6).
 - **Pieces.** The **Khun**, **Ma** and **Rua** move like the chess king, knight and rook. The **Met** steps one
   square diagonally. The **Khon** steps one square diagonally or one square straight forward, but never sideways or
-  straight back. The Met and the Khon are drawn as round tokens marked "M" and "Kh".
+  straight back. The Met is drawn as a small queen and the Khon as a bishop.
 - **Bia.** It moves one square forward and captures one square diagonally forward. It never moves two squares, so
   there is no en passant. On its sixth rank it always becomes a Met. There is no castling.
 - **Winning.** Capture the enemy Khun, or leave it no escape (checkmate). **Stalemate** is a draw, not a loss: your

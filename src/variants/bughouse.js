@@ -300,7 +300,7 @@ const spec = {
 		t('quantumchess', 'Two teams play on two boards: White A and Black B against White B and Black A.'),
 		t(
 			'quantumchess',
-			'The seats move in turn: White A, White B, Black B, Black A. A player who cannot move sits out.',
+			'The seats take turns in this order: White A, White B, Black B, Black A. A player who cannot move sits out.',
 		),
 		t(
 			'quantumchess',
@@ -552,6 +552,7 @@ const spec = {
 	sideInfo(state, side) {
 		return {
 			text: side % 2 === 0 ? t('quantumchess', 'Team 1') : t('quantumchess', 'Team 2'),
+			// TRANSLATORS: Bughouse, a player's partner: White A, White B, Black B or Black A
 			title: t('quantumchess', 'Partner: {side}', { side: sideName(spec, partner(side)) }),
 		}
 	},

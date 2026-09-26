@@ -217,7 +217,9 @@ Object.assign(spec, {
 		}
 		const won = checks.findIndex((c) => c >= CHECKS_TO_WIN)
 		return won >= 0
+			// TRANSLATORS: Three-check, the result of a roll that ended the game; {side} is White or Black
 			? t('quantumchess', 'Third check: {side} wins', { side: sideName(spec, won) })
+			// TRANSLATORS: Three-check, the result of a roll that decided a check: how many checks each side has given
 			: t('quantumchess', 'Checks: White {white}, Black {black}', { white: checks[0], black: checks[1] })
 	},
 
@@ -237,8 +239,9 @@ Object.assign(spec, {
 
 	infoText(record) {
 		const count = record.info?.check
+		// TRANSLATORS: Three-check, a line of the move list, "White gave check (2 of 3)"; {side} is White or Black
 		return count
-			? [t('quantumchess', '{side} gave check {count} of 3', { side: sideName(spec, record.side), count })]
+			? [t('quantumchess', '{side} gave check ({count} of 3)', { side: sideName(spec, record.side), count })]
 			: null
 	},
 
@@ -260,7 +263,7 @@ Object.assign(spec, {
 		),
 		t(
 			'quantumchess',
-			'Checks are always certain: a check in some possibilities only is rolled at once, even after castling or en passant.',
+			'Checks are always certain: if a move gives check in only some possibilities, a roll settles it at once, even after castling or en passant.',
 		),
 		t(
 			'quantumchess',

@@ -45,13 +45,19 @@ const spec = Object.assign(orthodoxSpec(), {
 			'quantumchess',
 			'A ghost sees from every square it might be on, so splitting a piece also lets you look further.',
 		),
-		t('quantumchess', 'A dark square right in front of your pawn means something is standing there.'),
+		t(
+			'quantumchess',
+			'A pawn sees the square in front of it only when that square is empty: a hidden square right in front of your pawn means something is standing there.',
+		),
 		t('quantumchess', 'En passant shows you the passing pawn for that one turn only.'),
 		t(
 			'quantumchess',
 			'Nobody warns you of danger: your king can be taken, or left without escape, by pieces you never saw.',
 		),
-		t('quantumchess', 'Two bare kings are no draw: a king that steps next to the unseen enemy king can be taken.'),
+		t(
+			'quantumchess',
+			'Two bare kings are not a draw: a king that steps next to the unseen enemy king can be taken.',
+		),
 		t('quantumchess', 'In pass & play each player sees only their own view: hand the device over when asked. Undo is off until the game ends, and then the whole board is revealed.'),
 	],
 	visibility: (state, side) => visibility(state, side),

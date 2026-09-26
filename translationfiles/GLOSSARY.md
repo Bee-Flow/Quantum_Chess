@@ -97,9 +97,13 @@ it changes in all three together.
 | Pass the device / to hand the device over | Apparaat doorgeven / het apparaat doorgeven | Gerät weitergeben / das Gerät weitergeben | Passer l'appareil / passer l'appareil |
 | pass & play in running text (variant rules) | bij samen spelen | beim Spiel zu zweit an einem Gerät | en jeu à deux |
 | You play (side choice in the new-game dialog) | Je speelt met | Du spielst | Votre camp |
-| {side} to move / {side} is thinking … | {side} is aan zet / {side} denkt na … | {side} ist am Zug / {side} denkt nach … | Trait : {side} / {side} : réflexion en cours… |
+| {side} to move / {side} is thinking… | {side} is aan zet / {side} denkt na… | {side} ist am Zug / {side} denkt nach… | Trait : {side} / {side} : réflexion en cours… |
 | Play and roll | Zetten en gooien | Ziehen und würfeln | Jouer et lancer les dés |
-| Flip board / Whole board / Zoom in / Zoom out | Bord omdraaien / Hele bord / Inzoomen / Uitzoomen | Brett drehen / Ganzes Brett / Vergrößern / Verkleinern | Retourner l'échiquier / Tout l'échiquier / Zoom avant / Zoom arrière |
+| Undo (the button, also named in rules texts) | Terugnemen | Rückgängig | Annuler le coup (in running text *annuler un coup*) |
+| Flip board / Whole board / Zoom in / Zoom out / Recentre | Bord omdraaien / Hele bord / Inzoomen / Uitzoomen / Centreren | Brett drehen / Ganzes Brett / Vergrößern / Verkleinern / Zentrieren | Retourner l'échiquier / Tout l'échiquier / Zoom avant / Zoom arrière / Recentrer |
+| Previous / Next board to play | Vorig / Volgend speelbaar bord | Vorheriges / Nächstes spielbares Brett | Échiquier précédent / suivant à jouer |
+| {count} targets outside the view | {count} doelen buiten beeld | {count} Zugziele außerhalb der Ansicht | {count} cibles hors de la zone affichée |
+| Game options (variant game screen) | Spelopties | Partieoptionen | Options de la partie |
 | Hide rules | Regels verbergen | Regeln ausblenden | Masquer les règles |
 
 Open point: *Pass & play* also names the variant mode for bughouse and four-player chess, where *Zu zweit* and
@@ -159,21 +163,37 @@ Pieces that move like chess pieces keep the chess words, also in shogi (king, ro
 
 ### Time and timelines (5D)
 
-The 5D mode's own texts are not in the `.po` files yet: only *multiverse* and *timeline* are used so far (in the name
-and summary of Multiverse chess). The other rows here and the 5D pieces under *Other pieces* are proposals to confirm
-when those texts are translated.
+These are the words of the Multiverse chess texts. German uses *Zug* for a move and for a turn, as in the rest of
+the app. The 5D texts do not say *branch*: in the rules page *branch/world* is another word for a possibility
+(*tak/wereld*, *Zweig/Welt*, *branche/monde*), not a timeline.
 
 | English | Dutch (nl) | German (de) | French (fr) |
 |---|---|---|---|
 | multiverse | multiversum | Multiversum | multivers |
-| timeline | tijdlijn | Zeitlinie | ligne temporelle |
-| the present / the past | het heden / het verleden | die Gegenwart / die Vergangenheit | le présent / le passé |
-| time travel / to travel in time | tijdreizen / door de tijd reizen | Zeitreise / durch die Zeit reisen | voyage dans le temps / voyager dans le temps |
-| branch / to open a new timeline | vertakking / een nieuwe tijdlijn openen | Verzweigung / eine neue Zeitlinie öffnen | bifurcation / ouvrir une nouvelle ligne temporelle |
-| active timeline | actieve tijdlijn | aktive Zeitlinie | ligne temporelle active |
-| jump (onto another timeline) | sprong | Sprung | saut |
+| timeline / new timeline | tijdlijn / nieuwe tijdlijn | Zeitlinie / neue Zeitlinie | ligne temporelle / nouvelle ligne temporelle |
+| the present / the past / Now (the mark of the present) | het heden / het verleden / Nu | die Gegenwart / die Vergangenheit / Jetzt | le présent / le passé / Maintenant |
+| time travel / to travel / travel (the arrows) | tijdreizen / reizen / reizen | Zeitreise / reisen / Reisen | voyage dans le temps / voyager / voyages |
+| to travel back / Travel back: {turns} turns | terugreizen / Terugreizen: {turns} beurten | zurückreisen / Zeitreise: {turns} Züge zurück | remonter dans le temps / Voyage dans le passé : {turns} tours |
+| to open a new timeline / Opened timeline {line} | een nieuwe tijdlijn openen / Tijdlijn {line} geopend | eine neue Zeitlinie öffnen / Zeitlinie {line} geöffnet | ouvrir une nouvelle ligne temporelle / Ligne temporelle {line} ouverte |
+| active / inactive (timeline) / Inactive timeline | actief / inactief / Inactieve tijdlijn | aktiv / inaktiv / Inaktive Zeitlinie | active / inactive / Ligne temporelle inactive (board label *{board} · inactif*) |
+| hatched (an inactive timeline) | gearceerd | schraffiert | hachuré |
+| sealed (a board too old to travel to) | verzegeld | versiegelt | scellé |
+| jump / to jump (onto another timeline) | sprong / springen | Sprung / springen | saut / sauter |
 | axis (file, rank, time, timeline) | as | Achse | axe |
 | turn (all moves of one player) / Submit turn | beurt / Beurt beëindigen | Zug / Zug beenden | tour / Valider le tour |
+| Submit turn in running text | “Beurt beëindigen” | „Zug beenden“ | Valider le tour; « Valider le tour » where it must read as a name |
+| to finish your turn | je beurt afmaken | deinen Zug beenden | terminer votre tour |
+| must move / optional (the board marks) / Required boards | verplicht / optioneel / Verplichte borden | Zugpflicht / optional / Pflichtbretter | obligatoire / facultatif / Échiquiers obligatoires |
+| must move / optional in running text | “verplicht” / “optioneel” | „Zugpflicht“ / „optional“ | « obligatoire » / « facultatif » |
+| gold / blue (the boards you may play) | goud / blauw | gold / blau | doré / bleu |
+| royal / royal piece | koninklijk / koninklijk stuk | königlich / königliche Figur | royal / pièce royale |
+| to pass (end the turn without moving) / 5D check | passen / schaak in 5D | passen / Schach in 5D | passer son tour / échec 5D |
+| twins (a ghost copied to a new timeline) | tweelingen | Zwillinge | jumeaux |
+| paths (the past remembers both paths) | wegen | Wege | chemins |
+| Timelines are AND, possibilities are OR | Tijdlijnen zijn EN, mogelijkheden zijn OF | Zeitlinien sind UND, Möglichkeiten sind ODER | Les lignes temporelles sont un ET, les possibilités un OU |
+
+*Pass* here ends a turn without moving. It is not the *pass* of *land = roll, pass = link* (*passeren*,
+*vorbeiziehen*, *passer*), so French always writes *passer son tour*.
 
 ### Hidden information
 
@@ -275,6 +295,7 @@ The French colours are singular; *Bleu* is the same msgid as the blue board them
 | The game ends: {result} | De partij eindigt: {result} | Die Partie endet: {result} | Fin de la partie — {result} |
 | resignation (end reason) | opgave | Aufgabe | abandon |
 | no legal move | geen toegestane zet | kein möglicher Zug | aucun coup légal |
+| stranded (5D: your own move left your turn impossible to finish) | vastgelopen | festgefahren | tour bloqué |
 | the move limit / Move limit reached | het maximale aantal zetten / Maximum aantal zetten bereikt | Zuglimit erreicht / Zuglimit erreicht | la limite de coups / Limite de coups atteinte |
 | stalemate is a draw / is not a draw | pat is remise / pat is geen remise | Patt ist remis / Patt ist kein Remis | le pat donne la nulle / le pat ne donne pas la nulle |
 | Gliński's scoring (hexagonal chess) | de puntentelling van Gliński | Glińskis Wertung | le barème de Gliński |
@@ -284,6 +305,8 @@ The French colours are singular; *Bleu* is the same msgid as the blue board them
 - Move codes and square names: `g1-f3|h3`, `?a6`, `e4`, `f3-e5`.
 - The names of cells, boards, levels, timelines and turns in the variants (`Cc3`, `B2c3`, `b3N`, `L0`, `L+1`, `T3`),
   drop codes (`P@e4`) and the promotion mark `+`.
+- The 5D move notation (`(0T2)Nc3>(+1T2)c3`, `>>`, `x`), the timeline labels `−0` and `+0`, and the piece letters
+  K, Q, R, B, N, U, D, S, Y, C and W, also in brackets after a piece name (*de eenhoorn (U)*).
 - Sente and Gote (the sides in shogi), the Thai names of the makruk pieces, and the kanji and hanzi on the shogi and
   xiangqi pieces.
 - The proper names in variant names and summaries: Raumschach, Kriegspiel, Chess960, Fischer Random, Gliński,
@@ -298,6 +321,9 @@ The French colours are singular; *Bleu* is the same msgid as the blue board them
 - Percentages keep the space of the source (`50 %`); French puts a no-break space before `:`, `?`, `!`, `;` and `%`.
 - Quotation marks: Dutch “…”, German „…“, French « … ».
 - Board sizes keep the multiplication sign with spaces (`5 × 5 × 5`, `10 × 8`).
-- Dutch and German keep the no-break space before `…` where the source has one (`{side} is thinking …`); French
-  writes `…` without a space.
+- Dutch and German keep the no-break space before `…` where the source has one (`The coach is thinking …`) and
+  write none where the source has none (`{side} is thinking…`); French writes `…` without a space.
+- Buttons and board labels do not wrap: a longer text is cut off with `…`. Keep them about as short as the source,
+  for example German *Zug beenden (eine deiner königlichen Figuren kann geschlagen werden: {percent})* and French
+  *{board} · inactif*.
 - Keep the emoji and symbols of the source (✦ ! ?! ?? 🍀 🎲 ♚ ✓ ·).

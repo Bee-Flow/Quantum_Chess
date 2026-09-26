@@ -406,6 +406,7 @@ function directionText(dir) {
 			// TRANSLATORS: Kriegspiel, the direction of a check: the shorter of the two diagonals through the king
 			return t('quantumchess', 'short diagonal')
 		default:
+			// TRANSLATORS: the piece; Kriegspiel also uses it as the direction of a check given by a knight
 			return t('quantumchess', 'knight')
 	}
 }
@@ -428,6 +429,7 @@ export function umpireLines(V, record, { brief = false } = {}) {
 	if (!a) {
 		return null
 	}
+	// TRANSLATORS: Kriegspiel, the umpire's first line after a move; {side} is White or Black
 	const lines = brief ? [] : [t('quantumchess', '{side} moved.', { side: sideName(V, record.side) })]
 	let kingTaken = false
 	for (const c of a.captures ?? []) {
@@ -447,6 +449,7 @@ export function umpireLines(V, record, { brief = false } = {}) {
 		}))
 	}
 	if (!kingTaken && !record.info.end && (a.tries > 0 || !brief)) {
+		// TRANSLATORS: Kriegspiel, the umpire: a pawn try is a pawn capture the player to move might be able to make
 		lines.push(a.tries > 0
 			? n('quantumchess', '%n pawn try.', '%n pawn tries.', a.tries)
 			: t('quantumchess', 'No pawn tries.'))

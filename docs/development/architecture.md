@@ -16,7 +16,7 @@ specification of the rules engine). The HTTP API is documented in [`api.md`](api
 2. [Repository layout](#2-repository-layout)
 3. [Backend](#3-backend)
 4. [Frontend](#4-frontend)
-5. [Rules engine and computer player](#5-rules-engine-and-computer-player)
+5. [Rules engine, computer player and chess variants](#5-rules-engine-computer-player-and-chess-variants)
 6. [Data flow](#6-data-flow)
 7. [Testing strategy](#7-testing-strategy)
 8. [Conventions](#8-conventions)
@@ -33,6 +33,7 @@ Quantum Chess is a Nextcloud app. It has four main parts:
 | Backend | `lib/` | Nextcloud server | HTTP API, online games, ratings, notifications, dashboard widget, settings, LLM integration |
 | Rules engine | `src/engine/`, `lib/Engine/` | Browser and server | The game rules, implemented twice (JavaScript and PHP) with byte-identical results |
 | Computer player | `src/ai/` | Browser (Web Worker) | The built-in opponent, the coach's analysis, the post-game review and the puzzle solver |
+| Chess variants | `src/variants/`, `src/variantplay/` | Browser | Twenty variants played on this device: their rules on a shared quantum layer, their computer player and their game screen |
 
 Some principles shape the whole design:
 
@@ -43,7 +44,7 @@ Some principles shape the whole design:
 - **Two engines, one set of rules.** Both engines implement [`docs/engine-rules.md`](../engine-rules.md). Shared
   fixtures prove that they produce the same bytes (section 5.2).
 - **Heavy computation stays in the browser.** Search, analysis and review run in a Web Worker. The server never
-  runs the computer player.
+  runs the computer player, and the chess variants never reach the server at all.
 - **Nextcloud-native.** The app uses the Nextcloud app framework (OCP APIs only), `@nextcloud/vue` components,
   Nextcloud notifications, the dashboard, user and app configuration, and Nextcloud Assistant (TaskProcessing) for
   LLM features.
@@ -58,21 +59,23 @@ them apart with these terms:
 | Term | Means | Code |
 |---|---|---|
 | **rules engine** | The game rules: move generation, applying moves, game end | `src/engine/`, `lib/Engine/` |
-| **computer player** | The built-in opponent and its search, evaluation and analysis. The UI calls it "Computer". | `src/ai/` |
+| **computer player** | The built-in opponent and its search, evaluation and analysis. The UI calls it "Computer". | `src/ai/`; for the chess variants `src/variants/core/ai.js` |
 | **LLM opponent** | An opponent with a personality whose moves are chosen by a large language model. The UI calls it "AI opponent". | `src/llm/`, `lib/Service/Ai/`, `/api/ai/*` |
 
-The backend has no computer player. In `lib/`, `Ai` always means the LLM integration.
+The backend has no computer player. In `lib/`, `Ai` always means the LLM integration. The chess variants do not use the
+rules engine: they have their own quantum layer (section 5.6), so "the rules engine" always means the classic one.
 
 ## 2. Repository layout
 
 ```text
 appinfo/            info.xml (app metadata) and routes.php (HTTP routes)
-docs/               rules.md, engine-rules.md, development/ (this document, api.md); RELEASING.md lives in the root
+docs/               rules.md, variants.md, engine-rules.md, development/ (this document, api.md); RELEASING.md lives
+                    in the root
 img/                app icons, dashboard icons, piece set (cburnett, with its own licence file)
 l10n/               generated translations (nl, de, de_DE, fr); never edited by hand
 lib/                PHP backend, PSR-4 namespace OCA\QuantumChess
 screenshots/        App Store screenshots (URLs referenced from info.xml)
-src/                web app, JavaScript rules engine, computer player
+src/                web app, JavaScript rules engine, computer player, chess variants
 templates/          PHP templates of the app page and the two settings pages
 tests/              js/ (Vitest), php/ (PHPUnit), e2e/ (Playwright), fixtures/ (engine parity fixtures)
 tools/              development tools: l10n.mjs (string extraction and conversion), check-references.mjs (the
@@ -277,9 +280,9 @@ New game types plug in by producing a GameController. They need no changes to th
 - **Preferences** are one JSON document per user. It is loaded from the initial state, merged over
   `PREFERENCE_DEFAULTS`, and saved with a debounce through `PUT /api/settings/preferences`. The board reads them
   through `board/boardPreferences.js`, which tests can override.
-- **Browser storage.** Local games, trainer progress and the last verified hash chain of each online game are kept
-  in `localStorage` through `services/storage.js`. Keys are versioned (`quantumchess.localGames.v1`) and scoped to the
-  logged-in user.
+- **Browser storage.** Local games, variant games (section 5.6.5), trainer progress and the last verified hash chain
+  of each online game are kept in `localStorage` through `services/storage.js`. Keys are versioned
+  (`quantumchess.localGames.v1`) and scoped to the logged-in user.
 
 ### 4.6 Styling
 
@@ -292,7 +295,7 @@ New game types plug in by producing a GameController. They need no changes to th
 - `.qc-scope` provides the tokens to content that Nextcloud teleports out of the app container, such as dialogs.
 - Use Nextcloud's `hidden-visually` class for text meant only for screen readers.
 
-## 5. Rules engine and computer player
+## 5. Rules engine, computer player and chess variants
 
 ### 5.1 The rules engine
 
@@ -397,55 +400,159 @@ the public API deliberately does not expose. Two things set it apart from the re
 The computer player uses only the engine's public API (`engine/index.js`). Given a seed and a node budget, a search
 is deterministic, and tests rely on that. Searches bounded by wall-clock time are not.
 
-### 5.6 The chess variants (`src/variants/`)
+### 5.6 The chess variants (`src/variants/`, `src/variantplay/`)
 
-Version 2 adds twenty chess variants, from 3D and 4D chess to shogi and xiangqi, played on this device (pass & play
-and against a computer player). They do not use the rules engine of section 5.1: that engine is specified byte for
-byte for classic Quantum Chess and mirrored in PHP for online games. The variants share one generic quantum layer
-instead, which is JavaScript only. The player-facing rules are in [`docs/variants.md`](../variants.md).
+Version 2 adds twenty chess variants, from 3D, 4D and 5D chess to shogi and xiangqi, played on this device: pass &
+play for two or four players, or against a computer player that takes every seat but the human's. They do not use
+the rules engine of section 5.1: that engine is specified byte for byte for classic Quantum Chess and mirrored in PHP
+for online games. The variants share one generic quantum layer instead, which is JavaScript only and has no server
+side: no variant game, move or result is sent to the server. The player-facing rules are in
+[`docs/variants.md`](../variants.md).
+
+#### 5.6.1 Modules
 
 | Module | Responsibility |
 |---|---|
-| `index.js` | The public API: catalogue, `loadVariant(id)` (one lazily loaded chunk per variant), the quantum layer and the computer player |
-| `catalog.js` | Names, summaries and categories of the variants, cheap to import on every page |
-| `core/topology.js` | Boards as squares with integer coordinates in any number of dimensions, their names and their drawing (square, hexagon or intersection cells, several boards) |
-| `core/world.js` | One **world**: an ordinary position (piece list, board, the variant's extra state). Movement descriptors (leap, ride, hop, lame leaper, oriented vectors, regions), move generation and application |
-| `core/orthodox.js`, `core/orthodoxVariant.js` | The orthodox pieces, castling (including Chess960, along a rank or a file), double steps, en passant and promotion on any board shape, the bookkeeping that keeps the en passant square and the castling rights the same in every world, and a ready-made 8 × 8 declaration |
-| `core/variant.js` | `defineVariant()`: the defaults and caches of a variant declaration; its header states the contract of every optional hook the quantum layer reads |
-| `core/quantum.js` | The quantum layer: weighted worlds (integer weights summing to 2^24), split, merge, measure, "land = roll, pass = link", certain moves, the budget, the solid roll and the game-end roll. `branches()` lists every outcome of a move with its weight; playing a move samples one |
-| `core/ai.js` | The computer player of the variants: expectimax over the outcomes of each roll, with a reply search at the higher levels (the variant may choose the replying side) |
-| `<id>.js` | One module per variant: its board, pieces, setup, special moves and win conditions, declared through hooks (`extraMoves`, `afterMove`, `worldResult`, `visibility`, ...) |
+| `index.js` | The public API: catalogue, `loadVariant(id)` (one lazily loaded chunk per variant), the quantum layer, and the computer player (`chooseMove`, `LEVELS`) |
+| `catalog.js` | Names, summaries, categories and player counts of the variants, cheap to import on every page |
+| `core/topology.js` | Boards as squares with integer coordinates in any number of dimensions, their names, the direction sets of the pieces, and their drawing (square, hexagon or intersection cells, several boards) |
+| `core/world.js` | One **world**: an ordinary position (piece list, board, the variant's extra state `x`). Movement descriptors (leap, ride, hop, lame leaper, oriented vectors, regions), move generation and application |
+| `core/orthodox.js`, `core/orthodoxVariant.js` | The orthodox pieces, castling (including Chess960, along a rank or a file), double steps, en passant and promotion on any board shape, the bookkeeping that keeps the en passant square and the castling rights the same in every world, and `orthodoxSpec()`, a ready-made 8 × 8 declaration that the variants with a few changed rules start from |
+| `core/variant.js` | `defineVariant()`: the defaults and caches of a declaration, and the classic end-rule flags. Its header states the contract of the hooks the quantum layer reads |
+| `core/quantum.js` | The quantum layer (section 5.6.2) |
+| `core/ai.js` | The computer player of the variants (section 5.6.4) |
+| `<id>.js` | One module per variant: its board, pieces, setup, options, special moves, win conditions and rules card, declared through the hooks of section 5.6.3 |
+| `chess960/`, `kriegspiel/`, `trid/`, `multiverse/` | The parts of the larger variants: the Chess960 start-position numbers; the Kriegspiel umpire and the computer's view; the Tri-Dimensional board; and the multiverse (5D) in `skeleton.js` (geometry, timelines, the present), `pieces.js`, `setup.js` (the 21 official setups), `moves.js`, `engine.js` (applying moves, idle worlds, the unfinishable turn), `texts.js` (records and texts), `layout.js` (the drawing) and `ai.js` (the computer's hooks) |
 
-A variant only describes ordinary chess in one world. The quantum layer plays each move in every world at once, and
-two generic checks make every rule quantum without variant code: the **solid roll** keeps kings, pawns and other
-solid pieces in one place, and the **game-end roll** settles a result that holds in only some worlds (a third check,
-an explosion, a king on the hill). Hidden-information variants add `visibility()` and the moves a player may try.
+#### 5.6.2 The quantum layer
 
-A few rules of [`docs/rules.md`](../rules.md) look at every world at once, and the layer handles them for every
-variant. Castling and en passant are **certain moves** (`isCertain`): a key that some world generates as a certain
-move is legal only when every world generates it as one, so it never rolls; a castling right is lost as soon as the
-king or that rook is not 100 % on its start square. A world in which the played action did not take effect (it
-missed there, a Measure, a turn skipped by a player who cannot move) is an **idle world**. Idle worlds pass through
-the variant's `applyMiss` hook, so per-ply bookkeeping such as the en passant square expires there too, and the worlds
-of the chosen outcome pass through its `unifyWorlds` hook, which makes facts about the whole state, such as castling
-rights, the same in every world. `orthodoxSpec()` brings both hooks. Every hook is optional, and without it the layer
-keeps its plain behaviour:
+A game state is a plain JSON object: the weighted **worlds** (`{ b, w }`, integer weights that sum to `T = 2^24`, like
+the rules engine, at most 64 worlds), the side to move, the ply and quiet-move counters, the result and one history
+record per move. A variant only describes ordinary chess in one world; the quantum layer plays each action (move, split,
+merge, measurement, drop) in every world at once. `branches()` lists every outcome of an action with its weight and the
+worlds it leaves, `applyMove()` samples one and `applyOutcome()` plays a chosen one; every function is pure. The layer
+implements the shared rules of [`docs/variants.md`](../variants.md): "land = roll, pass = link", splits onto two
+certainly empty squares (at most 4 squares per piece), merges, measurements, drops that roll when a ghost might stand on
+the square, and the budget of 8 arrangements per side (`budgetRule` for team budgets and per-player limits).
+
+Two generic checks follow every move and make every rule quantum without variant code: the **solid roll** keeps
+kings, pawns and the variant's other solid pieces (and its `solidExtra` structure, such as the check counters of
+Three-check) in one place, and the **game-end roll** settles a result that holds in only some worlds (a third check,
+an explosion, a king on the hill). A few rules of [`docs/rules.md`](../rules.md) look at every world at once, and the
+layer handles them for every variant. Castling and en passant are **certain moves** (`isCertain`): a key that some
+world generates as a certain move is legal only when every world generates it as one, so it never rolls; a castling
+right is lost as soon as the king or that rook is not 100 % on its start square. A world in which the played action
+did not take effect (it missed there, a Measure, a turn skipped by a player who cannot move) is an **idle world**.
+Idle worlds pass through the variant's `applyMiss` hook, so per-ply bookkeeping such as the en passant square expires
+there too, and the worlds of the chosen outcome pass through its `unifyWorlds` hook, which makes facts about the whole
+state, such as castling rights, the same in every world. `orthodoxSpec()` brings both hooks.
+
+**The classic end rules.** A "classic" variant (two sides, a royal piece, one move per turn, no compulsory capture)
+gets the end rules of [`docs/rules.md`](../rules.md) sections 5 and 6 through three flags, each of which a variant may
+switch off: `escapeRule` ("your king cannot escape": after a move, if every action of the side to move leaves a royal
+piece of it to be captured for certain and none can capture an enemy royal piece, the mover wins), `bareKingsDraw`
+and `drawsWait` (the generic draws wait while the side to move can capture an enemy royal piece for certain). Then
+come the quiet-move draw (`quietPlies`, default 100), the move limit (`maxPly`, default 600) and the result of a side
+without any legal action (`noMoves`, or `passWhenStuck` to let it sit out). Antichess, Bughouse, Four-player chess and
+the multiverse leave the escape rule out; the multiverse has its own test for a turn that cannot be finished
+(`stateResult`).
+
+#### 5.6.3 Hooks
+
+Every hook is optional, and without it the layer keeps its plain behaviour. `core/variant.js` documents the contract
+of the hooks that the quantum layer reads; `core/ai.js`, `useVariantGame` and `VariantGameView.vue` document the ones
+they read in their headers.
 
 | Concern | Hooks and fields |
 |---|---|
-| One world | `extraMoves`, `filterMoves`, `afterMove`, `onCapture`, `generate` and `apply` (a different world shape), `measured`; the move field `certain` (default true for castling and en passant) and the type flag `resetsQuiet` (default: solid, not royal) |
-| Across the worlds | `applyMiss(b, action, side, info)`, `unifyWorlds(bs, mover)`, `solidExtra(b)` (variant structure settled by the solid roll, like solid pieces), `budgetRule(b, side)` (team budgets, per-player limits), `compulsoryCapture` |
-| Results and turns | `worldResult`, `stateResult`, `noMoves`, `isOut`, `nextSide`, `passWhenStuck` (a side without a move sits out), `recordInfo` (variant data on a history record) |
-| Hidden information | `hidden`, `visibility`, `candidateMoves`, `ownView`, `hiddenStyle`, `umpire` |
-| Computer player | `evaluate`, `materialSign`, `aiView`, `replySide` |
-| Board and texts | `layoutOf`, `actions`, `sideInfo`, `noteText`, `infoText`, `codeText`, `reasonText`, `resignResult`, `handOrder`, `options[i].describe` |
+| One world | `extraMoves`, `filterMoves`, `afterMove`, `onCapture`, `generate` and `apply` (a different world shape, as in the multiverse), `measured`, `orient`, `enemies`; the move field `certain` (default true for castling and en passant) and the type flag `resetsQuiet` (default: solid, not royal) |
+| Across the worlds | `applyMiss(b, action, side, info)`, `unifyWorlds(bs, mover)`, `solidExtra(b)`, `budgetRule(b, side)`, `allowQuantum(state, action)` (forbid a split, merge or measurement the generic rules allow), `compulsoryCapture` |
+| Results and turns | `worldResult`, `stateResult`, `noMoves`, `isOut`, `nextSide`, `actions` (extra buttons, such as *Submit turn*), `passWhenStuck`, `escapeRule`, `bareKingsDraw`, `drawsWait`, `quietPlies`, `maxPly`, `recordInfo` (variant data on a history record) |
+| Hidden information | `hidden`, `visibility`, `hiddenStyle` (`'fog'` or `'plain'`), `ownView`, `candidateMoves`, `umpire` |
+| Computer player | `evaluate`, `materialSign`, `aiView`, `aiViewExact`, `replySide`, `aiTimeShare` |
+| Board and texts | `layoutOf` (a drawing per state, with its focus), `boardLegend`, `flipBoard`, `specialMoves`, `drops`, `handOrder`, `handBoards`, `rules`, `sideInfo`, `turnHint`, `noteText`, `infoText`, `codeText`, `outcomeSquare`, `reasonText`, `dangerText`, `endNote`, `moveWarning` (a move that waits for confirmation), `lastMoveMarks`, `turnMarks`, `refusalText`, `resignResult`, `options[i].describe` |
 
-`src/variantplay/` holds the UI: `VariantBoard.vue` draws any layout in SVG, `useVariantGame` runs a game (move
-modes, the confirmation of rolled moves, the computer's turns, undo with a roll memo, the hand-over curtain of the
-hidden-information variants), `texts.js`, `panel.js` and `marks.js` are the pure helpers behind the texts, the side
-panel and the square marks (they read the variant's text and panel hooks), and `variantGames.js` stores the games in
-the browser. The variant tests are in `tests/js/variants/`; `fuzz.spec.js` plays random games in every variant and
-checks the invariants of the quantum layer after every move.
+#### 5.6.4 The computer player (`core/ai.js`)
+
+`chooseMove(V, state, { level, rng, signal, now })` is an expectimax search over the outcomes of every roll, the same
+for every variant; a variant adds its own terms with `evaluate`. It has three levels (`LEVELS`):
+
+| Level | Looks at | Noise | Time |
+|---|---|---|---|
+| `easy` | its own moves and their outcomes | 120 centipawns | 400 ms |
+| `normal` | plus the forcing answers of the opponent | 25 centipawns | 1.5 s |
+| `hard` | plus every answer, and a third move for its best candidates while time lasts | none (exact ties at random) | 4 s |
+
+- **Real outcomes.** The outcomes of its own moves are real states of the game, so every end rule counts there: a
+  move after which the enemy cannot escape is a win, one that ends the game against it a loss. `replySide` chooses
+  whose answer is searched: by default the side to move next, in Bughouse the opponent on the same board, and in the
+  multiverse none until the turn is submitted.
+- **Time.** The budget is the level's time times `aiTimeShare(state)` (the multiverse shares one level time over the
+  boards of a turn). It runs from the call and is checked inside the evaluation of a candidate too, so a move keeps to
+  it even at 64 worlds; the best move found so far is played. `signal` aborts the search.
+- **Yields.** The search runs on the main thread of the game screen and yields to the browser whenever it has run for
+  more than 12 ms, between any two steps that may take long, so the board stays responsive while the computer thinks.
+- **The `now` option.** The budget follows the wall clock (`Date.now`) unless `chooseMove` gets another clock. Tests
+  pass one that counts the checks (`workClock` in `tests/js/variants/helpers.js`), so what the search gets done, and
+  the move it chooses, do not depend on the speed or load of the machine. The yields always follow the wall clock.
+- **Hidden information.** With `aiView` the computer searches the position as its own side knows it and plays the
+  best move of that view that is legal on the real state (`aiViewExact` when every candidate of the view is legal
+  with the same outcomes, which saves the checks). When none is, it tries what a player could attempt until the
+  umpire accepts one.
+
+#### 5.6.5 The game screen (`src/variantplay/`, `views/Variant*.vue`)
+
+`VariantsView.vue` (route `/variants`) shows the catalogue by category, the games on this device and the New game
+dialog (opponent, level, side and the variant's options). `VariantGameView.vue` (route `/variants/:variant/:id`)
+runs a game through `useVariantGame`: the move modes (Move, Split, Merge, Measure, drops), the confirmation of rolled
+moves and of a variant's `moveWarning`, promotions, the computer's turns, undo with the roll memo (`rolls.js`: a
+roll is keyed by ply, position hash and move, so undo never rerolls a result) and the hand-over of hidden games.
+`texts.js`, `panel.js`, `marks.js` and `glyphs.js` are the pure helpers behind the texts, the side panel, the square
+marks and the piece glyphs, and they read the variant's text and panel hooks.
+
+**The board.** `VariantBoard.vue` draws any `layoutOf` in SVG: square cells, hexagons, the intersections of xiangqi,
+and several boards side by side or in a grid, with outlines (the hill, threat lines, travel arrows, placeholders),
+area shades, labels that stay readable at any zoom, and ghost parts with their probability ring and badge.
+`VariantPiece.vue` draws a piece: a cburnett sprite (also smaller, with a unicorn's horn, a brawn's crossbar or two
+side by side), or a text token (round, a shogi pentagon or a xiangqi disc).
+
+- **Zoom and touch.** Large layouts (3D, 4D and 5D chess, Bughouse, Four-player chess) can be zoomed with the
+  buttons, Ctrl + wheel or a two-finger pinch, and panned by dragging with a mouse or one finger. While zoomed in the
+  board takes every touch gesture (`touch-action: none`); at zoom 1 the page still scrolls over it. The zoom cap is
+  8, or more for wide layouts, up to 40 px per unit. Zoomed in, boards pin their names to the top of the view and
+  move targets outside the view are counted at its edge.
+- **The focus box.** A layout may carry a `focus`: a point, a `box` to fit (with a smaller `alt` frame when the box
+  would be too small to play), minimum and maximum pixels per unit for touch and mouse, and `stops` for the
+  "previous / next board" buttons. The board recentres only when the focus `key` changes (or on *Recentre*), and waits
+  while the computer plays. 4D chess and Bughouse use it to open on the boards of the side to move on a touch screen;
+  the multiverse frames the boards to play, and at the end of a game the boards that decided it.
+- **Phones.** On a narrow screen the title comes first, then the board, then a slim bar with the status, the move
+  types and a move waiting for confirmation, which stays at the bottom of the screen while a tall board is scrolled.
+  The board leaves room for it, and the page scrolls so that the squares of a move waiting for confirmation are not
+  under the bar. The pieces in hand sit at their board.
+
+**Hidden information.** In Kriegspiel and Fog of war the board shows only what the viewer may see (`visibility`): fog
+over the other squares, or with `hiddenStyle: 'plain'` ordinary empty squares. A hidden square never names what stands
+there, and takes keyboard focus only as the target of a try built from what the viewer knows. The Split, Merge and
+Measure modes choose their squares on `ownView` (the board as the player knows it), and every attempt is decided on the
+real state; with `umpire` an attempt is binding, so there is no odds preview and results show no odds. While a hidden
+game runs there is no undo and no danger line, the opponent's budget reads "?", and the roll preview does not say which
+outcome ends the game. In pass & play the mover first sees the result of the move with their own view ("Your move: …")
+and passes the device; a curtain then covers the board and the players until the next player opens their view ("I am …:
+show my board"). The whole board is revealed when the game ends.
+
+**Saved games.** `variantGames.js` keeps the games in `localStorage`, scoped to the user like every other key: an index
+(`quantumchess.variants.index.v1`) and one record per game (`quantumchess.variants.game.v1.<id>`), at most 24 games (the
+oldest finished games go first). A record holds the options, the players, the start state, every move with the index of
+its outcome (so undo replays exactly), the roll memo and the current state (so opening a game needs no replay). Records
+are version 2 (`RECORD_VERSION`): the worlds of the two states are packed, the first in full and every other one as its
+differences from it (`packWorlds`), which shrinks a 64-world multiverse state to a few percent of its size. Records of
+version 1, with full worlds, are still read. When the storage refuses a record, the oldest finished games are removed
+until it fits; a record that still does not fit is not saved, and the game screen says so.
+
+The variant tests are in `tests/js/variants/`: one spec per variant with the cases of its rules, the core, the
+computer player on a work clock, the board and the phone layouts, and `fuzz.spec.js`, which plays random games in every
+variant and checks the invariants of the quantum layer after every move.
 
 ## 6. Data flow
 
@@ -529,6 +636,7 @@ and against the last chain this browser saw
 | Rules engine (PHP) | PHPUnit | `tests/php/Unit/Engine/` | The same, plus replay of every parity fixture |
 | Parity | Both, plus CI | `tests/fixtures/` | Byte-identical results of both engines; fixtures cannot drift from the generator |
 | Computer player | Vitest | `tests/js/ai/` | Search and evaluation, level behaviour, the solver, the worker protocol, deterministic seeded results |
+| Chess variants | Vitest | `tests/js/variants/` | The rules of every variant, the quantum layer and its hooks, the computer player on a work clock, the board and phone layouts, random games that keep the invariants (`fuzz.spec.js`) |
 | Frontend units and components | Vitest (+ happy-dom, `@vue/test-utils`) | `tests/js/<feature>/` (mirrors `src/`) | Pure modules, composables with injected dependencies, key components |
 | Backend | PHPUnit | `tests/php/Unit/` (mirrors `lib/`) | Services with mocked OCP interfaces, serializer JSON shapes, validation order and error codes |
 | HTTP API | Playwright, without a browser | `tests/e2e/api/` | Routes, JSON shapes, error codes and notifications against a real Nextcloud |
@@ -654,6 +762,6 @@ Refactoring must never change these without an explicit, versioned decision:
 | Class names recorded by Nextcloud: background job, settings classes, migration | `appinfo/info.xml`, `oc_jobs`, `oc_migrations` |
 | App config keys, user config keys and their value formats | `AdminSetting`, `Service\Player`, `Service\Settings` |
 | Rules engine API and its byte-identical parity | `src/engine/index.js`, `lib/Engine/Engine.php`, `tests/fixtures/engine/` |
-| Stored client data: `localStorage` keys and formats, `ENGINE_VERSION`, `BENCH_KEY` | `services/storage.js`, `game/localGames.js`, `ai/levels.js`, `ai/benchmark.js` |
+| Stored client data: `localStorage` keys and formats, `ENGINE_VERSION`, `BENCH_KEY` | `services/storage.js`, `game/localGames.js`, `variantplay/variantGames.js` (`RECORD_VERSION`), `ai/levels.js`, `ai/benchmark.js` |
 | Translation source strings | every `t()` / `n()` / `IL10N` call; `translationfiles/templates/quantumchess.pot` |
 | Bundle entry names | `vite.config.js`, `templates/*.php` |

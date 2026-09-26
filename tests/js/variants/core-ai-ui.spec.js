@@ -303,7 +303,9 @@ describe('U7: texts', () => {
 	})
 
 	it('says that castling and en passant never roll', () => {
-		expect(sharedRules()).toContain('Castling and en passant are only possible when they are possible in every possibility, and they are never rolled.')
+		const sentence
+			= 'Castling and en passant are allowed only when they are possible in every possibility; they are never rolled.'
+		expect(sharedRules()).toContain(sentence)
 	})
 })
 

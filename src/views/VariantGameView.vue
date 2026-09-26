@@ -111,6 +111,7 @@
 						:key="h.side"
 						class="qc-vgame__hand"
 						:class="'qc-vgame__hand--' + g.place">
+						<!-- TRANSLATORS: pieces held in hand; {side} is White, Black, Sente, Gote or White A -->
 						<span class="qc-vgame__hand-title">{{
 							t('quantumchess', 'In hand: {side}', { side: sideName(V, h.side) })
 						}}</span>
@@ -137,6 +138,7 @@
 					</div>
 				</div>
 				<div v-if="game.curtain.value" class="qc-vgame__curtain">
+					<!-- TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A -->
 					<p>{{ t('quantumchess', 'Pass the device to {side}.', { side: sideName(V, state.turn) }) }}</p>
 					<NcButton variant="primary" @click="game.curtain.value = false">
 						{{ t('quantumchess', 'I am {side}: show my board', { side: sideName(V, state.turn) }) }}
@@ -220,11 +222,13 @@
 						<span v-if="endNote" class="qc-vgame__end-note">{{ endNote }}</span>
 					</template>
 					<template v-else-if="game.thinking.value">
+						<!-- TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A -->
 						<NcLoadingIcon :size="16" inline /> {{
-							t('quantumchess', '{side} is thinking …', { side: sideName(V, state.turn) })
+							t('quantumchess', '{side} is thinking…', { side: sideName(V, state.turn) })
 						}}
 					</template>
 					<template v-else>
+						<!-- TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A -->
 						{{ t('quantumchess', '{side} to move', { side: sideName(V, state.turn) }) }}
 					</template>
 					<span v-if="compulsory" class="qc-vgame__compulsory">
@@ -778,6 +782,7 @@ const reportGroups = computed(() => {
 			last.lines.push(...lines)
 		} else {
 			const title = V.value.actions && !V.value.umpire
+				// TRANSLATORS: above the moves of a player's last turn in 5D chess; {side} is White or Black
 				? t('quantumchess', 'Last turn of {side}', { side: sideName(V.value, h.side) })
 				: null
 			groups.push({ side: h.side, title, lines: [...lines] })

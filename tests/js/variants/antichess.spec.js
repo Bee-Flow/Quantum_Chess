@@ -195,8 +195,8 @@ describe('antichess: setup and declaration', () => {
 	})
 
 	it('describes the winner in the result texts', () => {
-		expect(resultText(V, { winner: 1, reason: 'allLost' })).toBe('Black wins (it has no pieces left)')
-		expect(resultText(V, { winner: 0, reason: 'stalemate' })).toBe('White wins (it has no move left)')
+		expect(resultText(V, { winner: 1, reason: 'allLost' })).toBe('Black wins (the winner has no pieces left)')
+		expect(resultText(V, { winner: 0, reason: 'stalemate' })).toBe('White wins (the winner has no move left)')
 		expect(resultText(V, { winner: null, reason: 'bishops' })).toBe('Draw (no capture can ever happen again)')
 		expect(V.sideInfo(newGame(V), 0)).toEqual({
 			text: 'Pieces: 16',

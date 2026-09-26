@@ -142,7 +142,7 @@ Object.assign(spec, {
 		),
 		t(
 			'quantumchess',
-			'Where a capture try finds nothing to take, it is an ordinary move if you had no capture in that possibility, and it misses if you had one. A pawn\'s diagonal try misses.',
+			'Where a capture attempt finds nothing to take, it counts as an ordinary move if you had no other capture in that possibility, and it misses if you had one. A pawn\'s diagonal capture attempt always misses there.',
 		),
 		t(
 			'quantumchess',
@@ -197,10 +197,13 @@ Object.assign(spec, {
 	reasonText(reason) {
 		switch (reason) {
 			case 'allLost':
-				return t('quantumchess', 'it has no pieces left')
+				// TRANSLATORS: Antichess, why the game was won: the winner has lost all its pieces
+				return t('quantumchess', 'the winner has no pieces left')
 			case 'stalemate':
-				return t('quantumchess', 'it has no move left')
+				// TRANSLATORS: Antichess, why the game was won: the winner was to move and could not move (stalemate)
+				return t('quantumchess', 'the winner has no move left')
 			case 'bishops':
+				// TRANSLATORS: Antichess, why the game was drawn: the pieces left can never capture anything again
 				return t('quantumchess', 'no capture can ever happen again')
 			default:
 				return null

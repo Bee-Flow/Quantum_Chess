@@ -305,7 +305,7 @@ const spec = {
 			),
 			t(
 				'quantumchess',
-				'A player who has no move at all loses. 50 moves each without a capture, a drop or a pawn move that happens, or 500 moves in total, is a draw.',
+				'A player who has no move at all loses. The game is drawn after 50 moves by each side without a capture, a drop or a pawn move actually happening, or after 500 moves in total.',
 			),
 		]
 	},

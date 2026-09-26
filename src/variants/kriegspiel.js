@@ -40,11 +40,11 @@ const spec = Object.assign(orthodoxSpec(), {
 		),
 		t(
 			'quantumchess',
-			'After every move both players hear each capture (its square, and whether a pawn or a piece was taken) and check with its directions and the chance that one enemy move, a merge included, could capture the king.',
+			'After every move both players hear each capture (its square, and whether a pawn or a piece was taken) and any check, with its directions and the chance that one enemy move, a merge included, could capture the king.',
 		),
 		t(
 			'quantumchess',
-			'Before each turn both players hear how many pawn captures the player to move might be able to make, en passant included.',
+			'Before each turn both players hear the number of pawn tries: the pawn captures the player to move might be able to make, en passant included.',
 		),
 		t(
 			'quantumchess',

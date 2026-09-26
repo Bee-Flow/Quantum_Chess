@@ -361,7 +361,8 @@ describe('U5, U7: the game view', () => {
 	}
 
 	it('(U5) leaves castling and en passant out of the shared rules of a variant without them', async () => {
-		const castling = 'Castling and en passant are only possible when they are possible in every possibility, and they are never rolled.'
+		const castling
+			= 'Castling and en passant are allowed only when they are possible in every possibility; they are never rolled.'
 		const plain = orthodox('test-no-special', { specialMoves: false })
 		const w = await mountGame(plain, newGame(plain))
 		const rules = await shownRules(w)

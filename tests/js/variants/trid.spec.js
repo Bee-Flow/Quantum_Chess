@@ -341,7 +341,7 @@ describe('Tri-D chess: rules card', () => {
 			expect(card[0]).toContain(board)
 		}
 		expect(card[1]).toContain('A square is named file, rank and board, such as b3N or z0QL1.')
-		expect(card[6]).toContain('if the king and that rook have not moved (in any possibility)')
+		expect(card[6]).toContain('if neither the king nor that rook has moved in any possibility')
 		expect(card[6]).toContain('once the queen\'s square is empty')
 		expect(card[7]).toContain('A ghost on the other level of your target square does not matter.')
 		// the classic end rules apply (docs/rules.md 5): the card must not deny them

@@ -298,7 +298,8 @@ describe('U4, U5, U7: texts', () => {
 	})
 
 	it('(U5) leaves castling and en passant out for a variant without them', () => {
-		const sentence = 'Castling and en passant are only possible when they are possible in every possibility, and they are never rolled.'
+		const sentence
+			= 'Castling and en passant are allowed only when they are possible in every possibility; they are never rolled.'
 		expect(sharedRules()).toContain(sentence)
 		expect(sharedRules(V)).toContain(sentence)
 		expect(sharedRules({ specialMoves: true })).toContain(sentence)

@@ -373,7 +373,7 @@ const spec = {
 		t('quantumchess', 'When no Bia is left and one side has only its Khun, the other side must capture that Khun within a set number of its moves, counted from the lone Khun\'s first move after the last capture or promotion, or the game is drawn.'),
 		t('quantumchess', 'That number is the first that applies of 8 (two Rua), 16 (one Rua), 22 (two Khon), 32 (two Ma), 44 (one Khon) and 64, minus the number of pieces on the board (both Khuns included), plus one, and at least one.'),
 		t('quantumchess', 'When no Bia is left, the game is also drawn after 65 moves by each side without a capture or promotion, and it is drawn when only the two Khuns are left.'),
-		t('quantumchess', 'These draws wait while the player to move can capture the enemy Khun for certain.'),
+		t('quantumchess', 'These draws are put off while the player to move can capture the enemy Khun for certain.'),
 	],
 	setup() {
 		const w = emptyWorld(spec)
@@ -438,12 +438,16 @@ const spec = {
 				// TRANSLATORS: Makruk: every move of the loser would have let its Khun (king) be captured for certain
 				return t('quantumchess', 'the Khun could not escape')
 			case 'stalemate':
+				// TRANSLATORS: Makruk, why the game was drawn: the Khun was not attacked, but each move would expose it
 				return t('quantumchess', 'stalemate')
 			case 'bareKings':
+				// TRANSLATORS: Makruk, why the game was drawn; a Khun is the king
 				return t('quantumchess', 'only the two Khuns are left')
 			case 'count':
+				// TRANSLATORS: Makruk, why the game was drawn: the lone Khun (king) survived the counted moves
 				return t('quantumchess', 'the counting rule: the lone Khun was not captured in time')
 			case 'quiet':
+				// TRANSLATORS: Makruk, why the game was drawn; a Bia is a pawn
 				return t('quantumchess', '65 moves by each side since the last capture or promotion, with no Bia left')
 			default:
 				return null

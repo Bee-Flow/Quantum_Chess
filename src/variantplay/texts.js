@@ -170,10 +170,12 @@ export function reasonText(V, reason) {
 export function resultText(V, result) {
 	const why = reasonText(V, result.reason)
 	if (result.winner !== null && result.winner !== undefined) {
+		// TRANSLATORS: {side} is a side: White, Black, Red, Blue, Yellow, Green, Sente, Gote or White A (Bughouse)
 		return t('quantumchess', '{side} wins ({reason})', { side: sideName(V, result.winner), reason: why })
 	}
 	if (Array.isArray(result.winners) && result.winners.length) {
 		const names = result.winners.map((s) => sideName(V, s)).join(' & ')
+		// TRANSLATORS: a team's win; {sides} names its players, such as "Red & Yellow" or "White A & Black B"
 		return n(
 			'quantumchess',
 			'{sides} wins ({reason})',
@@ -212,7 +214,7 @@ export function sharedRules(V = null) {
 	if (V?.specialMoves !== false) {
 		out.push(t(
 			'quantumchess',
-			'Castling and en passant are only possible when they are possible in every possibility, and they are never rolled.',
+			'Castling and en passant are allowed only when they are possible in every possibility; they are never rolled.',
 		))
 	}
 	out.push(
@@ -254,6 +256,7 @@ export function recordLines(V, record, viewer, { brief = false } = {}) {
 		out.push(...own.filter((line) => typeof line === 'string' && line))
 	}
 	for (const side of record.skipped ?? []) {
+		// TRANSLATORS: {side} is a player of four-player chess (Red, Blue, Yellow, Green) or Bughouse (White A …)
 		out.push(t('quantumchess', '{side} cannot move and sits out', { side: sideName(V, side) }))
 	}
 	return out
