@@ -6,7 +6,7 @@
 /**
  * Kriegspiel (src/variants/kriegspiel.js): the orthodox game in which each player sees only their own pieces, the
  * umpire's "no", the announcements (captures, check, pawn tries), the quantum rules seen through the umpire, and the
- * computer's view. The cases K1-K23 are those of handoff/research/kriegspiel.md, section 7.
+ * computer's view. The cases are numbered K1-K23.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -377,7 +377,7 @@ describe('kriegspiel: the umpire', () => {
 		expect(card.some((line) => line.includes('en passant as such are never announced'))).toBe(true)
 		// a ghost also becomes solid when a rolled enemy move only passes one of its squares
 		expect(card.some((line) => line.includes('land on or pass through one of its squares'))).toBe(true)
-		// the classic end rules apply (LEAD-DECISIONS L1): the card must not deny them
+		// the classic end rules apply: the card must not deny them
 		expect(card.some((line) => /no checkmate|only by capturing/i.test(line))).toBe(false)
 		expect(card.some((line) => line.includes('when a king cannot escape or a draw comes'))).toBe(true)
 	})
@@ -547,7 +547,7 @@ describe('kriegspiel: the quantum rules through the umpire', () => {
 		expect(V.infoText(on.history.at(-1), 1)).toEqual(['White moved.', '1 pawn try.'])
 	})
 
-	it('keeps the classic end rules, decided by the umpire on the real board (LEAD-DECISIONS L1)', () => {
+	it('keeps the classic end rules, decided by the umpire on the real board', () => {
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait]).toEqual([true, true, true])
 		// every move of White's king goes next to the queen or the king: Black wins without having seen that king
 		const trapped = play(V, stateOf(V, [[{ a1: '0:k', c2: '1:k', b4: '1:q' }, 1]], 1), 'b4-b3')

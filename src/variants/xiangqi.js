@@ -11,8 +11,8 @@
  * general to win, also with the flying general along an open file. A side loses at once when every move it has would
  * let its general be captured for certain (the core's escape rule, `cannotEscape`: checkmate and the WXF stalemate),
  * and a side without any move loses. Draws: no piece left that can cross the river, 50 moves by each side without a
- * capture, the move limit. There is no repetition rule, so perpetual check does not lose. The research spec is
- * handoff/research/xiangqi.md; the player-facing rules are in docs/variants.md.
+ * capture, the move limit. There is no repetition rule, so perpetual check does not lose. Player-facing rules are in
+ * docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -122,9 +122,11 @@ function boardLines() {
 }
 
 /**
- * The coordinate labels: files a–i under the board, ranks 1–10 left of it.
+ * The coordinate labels: files a–i under the board, ranks 1–10 left of it; then the inscription of the river, as on a
+ * printed board: 楚河 ("Chu river") on the left half and 漢界 ("Han border") on the right, from Red's side (part of the
+ * drawing, like the characters of the pieces, so not translated).
  *
- * @return {Array<{x: number, y: number, text: string}>}
+ * @return {Array<{x: number, y: number, text: string, kind?: string}>}
  */
 function boardLabels() {
 	const labels = []
@@ -134,6 +136,9 @@ function boardLabels() {
 	for (let r = 0; r < RANKS; r++) {
 		labels.push({ x: -0.2, y: Y(r), text: String(r + 1) })
 	}
+	const river = (Y(4) + Y(5)) / 2
+	labels.push({ x: X(2), y: river, text: '楚河', kind: 'river' })
+	labels.push({ x: X(6), y: river, text: '漢界', kind: 'river' })
 	return labels
 }
 

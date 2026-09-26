@@ -8,8 +8,8 @@
  * be captured (no check, no castling, pawns may promote to a king), and a side wins when it has lost all its pieces or
  * has no move. The game is drawn when no capture can ever happen again (bishops on opposite colours, locked pawns).
  * Compulsory capture works on two levels: in every possibility on its own (`filterMoves`), and over the whole state
- * (`compulsoryCapture`: if a move might capture in some possibility, only such capture tries are legal). The research
- * spec is handoff/research/antichess.md.
+ * (`compulsoryCapture`: if a move might capture in some possibility, only such capture tries are legal).
+ * Player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -168,7 +168,7 @@ Object.assign(spec, {
 	},
 	// over the whole state: if some move might capture in some possibility, only such moves are legal
 	compulsoryCapture: true,
-	// The classic end rules (docs/rules.md 5 and 6, handoff/LEAD-DECISIONS.md L1) are wrong in losing chess, where
+	// The classic end rules (docs/rules.md 5 and 6) are wrong in losing chess, where
 	// the king is an ordinary piece: no "your king cannot escape" win, two lone kings are not a draw, and no draw
 	// waits for a king capture. The core's defaults are already off here (no royal piece, compulsory capture); they
 	// are stated on purpose, so a change of those defaults cannot switch them on.

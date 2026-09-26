@@ -8,8 +8,7 @@
  * White B and Black A (Team 2); the seats move in turn White A, White B, Black B, Black A. A captured piece goes to
  * the capturer's partner, who may drop it on an empty square of their own board; capturing any king ends the whole
  * game. Both boards are one topology (`[file, rank, board]`, squares `A:e4` and `B:e4`), each team shares one quantum
- * budget, and en passant belongs to the board where the pawn moved. The research spec is
- * handoff/research/bughouse.md.
+ * budget, and en passant belongs to the board where the pawn moved. Player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -286,7 +285,7 @@ const spec = {
 	quietPlies: 200,
 	// a seat without any legal move waits for a piece from its partner: it sits out instead of ending the game
 	passWhenStuck: true,
-	// The classic end rules (docs/rules.md 5 and 6; LEAD-DECISIONS L1, which lists bughouse with the four-seat games).
+	// The classic end rules (docs/rules.md 5 and 6), fitted to four seats in two teams.
 	// "Your king cannot escape" is left out: the core's rule names the seat that just moved (half the time a seat of
 	// the other board) as the only winner, while a bughouse game is won by a team. It would also end games too early:
 	// the king of White A or Black B is taken only after the two moves of the other board, where the partner may still

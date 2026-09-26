@@ -4,7 +4,7 @@
  */
 
 /**
- * Package "app" of the multiverse changes to the generic app and computer (multiverse-final.md 7.2): the computer
+ * The changes to the generic app and computer added for multiverse chess: the computer
  * yields to the browser throughout its search, also in the pre-pass, and stops at once when aborted (H2); it checks
  * only its chosen move on the real state when the view is exact (`aiViewExact`, H2) and keeps to a share of the level
  * time (`aiTimeShare`, H3); saved games pack their worlds (record version 2), still read version 1 and report a full

@@ -12,13 +12,16 @@
  * `level` is the id of the level, `'easy'`, `'normal'` or `'hard'`), `evaluate(world, side)`, `materialSign`, and
  * `replySide(state, me)`: whose answer the normal and hard levels look at after one of my moves (default the side to
  * move next; `null` for no answer; bughouse answers with the opponent on the same board). When it is `me` (a turn of
- * several moves, as in the multiverse before Submit), the search takes my best continuation instead. Two more:
+ * several moves, as in the multiverse before Submit), the search takes my best continuation instead. Three more:
  *
  * - `aiTimeShare(state) -> number` in (0, 1]: the share of the level's time this ply may take (default 1; a value
  *   outside that range counts as 1). A turn of several moves shares one level time that way.
  * - `aiViewExact` (declaration flag, default false): every candidate of `aiView` is legal on the real state with the
  *   same outcomes. The search then checks only the move it chose on the real state (and the next best when that one is
  *   not legal) instead of every candidate.
+ * - `aiThreats(w, side, id) -> Array<{id, capture}>`: for a variant with its own `generate`, the captures piece `id`
+ *   could make on its next move in world `w`, wherever it stands (the multiverse: also when the side's turn goes on on
+ *   other boards). Without it the quantum terms ask `generate` for the side.
  *
  * The classic "your king cannot escape" (the variant's `escapeRule`, docs/rules.md 5) is seen in three places: the
  * outcomes of my own moves are the real states of the game, so a move after which the enemy cannot escape is a win
@@ -32,6 +35,15 @@
  * The hard level looks one move further than the normal level: once its two-move pass is complete, it re-scores its
  * best candidates (`LEVELS[i].deep` of them) with a third move of mine after each answer, my forcing moves or none
  * (`deepen`), for as long as its time budget lasts, and keeps a re-scored move only when its whole evaluation fitted.
+ *
+ * Quantum moves get what a search of two moves misses (`QUANTUM`, `QuantumJudge`): a split whose parts threaten two
+ * pieces, one that dodges a capture or closes the lines of an attack on the own king, a merge that captures, a merge
+ * or measurement that frees the budget, and a safe split some room in the budget; an ordinary quiet move gets the
+ * same threat terms, so a split never looks better than the same threat made by one certain piece. The terms stay
+ * below a pawn and are left out of a decided game. Beside the splits at random, the splits with such a purpose are
+ * candidates, and the hard level's third move also looks at the best quantum moves and then adds only the terms it
+ * cannot see itself. When the turn goes on after a measurement and the search looks at no answer there (`replySide`
+ * null, the multiverse), the measurement also gets what its outcome shows (`insight`).
  *
  * The search yields to the browser whenever it has run for more than a few milliseconds (`pacer`), between any two
  * steps that may take long at 64 worlds: each split source and each candidate of the pre-pass, and inside the
@@ -59,13 +71,14 @@ import {
 	certainCapture,
 	isCertain,
 	legalMoves,
+	parseCode,
 	splitCode,
 	splitTargets,
 	stateAfter,
 	T,
 	worldResult,
 } from './quantum.js'
-import { applyClassical, generate, HAND, linesOf, pushMove } from './world.js'
+import { applyClassical, cloneWorld, generate, HAND, linesOf, placePiece, pushMove } from './world.js'
 
 /**
  * The levels: how deep the computer looks (`reply`: the answer to each of my moves, `fullReply`: every answer rather
@@ -85,6 +98,23 @@ const WIN = 100000
  * 25 MB with the facts kept per world: every candidate at a few worlds, a dozen at 64 worlds on a 4 x 4 x 4 x 4 board.
  */
 const MEMO_ENTRIES = 1 << 18
+
+/**
+ * The quantum terms that a value gets: none once the game is decided (a sure win or loss needs no preference).
+ *
+ * @param {number} value the value of a move
+ * @param {number} terms its quantum terms
+ * @return {number}
+ */
+function termsOf(value, terms) {
+	return Math.abs(value) < WIN / 2 ? terms : 0
+}
+
+/**
+ * How many quantum moves the third move of the hard level looks at beyond its best candidates without their quantum
+ * terms (`deepen`).
+ */
+const DEEP_QUANTUM = 2
 
 /** The search yields to the browser when it has run this many milliseconds without a break. */
 const PACE_MS = 12
@@ -546,7 +576,686 @@ function certainTake(V, state, d = state.turn) {
 }
 
 /**
- * The candidate moves of a state: every ordinary move, measurement and merge, plus a few splits.
+ * The weights of the computer's quantum terms (`QuantumJudge`), in centipawns. A search of two moves sees what a move
+ * changes in material, but not what it prepares: a threat on two squares that the enemy can parry only once, a piece
+ * that escapes an attack, a part that closes a line to the own king, the room a ghost leaves in the budget. These
+ * terms add that value:
+ *
+ * - `fork`: the share of the second-best threat of a quiet move or a split (the enemy parries the best one, the other
+ *   one is the gain), and `attack` the share of its best threat on a piece that is not royal. A threat is the chance
+ *   that the attacking piece or part is there times the gain of its capture: what the capture changes in the value
+ *   of the world (the victim, a piece in hand, an explosion), less the attacker when the enemy can take it back;
+ *   both parts of a split on one victim make a converging capture, so their chances add up. An ordinary quiet move
+ *   gets these terms too, so that a split fork never looks better than the same fork made by one certain piece;
+ * - `dodge`: a piece that could be taken with gain splits onto two safe squares;
+ * - `block`: a part of a split stands on the line of an attack on an own royal piece;
+ * - `spread`: a split onto two safe squares, times the share of the budget still free and less the more worlds
+ *   there are, none from `SPREAD_WORLDS` on (every world makes the search slower); none in losing chess;
+ * - `relief`: a merge or measurement that frees the whole budget (the same share of it for less);
+ * - `capture`: a merge that captures, times its chance.
+ *
+ * The threat, dodge and spread terms need safe squares (no enemy attack, or a defended square that only a piece worth
+ * at least as much attacks). All terms of one move together never exceed `cap`: with the ±25 of the normal level's
+ * noise on two moves, less than a pawn, so they choose among moves of equal material and never buy a quantum move
+ * with material.
+ */
+export const QUANTUM = Object.freeze({
+	cap: 40,
+	fork: 0.2,
+	attack: 0.02,
+	dodge: 12,
+	block: 8,
+	spread: 8,
+	relief: 40,
+	capture: 15,
+})
+
+/** From this many worlds on a split gets no `QUANTUM.spread`. */
+const SPREAD_WORLDS = 16
+
+/** The gain of a threat on a royal piece, for `QUANTUM` (larger than any piece: the enemy must parry it first). */
+const ROYAL_THREAT = 1000
+
+/** The value of a royal attacker for the safety of a square: it takes only what nobody defends. */
+const ROYAL_ATTACKER = 1e6
+
+/** No attack lines. */
+const NO_LINES = Object.freeze(new Set())
+
+/** The terms of a move without quantum value. */
+const NO_TERMS = Object.freeze({ total: 0, style: 0, purpose: false })
+
+/**
+ * Visit the squares that a piece of `type` and `side` on `sq` attacks on `board`, as `capturesOf` walks its lines: the
+ * square of each leap whose `via` squares are empty, each square of a ride up to and including the first piece, and
+ * after the first piece of a hop (the screen) each square up to and including the next piece. A move-only line (a
+ * pawn's step) attacks nothing.
+ *
+ * @param {object} V variant
+ * @param {ArrayLike<number>} board the piece on every square (-1 for none)
+ * @param {string} type piece type
+ * @param {number} side side index
+ * @param {number} sq square
+ * @param {(t: number, path: number[]|null) => void} visit gets each attacked square, and for a ride the empty squares
+ *   before it on the line
+ */
+function reach(V, board, type, side, sq, visit) {
+	for (const line of linesOf(V, type, side, sq)) {
+		if (line.d.mode === 'move' && line.kind !== 'hop') {
+			continue
+		}
+		if (line.kind === 'leap') {
+			if (!line.via.some((s) => board[s] !== -1)) {
+				visit(line.squares[0], null)
+			}
+		} else if (line.kind === 'ride') {
+			const path = []
+			for (const t of line.squares) {
+				visit(t, path)
+				if (board[t] !== -1) {
+					break
+				}
+				path.push(t)
+			}
+		} else {
+			let screen = false
+			for (const t of line.squares) {
+				if (screen) {
+					visit(t, null)
+					if (board[t] !== -1) {
+						break
+					}
+				} else if (board[t] !== -1) {
+					screen = true
+				}
+			}
+		}
+	}
+}
+
+/**
+ * The value of a piece type in centipawns (100 without one).
+ *
+ * @param {object} V variant
+ * @param {string} type piece type
+ * @return {number}
+ */
+function valueOf(V, type) {
+	return V.types[type]?.value ?? 100
+}
+
+/**
+ * The threat terms of a list of threats (`QUANTUM.fork` and `QUANTUM.attack`).
+ *
+ * @param {Map<number, {gain: number, royal: boolean}>} byVictim the threats by victim
+ * @return {number}
+ */
+function threatTerms(byVictim) {
+	const all = [...byVictim.values()].sort((x, y) => y.gain - x.gain)
+	const plain = all.find((e) => !e.royal)
+	return QUANTUM.fork * (all[1]?.gain ?? 0) + QUANTUM.attack * (plain?.gain ?? 0)
+}
+
+/**
+ * The computer's quantum terms (`QUANTUM`) for the candidates of one search, and the splits worth a look. Each piece
+ * of the side to move that a candidate moves is scanned once, in the first world where it stands on its square: which
+ * squares the enemy attacks and the own side defends once the piece has left, and which lines of an attack on an own
+ * royal piece a part of a split could close; each target square once more, for what the piece would attack there. A
+ * variant with its own `generate` is scanned by playing the quiet move to each target and asking `generate` (no
+ * defence known: a victim counts as defended), or its `aiThreats`.
+ */
+class QuantumJudge {
+	/**
+	 * @param {object} V variant
+	 * @param {object} state the state the search runs on
+	 */
+	constructor(V, state) {
+		this.V = V
+		this.state = state
+		this.me = state.turn
+		const { used, limit } = budgetInfo(V, state, this.me)
+		this.used = used
+		this.limit = limit
+		// the share of the budget still free, less while the worlds are many (each one makes the search slower)
+		this.room = Math.max(0, 1 - used / limit) * Math.max(0, 1 - state.worlds.length / SPREAD_WORLDS)
+		// losing chess: no threat, dodge, block or spread terms, only the room a merge or measurement makes
+		this.plain = V.materialSign === -1
+		this.pieces = new Map()
+		this.known = new Map()
+	}
+
+	/**
+	 * Whether a code is a measurement.
+	 *
+	 * @param {string} code move code
+	 * @return {boolean}
+	 */
+	measures(code) {
+		return code[0] === '?' && parseCode(this.V, code)?.type === 'measure'
+	}
+
+	/**
+	 * The quantum terms of a candidate: `total` for the search, `style` the part of it that a deeper search does not
+	 * see either (all but the threats), `purpose` whether a split has a threat, a dodge or a block.
+	 *
+	 * @param {string} code move code (a legal one)
+	 * @param {(code: string) => object[]|null} outcomesOf the outcomes of a move (asked for a merge or measurement)
+	 * @return {{total: number, style: number, purpose: boolean}}
+	 */
+	terms(code, outcomesOf) {
+		let t = this.known.get(code)
+		if (t === undefined) {
+			const p = parseCode(this.V, code)
+			if (!p) {
+				t = NO_TERMS
+			} else if (p.type === 'move') {
+				t = this.quiet(code)
+			} else if (p.type === 'split') {
+				t = this.split(p.from[0], p.to[0], p.to[1])
+			} else {
+				const list = outcomesOf(code)
+				t = list ? this.settle(p.type, list) : NO_TERMS
+			}
+			this.known.set(code, t)
+		}
+		return t
+	}
+
+	/**
+	 * The threat terms of an ordinary move: a quiet move (no capture, promotion, drop or certain move) of a piece that
+	 * is not royal, onto a safe square, in the first world where it can be played.
+	 *
+	 * @param {string} key move key
+	 * @return {{total: number, style: number, purpose: boolean}}
+	 */
+	quiet(key) {
+		if (this.plain) {
+			return NO_TERMS
+		}
+		let m
+		for (const { b } of this.state.worlds) {
+			m = generate(this.V, b, this.me).get(key)
+			if (m) {
+				break
+			}
+		}
+		if (!m || m.capture >= 0 || m.promo || m.drop || m.from < 0 || isCertain(m) || m.kind === 'castle') {
+			return NO_TERMS
+		}
+		const info = this.piece(m.from)
+		if (!info || info.royal) {
+			return NO_TERMS
+		}
+		const e = this.spot(info, m.to)
+		if (!e?.safe) {
+			return NO_TERMS
+		}
+		const byVictim = new Map()
+		for (const [id, x] of e.threats) {
+			byVictim.set(id, { gain: x.gain * info.chance, royal: x.royal })
+		}
+		return this.capped(threatTerms(byVictim), 0, false)
+	}
+
+	/**
+	 * The terms of a merge or measurement: the room it makes in the budget, averaged over its outcomes, and for a merge
+	 * the chance that it captures.
+	 *
+	 * @param {string} type merge or measure
+	 * @param {object[]} list its outcomes
+	 * @return {{total: number, style: number, purpose: boolean}}
+	 */
+	settle(type, list) {
+		let after = 0
+		let caught = 0
+		for (const br of list) {
+			const p = br.weight / T
+			after += p * budgetInfo(this.V, { ...this.state, worlds: br.worlds }, this.me).used
+			if (br.captures.length > 0) {
+				caught += p
+			}
+		}
+		let style = (QUANTUM.relief * Math.max(0, this.used - after)) / this.limit
+		if (type === 'merge' && !this.plain) {
+			style += QUANTUM.capture * caught
+		}
+		return this.capped(0, style, false)
+	}
+
+	/**
+	 * The terms of the split `f-t1|t2` (see `QUANTUM`).
+	 *
+	 * @param {number} f from square
+	 * @param {number} t1 first target
+	 * @param {number} t2 second target
+	 * @return {{total: number, style: number, purpose: boolean}}
+	 */
+	split(f, t1, t2) {
+		const info = this.piece(f)
+		const a = info && this.spot(info, t1)
+		const c = info && this.spot(info, t2)
+		if (!a || !c) {
+			return NO_TERMS
+		}
+		const safe = a.safe && c.safe
+		// losing chess: no spread either, a ghost is not safer where every capture is compulsory
+		let style = safe && !this.plain ? QUANTUM.spread * this.room : 0
+		if (this.plain) {
+			return this.capped(0, style, false)
+		}
+		let threat = 0
+		let purpose = false
+		if (safe) {
+			// the chance of each victim adds up over the parts that attack it: both parts make a converging capture
+			const byVictim = new Map()
+			for (const part of [a, c]) {
+				for (const [id, x] of part.threats) {
+					const gain = (byVictim.get(id)?.gain ?? 0) + (x.gain * info.chance) / 2
+					byVictim.set(id, { gain, royal: x.royal })
+				}
+			}
+			threat = threatTerms(byVictim)
+			if (info.attacked) {
+				style += QUANTUM.dodge
+			}
+			purpose = threat > 0 || info.attacked
+		}
+		if (a.block.size > 0 || c.block.size > 0) {
+			style += QUANTUM.block
+			purpose = true
+		}
+		return this.capped(threat, style, purpose)
+	}
+
+	/**
+	 * Terms within the cap.
+	 *
+	 * @param {number} threat the threat terms
+	 * @param {number} style the other terms
+	 * @param {boolean} purpose whether a split has a purpose
+	 * @return {{total: number, style: number, purpose: boolean}}
+	 */
+	capped(threat, style, purpose) {
+		return {
+			total: Math.min(QUANTUM.cap, threat + style),
+			style: Math.min(QUANTUM.cap, style),
+			purpose,
+		}
+	}
+
+	/**
+	 * The splits of the piece on `f` that have a purpose (`split`: a threat, a dodge or a block), legal ones only, the
+	 * best first, and first of all the pairs that close the most lines of attacks on own royal pieces. The pairs are
+	 * made of the targets with a threat or a block (at most 6, the strongest first) and those or a few safe targets
+	 * (equal ones in an order that changes from ply to ply), as far as the variant allows the pair (`allowQuantum`).
+	 *
+	 * @param {number} f from square
+	 * @param {(code: string) => object[]|null} outcomesOf the outcomes of a move
+	 * @param {number} max how many splits at most
+	 * @return {Array<{code: string, score: number}>}
+	 */
+	ideas(f, outcomesOf, max) {
+		const info = this.plain || this.used >= this.limit ? null : this.piece(f)
+		if (!info) {
+			return []
+		}
+		// equal targets and pairs in an order that changes from ply to ply, without the search's random numbers
+		const mix = (n) => (Math.imul(n + 1, 0x9E3779B1) ^ Math.imul(this.state.ply + 1, 0x85EBCA6B)) >>> 0
+		const entries = []
+		for (const t of splitTargets(this.V, this.state, f)) {
+			const e = this.spot(info, t)
+			if (e) {
+				entries.push({ t, e, tie: mix(t) })
+			}
+		}
+		const strength = (x) => {
+			let sum = x.e.block.size * ROYAL_THREAT
+			for (const y of x.e.threats.values()) {
+				sum += y.gain
+			}
+			return sum
+		}
+		const byTie = (x, y) => x.tie - y.tie
+		const lead = entries.filter((x) => x.e.threats.size > 0 || x.e.block.size > 0)
+			.sort((x, y) => strength(y) - strength(x) || byTie(x, y))
+			.slice(0, 6)
+		const safe = entries.filter((x) => x.e.safe).sort(byTie).slice(0, 6)
+		const first = info.attacked ? [...lead, ...safe.slice(0, 4)] : lead
+		// the variant may forbid a pair (the multiverse: both halves on one board); its hook is cheap
+		const allowed = (t1, t2) => !this.V.allowQuantum
+			|| this.V.allowQuantum(this.state, { type: 'split', from: [f], to: [t1, t2] })
+		const pairs = new Map()
+		for (const x of first) {
+			for (const y of [...lead, ...safe]) {
+				const [t1, t2] = x.t < y.t ? [x.t, y.t] : [y.t, x.t]
+				const key = t1 + ':' + t2
+				if (t1 === t2 || pairs.has(key) || !allowed(t1, t2)) {
+					continue
+				}
+				const terms = this.split(f, t1, t2)
+				if (terms.purpose) {
+					// the more attack lines on an own royal piece the pair closes, the more urgent
+					const urgent = new Set([...x.e.block, ...y.e.block]).size * ROYAL_THREAT
+					pairs.set(key, { t1, t2, score: terms.total + urgent, tie: mix(t1 * 4096 + t2) })
+				}
+			}
+		}
+		const out = []
+		let tries = 0
+		for (const p of [...pairs.values()].sort((x, y) => y.score - x.score || x.tie - y.tie)) {
+			if (out.length >= max || tries++ >= 3 * max) {
+				break
+			}
+			const code = splitCode(this.V, f, p.t1, p.t2)
+			if (outcomesOf(code)) {
+				out.push({ code, score: p.score })
+			}
+		}
+		return out
+	}
+
+	/**
+	 * The scan of the piece of the side to move on `f`, remembered: null when there is none.
+	 *
+	 * @param {number} f square
+	 * @return {object|null} `{ b, X, f, chance, royal, attacked, danger, targets, ... }`: its first world, the piece,
+	 *   the chance that it stands on `f`, whether it is royal, whether it could be taken with gain where it stands,
+	 *   whether an own royal piece is attacked, and the target squares scanned so far (`spot`)
+	 */
+	piece(f) {
+		let info = this.pieces.get(f)
+		if (info === undefined) {
+			info = this.scan(f)
+			this.pieces.set(f, info)
+		}
+		return info
+	}
+
+	/**
+	 * Scan the piece on `f` (see `piece`).
+	 *
+	 * @param {number} f square
+	 * @return {object|null}
+	 */
+	scan(f) {
+		const { V, state, me } = this
+		let b = null
+		let chance = 0
+		for (const { b: w, w: weight } of state.worlds) {
+			const id = w.board[f]
+			if (id >= 0 && w.sd[id] === me && (b === null || id === b.board[f])) {
+				b ??= w
+				chance += weight / T
+			}
+		}
+		if (b === null) {
+			return null
+		}
+		const X = b.board[f]
+		const info = {
+			b,
+			X,
+			f,
+			vX: valueOf(V, b.ty[X]),
+			chance,
+			royal: V.royalTypes.has(b.ty[X]),
+			attacked: false,
+			danger: false,
+			targets: new Map(),
+		}
+		if (V.generate) {
+			this.baseGenerated(info)
+		} else {
+			this.baseLines(info)
+		}
+		return info
+	}
+
+	/**
+	 * The chance that piece `id` stands on square `s`.
+	 *
+	 * @param {number} s square
+	 * @param {number} id piece
+	 * @return {number}
+	 */
+	presence(s, id) {
+		let p = 0
+		for (const { b, w } of this.state.worlds) {
+			if (b.board[s] === id) {
+				p += w / T
+			}
+		}
+		return p
+	}
+
+	/**
+	 * The scan of a target square of a scanned piece (remembered): `{ safe, block, threats }`, where `block` holds the
+	 * attacks on own royal pieces that a part there would stop and `threats` maps each victim to `{ gain, royal }` (the
+	 * gain times the chance that the victim is there); null when the piece has no quiet move there in its world (a
+	 * variant with its own `generate`).
+	 *
+	 * @param {object} info the scan of the piece
+	 * @param {number} t target square
+	 * @return {{safe: boolean, block: Set<string>, threats: Map<number, {gain: number, royal: boolean}>}|null}
+	 */
+	spot(info, t) {
+		let e = info.targets.get(t)
+		if (e === undefined) {
+			e = this.V.generate ? this.spotGenerated(info, t) : this.spotLines(info, t)
+			info.targets.set(t, e)
+		}
+		return e
+	}
+
+	/**
+	 * The base of a scan along the movement lines (a variant without its own `generate`): with the piece lifted off
+	 * its square, the cheapest enemy attacker and the number of own defenders of every square, and the squares on the
+	 * lines of the attacks on own royal pieces that the piece does not block now (each line by its attacker and its
+	 * first square).
+	 *
+	 * @param {object} info the scan to fill in
+	 */
+	baseLines(info) {
+		const { V, me } = this
+		const { b, X, f } = info
+		const board = b.board.slice()
+		board[f] = -1
+		const cheapest = new Array(board.length).fill(Infinity)
+		const defenders = new Array(board.length).fill(0)
+		// per square, the attacks on own royal pieces that a piece there would stop (attacker and the line's start)
+		const blocks = new Map()
+		for (let id = 0; id < b.sq.length; id++) {
+			const s = b.sq[id]
+			if (s < 0 || id === X) {
+				continue
+			}
+			const side = b.sd[id]
+			if (!V.enemies(me, side)) {
+				reach(V, board, b.ty[id], side, s, (t) => {
+					defenders[t]++
+				})
+				continue
+			}
+			const v = V.royalTypes.has(b.ty[id]) ? ROYAL_ATTACKER : valueOf(V, b.ty[id])
+			reach(V, board, b.ty[id], side, s, (t, path) => {
+				cheapest[t] = Math.min(cheapest[t], v)
+				const hit = board[t]
+				if (hit >= 0 && b.sd[hit] === me && V.royalTypes.has(b.ty[hit]) && (!path || !path.includes(f))) {
+					info.danger = true
+					const line = id + ':' + (path?.[0] ?? t)
+					for (const q of path ?? []) {
+						if (!blocks.has(q)) {
+							blocks.set(q, new Set())
+						}
+						blocks.get(q).add(line)
+					}
+				}
+			})
+		}
+		info.attacked = cheapest[f] < Infinity && (defenders[f] === 0 || cheapest[f] < info.vX)
+		Object.assign(info, { board, cheapest, defenders, blocks })
+	}
+
+	/**
+	 * A target square scanned along the movement lines (see `spot`). A capture from there is played out in the world
+	 * with the piece on the target, so its gain is what it changes in the value of the world (a piece in hand, an
+	 * explosion), less the piece when the capture square is attacked and the piece is still there.
+	 *
+	 * @param {object} info the scan of the piece
+	 * @param {number} t target square
+	 * @return {{safe: boolean, block: Set<string>, threats: Map<number, {gain: number, royal: boolean}>}}
+	 */
+	spotLines(info, t) {
+		const { V, me } = this
+		const { b, X, board, cheapest, defenders, vX } = info
+		const threats = new Map()
+		// the world with the piece on t, where its captures are played out
+		let moved = null
+		let before = 0
+		reach(V, board, b.ty[X], me, t, (s) => {
+			const E = board[s]
+			if (E < 0 || s === t || !V.enemies(me, b.sd[E])) {
+				return
+			}
+			const royal = V.royalTypes.has(b.ty[E])
+			let gain = ROYAL_THREAT
+			if (!royal) {
+				if (moved === null) {
+					moved = cloneWorld(b)
+					placePiece(moved, X, t)
+					before = worldValue(V, moved, me)
+				}
+				// what the capture changes (a hand, an explosion), less the piece when the enemy can take it back there
+				const built = []
+				pushMove(V, moved, built, X, t, s, E)
+				const after = applyClassical(V, moved, built[0])
+				const back = after.sq[X] === s && cheapest[s] < Infinity ? vX : 0
+				gain = worldValue(V, after, me) - before - back
+			}
+			if (gain > 0) {
+				threats.set(E, { gain: gain * this.presence(s, E), royal })
+			}
+		})
+		return {
+			safe: cheapest[t] === Infinity || (defenders[t] > 0 && cheapest[t] >= vX),
+			block: info.blocks.get(t) ?? NO_LINES,
+			threats,
+		}
+	}
+
+	/**
+	 * The enemy captures of a world as a variant with its own `generate` makes them: those of the scanned piece, and
+	 * the attacks on own royal pieces (as `attacker:victim`).
+	 *
+	 * @param {object} w world
+	 * @param {number} X the scanned piece
+	 * @return {{takers: object[], royal: Set<string>}}
+	 */
+	enemyCaptures(w, X) {
+		const { V, me } = this
+		const takers = []
+		const royal = new Set()
+		for (let s = 0; s < V.sideCount; s++) {
+			if (!V.enemies(me, s)) {
+				continue
+			}
+			for (const m of capturesOf(V, w, s)) {
+				if (m.capture === X) {
+					takers.push(m)
+				}
+				if (w.sd[m.capture] === me && V.royalTypes.has(w.ty[m.capture])) {
+					royal.add(m.id + ':' + m.capture)
+				}
+			}
+		}
+		return { takers, royal }
+	}
+
+	/**
+	 * The base of a scan of a variant with its own `generate`: whether a cheaper enemy piece could take the piece,
+	 * the attacks on own royal pieces, and the quiet moves of the piece.
+	 *
+	 * @param {object} info the scan to fill in
+	 */
+	baseGenerated(info) {
+		const { b, X, f } = info
+		const here = this.enemyCaptures(b, X)
+		info.attacked = here.takers.some((m) => valueOf(this.V, b.ty[m.id]) < info.vX)
+		info.danger = here.royal.size > 0
+		info.royalHere = here.royal
+		info.quiet = quietMoves(this.V, b, this.me, X, f)
+	}
+
+	/**
+	 * A target square of a variant with its own `generate` (see `spot`): the quiet move there is played in the world;
+	 * `aiThreats` (else `generate`) tells what the piece attacks there, a victim counting as defended.
+	 *
+	 * @param {object} info the scan of the piece
+	 * @param {number} t target square
+	 * @return {{safe: boolean, block: Set<string>, threats: Map<number, {gain: number, royal: boolean}>}|null}
+	 */
+	spotGenerated(info, t) {
+		const { V, me } = this
+		const { b, X, vX } = info
+		const m = info.quiet.get(t)
+		if (!m) {
+			return null
+		}
+		const next = applyClassical(V, b, m)
+		const threats = new Map()
+		for (const c of V.aiThreats ? V.aiThreats(next, me, X) : generate(V, next, me).values()) {
+			if (c.id !== X || c.capture < 0) {
+				continue
+			}
+			const E = c.capture
+			const royal = V.royalTypes.has(next.ty[E])
+			const gain = royal ? ROYAL_THREAT : Math.max(0, valueOf(V, next.ty[E]) - vX)
+			if (gain > 0) {
+				threats.set(E, { gain: gain * this.presence(next.sq[E], E), royal })
+			}
+		}
+		const there = this.enemyCaptures(next, X)
+		return {
+			safe: there.takers.length === 0,
+			// the attacks on own royal pieces that the part stops
+			block: new Set([...info.royalHere].filter((k) => !there.royal.has(k))),
+			threats,
+		}
+	}
+}
+
+/**
+ * The quantum terms of one legal move of the side to move (`QUANTUM`), as the search adds them to its value:
+ * `total`, `style` (the part a deeper search does not see either) and `purpose` (a split with a threat, a dodge or
+ * a block). Exported for tests.
+ *
+ * @param {object} V variant
+ * @param {object} state state
+ * @param {string} code move code
+ * @return {{total: number, style: number, purpose: boolean}}
+ */
+export function quantumTerms(V, state, code) {
+	return new QuantumJudge(V, state).terms(code, (c) => branches(V, state, c))
+}
+
+/**
+ * The splits with a purpose of the piece on `f` that the search looks at first (`QuantumJudge.ideas`), the best
+ * first. Exported for tests.
+ *
+ * @param {object} V variant
+ * @param {object} state state
+ * @param {number} f from square
+ * @param {number} [max] how many at most
+ * @return {string[]} split codes
+ */
+export function splitIdeas(V, state, f, max = 3) {
+	return new QuantumJudge(V, state).ideas(f, (c) => branches(V, state, c), max).map((e) => e.code)
+}
+
+/**
+ * The candidate moves of a state: every ordinary move, measurement and merge, plus a few splits: the level's count of
+ * splits at random from the best targets of each piece (`aiSplits`), and as many splits with a purpose
+ * (`QuantumJudge.ideas`: a threat, a dodge or a block; the best of all pieces) that are not among them yet.
  *
  * @param {object} V variant
  * @param {object} state state
@@ -555,30 +1264,47 @@ function certainTake(V, state, d = state.turn) {
  * @param {SearchClock} clock the time budget (no more split candidates once it is spent)
  * @param {() => Promise<void>} pause yields to the browser now and then
  * @param {(code: string) => object[]|null} outcomesOf the outcomes of a move (`OutcomeMemo`)
+ * @param {QuantumJudge} judge the quantum terms of this search
  * @return {Promise<string[]>}
  */
-async function candidates(V, state, splitCount, rng, clock, pause, outcomesOf) {
+async function candidates(V, state, splitCount, rng, clock, pause, outcomesOf, judge) {
 	const out = legalMoves(V, state).map((m) => m.code)
-	if (splitCount > 0) {
-		const froms = new Set()
-		for (const { b } of state.worlds) {
-			for (let id = 0; id < b.sq.length; id++) {
-				if (b.sd[id] === state.turn && b.sq[id] >= 0 && V.types[b.ty[id]]?.splittable) {
-					froms.add(b.sq[id])
-				}
+	if (splitCount <= 0) {
+		return out
+	}
+	const froms = new Set()
+	for (const { b } of state.worlds) {
+		for (let id = 0; id < b.sq.length; id++) {
+			if (b.sd[id] === state.turn && b.sq[id] >= 0 && V.types[b.ty[id]]?.splittable) {
+				froms.add(b.sq[id])
 			}
 		}
-		const pool = []
-		for (const f of froms) {
-			if (clock.up()) {
-				break
-			}
-			await pause()
-			pool.push(...aiSplits(V, state, f, rng, 6, outcomesOf))
+	}
+	const pool = []
+	const ideas = []
+	for (const f of froms) {
+		if (clock.up()) {
+			break
 		}
-		for (let i = 0; i < splitCount && pool.length; i++) {
-			const k = Math.floor(rng() * pool.length)
-			out.push(pool.splice(k, 1)[0])
+		await pause()
+		pool.push(...aiSplits(V, state, f, rng, 6, outcomesOf))
+		ideas.push(...judge.ideas(f, outcomesOf, 3))
+	}
+	for (let i = 0; i < splitCount && pool.length; i++) {
+		const k = Math.floor(rng() * pool.length)
+		out.push(pool.splice(k, 1)[0])
+	}
+	// the splits with a purpose, the best first (equal ones in the order of the pieces), as many as the level's count
+	const seen = new Set(out)
+	let extra = 0
+	for (const { code } of ideas.sort((a, b) => b.score - a.score)) {
+		if (extra >= splitCount) {
+			break
+		}
+		if (!seen.has(code)) {
+			seen.add(code)
+			out.push(code)
+			extra++
 		}
 	}
 	return out
@@ -968,10 +1694,11 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
 	}
 	const memo = new OutcomeMemo(V, state)
 	const outcomesOf = memo.get
+	const judge = new QuantumJudge(V, state)
 	const legal = real === state ? null : legalOn(V, real)
 	// a view that is not exact: every candidate is checked on the real state before it is judged
 	const checkEach = legal !== null && !V.aiViewExact
-	const moves = await candidates(V, state, L.splits, rng, clock, pause, outcomesOf)
+	const moves = await candidates(V, state, L.splits, rng, clock, pause, outcomesOf, judge)
 	if (!moves.length) {
 		return V.aiView ? attemptUntilAccepted(V, real, me, rng, pause) : null
 	}
@@ -1000,9 +1727,15 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
 		}
 		let late = clock.up()
 		let value = null
+		// what a measurement shows when the turn goes on after it
+		let seen = 0
 		if (!late) {
 			try {
 				value = await expected(V, state, code, outcomesOf(code), score, clock, pause, false)
+				if (value !== null && L.reply && judge.measures(code)) {
+					seen = await insight(V, state, code, outcomesOf(code), me, L, clock, pause)
+					value += seen
+				}
 			} catch (e) {
 				if (!(e instanceof OutOfTime)) {
 					throw e
@@ -1021,7 +1754,10 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
 				break
 			}
 			if (best !== null) {
-				bestQuick ??= await expected(V, state, best, outcomesOf(best), now, null, pause)
+				if (bestQuick === undefined) {
+					const quick = await expected(V, state, best, outcomesOf(best), now, null, pause)
+					bestQuick = quick === null ? null : quick + termsOf(quick, judge.terms(best, outcomesOf).total)
+				}
 				if (bestQuick === null || bestQuick > -WIN / 2) {
 					break
 				}
@@ -1032,9 +1768,13 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
 		if (value === null) {
 			continue
 		}
+		// the quantum terms: what a move, split, merge or measurement prepares
+		const terms = judge.terms(code, outcomesOf)
+		const added = termsOf(value, terms.total)
+		value += added
 		const noisy = value + (L.noise ? (rng() - 0.5) * 2 * L.noise : rng() * 1e-3)
 		if (!late) {
-			scored.push({ code, value: noisy, forcing: pass.forcing.has(code) })
+			scored.push({ code, value: noisy, forcing: pass.forcing.has(code), terms, added, seen })
 		}
 		judged.push({ code, value: noisy })
 		// a move judged without its answer is compared with the best move judged that way
@@ -1062,6 +1802,78 @@ export async function chooseMove(V, state, { level = 'normal', rng = Math.random
 		return best ?? attemptUntilAccepted(V, real, me, rng, pause)
 	}
 	return firstLegal(V, real, best, judged, pass.ordered, legal, rng, pause)
+}
+
+/**
+ * The value of what a measurement shows when the turn goes on after it (a turn of several moves, as in the
+ * multiverse): with its outcome known, the side chooses its next move for that outcome, where without it one move
+ * must serve every outcome. The difference, never negative, is what the measurement is worth beyond its own outcomes:
+ * a danger to an own royal piece that the next move answers only where it exists, a capture that the found victim
+ * makes certain. The next moves looked at are the forcing ones (`forces`; every move at a level with `fullReply`), or
+ * none; each is judged by the light states after it, and a move that is not looked at in one outcome counts as none
+ * there. Zero when the turn passes or the game ends, and when the search looks at the next move itself (the variant's
+ * `replySide` names the side to move after the measurement; the multiverse leaves its own turn to the evaluation).
+ *
+ * @param {object} V variant
+ * @param {object} state state before the measurement
+ * @param {string} code the measurement
+ * @param {object[]} list its outcomes
+ * @param {number} me my side
+ * @param {object} L level
+ * @param {SearchClock} clock the time budget (checked before each next move)
+ * @param {() => Promise<void>} pause yields to the browser now and then
+ * @return {Promise<number>}
+ */
+async function insight(V, state, code, list, me, L, clock, pause) {
+	const after = list.map((br) => ({ p: br.weight / T, s: stateAfter(V, state, code, br, list, { light: true }) }))
+	// only where the search looks at no answer after it (`replySide` null): else it sees my next move itself
+	const answer = (s) => (V.replySide ? V.replySide(s, me) : s.turn)
+	if (after.length < 2 || after.some(({ s }) => s.result || s.turn !== me || answer(s) !== null)) {
+		return 0
+	}
+	const stand = after.map(({ s }) => evaluateState(V, s, me))
+	// per next move, its value in each outcome (none: the value of the outcome itself)
+	const rows = new Map()
+	for (const [i, { s }] of after.entries()) {
+		for (const m of legalMoves(V, s)) {
+			clock.check()
+			await pause()
+			const next = branches(V, s, m.code)
+			if (!next || !(L.fullReply || forces(V, s, m.code, next))) {
+				continue
+			}
+			let v = 0
+			for (const br of next) {
+				v += (br.weight / T) * evaluateState(V, stateAfter(V, s, m.code, br, next, { light: true }), me)
+			}
+			if (!rows.has(m.code)) {
+				rows.set(m.code, stand.slice())
+			}
+			rows.get(m.code)[i] = v
+		}
+	}
+	const mean = (values) => after.reduce((sum, { p }, i) => sum + p * values[i], 0)
+	let blind = mean(stand)
+	for (const row of rows.values()) {
+		blind = Math.max(blind, mean(row))
+	}
+	const informed = mean(stand.map((v, i) => Math.max(v, ...[...rows.values()].map((row) => row[i]))))
+	return Math.max(0, informed - blind)
+}
+
+/**
+ * What a measurement shows when the turn goes on after it (`insight`), at a level and without a time limit. Exported
+ * for tests.
+ *
+ * @param {object} V variant
+ * @param {object} state state before the measurement
+ * @param {string} code the measurement (legal)
+ * @param {string} [level] easy, normal or hard
+ * @return {Promise<number>}
+ */
+export function measureInsight(V, state, code, level = 'normal') {
+	const L = LEVELS.find((l) => l.id === level) ?? LEVELS[1]
+	return insight(V, state, code, branches(V, state, code), state.turn, L, new SearchClock(Infinity), async () => {})
 }
 
 /**
@@ -1244,17 +2056,21 @@ function pacer() {
 
 /**
  * The third move of the hard level, at the end of the two-move pass: the best candidates of that pass, in the order of
- * their value (the forcing ones first among equal values, rounded to a centipawn), are scored again with `deepValue`,
- * while the time budget lasts, less a tenth of it, so that the search ends in time even when one step of it is slow.
- * The best of those whose whole evaluation fitted is chosen; null when none did (the two-move choice stands).
+ * their value without the quantum terms (the forcing ones first among equal values, rounded to a centipawn), and after
+ * them the `DEEP_QUANTUM` moves with quantum terms of most value that are not among them, are scored again with
+ * `deepValue`, while the time budget lasts, less a tenth of it, so that the search ends in time even when one step of
+ * it is slow. A re-scored value gets the quantum terms that the third move does not see (`style`) and what a
+ * measurement shows when the turn goes on after it (`seen`). The best of those whose whole evaluation fitted is chosen;
+ * null when none did (the two-move choice stands).
  *
  * @param {object} V variant
  * @param {object} state state (the computer's view)
  * @param {number} me my side
  * @param {object} L level
  * @param {SearchClock} clock the time budget of the search
- * @param {Array<{code: string, value: number, forcing: boolean}>} scored the candidates of the two-move pass with
- *   their values, and whether they might force the game
+ * @param {Array<{code: string, value: number, forcing: boolean, terms: object, added: number, seen: number}>} scored
+ *   the candidates of the two-move pass: their values (quantum terms included), whether they might force the game,
+ *   their quantum terms (`QuantumJudge.terms`), the part of the terms their value holds, and what a measurement shows
  * @param {() => number} rng random numbers
  * @param {AbortSignal|undefined} signal abort the search
  * @param {() => Promise<void>} pause yields to the browser now and then
@@ -1262,13 +2078,18 @@ function pacer() {
  * @return {Promise<string|null>}
  */
 async function deepen(V, state, me, L, clock, scored, rng, signal, pause, outcomesOf) {
+	const base = (e) => e.value - e.added
 	const top = [...scored]
-		.sort((a, b) => Math.round(b.value) - Math.round(a.value) || b.forcing - a.forcing || b.value - a.value)
+		.sort((a, b) => Math.round(base(b)) - Math.round(base(a)) || b.forcing - a.forcing || base(b) - base(a))
 		.slice(0, L.deep)
+	// the quantum moves of most value with their terms, which the order without them may leave out
+	const quantum = scored.filter((e) => e.added > 0 && !top.includes(e))
+		.sort((a, b) => b.value - a.value)
+		.slice(0, DEEP_QUANTUM)
 	const budget = new SearchClock(clock.deadline - clock.now() - clock.timeMs / 10, signal, clock.now)
 	let best = null
 	let bestValue = -Infinity
-	for (const { code } of top) {
+	for (const { code, terms, seen } of [...top, ...quantum]) {
 		if (signal?.aborted || budget.up()) {
 			break
 		}
@@ -1288,7 +2109,10 @@ async function deepen(V, state, me, L, clock, scored, rng, signal, pause, outcom
 			}
 			break
 		}
-		const noisy = value + (L.noise ? (rng() - 0.5) * 2 * L.noise : rng() * 1e-3)
+		// the third move sees the threats of a split: only the other quantum terms are added, and what a measurement
+		// shows when the turn goes on after it (the third move is not searched inside the own turn)
+		const noise = L.noise ? (rng() - 0.5) * 2 * L.noise : rng() * 1e-3
+		const noisy = value + termsOf(value, terms.style) + seen + noise
 		if (noisy > bestValue) {
 			bestValue = noisy
 			best = code

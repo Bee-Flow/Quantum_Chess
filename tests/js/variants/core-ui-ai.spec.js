@@ -4,10 +4,10 @@
  */
 
 /**
- * Package "ui-ai" of the follow-up items, pure parts: the computer's fallback when no move of its view is legal (U1),
- * its time budget (U2), the roll memo key (U3), the miss text of a drop (U4), the shared rules without castling and
- * en passant (U5) and with capture-the-king and the escape rule (lead decision L1), no split candidates of the computer
- * with a full budget (R8, its `aiSplits` half) and the reason text of a king that cannot escape (U7).
+ * The computer and shared-rules helpers of the core, pure parts: the computer's fallback when no move of its view is
+ * legal (U1), its time budget (U2), the roll memo key (U3), the miss text of a drop (U4), the shared rules without
+ * castling and en passant (U5) and with capture-the-king and the escape rule (L1), no split candidates of the
+ * computer with a full budget (R8, its `aiSplits` half) and the reason text of a king that cannot escape (U7).
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest'

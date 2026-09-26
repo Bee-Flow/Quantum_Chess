@@ -6,7 +6,7 @@
 /**
  * Xiangqi (Chinese chess): the point board, the WXF start array, the move of every piece (checked against
  * Fairy-Stockfish by perft), the flying general, the loss without a move, the draws, and how they meet the quantum
- * rules. The cases follow section 7 of handoff/research/xiangqi.md.
+ * rules.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -202,7 +202,7 @@ describe('xiangqi: board and setup', () => {
 		const s = newGame(V)
 		expect(s.turn).toBe(0)
 		expect(s.worlds[0].b.x).toEqual({})
-		// every piece on its start point, in id order (section 2.3 of the spec)
+		// every piece on its start point, in id order
 		expect(show(s)).toEqual([
 			'1 Ra1 Hb1 Ec1 Ad1 Ke1 Af1 Eg1 Hh1 Ri1 Cb3 Ch3 Pa4 Pc4 Pe4 Pg4 Pi4 '
 			+ 'pa7 pc7 pe7 pg7 pi7 cb8 ch8 ra10 hb10 ec10 ad10 ke10 af10 eg10 hh10 ri10',
@@ -229,7 +229,12 @@ describe('xiangqi: board and setup', () => {
 		// the corner marks: 2 segments per quarter, 10 points with 4 quarters and 4 edge points with 2
 		expect(layout.lines.length - grid.length).toBe(2 * (10 * 4 + 4 * 2))
 		const ranks = Array.from({ length: 10 }, (_, r) => String(r + 1))
-		expect(layout.labels.map((l) => l.text)).toEqual([...'abcdefghi', ...ranks])
+		expect(layout.labels.filter((l) => !l.kind).map((l) => l.text)).toEqual([...'abcdefghi', ...ranks])
+		// the river's inscription, in the middle of the river band
+		expect(layout.labels.filter((l) => l.kind === 'river')).toEqual([
+			{ x: 2.5, y: 5, text: '楚河', kind: 'river' },
+			{ x: 6.5, y: 5, text: '漢界', kind: 'river' },
+		])
 		// no zoom controls: 9 × 10 is below the threshold
 		expect(layout.width * layout.height).toBeLessThanOrEqual(200)
 	})
@@ -262,7 +267,7 @@ describe('xiangqi: board and setup', () => {
 		expect(rules[6]).toContain('every move you have would let your general be captured for certain')
 		// no castling and no en passant: the shared rules card leaves out its sentence about them
 		expect(V.specialMoves).toBe(false)
-		// the classic end rules of docs/rules.md 5 and 6 all apply (LEAD-DECISIONS L1)
+		// the classic end rules of docs/rules.md 5 and 6 all apply
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait]).toEqual([true, true, true])
 		expect(sharedRules(V).some((r) => r.includes('Castling') || r.includes('en passant'))).toBe(false)
 	})

@@ -4,7 +4,7 @@
  */
 
 /**
- * The moves of multiverse chess in one world (handoff/research/multiverse-final.md sections 5, 6.6 and 6.7).
+ * The moves of multiverse chess in one world.
  *
  * A piece moves from the latest board of a row its side may play, along its vectors (dx, dy, dT, dL), onto a stored
  * board: its own board (a physical move), the latest board of another row (a jump, key `>`), or an older board (a

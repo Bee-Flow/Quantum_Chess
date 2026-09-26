@@ -8,7 +8,7 @@
  * without its four 3 × 3 corners. Free for all (default): a captured king takes its whole army off the board, the last
  * king standing wins. Teams (option): Red and Yellow against Blue and Green, partners cannot capture each other, the
  * first captured king loses for its team. Each player's quantum budget is 2 while four play (4 with three, 8 with
- * two). Player-facing rules are in docs/variants.md; the design is in handoff/research/fourplayer.md.
+ * two). Player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -521,7 +521,7 @@ const spec = {
 	],
 	maxPly: 1200,
 	quietPlies: 200,
-	// The classic end rules (docs/rules.md 5 and 6; handoff/LEAD-DECISIONS.md L1, which lists the four-player games).
+	// The classic end rules (docs/rules.md 5 and 6), fitted to three or four players.
 	// "Your king cannot escape" is left out: the core's rule makes the player who just moved the only winner, but with
 	// three or four players in the game another player may be the one to capture, a captured king only puts its
 	// player out in free for all, and a Teams game is won by a team; the flag holds for the whole game, so it stays

@@ -4,17 +4,16 @@
  */
 
 /**
- * The test scenarios of multiverse chess (handoff/research/multiverse-final.md section 10, with the expectations of its
- * section 15 "Review notes"), each under its number and name from the spec: the structure and classical rules (S),
- * the quantum rules (Q), the limits and records (L, R), the drawing (U) and the computer (A).
+ * The test scenarios of multiverse chess, each under the number and name of its design scenario: the structure and
+ * classical rules (S), the quantum rules (Q), the limits and records (L, R), the drawing (U) and the computer (A).
  *
- * After every action the invariants of section 10 are checked: the weights sum to T, `sq` and `board` agree, every
+ * After every action the invariants are checked: the weights sum to T, `sq` and `board` agree, every
  * world has the same skeleton (`solidExtra`) and the same solid pieces, no budget is over its limit, there are no
  * more worlds than the product of the budgets, the side to move is `x.s`, no roll ever settles the structure, the
  * mover never raises the opponent's budget, and every created row is reachable (White's rows start on a Black board
  * from a White parent board, Black's the other way round).
  *
- * The self-play scenario A3 plays 2 games per setup and level; the spec's 8 run with `QC_SLOW=1`:
+ * The self-play scenario A3 plays 2 games per setup and level; the design's 8 run with `QC_SLOW=1`:
  *
  *     QC_SLOW=1 npx vitest run tests/js/variants/multiverse.spec.js
  *
@@ -51,15 +50,12 @@ import { buildWorld, place } from '../../../src/variants/multiverse/setup.js'
 import { LAB, lOf, mandatory, ROWS, skeleton, uOf } from '../../../src/variants/multiverse/skeleton.js'
 import { play, workClock } from './helpers.js'
 
-/**
- * The games per setup and level of the self-play scenario A3: the spec's 8 with `QC_SLOW=1` (about a minute and a
- * half), else 2.
- */
+/** The games per setup and level of the self-play scenario A3: 2, or 8 with `QC_SLOW=1` (about a minute and a half). */
 const SEEDS = process.env.QC_SLOW ? 8 : 2
 
-/** The warning of a move after which the mover cannot finish its own turn (section 6.14). */
+/** The warning of a move after which the mover cannot finish its own turn. */
 const LOSE = 'After this move you cannot finish your turn: you lose'
-/** The warning of a move after which the opponent cannot finish its turn and the game is drawn (section 6.14). */
+/** The warning of a move after which the opponent cannot finish its turn and the game is drawn. */
 const DRAW = 'After this move your opponent cannot finish their turn: the game ends in a draw'
 /** The warning of a move after which the mover cannot finish its own turn in some outcomes of its roll only. */
 const MAY_LOSE = 'Depending on the roll, you may not be able to finish your turn after this move: then you lose'
@@ -134,7 +130,7 @@ function must(s) {
 }
 
 /**
- * The invariants of section 10 that hold in every state.
+ * The invariants that hold in every state.
  *
  * @param {object} s state
  */
@@ -332,7 +328,7 @@ function typesOn(s, name) {
 }
 
 /**
- * The start position after White's split of the knight: `S1` of the spec.
+ * The start position after White's split of the knight: scenario `S1`.
  *
  * @return {object}
  */
@@ -641,7 +637,6 @@ describe('Multiverse chess: structure and classical rules', () => {
 
 	it('S13b en passant after a double step on the first board of a new timeline', () => {
 		// 5d-chess-js offers no en passant here: it looks for the board one turn before, which does not exist
-		// (section 15, I2)
 		let s = one({
 			s: 1,
 			c: [1, 0],
@@ -1152,7 +1147,7 @@ describe('Multiverse chess: quantum', () => {
 		setId(B, '(+1)c3', idAt(A, '(0)c3'))
 		const stalemate = { winner: null, reason: 'stalemate' }
 		expect([A, B].map((w) => V.stateResult(stateOf([[w, 1]])))).toEqual([stalemate, stalemate])
-		// together the turn is a gamble, not a stalemate: a Missed move still plays its board (section 15, I3)
+		// together the turn is a gamble, not a stalemate: a Missed move still plays its board
 		const s = stateOf([[A, 1], [B, 1]])
 		expect(must(s)).toEqual(['0', '+1'])
 		expect(stuck(V, s)).toBe(false)
@@ -1298,7 +1293,7 @@ describe('Multiverse chess: limits and records', () => {
 	})
 
 	// the absolute code in the move notation, with no words: the record is saved with the game and shown as it is in
-	// the move list (section 15, I1)
+	// the move list
 	it('R1 records: the text of a time split', () => {
 		const s = run(start(), ['(0T1)d1-c3', '(0T1)a4-a3', '(0)c3-(0)~3a3|(0)~3e3'])
 		expect(s.history.at(-1).info.text).toBe('(0T2)c3-(0T1)a3|(0T1)e3')
@@ -1408,7 +1403,7 @@ describe('Multiverse chess: the computer', () => {
 	it('A3 self-play', async () => {
 		/**
 		 * Play one game of the computer against itself. Every position it plays from is not stuck, so some action
-		 * must leave the mover able to finish its turn (the invariant of section 10 checked on self-play).
+		 * must leave the mover able to finish its turn (the invariant checked on self-play).
 		 *
 		 * @param {string} setup setup id
 		 * @param {string} level level id

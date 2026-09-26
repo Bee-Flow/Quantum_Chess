@@ -4,11 +4,11 @@
  */
 
 /**
- * The drawing of multiverse chess (handoff/research/multiverse-final.md section 9, scenarios U1 to U5): every stored
- * square drawn exactly once, the rows and columns, the present band, the must-move and optional halos, the frames in
- * the colour of the side to move, the branch connectors, the travel arrows, the placeholders of the next boards, the
- * threat lines of 5D check (from the board the capture would be made from), the names and pins, the focus (its frames,
- * stops and key, also at the end of a game), the legend, and Black's view.
+ * The drawing of multiverse chess (scenarios U1 to U5 of its design): every stored square drawn exactly once, the rows
+ * and columns, the present band, the must-move and optional halos, the frames in the colour of the side to move, the
+ * branch connectors, the travel arrows, the placeholders of the next boards, the threat lines of 5D check (from the
+ * board the capture would be made from), the names and pins, the focus (its frames, stops and key, also at the end of a
+ * game), the legend, and Black's view.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -441,7 +441,12 @@ describe('the drawing of the multiverse', () => {
 		expect(boards.map((b) => b.label)).toContain(`L+2 T4${NB}● · inactive`)
 		// both parent boards are sealed: the connectors leave L0 just below its middle (clear of its "⋯" and name), run
 		// down in a lane of their own right of the names and turn into the first board of their row
-		const rowY = (lab) => labels.find((l) => l.text === lab).y + 0.3
+		// a row's middle: 0.3 below its name, or 0.75 when a note (here "inactive") stands 0.75 below the middle
+		const rowY = (lab) => {
+			const name = labels.find((l) => l.text === lab)
+			const note = labels.some((l) => l.kind === 'note' && Math.abs(l.y - name.y - 1.5) < 1e-9)
+			return name.y + (note ? 0.75 : 0.3)
+		}
 		const white = '#b3a58c'
 		const r = (v) => +v.toFixed(9)
 		const lines = lay.layout.lines.map((l) => ({ ...l, x1: r(l.x1), x2: r(l.x2), y1: r(l.y1), y2: r(l.y2) }))

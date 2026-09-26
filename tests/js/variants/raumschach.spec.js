@@ -7,7 +7,7 @@
  * Raumschach (5 × 5 × 5): the cube and its drawing, the start array, the movement of every piece, the pawn's five
  * capture directions and its orientation for Black, promotion, the classic end rules of the core (capture the king,
  * the king that cannot escape, the bare-kings draw, draws that wait), the quantum rules on 3D lines and the computer
- * player. The cases R1-R11 and RQ1-RQ13 are those of handoff/research/raumschach.md, section 7.
+ * player. The cases are numbered R1-R11 and RQ1-RQ13.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -33,7 +33,7 @@ import { applyClassical, generate, worldFrom } from '../../../src/variants/core/
 import V from '../../../src/variants/raumschach.js'
 import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
-/** The default kings of the spec's test positions. */
+/** The default kings of the test positions. */
 const KINGS = { Ae3: '0:k', Ee3: '1:k' }
 const PROMOTIONS = ['q', 'r', 'b', 'n', 'u']
 
@@ -274,7 +274,7 @@ describe('Raumschach: the cube, its drawing and the start array', () => {
 		}
 	})
 
-	it('uses the core\'s classic end rules and leaves castling out of the shared card (LEAD-DECISIONS L1, L2)', () => {
+	it('uses the core\'s classic end rules and leaves castling out of the shared card', () => {
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait]).toEqual([true, true, true])
 		// the bare-kings draw is the core's, not a copy in the variant
 		expect(V.worldResult).toBeUndefined()
@@ -529,7 +529,7 @@ describe('Raumschach: how the game ends', () => {
 		expect(play(V, s0, 'Bd2-Dd4').result).toEqual({ winner: 0, reason: 'cannotEscape' })
 	})
 
-	it('is won at once by a 3D stalemate too, which the IRF scores as a draw (LEAD-DECISIONS L1)', () => {
+	it('is won at once by a 3D stalemate too, which the IRF scores as a draw', () => {
 		// the queen on Ed3 and the king on Cd4 cover the 7 cells around Ee5 without attacking the king itself
 		const s = play(V, stateOf(V, [[{ Cd4: '0:k', Ad3: '0:q', Ee5: '1:k' }, 1]]), 'Ad3-Ed3')
 		expect(s.result).toEqual({ winner: 0, reason: 'cannotEscape' })
@@ -633,7 +633,7 @@ describe('Raumschach: quantum rules on 3D lines', () => {
 		const missed = applyOutcome(V, s, 'Dc5-Ec5=u', 0)
 		expect(on(missed, 'Dc5')).toEqual(['0p 1'])
 		expect(on(missed, 'Ec5')).toEqual(['1n 1'])
-		// undo and another choice, the unicorn included, replays the same roll (LEAD-DECISIONS L3)
+		// undo and another choice, the unicorn included, replays the same roll
 		for (const p of PROMOTIONS) {
 			expect(rollMemoKey(s, 'Dc5-Ec5=' + p)).toBe(rollMemoKey(s, 'Dc5-Ec5'))
 		}

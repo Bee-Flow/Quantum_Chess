@@ -11,7 +11,7 @@
  * no check, castling never rolls and a right is lost as soon as its king or rook is not 100 % home. Winning and
  * drawing are the core's classic rules (docs/rules.md 5 and 6), kept at their defaults: capture the king, "your king
  * cannot escape" (`escapeRule`), the bare-kings draw (`bareKingsDraw`, no own `worldResult`) and draws that wait while
- * the king can be taken for certain (`drawsWait`). The research spec is handoff/research/chess960.md.
+ * the king can be taken for certain (`drawsWait`). Player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'

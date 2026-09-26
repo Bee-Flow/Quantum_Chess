@@ -5,8 +5,8 @@
 
 /**
  * Makruk (Thai chess): setup, the Thai pieces, the Bia's promotion to Met, stalemate, the bare-Khun count, the 64-move
- * rule and the bare Khuns, and how they meet the quantum rules. The cases follow section 7 of
- * handoff/research/makruk.md; the classical move counts were checked against Fairy-Stockfish.
+ * rule and the bare Khuns, and how they meet the quantum rules. The classical move counts were checked against
+ * Fairy-Stockfish.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -123,7 +123,7 @@ function perft(w, side, depth) {
 }
 
 /**
- * The count fields that the spec's cases compare.
+ * The count fields that the cases compare.
  *
  * @param {object} s state
  * @return {object|null}
@@ -152,7 +152,7 @@ describe('makruk: board, setup and pieces', () => {
 		expect(V.types.p.splittable || V.types.k.splittable).toBe(false)
 	})
 
-	it('has no castling or en passant, and keeps the escape rule and its own bare-Khuns draw (LEAD-DECISIONS)', () => {
+	it('has no castling or en passant, and keeps the escape rule and its own bare-Khuns draw', () => {
 		expect([V.specialMoves, V.escapeRule, V.bareKingsDraw, V.drawsWait]).toEqual([false, true, false, true])
 		expect(sharedRules(V).some((r) => r.includes('Castling') || r.includes('en passant'))).toBe(false)
 		expect(V.rules().some((r) => /no checkmate|only by capturing/i.test(r))).toBe(false)

@@ -4,19 +4,23 @@
  */
 
 /**
- * The engine of multiverse chess (handoff/research/multiverse-final.md sections 2 to 8): the setups and options, the
- * geometry and names, the vectors of every piece along every axis, the move keys, branches, jumps, the present, Submit,
- * the stuck test and the quantum rules on top of the multiverse (links through time, a Missed branch, time splits,
- * measurements, merges onto a king in the past).
+ * The engine of multiverse chess: the setups and options, the geometry and names, the vectors of every piece along
+ * every axis, the move keys, branches, jumps, the present, Submit, the stuck test and the quantum rules on top of the
+ * multiverse (links through time, a Missed branch, time splits, measurements, merges onto a king in the past).
  */
 
 import { describe, expect, it } from 'vitest'
+import { seededRng } from '../../../src/engine/index.js'
 import {
+	applyMove,
 	applyOutcome,
 	branches,
+	budget,
+	BUDGET,
 	budgetInfo,
 	isLegal,
 	legalMoves,
+	MAX_WORLDS,
 	newGame,
 	ordinaryMoves,
 	outcomes,
@@ -185,7 +189,7 @@ function setId(w, q, id) {
 
 describe('setups and options', () => {
 	for (const id of SETUP_ORDER) {
-		it('starts ' + id + ' with its position, White to move on every starting timeline', () => {
+		it('starts ' + id + ' with its position, White to move on its starting timelines', () => {
 			const S = SETUPS[id]
 			const s = start(id)
 			const b = s.worlds[0].b
@@ -194,9 +198,9 @@ describe('setups and options', () => {
 			expect(x.h).toBe(S.n <= 5 ? 4 : 8)
 			expect(Object.keys(x)).toEqual(['n', 'h', 'm', 'md', 's', 't', 'c', 'tl', 'ep', 'ord', 'nr', 'k'])
 			expect(x.nr).toBe(S.rows.length)
-			for (const [l, fen] of S.rows) {
+			for (const [l, fen, v = 2] of S.rows) {
 				const u = uOf(l, S.md)
-				expect(x.tl[u]).toEqual([S.turnZero ? 1 : 2, 2, null, null])
+				expect(x.tl[u]).toEqual([S.turnZero ? 1 : v, v, null, null])
 				const pieces = fenPieces(fen, S.n, true)
 				const at = (slot) => pieces
 					.map((p) => squareView(s, sqOf(u, slot, p.x, p.y)).map((o) => o.side + o.type))
@@ -207,7 +211,8 @@ describe('setups and options', () => {
 			}
 			const count = S.rows.reduce((a, [, fen]) => a + fenPieces(fen, S.n).length, 0)
 			expect(b.sq.filter((q) => q >= 0).length).toBe(count * (S.turnZero ? 2 : 1))
-			expect(mustLines(s).sort()).toEqual(S.rows.map(([l]) => l).sort())
+			// a staggered row (Black to move on its first board) waits for White's first move elsewhere
+			expect(mustLines(s).sort()).toEqual(S.rows.filter((r) => (r[2] ?? 2) === 2).map(([l]) => l).sort())
 			expect(isLegal(V, s, SUBMIT)).toBe(false)
 			expect(keys(s).length).toBeGreaterThan(0)
 			expect(budgetInfo(V, s, 0).limit).toBe(8)
@@ -223,7 +228,8 @@ describe('setups and options', () => {
 		expect(V.options.map((o) => o.id)).toEqual(['setup', 'timelines', 'reach', 'view'])
 		expect(V.options[0].values.map((v) => v.id)).toEqual(SETUP_ORDER)
 		expect(V.options[0].default).toBe('small')
-		expect(SETUP_ORDER.length).toBe(21)
+		// every official setup but the empty 1 × 1 board of Misc – Global Warming
+		expect(SETUP_ORDER.length).toBe(44)
 		expect(V.options[0].describe('justunicorns')).toContain('5 × 5')
 		// the plain label, the official name and the size, then the pieces
 		expect(V.options[0].describe('defended'))
@@ -244,7 +250,125 @@ describe('setups and options', () => {
 		expect(rules[1]).toContain('Each move is played at once (and rolled if its result is uncertain)')
 	})
 
-	it('declares the classic end rules and limits of the final spec', () => {
+	it('writes every setup as boards of its size, with a royal piece for each side but in checkmate practice', () => {
+		for (const id of SETUP_ORDER) {
+			const S = SETUPS[id]
+			const royal = [0, 0]
+			for (const [, fen] of S.rows) {
+				const ranks = fen.split('/')
+				expect(ranks, id).toHaveLength(S.n)
+				for (const rank of ranks) {
+					expect([...rank].reduce((a, ch) => a + (ch >= '0' && ch <= '9' ? Number(ch) : 1), 0), id).toBe(S.n)
+				}
+				for (const p of fenPieces(fen, S.n)) {
+					royal[p.side] += 'ky'.includes(p.type) ? 1 : 0
+				}
+			}
+			expect(royal[0], id).toBeGreaterThan(0)
+			expect(royal[1] > 0, id).toBe(!id.startsWith('mate'))
+			expect(V.options[0].describe(id), id).toContain(S.n + ' × ' + S.n + ')')
+		}
+		expect(V.options[0].describe('tactician'))
+			.toBe('Timeline tactician: each army on its own timeline (Misc – Timeline Tactitian, 4 × 4)')
+		expect(V.options[0].describe('strategos')).toContain('Unicorns (U) move along three axes at once.')
+		// plain text: an apostrophe of the label is not escaped
+		expect(V.options[0].describe('halfreflected')).toMatch(/^Half reflected: Black's king and queen swapped \(/)
+	})
+
+	it('starts Timeline Fragments staggered: −0 waits with Black to move until White has moved on +0', () => {
+		let s = start('fragments')
+		const x = s.worlds[0].b.x
+		expect([x.tl[uOf(-1, 1)], x.tl[uOf(0, 1)], mustLines(s)]).toEqual([[3, 3, null, null], [2, 2, null, null], [0]])
+		// White plays only on +0; its move passes the turn, and Black must move on both timelines
+		expect(keys(s).every((k) => k.startsWith('(+0T1)'))).toBe(true)
+		expect(keys(s)).toContain('(+0T1)a1-b2')
+		s = run(s, ['(+0T1)a1-b2'])
+		expect([s.turn, mustLines(s).sort()]).toEqual([1, [-1, 0]])
+		expect(keys(s)).toContain('(' + MINUS + '0T1)a4>(+0T1)b3')
+		expect(V.options[0].describe('fragments')).toContain('Timeline −0 starts half a turn later, with Black to move')
+	})
+
+	it('plays checkmate practice without a black king: Black wins by capture, and a Black without pieces draws', () => {
+		expect(V.options[0].describe('matequeen')).toContain('Black has no king to lose')
+		// nothing that escaping changes: the game's options panel escapes the description once more
+		expect(V.options[0].describe('matequeen')).not.toMatch(/['"&<>]/)
+		expect(royalDanger(V, start('mateknight'), 1)).toBe(0)
+		const lone = (board) => one({ n: 6, s: 1, rows: { 0: { st: 2, en: 3, boards: { 3: board } } } })
+		const hunt = run(lone('6/6/6/6/2n3/K5'), ['(0T1)c2-a1'])
+		expect(hunt.result).toEqual({ winner: 1, reason: 'king' })
+		const bare = lone('6/6/6/6/6/K5')
+		expect([keys(bare), V.stateResult(bare)]).toEqual([[], { winner: null, reason: 'stalemate' }])
+	})
+
+	it('plays Just Kings on 3 × 3 and moves a pawn from its own back rank like any unmoved pawn', () => {
+		expect(keys(start('justkings')).sort()).toEqual(['(0T1)a1-a2', '(0T1)a1-b1', '(0T1)a1-b2'])
+		const open = keys(start('smallopen'))
+		expect(open).toContain('(0T1)e1-e2')
+		expect(open).toContain('(0T1)e1-e3')
+		expect(keys(run(start('smallopen'), ['(0T1)e1-e3']))).toContain('(0T1)a5-a3')
+	})
+
+	it('opens up to four timelines per player, three around three starting timelines and on two 8 × 8 ones', () => {
+		expect(V.options[1].values.map((v) => v.id)).toEqual(['1', '2', '3', '4'])
+		expect(V.options[1].values[3].label()).toBe('Four (laptop)')
+		const caps = ['standard', 'small', 'invasion', 'fragments', 'twotimelines', 'marauders', 'battlegrounds']
+		expect(caps.map((id) => start(id, { timelines: '4' }).worlds[0].b.x.m)).toEqual([4, 4, 4, 4, 3, 3, 3])
+		expect(caps.map((id) => start(id, { timelines: '2' }).worlds[0].b.x.m)).toEqual([2, 2, 2, 2, 2, 2, 2])
+		expect(V.rules()[4])
+			.toContain('(1 to 4; at most 3 when the game starts with three timelines, or with two on 8 × 8)')
+		// a seeded game that branches whenever it can reaches the fourth timeline of both players, and no more
+		for (const id of ['standard', 'invasion']) {
+			let s = start(id, { timelines: '4' })
+			let r = 5
+			for (let ply = 0; ply < 80 && !s.result; ply++) {
+				const b = s.worlds[0].b
+				const list = keys(s)
+				const branch = list.filter((k) => k.includes('>>'))
+				if (b.x.c[s.turn] >= 4) {
+					// at the cap only a branch onto an enemy royal piece is left: it ends the game and opens nothing
+					const moves = V.generate(b, s.turn).filter((m) => m.kind === 'branch')
+					expect(moves.every((m) => m.extra.noRow), id).toBe(true)
+				}
+				r = (r * 1103515245 + 12345) % 2147483648
+				const pool = branch.length ? branch : list.length ? list : [SUBMIT]
+				s = applyOutcome(V, s, pool[r % pool.length], 0)
+			}
+			const x = s.worlds[0].b.x
+			expect(x.c, id).toEqual([4, 4])
+			const rows = x.tl.map((e, u) => (e ? LAB[u] : null)).filter(Boolean)
+			expect(rows, id).toEqual(expect.arrayContaining(['+4', MINUS + '4']))
+			expect(V.layoutOf(s).cells.length).toBeGreaterThan(0)
+		}
+	})
+
+	it('plays a random game with splits on every setup, keeping the invariants of the quantum layer', () => {
+		for (const id of SETUP_ORDER) {
+			const rng = seededRng(7919 + id.length)
+			let s = start(id, { timelines: '4' })
+			for (let ply = 0; ply < 24 && !s.result; ply++) {
+				let codes = legalMoves(V, s).map((m) => m.code)
+				if (ply % 4 === 1) {
+					const b = s.worlds[0].b
+					const own = (q, pid) => q >= 0 && b.sd[pid] === s.turn && V.types[b.ty[pid]]?.splittable
+					const froms = b.sq.filter(own)
+					const splits = froms.length ? splitsFrom(V, s, froms[Math.floor(rng() * froms.length)]) : []
+					codes = splits.length ? splits.map((m) => m.code) : codes
+				}
+				expect(codes.length, id).toBeGreaterThan(0)
+				s = applyMove(V, s, codes[Math.floor(rng() * codes.length)], rng).state
+				expect(s.worlds.length, id).toBeLessThanOrEqual(MAX_WORLDS)
+				expect(s.worlds.reduce((a, e) => a + e.w, 0), id).toBe(T)
+				expect(new Set(s.worlds.map(({ b }) => solidExtra(b))).size, id).toBe(1)
+				for (const { b } of s.worlds) {
+					expect(b.sq.every((q, pid) => q < 0 || b.board[q] === pid), id).toBe(true)
+				}
+				expect(Math.max(budget(s, 0), budget(s, 1)), id).toBeLessThanOrEqual(BUDGET)
+				expect(V.layoutOf(s).cells.length, id).toBeGreaterThan(0)
+			}
+		}
+	})
+
+	it('declares the classic end rules and limits of the multiverse', () => {
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait, V.flipBoard]).toEqual([false, false, true, false])
 		expect([V.maxPly, V.quietPlies, V.specialMoves]).toEqual([1200, 300, true])
 		expect(V.sides.map((s) => s.rotate)).toEqual([0, 0])
@@ -269,7 +393,10 @@ describe('geometry, names and keys', () => {
 				}
 			}
 		}
-		expect([uOf(-1, 1), uOf(0, 1), uOf(4, 1), uOf(-5, 1), uOf(4, 0)]).toEqual([9, 10, -1, -1, -1])
+		// four new timelines per player on one or two starting timelines, three around three starting timelines
+		expect([uOf(-1, 1), uOf(0, 1), uOf(4, 1), uOf(-5, 1), uOf(4, 0), uOf(-4, 0), uOf(4, 2), uOf(-4, 2)])
+			.toEqual([9, 10, 8, 7, 8, 7, 8, 7])
+		expect([uOf(5, 1), uOf(-6, 1), uOf(5, 0), uOf(-5, 0), uOf(5, 2), uOf(-5, 2)]).toEqual([-1, -1, -1, -1, -1, -1])
 		expect(V.topology.names[sq('(+1)c3')]).toBe('(+1)c3')
 		expect(V.topology.names.every((name) => !/[-|?@=\s]/.test(name))).toBe(true)
 		expect(sq('(0)~3c3') - sq('(0)c3')).toBe(3 * 64)

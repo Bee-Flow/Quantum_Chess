@@ -4,7 +4,7 @@
  */
 
 /**
- * The generic board and view items of the multiverse spec (multiverse-final.md 7.2), pure parts; the components and
+ * The generic board and view features added for multiverse chess, pure parts; the components and
  * the composable are in core-board.vue.spec.js: the move record reaches the variant's `codeText` (H5) and the
  * variant's `lastMoveMarks` replaces the last record's squares, but not in a hidden game (H11). Then the pure parts of
  * the second visual review: the move list's notation and rows, the hands grouped at the board and the squares of a

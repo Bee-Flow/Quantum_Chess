@@ -5,8 +5,8 @@
 
 /**
  * Atomic chess (src/variants/atomic.js): the setup, the pieces, the explosion and its legality rules, the results,
- * and how explosions meet ghosts, rolls, links, the budget and the game-end roll. The cases T1-T28 and L1 are those
- * of handoff/research/atomic.md, section 7.
+ * and how explosions meet ghosts, rolls, links, the budget and the game-end roll. The cases are numbered T1-T28 and
+ * L1.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -578,7 +578,7 @@ describe('atomic: how the game ends', () => {
 		expect(royalDanger(V, { ...t, result: null }, 0)).toBe(1)
 	})
 
-	it('keeps the classic end rules, with its own bare-kings draw (LEAD-DECISIONS L1)', () => {
+	it('keeps the classic end rules, with its own bare-kings draw', () => {
 		// the core's bare-kings draw is off: atomic decides it in each possibility (the game-end roll of T14)
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait]).toEqual([true, false, true])
 		// the 50-move draw waits while Black can blow up White's king for certain (a5xd2 next to e1)
@@ -733,7 +733,7 @@ describe('atomic: quantum interactions', () => {
 		expect(outs(s, 'd5|h5-f6')).toBe('capture 1')
 		expect(play(V, s, 'd5|h5-f6').result).toEqual({ winner: 0, reason: 'exploded' })
 		expect(outs(s, 'd5-f6')).toBe('miss 0.5 R | capture 0.5 R')
-		// the merge counts with every world in which one of its parts captures (handoff/research/atomic.md 3.1)
+		// the merge counts with every world in which one of its parts captures
 		expect(royalDanger(V, s, 1)).toBe(1)
 		expect(royalDanger(V, { ...s, turn: 1 }, 1)).toBe(1)
 		expect(bruteDanger(s, 1)).toBe(1)

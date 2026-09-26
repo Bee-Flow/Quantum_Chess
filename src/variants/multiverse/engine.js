@@ -4,11 +4,11 @@
  */
 
 /**
- * The rules of multiverse chess on top of the quantum layer (handoff/research/multiverse-final.md sections 4, 6.8 to
- * 6.13 and 8): applying a move in one world, the idle worlds (`applyMiss`: a move always makes its boards, the dice
- * only decide what happens to the piece), `allowQuantum` (splits and merges on one board, measurements on a board the
- * side to move may play), castling rights over the worlds, the skeleton key, the captured king, and the end of a turn
- * that cannot be finished (the stuck test: checkmate, stalemate or stranded).
+ * The rules of multiverse chess on top of the quantum layer: applying a move in one world, the idle worlds
+ * (`applyMiss`: a move always makes its boards, the dice only decide what happens to the piece), `allowQuantum`
+ * (splits and merges on one board, measurements on a board the side to move may play), castling rights over the
+ * worlds, the skeleton key, the captured king, and the end of a turn that cannot be finished (the stuck test:
+ * checkmate, stalemate or stranded).
  *
  * Every function that builds a world is pure: it copies the world and never changes its input.
  */
@@ -463,14 +463,14 @@ function abstractActions(state, side, rows) {
 }
 
 /**
- * Whether the side to move cannot finish its turn: no sequence of its actions, each board used once, makes Submit
- * legal in some outcome (handoff/research/multiverse-final.md 6.13 and review note I3). The quick path: every
- * must-move row has a move on its own board in the cached generation (such a move disappears during the turn only
- * when a roll or measurement of another action keeps only worlds without it). Otherwise a depth-first search over
- * skeleton copies with the abstract actions: a move on its own board or a measurement uses one row, a jump uses two
- * rows that were not used yet (and becomes a branch onto the old board once its target row was used), a branch uses
- * its row and opens one (while the side may open timelines). Rows that are not must-move matter only as jump sources
- * onto must-move rows or through a branch that changes the must-move set or makes Submit legal.
+ * Whether the side to move cannot finish its turn: no sequence of its actions, each board used once, makes Submit legal
+ * in some outcome. The quick path: every must-move row has a move on its own board in the cached generation (such a
+ * move disappears during the turn only when a roll or measurement of another action keeps only worlds without it).
+ * Otherwise a depth-first search over skeleton copies with the abstract actions: a move on its own board or a
+ * measurement uses one row, a jump uses two rows that were not used yet (and becomes a branch onto the old board once
+ * its target row was used), a branch uses its row and opens one (while the side may open timelines). Rows that are not
+ * must-move matter only as jump sources onto must-move rows or through a branch that changes the must-move set or makes
+ * Submit legal.
  *
  * "Stuck" is always right; "not stuck" is exact apart from four rare one-sided cases (a royal capture that may be
  * Missed, a travel through the oldest stored board of a row that another action advances, a measurement that

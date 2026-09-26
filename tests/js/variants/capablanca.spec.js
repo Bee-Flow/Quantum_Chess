@@ -5,8 +5,8 @@
 
 /**
  * Capablanca chess: the 10 × 8 board and its setup, the archbishop and the chancellor, castling three squares to the
- * i or c file, pawns and promotion, the win and draw rules, the quantum cases and the computer player. The cases
- * T1-T9 and Q1-Q12b are those of handoff/research/capablanca.md, section 7.
+ * i or c file, pawns and promotion, the win and draw rules, the quantum cases and the computer player, numbered T1-T9
+ * and Q1-Q12b.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -100,7 +100,7 @@ function castles(s) {
 }
 
 /**
- * The outcomes of a move in the notation of the spec: `key p`, with ` R` for a rolled outcome, joined by ` | `
+ * The outcomes of a move in a short notation: `key p`, with ` R` for a rolled outcome, joined by ` | `
  * (notes of a settling roll in brackets); null when the move is illegal.
  *
  * @param {object} s state
@@ -258,9 +258,9 @@ describe('Capablanca chess: board and setup', () => {
 		for (const id of ['k', 'q', 'r', 'b', 'n', 'p']) {
 			expect(V.types[id].glyph).toEqual({ sprite: id })
 		}
-		// the compound pieces are drawn as the two pieces they combine
-		expect(V.types.a.glyph).toEqual({ sprites: ['b', 'n'] })
-		expect(V.types.c.glyph).toEqual({ sprites: ['r', 'n'] })
+		// drawn as the pieces they combine: a knight's head on a bishop's base or in a rook's turret
+		expect(V.types.a.glyph).toEqual({ sprite: 'n', body: 'b' })
+		expect(V.types.c.glyph).toEqual({ sprite: 'n', body: 'r' })
 		for (const [id, value] of Object.entries(VALUES)) {
 			expect(V.types[id].value, id).toBe(value)
 		}
@@ -503,7 +503,7 @@ describe('Capablanca chess: winning and drawing', () => {
 		expect(play(V, long, 'e4-f6').result).toEqual({ winner: null, reason: 'moveLimit' })
 	})
 
-	it('wins when the enemy king cannot escape, as a chancellor or archbishop can force (LEAD-DECISIONS L1)', () => {
+	it('wins when the enemy king cannot escape, as a chancellor or archbishop can force', () => {
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait, V.specialMoves]).toEqual([true, true, true, true])
 		// the card leaves the win rules to the shared card and must not deny the escape rule
 		expect(V.rules().join(' ')).not.toMatch(/checkmate|only by capturing|capture the king to win/i)

@@ -4,8 +4,8 @@
  */
 
 /**
- * The pieces of multiverse chess (handoff/research/multiverse-final.md section 5): every official piece of 5D chess,
- * their vectors over the four axes (dx, dy, dT, dL) = file, rank, whole turns, lines, and their types.
+ * The pieces of multiverse chess: every official piece of 5D chess, their vectors over the four axes (dx, dy, dT, dL)
+ * = file, rank, whole turns, lines, and their types.
  *
  * Kings, rooks, pawns and brawns that never moved have their own types (`k0`, `r0`, `p0`, `w0`): castling and double
  * steps need them, and like every solid type they are the same in every world. A piece on a history board has the

@@ -372,7 +372,7 @@ describe('U5, U7: the game view', () => {
 		const d = await mountGame(V, newGame(V))
 		const all = await shownRules(d)
 		expect(all).toContain(castling)
-		// lead decision L1: the shared card explains the escape rule of a classic variant
+		// the shared card explains the escape rule of a classic variant
 		expect(all.some((r) => r.startsWith('Your king cannot escape: '))).toBe(true)
 		d.unmount()
 	})

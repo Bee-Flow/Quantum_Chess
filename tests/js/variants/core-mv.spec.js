@@ -4,7 +4,7 @@
  */
 
 /**
- * The core hook `allowQuantum(state, action)` (handoff/research/multiverse-final.md section 7.1): a variant may forbid
+ * The core hook `allowQuantum(state, action)`: a variant may forbid
  * a split, merge or measurement that the generic rules allow. Every place that lists or plays these actions follows
  * it (splits, merge candidates and merges, the merge danger, measurements), and a variant without the hook plays as
  * before.

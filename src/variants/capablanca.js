@@ -10,8 +10,7 @@
  * take en passant and promote to any of the six pieces. Capture the king to win. Castling and en passant are certain
  * moves (never rolled), as in every variant. The core's classic end rules apply unchanged (the `escapeRule`,
  * `bareKingsDraw` and `drawsWait` defaults of a two-sided variant): a king that cannot escape loses, bare kings draw,
- * and those draws wait while the king can be taken for certain. The research spec is handoff/research/capablanca.md;
- * the player-facing rules are in docs/variants.md.
+ * and those draws wait while the king can be taken for certain. The player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -73,14 +72,14 @@ const types = orthodoxTypes({ lastRank: board.lastRank, promoteTo: [...PROMOTE_T
 types.a = {
 	name: () => t('quantumchess', 'Archbishop'),
 	moves: [{ ride: BISHOP_DIRS }, { leap: KNIGHT_JUMPS }],
-	// a bishop and a knight side by side, the pieces it combines
-	glyph: { sprites: ['b', 'n'] },
+	// the pieces it combines: a knight's head on a bishop's base, with the bishop's cross on its neck
+	glyph: { sprite: 'n', body: 'b' },
 }
 types.c = {
 	name: () => t('quantumchess', 'Chancellor'),
 	moves: [{ ride: ROOK_DIRS }, { leap: KNIGHT_JUMPS }],
-	// a rook and a knight side by side
-	glyph: { sprites: ['r', 'n'] },
+	// a knight's head rising from a rook's turret
+	glyph: { sprite: 'n', body: 'r' },
 }
 // orthodoxTypes() builds fresh objects, so these values do not reach the other variants
 for (const [id, value] of Object.entries(VALUES)) {

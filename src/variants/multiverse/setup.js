@@ -4,9 +4,9 @@
  */
 
 /**
- * The start positions of multiverse chess and the building of its worlds (handoff/research/multiverse-final.md
- * sections 2, 3, 6.3 and 6.4): the 21 official setups, the travel reach, empty worlds, new rows and piece placement,
- * and `buildWorld`, which builds a world from board strings for tests and lessons.
+ * The start positions of multiverse chess and the building of its worlds (docs/variants.md, "Multiverse chess (5D)"):
+ * the official setups, the travel reach, empty worlds, new rows and piece placement, and `buildWorld`, which builds a
+ * world from board strings for tests and lessons.
  *
  * A world is `{ sq, ty, sd, board, x }` as everywhere (core/world.js). Its extra state `x` is
  * `{ n, h, m, md, s, t, c, tl, ep, ord, nr, k }`: board size, history boards per row, the cap of new timelines, the
@@ -17,29 +17,45 @@
  * order never changes (identical worlds are recognised by their JSON).
  */
 
-import { CELLS, idOf, ROWS, SLOTS, sqOf, uOf } from './skeleton.js'
+import { CELLS, idOf, MAX_NEW, ROWS, SLOTS, sqOf, uOf } from './skeleton.js'
 
 /** The Standard position. */
 const STANDARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
 
 /**
- * The setups: board size `n`, start mode `md`, the starting rows as `[line, 5DFEN]` (ranks top to bottom) and whether
- * the game starts from turn zero (the Standard position also on a T0 ● history board).
+ * The official setups of 5D chess (the boards of the 5dpgn `Board` header), all but Misc – Global Warming, an empty
+ * 1 × 1 board that is drawn before the first move: board size `n`, start mode `md`, the starting rows as
+ * `[line, 5DFEN, v]` (ranks top to bottom; `v` the half-turn index of the row's first board, 2 = T1 White to move by
+ * default, 3 = T1 Black to move for a staggered start) and whether the game starts from turn zero (the Standard
+ * position also on a T0 ● history board). The order is the order of the new-game dialog: the three main boards, then
+ * the families of the original game.
  */
 export const SETUPS = Object.freeze({
 	small: { n: 5, md: 0, rows: [[0, 'kqbnr/ppppp/5/PPPPP/KQBNR']] },
 	verysmallopen: { n: 4, md: 0, rows: [[0, 'nbrk/3p/P3/KRBN']] },
 	standard: { n: 8, md: 0, rows: [[0, STANDARD]] },
 	smallcentered: { n: 5, md: 0, rows: [[0, 'rnkqr/ppppp/5/PPPPP/RQKNR']] },
+	smallflipped: { n: 5, md: 0, rows: [[0, 'nbrqk/ppppp/5/PPPPP/KQRBN']] },
+	smallopen: { n: 5, md: 0, rows: [[0, 'prnbk/3pp/5/PP3/KBNRP']] },
 	verysmall: { n: 4, md: 0, rows: [[0, 'nbrk/pppp/PPPP/KRBN']] },
 	noqueens: { n: 7, md: 0, rows: [[0, 'rnbknbr/ppppppp/7/7/7/PPPPPPP/RNBKNBR']] },
+	nobishops: { n: 6, md: 0, rows: [[0, 'rnqknr/pppppp/6/6/PPPPPP/RNQKNR']] },
+	noknights: { n: 6, md: 0, rows: [[0, 'rbqkbr/pppppp/6/6/PPPPPP/RBQKBR']] },
+	norooks: { n: 6, md: 0, rows: [[0, 'nbqkbn/pppppp/6/6/PPPPPP/NBQKBN']] },
+	knightsbishops: { n: 6, md: 0, rows: [[0, 'rbqkbr/pppppp/6/6/PPPPPP/RNQKNR']] },
+	simpleset: { n: 6, md: 0, rows: [[0, 'rnbqkr/pppppp/6/6/PPPPPP/RKQBNR']] },
 	turnzero: { n: 8, md: 0, rows: [[0, STANDARD]], turnZero: true },
 	twotimelines: { n: 8, md: 1, rows: [[-1, STANDARD], [0, STANDARD]] },
 	princess: { n: 8, md: 0, rows: [[0, 'rnbskbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBSKBNR']] },
 	reversed: { n: 8, md: 0, rows: [[0, 'rnbycbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBYCBNR']] },
 	defended: { n: 8, md: 0, rows: [[0, 'rqbnkbnr/pppppppp/8/8/8/8/PPPPPPPP/RQBNKBNR']] },
 	halfreflected: { n: 8, md: 0, rows: [[0, 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR']] },
+	justkings: { n: 3, md: 0, rows: [[0, '2k/3/K2']] },
+	justpawns: { n: 5, md: 0, rows: [[0, 'ppppk/5/5/5/KPPPP']] },
 	justknights: { n: 5, md: 0, rows: [[0, 'n1kn1/5/5/5/1NK1N']] },
+	justbishops: { n: 5, md: 0, rows: [[0, '1bbk1/5/5/5/1KBB1']] },
+	justrooks: { n: 5, md: 0, rows: [[0, '1rk1r/5/5/5/R1KR1']] },
+	justqueens: { n: 6, md: 0, rows: [[0, '1q1k2/6/6/6/6/2K1Q1']] },
 	justunicorns: { n: 5, md: 0, rows: [[0, '1u1uk/5/5/5/KU1U1']] },
 	justdragons: { n: 5, md: 0, rows: [[0, '2ddk/5/5/5/KDD2']] },
 	justbrawns: { n: 5, md: 0, rows: [[0, 'wwwwk/5/5/5/KWWWW']] },
@@ -51,10 +67,26 @@ export const SETUPS = Object.freeze({
 		md: 2,
 		rows: [[-1, 'wrkrw/1www1/5/5/5'], [0, 'w1w1w/5/5/5/W1W1W'], [1, '5/5/5/1WWW1/WRKRW']],
 	},
+	battlegrounds: {
+		n: 5,
+		md: 2,
+		rows: [[-1, 'rrkrr/bbqbb/ppppp/5/PPPPP'], [0, 'nnnnn/ppppp/5/PPPPP/NNNNN'], [1, 'ppppp/5/PPPPP/BBQBB/RRKRR']],
+	},
 	invasion: { n: 5, md: 1, rows: [[-1, 'nbkrb/ppppp/5/5/PPPPP'], [0, 'ppppp/5/5/PPPPP/NBKRB']] },
+	formations: { n: 5, md: 1, rows: [[-1, 'ppppp/5/5/5/2K2'], [0, '2k2/5/5/5/PPPPP']] },
+	tactician: { n: 4, md: 1, rows: [[-1, 'kbnr/pppp/4/4'], [0, '4/4/PPPP/KBNR']] },
+	strategos: { n: 5, md: 1, rows: [[-1, 'nbkur/ppppp/5/5/5'], [0, '5/5/5/PPPPP/RUKBN']] },
+	skirmish: { n: 5, md: 1, rows: [[-1, '3rk/3pp/5/BB3/NN3'], [0, '3nn/3bb/5/PP3/KR3']] },
+	// −0 starts half a turn later, with Black to move
+	fragments: { n: 4, md: 1, rows: [[-1, 'kppp/4/4/NBRU', 3], [0, 'nbru/4/4/KPPP']] },
+	mateknight: { n: 6, md: 0, rows: [[0, '5n/6/6/6/6/K5']] },
+	matebishop: { n: 6, md: 0, rows: [[0, '4b1/6/6/6/6/K5']] },
+	materook: { n: 6, md: 0, rows: [[0, '5r/6/6/6/6/K5']] },
+	matequeen: { n: 6, md: 0, rows: [[0, '4q1/6/6/6/6/K5']] },
+	matepawns: { n: 6, md: 0, rows: [[0, '2ppp1/6/6/6/6/3K2']] },
 })
 
-/** The order of the setups in the new-game dialog (the easiest first). */
+/** The order of the setups in the new-game dialog (the main boards first). */
 export const SETUP_ORDER = Object.freeze(Object.keys(SETUPS))
 
 /**
@@ -176,20 +208,36 @@ export function place(w, id, sq, type, side) {
 }
 
 /**
+ * The cap of new timelines per player: the option's value (3 when it is missing or not a number), at most what the
+ * storage rows hold for the setup's start mode (a three-timeline start keeps 3 when 4 is chosen), and at most 3 on
+ * two 8 × 8 timelines (Standard – Two Timelines), where a fourth pair makes one step of the game (the legal moves, the
+ * danger, the drawing and the move) take 0.13 to 0.17 s at 64 possibilities on a desktop computer, over the 0.15 s a
+ * step may take.
+ *
+ * @param {object} S the setup (`SETUPS`)
+ * @param {string} [option] the option value: '1' … '4'
+ * @return {number}
+ */
+export function capOf(S, option = '3') {
+	const most = S.n >= 8 && S.rows.length > 1 ? Math.min(3, MAX_NEW[S.md]) : MAX_NEW[S.md]
+	return Math.max(1, Math.min(Number(option) || 3, most))
+}
+
+/**
  * The start world of a game.
  *
- * @param {object} [options] option values: `setup`, `timelines` ('1' … '3'), `reach` ('auto', '2', '4')
+ * @param {object} [options] option values: `setup`, `timelines` ('1' … '4'), `reach` ('auto', '2', '4')
  * @return {object}
  */
 export function setup(options = {}) {
 	const S = SETUPS[options.setup] ?? SETUPS.small
 	const h = 2 * reachOf(S.n, options.reach)
-	const w = blankWorld({ n: S.n, h, m: Number(options.timelines ?? 3) || 3, md: S.md })
+	const w = blankWorld({ n: S.n, h, m: capOf(S, options.timelines), md: S.md })
 	const x = w.x
-	for (const [l, fen] of S.rows) {
+	for (const [l, fen, v = 2] of S.rows) {
 		const u = uOf(l, S.md)
 		grow(w, u)
-		x.tl[u] = [S.turnZero ? 1 : 2, 2, null, null]
+		x.tl[u] = [S.turnZero ? 1 : v, v, null, null]
 		for (const p of fenPieces(fen, S.n, true)) {
 			place(w, idOf(x, u, 0, p.x, p.y), sqOf(u, 0, p.x, p.y), p.type, p.side)
 			if (S.turnZero) {

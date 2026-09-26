@@ -6,7 +6,7 @@
 /**
  * King of the Hill: the board, the orthodox pieces, the hill win, the hill-entry rule (a king may not step onto a
  * hill square that is attacked once it stands there) in classical and quantum positions, and the computer player.
- * The cases K1-K21 are those of handoff/research/koth.md, section 7.
+ * The cases are numbered K1-K21.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -296,7 +296,7 @@ describe('King of the Hill: the hill win and the hill-entry rule', () => {
 		expect(race.quiet).toBe(1)
 	})
 
-	it('keeps the classic end rules except the bare-kings draw (LEAD-DECISIONS L1)', () => {
+	it('keeps the classic end rules except the bare-kings draw', () => {
 		expect([V.escapeRule, V.drawsWait, V.bareKingsDraw]).toEqual([true, true, false])
 		// the 50-move draw waits while Black can capture the white king for certain (the rook on b8 guards b1)
 		const s = { ...stateOf(V, [[{ a1: '0:k', b8: '1:r', h8: '1:k' }, 1]]), quiet: 99 }

@@ -4,8 +4,8 @@
  */
 
 /**
- * The computer player's hooks for multiverse chess (handoff/research/multiverse-final.md section 6.15). The core's
- * search (core/ai.js) does the work; these hooks teach it the multi-move turn and 5D check.
+ * The computer player's hooks for multiverse chess (docs/variants.md, "Multiverse chess (5D)"). The core's search
+ * (core/ai.js) does the work; these hooks teach it the multi-move turn and 5D check.
  *
  * - `evaluate(w, side)` adds the 5D terms to the core's material (history pieces are worth nothing): check, a threat
  *   on an enemy royal piece, a hanging-piece term for the boards the side to move has already played this turn, the
@@ -14,9 +14,13 @@
  *   `viewFilter` and keeps every move of the must-move boards and, from the other boards, only royal captures, jumps
  *   onto a must-move board and the branches that move the present back. Each of these depends only on the skeleton
  *   and the solid royal pieces, so a key is kept in every world or in none: every candidate of the view is legal on
- *   the real state with the same outcomes (`aiViewExact`).
+ *   the real state with the same outcomes (`aiViewExact`). A piece on a must-move board keeps all of its splits, those
+ *   across boards and in time included; the splits of the other boards come once the must-move boards are played.
  * - `replySide(s, me)`: no answer inside the computer's own turn (the evaluation judges), the opponent after it.
  * - `aiTimeShare(state)`: one turn of several boards shares one level time.
+ * - `aiThreats(w, side, id)` (`pieceThreats`): what a piece would attack on its next turn, anywhere in the multiverse;
+ *   the core's quantum terms rank the computer's splits with it (a part that threatens a king in the past, a fork
+ *   across two boards).
  *
  * The stuck test (`stateResult`) runs on every outcome the search looks at, so a move that strands the computer's own
  * turn is a lost game for it and is never chosen while another move is left.
@@ -95,6 +99,29 @@ export function evaluate(w, side) {
 	const terms = (threat ? WEIGHTS.threat : 0) - (check ? WEIGHTS.check : 0) - WEIGHTS.hang * hang
 	const lead = Math.max(-2, Math.min(2, x.c[1 - side] - x.c[side]))
 	return WEIGHTS.contempt + (x.s === side ? terms : -terms) + WEIGHTS.timeline * lead
+}
+
+/**
+ * The captures that piece `id` of `side` could make with its next move in world `w` (the core's `aiThreats`, which
+ * tells the computer what a part of a split would attack): the rows whose latest board the other side plays next are
+ * passed virtually, so the piece moves from wherever it stands as it will on its next turn, onto its own board, other
+ * timelines and the past. Castling and en passant are left out.
+ *
+ * @param {object} w world
+ * @param {number} side side index
+ * @param {number} id the piece
+ * @return {Array<{id: number, capture: number}>}
+ */
+export function pieceThreats(w, side, id) {
+	const x = w.x
+	const pass = x.tl.map((e) => e !== null && (e[1] & 1) !== side)
+	const out = []
+	walkMoves(w, side, pass, (m) => {
+		if (m.id === id && m.capture >= 0) {
+			out.push({ id, capture: m.capture })
+		}
+	})
+	return out
 }
 
 /**
@@ -236,6 +263,7 @@ export function computerHooks(V) {
 		aiView: (state, me) => aiView(V, state, me),
 		replySide,
 		aiTimeShare,
+		aiThreats: pieceThreats,
 		// every candidate of the view is legal on the real state with the same outcomes
 		aiViewExact: true,
 	}

@@ -37,11 +37,13 @@
   confirm or cancel it. The move list is oldest first and numbered, with a column per side in a two-player game (a
   multi-move turn in one cell), written in long algebraic notation with the piece letters and `x` for a capture (the
   saved moves keep their piece type); the variant's `infoText` gives only the lines that carry information there
-  (`brief`), and a game with an umpire heads its announcements "Umpire". A budget the viewer may not know reads
-  "Budget hidden". `boardLegend(state)` adds lines under the board (`{ kind, text }`, with a swatch for `kind: 'hill'`,
-  the hill of King of the Hill), as the fog legend does for hidden squares. A failed save shows "This game could not
-  be saved on this device." until a save works again; this notice and the refusal notice are drawn as warning notes
-  (the main text colour on a light tint of the warning colour).
+  (`brief`), and a game with an umpire heads its announcements "Umpire", one line per move. A budget the viewer may not
+  know reads "Budget hidden" (a caption, no pips). The game buttons sit two to a row (three share one row), each with
+  its whole label, and the hand-over curtain shows its prompt on a card over the blurred board. `boardLegend(state)`
+  adds lines under the board (`{ kind, text }`, with a swatch for `kind: 'hill'`, the hill of King of the Hill), as the
+  fog legend does for hidden squares. A failed save shows "This game could not be saved on this device." until a save
+  works again; this notice and the refusal notice are drawn as warning notes (the main text colour on a light tint of
+  the warning colour).
 -->
 <template>
 	<div ref="rootEl" class="qc-vgame">
@@ -138,11 +140,13 @@
 					</div>
 				</div>
 				<div v-if="game.curtain.value" class="qc-vgame__curtain">
-					<!-- TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A -->
-					<p>{{ t('quantumchess', 'Pass the device to {side}.', { side: sideName(V, state.turn) }) }}</p>
-					<NcButton variant="primary" @click="game.curtain.value = false">
-						{{ t('quantumchess', 'I am {side}: show my board', { side: sideName(V, state.turn) }) }}
-					</NcButton>
+					<div class="qc-vgame__curtain-card">
+						<!-- TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A -->
+						<p>{{ t('quantumchess', 'Pass the device to {side}.', { side: sideName(V, state.turn) }) }}</p>
+						<NcButton variant="primary" @click="game.curtain.value = false">
+							{{ t('quantumchess', 'I am {side}: show my board', { side: sideName(V, state.turn) }) }}
+						</NcButton>
+					</div>
 				</div>
 				<p v-if="fogLegend" class="qc-vgame__legend">
 					<span class="qc-vgame__fog-swatch" aria-hidden="true" />
@@ -764,7 +768,7 @@ const refusedText = computed(() => (V.value?.umpire && game.refused.value.length
 /**
  * The report's lines in groups: one per run of records of one side. In a variant whose turn has several moves (its
  * `actions`, the multiverse) each group is headed with whose turn it was ("Last turn of White"), so an old line is not
- * read as the present.
+ * read as the present. With an umpire, the announcements of one move share a line.
  */
 const reportGroups = computed(() => {
 	if (!V.value || !state.value) {
@@ -773,9 +777,13 @@ const reportGroups = computed(() => {
 	const viewer = game.viewer.value
 	const groups = []
 	for (const h of recordsSince(state.value.history, viewer)) {
-		const lines = recordLines(V.value, h, viewer)
+		let lines = recordLines(V.value, h, viewer)
 		if (!lines.length) {
 			continue
+		}
+		// the umpire's announcements of one move read as one line ("White moved. No pawn tries.")
+		if (V.value.umpire) {
+			lines = [lines.join(' ')]
 		}
 		const last = groups[groups.length - 1]
 		if (last && last.side === h.side) {
@@ -1089,10 +1097,30 @@ function pieceTypeAt(sq) {
 	align-items: center;
 	justify-content: center;
 	gap: 12px;
+	padding: 16px;
 	background: color-mix(in srgb, var(--color-main-background) 70%, transparent);
 	backdrop-filter: blur(6px);
 	font-size: 18px;
 	text-align: center;
+}
+
+// the hand-over prompt on a card of its own, so that the blurred board behind it reads as covered on purpose
+.qc-vgame__curtain-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: 20px 24px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background: var(--color-main-background);
+	box-shadow: 0 2px 12px var(--color-box-shadow, rgb(0 0 0 / 0.15));
+
+	p {
+		margin: 0;
+	}
 }
 
 .qc-vgame__panel {
@@ -1240,19 +1268,29 @@ function pieceTypeAt(sq) {
 	white-space: nowrap;
 }
 
-// a budget the viewer may not know: an empty track with a question mark instead of the pips, captioned
+// a budget the viewer may not know: no pips, the caption "Budget hidden" beside a question mark in a dashed circle
+.qc-vgame__budget--unknown {
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+
+	.qc-vgame__budget-count {
+		font-size: 13px;
+	}
+}
+
 .qc-vgame__unknown-track {
 	display: flex;
+	flex: none;
 	box-sizing: border-box;
 	align-items: center;
 	justify-content: center;
-	width: 70px;
-	height: 14px;
-	border: 1px dashed var(--color-text-maxcontrast);
-	border-radius: 2px;
-	background: repeating-linear-gradient(90deg, transparent 0 8px, var(--color-border-dark) 8px 9px);
+	width: 20px;
+	height: 20px;
+	border: 1.5px dashed var(--color-text-maxcontrast);
+	border-radius: 50%;
 	color: var(--color-text-maxcontrast);
-	font-size: 11px;
+	font-size: 12px;
 	font-weight: bold;
 	line-height: 1;
 }
@@ -1383,11 +1421,29 @@ function pieceTypeAt(sq) {
 	margin-top: 4px;
 }
 
-.qc-vgame__choices,
+.qc-vgame__choices {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+// the game buttons (Undo, Flip board, Resign, New game): two to a row, sharing it evenly, so none of four is left
+// alone on a row of its own; three (the game over, the hand-over) share one row. A button never cuts its label (the
+// longer translations): it takes the width the label needs and the row wraps.
 .qc-vgame__actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 6px;
+
+	> * {
+		flex: 1 1 40%;
+		min-width: max-content;
+	}
+
+	> :first-child:nth-last-child(3),
+	> :first-child:nth-last-child(3) ~ * {
+		flex-basis: 28%;
+	}
 }
 
 // the four move types as one row: the buttons share the width, each at least as wide as its label

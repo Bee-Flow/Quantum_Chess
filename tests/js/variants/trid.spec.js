@@ -5,8 +5,10 @@
 
 /**
  * Tri-Dimensional chess (src/variants/trid.js): the board and its drawing, the start position, projected movement
- * with blocking on every level, pawns, castling and en passant, the end of the game, and the quantum cases of the
- * research spec (handoff/research/trid.md, section 7: T1-T13, TQ1-TQ14, F1).
+ * with blocking on every level, pawns, castling and en passant, the end of the game, the moves of the attack boards
+ * (Meder art. 3.6: the pins, ownership, the one-piece limit, carrying a piece, the squares that move with a board,
+ * promotion by a board move), the quantum cases (T1-T13, TQ1-TQ14 and F1 name the cases of the rules this file was
+ * first written from) and the attack boards in superposition.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -27,9 +29,10 @@ import {
 	T,
 } from '../../../src/variants/core/quantum.js'
 import { applyClassical, generate } from '../../../src/variants/core/world.js'
-import V, { extras, startRights } from '../../../src/variants/trid.js'
-import { COL_OF, COLS } from '../../../src/variants/trid/board.js'
-import { play, stateOf, stopwatch } from './helpers.js'
+import V, { extras, lastRank, startRights } from '../../../src/variants/trid.js'
+import { COL_OF, columns, PIN_OF, PIN_SQUARES, START_BOARDS, TAB_OF } from '../../../src/variants/trid/board.js'
+import { ADJACENT, direction, PIN, PINS } from '../../../src/variants/trid/geometry.js'
+import { play, stateOf, stopwatch, workClock } from './helpers.js'
 
 const topo = V.topology
 
@@ -56,9 +59,10 @@ function S(name) {
  * @param {string[]} [opts.unmoved] squares of the pawns that have not moved
  * @param {string[]} [opts.rights] castling flags (K, Q, k, q)
  * @param {boolean} [opts.kings] add the kings
+ * @param {string[]} [opts.boards] the pins of the attack boards (default: the start pins)
  * @return {object}
  */
-function pos(worlds, { turn = 0, unmoved = [], rights = [], kings = true } = {}) {
+function pos(worlds, { turn = 0, unmoved = [], rights = [], kings = true, boards = START_BOARDS } = {}) {
 	const list = worlds.map((w) => (Array.isArray(w) ? w : [w, 1]))
 		.map(([pl, rel]) => [kings ? { d0KL1: '0:k', d9KL6: '1:k', ...pl } : pl, rel])
 	return stateOf(V, list, turn, (b) => {
@@ -68,7 +72,7 @@ function pos(worlds, { turn = 0, unmoved = [], rights = [], kings = true } = {})
 				moved.push(id)
 			}
 		})
-		b.x = extras({ castle: startRights().filter((c) => rights.includes(c.flag)), moved })
+		b.x = extras({ castle: startRights().filter((c) => rights.includes(c.flag)), moved, boards })
 	})
 }
 
@@ -208,9 +212,39 @@ function words(text) {
 
 const PROMOS = (code) => ['b', 'n', 'q', 'r'].map((p) => code + '=' + p)
 
+/**
+ * The legal board moves of the state, sorted.
+ *
+ * @param {object} s state
+ * @return {string[]}
+ */
+function boardCodes(s) {
+	return codes(s).filter((c) => c.includes('>')).sort()
+}
+
+/**
+ * The pins of the attack boards in every world, joined per world.
+ *
+ * @param {object} s state
+ * @return {string[]}
+ */
+function pinsOf(s) {
+	return [...new Set(s.worlds.map(({ b }) => b.x.boards.join()))]
+}
+
+/** From the start, the moves that leave White's QL1 board with only its z pawn (the queen, rook and a pawn leave). */
+const FREE_QL1 = words('a2W-a4W a8B-b6N a1W-b3W b6N-a8B a1QL1-a2W a8B-b6N a0QL1-a1W b6N-a8B a2W-a3W a8B-b6N '
+	+ 'a1W-a2W b6N-a8B z0QL1-a0QL1 a8B-b6N a0QL1-a1W b6N-a8B')
+
+/** White's queen's board on QL3, White's king's board on KL1, Black's on QL6 and KL6. */
+const QL3 = ['QL3', 'KL1', 'QL6', 'KL6']
+
 describe('Tri-D chess: board and start position', () => {
-	it('has 64 squares, 20 two-level map squares and 16 void map squares (T1)', () => {
-		expect(topo.size).toBe(64)
+	it('has 64 squares at the start, 20 two-level map squares and 16 void map squares (T1)', () => {
+		// every square of the main levels and of the twelve pins, and a tab per pin
+		expect(topo.size).toBe(48 + 12 * 4 + 12)
+		const COLS = columns(START_BOARDS)
+		expect(COLS.flat()).toHaveLength(64)
 		const count = (n) => COLS.map((c, i) => [c, i]).filter(([c]) => c.length === n)
 			.map(([, i]) => 'zabcde'[i % 6] + Math.floor(i / 6)).sort()
 		expect(count(2)).toEqual(words('a1 a3 a4 a5 a6 a8 b3 b4 b5 b6 c3 c4 c5 c6 d1 d3 d4 d5 d6 d8'))
@@ -219,6 +253,10 @@ describe('Tri-D chess: board and start position', () => {
 		expect(COLS[1 + 6].map((s) => topo.names[s])).toEqual(['a1W', 'a1QL1'])
 		expect(COLS[6].map((s) => topo.names[s])).toEqual(['z1QL1'])
 		expect(topo.byName('b0QL1')).toBe(-1)
+		// the squares of a column are in height order, the attack boards above their main level
+		expect(columns(['QL2', 'KL1', 'QL5', 'KL6'])[1 + 6 * 4].map((s) => topo.names[s]))
+			.toEqual(['a4W', 'a4QL2', 'a4N', 'a4QL5'])
+		expect(topo.names.slice(-12)).toEqual(PINS)
 	})
 
 	it('sets up every piece on its start square, with White to move and no castling yet (T2)', () => {
@@ -263,6 +301,7 @@ describe('Tri-D chess: board and start position', () => {
 			d7B: '1:p',
 		})
 		expect(w.x).toEqual(extras({ castle: startRights(), started: [false, false] }))
+		expect(w.x.boards).toEqual(['QL1', 'KL1', 'QL6', 'KL6'])
 		const pawnMoves = ['a', 'b', 'c', 'd'].flatMap((f) => ['3W', '3N', '4W', '4N'].map((t) => f + '2W-' + f + t))
 		expect(codes(s).sort()).toEqual(['a1W-b3N', 'a1W-b3W', 'd1W-c3N', 'd1W-c3W', ...pawnMoves].sort())
 		expect(classical(w, 1)).toHaveLength(20)
@@ -271,33 +310,47 @@ describe('Tri-D chess: board and start position', () => {
 		expect(perft(w, 0, 3)).toBe(9128)
 	})
 
-	it('draws seven separate boards with captions, file letters and rank numbers, and nothing overlaps', () => {
-		const L = topo.layout
-		expect(L.boards).toHaveLength(7)
-		// small enough to show whole on a phone (about 30 px per square at 390 px): no zoom buttons
-		expect(L.zoomable).toBeUndefined()
-		expect(L.width * L.height).toBeLessThan(200)
-		expect(L.width / L.height).toBeGreaterThan(0.7)
-		const texts = L.labels.map((l) => l.text)
-		for (const caption of ['W', 'N', 'B', 'QL1', 'KL1', 'QL6', 'KL6']) {
+	it('draws the three levels and every pin, and nothing overlaps', () => {
+		const L = V.layoutOf(newGame(V))
+		const { layout } = L
+		expect(L.size).toBe(topo.size)
+		// W, N, B and the four attack boards; the six empty slots are dashed (QL2 and QL5 share one, KL2 and KL5 too)
+		expect(layout.boards).toHaveLength(7)
+		expect(layout.outlines.filter((o) => o.kind === 'next')).toHaveLength(6 * 4)
+		// small enough to show whole on a phone (about 28 px per square at 390 px): no zoom buttons
+		expect(layout.zoomable).toBeUndefined()
+		expect(layout.width * layout.height).toBeLessThanOrEqual(200)
+		const texts = layout.labels.map((l) => l.text)
+		for (const caption of ['W', 'N', 'B', ...PINS]) {
 			expect(texts.filter((x) => x === caption)).toHaveLength(1)
 		}
 		for (let r = 0; r <= 9; r++) {
 			expect(texts).toContain(String(r))
 		}
-		expect(topo.cells).toHaveLength(64)
-		for (const a of topo.cells) {
+		// the 64 squares that exist and the twelve tabs
+		expect(L.cells).toHaveLength(64 + 12)
+		// the tabs: wooden where a board stands, pale where the pin is free
+		const tabs = L.cells.filter((c) => c.shade === 'wood' || c.shade === 'camp')
+		expect(tabs.map((c) => topo.names[c.sq])).toEqual(PINS)
+		expect(tabs.filter((c) => c.shade === 'wood').map((c) => topo.names[c.sq])).toEqual(START_BOARDS)
+		// each pin name stands in the top of its tab, so the dot that marks a free pin as a target (in the middle of
+		// the tab, a sixth of a square across) leaves the name readable
+		for (const tab of tabs) {
+			const name = layout.labels.find((l) => l.text === topo.names[tab.sq])
+			expect(name.y - tab.y, topo.names[tab.sq]).toBeLessThanOrEqual(0.2)
+		}
+		for (const a of L.cells) {
 			expect(a.x).toBeGreaterThanOrEqual(0)
-			expect(a.x + a.w).toBeLessThanOrEqual(L.width)
-			expect(a.y + a.h).toBeLessThanOrEqual(L.height)
-			for (const b of topo.cells) {
+			expect(a.x + a.w).toBeLessThanOrEqual(layout.width)
+			expect(a.y + a.h).toBeLessThanOrEqual(layout.height)
+			for (const b of L.cells) {
 				if (a.sq < b.sq) {
 					expect(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y).toBe(true)
 				}
 			}
 		}
 		// a map square has the same colour on every level
-		const cell = (n) => topo.cells[S(n)]
+		const cell = (n) => L.cells.find((c) => c.sq === S(n))
 		expect(cell('a1W').shade).toBe('dark')
 		expect(cell('a1QL1').shade).toBe('dark')
 		expect(cell('b3N').shade).toBe(cell('b3W').shade)
@@ -310,44 +363,97 @@ describe('Tri-D chess: board and start position', () => {
 		// each attack board abuts the corner it is pinned to, one row further out
 		expect(cell('a1QL1').y - (cell('a1W').y + 1)).toBeCloseTo(0.2, 9)
 		expect(cell('d8B').y - (cell('d8KL6').y + 1)).toBeCloseTo(0.2, 9)
-		// W's ranks continue on B above it; N stands beside them, level with its ranks (less than a fifth off)
-		expect(cell('a5B').y).toBeLessThan(cell('a4W').y - 1)
+		// N stands beside W and B, its ranks 4 and 5 level with the band between them
 		expect(cell('a3N').x).toBeGreaterThan(cell('d3W').x + 2)
-		for (const r of [3, 4]) {
-			expect(Math.abs(cell(`b${r}N`).y - cell(`b${r}W`).y)).toBeLessThan(0.2)
+		expect(cell('a4N').y).toBeGreaterThan(cell('a5B').y)
+		expect(cell('a5N').y).toBeLessThan(cell('a4W').y)
+		// every rank of every board is numbered on its row, and only the pin names sit on a cell (their tabs)
+		for (const c of L.cells) {
+			const [, rank, h] = topo.coords[c.sq]
+			if (c.shade !== 'wood' && c.shade !== 'camp') {
+				expect(layout.labels.some((l) => l.text === String(rank) && Math.abs(l.y - (c.y + 0.5)) < 1e-9), h)
+					.toBe(true)
+			}
 		}
-		for (const r of [5, 6]) {
-			expect(Math.abs(cell(`b${r}N`).y - cell(`b${r}B`).y)).toBeLessThan(0.2)
+		for (const l of layout.labels) {
+			const on = L.cells.filter((c) => l.x > c.x && l.x < c.x + c.w && l.y > c.y && l.y < c.y + c.h)
+			expect(on.map((c) => topo.names[c.sq])).toEqual(PINS.includes(l.text) ? [l.text] : [])
 		}
-		// every rank of every board is numbered on its row, and no label sits on a cell
-		for (const c of topo.cells) {
-			const [, rank] = topo.coords[c.sq]
-			expect(L.labels.some((l) => l.text === String(rank) && Math.abs(l.y - (c.y + 0.5)) < 1e-9)).toBe(true)
+		// the tabs say whether a board stands on their pin
+		expect(L.names[S('QL1')]).toBe('Attack board on QL1')
+		expect(L.names[S('QL3')]).toBe('Free pin QL3')
+		expect(L.names[S('a1W')]).toBe('a1W')
+	})
+
+	it('draws each attack board at its pin, with its squares, and opens a second inner band when both need it', () => {
+		const at = (boards) => {
+			const L = V.layoutOf(pos([{}], { boards }))
+			return { L, cell: (n) => L.cells.find((c) => c.sq === S(n)) }
 		}
-		for (const l of L.labels) {
-			expect(topo.cells.some((c) => l.x > c.x && l.x < c.x + c.w && l.y > c.y && l.y < c.y + c.h)).toBe(false)
+		const { L, cell } = at(['QL3', 'KL2', 'QL5', 'KL6'])
+		// the squares of the empty pins are not drawn, those of the boards are, beside the corners they hang over
+		expect(cell('a1QL1')).toBeUndefined()
+		expect(cell('z0QL1')).toBeUndefined()
+		for (const n of ['z2QL3', 'a3QL3', 'd4KL2', 'e5KL2', 'z4QL5', 'a5QL5']) {
+			expect(cell(n), n).toBeDefined()
 		}
+		expect(L.cells).toHaveLength(64 + 12)
+		// a board keeps its files, and its ranks run beside the corner: the inner band below B, above W
+		expect(cell('a3QL3').x).toBe(cell('a3N').x)
+		expect(cell('a3QL3').y - (cell('a3N').y + 1)).toBeCloseTo(0.2, 9)
+		expect(cell('a5QL5').x).toBe(cell('a5B').x)
+		expect(cell('a5QL5').y - (cell('a5B').y + 1)).toBeCloseTo(0.2, 9)
+		expect(cell('d4W').y - (cell('d4KL2').y + 1)).toBeCloseTo(0.2, 9)
+		// N's bands are level with the ranks of B and W
+		expect(cell('a2QL3').y).toBe(cell('a2W').y)
+		expect(L.layout.boards).toHaveLength(7)
+		expect(L.names[S('QL1')]).toBe('Free pin QL1')
+		// QL2 and QL5 share a slot; with boards on both, B's pins get a band of their own above W's
+		const two = at(['QL2', 'KL1', 'QL5', 'KL6'])
+		expect(two.L.layout.height).toBeCloseTo(L.layout.height + 2.2, 9)
+		expect(two.cell('a4QL5').y + 1 + 0.2).toBeCloseTo(two.cell('a5QL2').y, 9)
+		expect(two.cell('a4W').y - (two.cell('a4QL2').y + 1)).toBeCloseTo(0.2, 9)
+		for (const a of two.L.cells) {
+			for (const b of two.L.cells) {
+				if (a.sq < b.sq) {
+					expect(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y).toBe(true)
+				}
+			}
+		}
+		// the layout is shared per set of pins
+		expect(V.layoutOf(pos([{}], { boards: ['QL3', 'KL2', 'QL5', 'KL6'] }))).toBe(L)
 	})
 })
 
 describe('Tri-D chess: rules card', () => {
-	it('names the levels, the castling rights and the ghost on the other level of the target', () => {
+	it('names the levels and pins, the board moves, the castling rights and the ghosts', () => {
 		const card = V.rules()
 		expect(card).toHaveLength(8)
 		expect(card[0]).toContain('White\'s (W, lowest), Neutral (N) and Black\'s (B, highest)')
-		expect(card[0]).toContain('at the back corners')
-		// every board caption and square name on screen is explained (spec section 5, entries 1 and 2)
+		// every board caption and square name on screen is explained
+		expect(card[0]).toContain('QL1 to QL6 on the queen\'s side and KL1 to KL6 on the king\'s side')
 		for (const board of ['QL1', 'KL1', 'QL6', 'KL6']) {
 			expect(card[0]).toContain(board)
 		}
 		expect(card[1]).toContain('A square is named file, rank and board, such as b3N or z0QL1.')
+		expect(card[1]).toContain('The squares of a pin exist only while a board stands on it.')
+		expect(card[3]).toContain('an attack board that holds at most one piece to a free pin next to it')
+		expect(card[3]).toContain('only an empty board may move backwards')
+		expect(card[4]).toContain('but not after riding a board')
+		expect(card[5]).toContain('A pawn that a board move takes to its last rank, or leaves on it, promotes at once')
+		expect(card[3]).toContain('(QL3 reaches QL1, QL2, QL4 and QL5)')
 		expect(card[6]).toContain('if neither the king nor that rook has moved in any possibility')
 		expect(card[6]).toContain('once the queen\'s square is empty')
 		expect(card[7]).toContain('A ghost on the other level of your target square does not matter.')
+		expect(card[7]).toContain('Attack boards are never ghosts')
 		// the classic end rules apply (docs/rules.md 5): the card must not deny them
 		for (const line of card) {
-			expect(line).not.toMatch(/checkmate|only by capturing|no bare|trapped/i)
+			expect(line).not.toMatch(/checkmate|only by capturing|no bare|trapped|never move/i)
 		}
+		expect(V.boardLegend(newGame(V))).toEqual([{
+			kind: 'pin',
+			text: 'To move an attack board, tap its pin name, then the name of a free pin (dashed).',
+		}])
 	})
 })
 
@@ -522,6 +628,262 @@ describe('Tri-D chess: pawns', () => {
 	})
 })
 
+describe('Tri-D chess: attack boards', () => {
+	it('keeps every board on its start pin until it holds at most one piece', () => {
+		let s = newGame(V)
+		expect(boardCodes(s)).toEqual([])
+		for (const code of FREE_QL1) {
+			expect(boardCodes(s)).toEqual([])
+			s = play(V, s, code)
+		}
+		// only the z pawn is left on QL1: White's board may go forward to QL2 or QL3; KL1 across is taken
+		expect(boardCodes(s)).toEqual(['QL1>QL2', 'QL1>QL3'])
+		const move = legalMoves(V, s).find((m) => m.code === 'QL1>QL3')
+		expect([topo.names[move.from], topo.names[move.to], move.kind]).toEqual(['QL1', 'QL3', 'board'])
+		expect(outs(s, 'QL1>QL3')).toEqual([['move', 1, false]])
+	})
+
+	it('knows the pins next to each pin (Meder art. 3.6)', () => {
+		const next = (name) => ADJACENT[PINS.indexOf(name)].map((j) => PINS[j]).sort()
+		expect(PIN.map((p) => ADJACENT[PINS.indexOf(p.name)].length)).toEqual([3, 3, 4, 4, 5, 5, 5, 5, 4, 4, 3, 3])
+		expect(next('QL3')).toEqual(['KL3', 'QL1', 'QL2', 'QL4', 'QL5'])
+		expect(next('QL6')).toEqual(['KL6', 'QL4', 'QL5'])
+		expect(next('KL1')).toEqual(['KL2', 'KL3', 'QL1'])
+		expect(next('KL5')).toEqual(['KL3', 'KL4', 'KL6', 'QL5'])
+		// from QL3, QL2, QL4 and QL5 lie ahead for White, QL1 behind, KL3 beside
+		const dir = (a, b) => direction(PINS.indexOf(a), PINS.indexOf(b))
+		expect(['QL2', 'QL4', 'QL5', 'QL1', 'KL3'].map((p) => dir('QL3', p))).toEqual([1, 1, 1, -1, 0])
+		// the boards cover the corner square of their main level and the squares beyond it
+		const squaresOf = (name) => PIN_SQUARES[PINS.indexOf(name)].map((sq) => topo.names[sq])
+		expect(squaresOf('QL2')).toEqual(['z4QL2', 'a4QL2', 'z5QL2', 'a5QL2'])
+		expect(squaresOf('KL4')).toEqual(['d6KL4', 'e6KL4', 'd7KL4', 'e7KL4'])
+		expect(TAB_OF.map((sq) => topo.names[sq])).toEqual(PINS)
+	})
+
+	it('moves an empty board to any free pin next to it, a board with a piece only forwards or sideways', () => {
+		// White's empty board on QL3 may also go back to QL1; the board on KL1 holds White's king
+		expect(boardCodes(pos([{}], { boards: QL3 })))
+			.toEqual(['KL1>KL2', 'KL1>KL3', 'KL1>QL1', 'QL3>KL3', 'QL3>QL1', 'QL3>QL2', 'QL3>QL4', 'QL3>QL5'])
+		// with a knight on it, not backwards
+		expect(boardCodes(pos([{ z2QL3: '0:n' }], { boards: QL3 })).filter((c) => c.startsWith('QL3')))
+			.toEqual(['QL3>KL3', 'QL3>QL2', 'QL3>QL4', 'QL3>QL5'])
+		// Black: forwards is towards rank 0; the board on QL6 is empty, the one on KL6 holds Black's king
+		expect(boardCodes(pos([{}], { turn: 1 }))).toEqual(['KL6>KL4', 'KL6>KL5', 'QL6>QL4', 'QL6>QL5'])
+		const back = pos([{ a6QL4: '1:n' }], { turn: 1, boards: ['QL1', 'KL1', 'QL4', 'KL6'] })
+		expect(boardCodes(back).filter((c) => c.startsWith('QL4')))
+			.toEqual(['QL4>KL4', 'QL4>QL2', 'QL4>QL3', 'QL4>QL5'])
+		const empty = pos([{}], { turn: 1, boards: ['QL1', 'KL1', 'QL4', 'KL6'] })
+		expect(boardCodes(empty).filter((c) => c.startsWith('QL4')))
+			.toEqual(['QL4>KL4', 'QL4>QL2', 'QL4>QL3', 'QL4>QL5', 'QL4>QL6'])
+		// a pin holds one board: an occupied pin is never a target
+		expect(boardCodes(pos([{}], { boards: ['QL3', 'KL1', 'QL5', 'KL3'] })).filter((c) => c.startsWith('QL3')))
+			.toEqual(['QL3>QL1', 'QL3>QL2', 'QL3>QL4'])
+	})
+
+	it('gives an empty board to its owner and a board with a piece to that piece\'s side', () => {
+		// Black's empty board on QL3: Black may move it, White may not
+		const black = ['QL1', 'KL1', 'QL3', 'KL6']
+		expect(boardCodes(pos([{}], { boards: black })).filter((c) => c.startsWith('QL3'))).toEqual([])
+		expect(boardCodes(pos([{}], { turn: 1, boards: black })).filter((c) => c.startsWith('QL3')))
+			.toEqual(['QL3>KL3', 'QL3>QL2', 'QL3>QL4', 'QL3>QL5'])
+		// White's board with a Black knight on it is Black's: forwards for Black is towards QL1
+		expect(boardCodes(pos([{ a3QL3: '1:n' }], { boards: QL3 })).filter((c) => c.startsWith('QL3'))).toEqual([])
+		expect(boardCodes(pos([{ a3QL3: '1:n' }], { turn: 1, boards: QL3 })).filter((c) => c.startsWith('QL3')))
+			.toEqual(['QL3>KL3', 'QL3>QL1'])
+		// Black's board with a White rook on it is White's
+		const rook = pos([{ z6QL4: '0:r' }], { boards: ['QL1', 'KL1', 'QL4', 'KL6'] })
+		expect(boardCodes(rook).filter((c) => c.startsWith('QL4'))).toEqual(['QL4>KL4', 'QL4>QL6'])
+		expect(boardCodes({ ...rook, turn: 1 }).filter((c) => c.startsWith('QL4'))).toEqual([])
+	})
+
+	it('never moves a board that holds two pieces, of either side', () => {
+		for (const pair of [{ z2QL3: '0:n', a3QL3: '1:p' }, { z2QL3: '0:n', z3QL3: '0:b' }]) {
+			for (const turn of [0, 1]) {
+				expect(boardCodes(pos([pair], { turn, boards: QL3 })).filter((c) => c.startsWith('QL3'))).toEqual([])
+			}
+		}
+		// the king's board with the rook beside the king stays where it is
+		expect(boardCodes(pos([{ e0KL1: '0:r' }])).filter((c) => c.startsWith('KL1'))).toEqual([])
+	})
+
+	it('carries its piece to the same place on the new pin, and the squares move with the board', () => {
+		let s = pos([{ z2QL3: '0:n', a1W: '0:r', b5N: '0:n' }], { boards: QL3 })
+		expect(targets(s, 'a1W')).toEqual(words('a2QL3 a2W a3N a3QL3 a3W a4N a4W a5B a5N a6B a6N a7B a8B a8QL6 a9QL6 '
+			+ 'b1W c1W d1KL1 d1W e1KL1'))
+		s = play(V, s, 'QL3>QL5')
+		expect(pinsOf(s)).toEqual(['QL5,KL1,QL6,KL6'])
+		expect(at(s, 'z4QL5')).toEqual(['0:n'])
+		expect(at(s, 'z2QL3')).toEqual(['.'])
+		s = play(V, s, 'd9KL6-d8B')
+		// the rook's file now ends on a5QL5 and a4QL5 on the new board; the old board's squares are gone
+		expect(targets(s, 'a1W')).toEqual(words('a2W a3N a3W a4N a4QL5 a4W a5B a5N a5QL5 a6B a6N a7B a8B a8QL6 a9QL6 '
+			+ 'b1W c1W d1KL1 d1W e1KL1'))
+		// pieces reach the board's squares: the knight on b5N jumps to z4QL5's neighbours
+		expect(targets(s, 'b5N')).toContain('a3W')
+		expect(targets(s, 'b5N')).not.toContain('a3QL3')
+		expect(targets(s, 'z4QL5')).toEqual(words('a2W a6B a6N b3N b3W b5B'))
+		// a rider flies across the pin the board left: a rook on z0 now sees z4 and z5 on QL5
+		const r = pos([{ z0QL1: '0:r' }], { boards: ['QL1', 'KL1', 'QL5', 'KL6'] })
+		expect(targets(r, 'z0QL1')).toEqual(['a0QL1', 'z1QL1', 'z4QL5', 'z5QL5'])
+	})
+
+	it('counts a board move as a turn: en passant ends, a carried pawn no longer double-steps, a carried king or rook loses castling', () => {
+		// the pawn a1QL1 has not moved yet, and rides to a3QL3
+		let s = pos([{ a1QL1: '0:p' }], { unmoved: ['a1QL1'], boards: ['QL1', 'KL1', 'QL6', 'KL6'] })
+		expect(movesFrom(s, 'a1QL1')).toEqual(['a1QL1-a2W', 'a1QL1-a3N', 'a1QL1-a3W'])
+		s = play(V, s, 'QL1>QL3')
+		expect(at(s, 'a3QL3')).toEqual(['0:p'])
+		s = play(V, s, 'd9KL6-d8B')
+		expect(movesFrom(s, 'a3QL3')).toEqual(['a3QL3-a4N', 'a3QL3-a4W'])
+		// en passant: Black double-steps, White moves a board instead of taking, the chance is gone
+		const ep = play(V, pos([{ c5N: '0:p', b7B: '1:p' }], { turn: 1, unmoved: ['b7B'], boards: QL3 }), 'b7B-b5N')
+		expect(movesFrom(ep, 'c5N')).toContain('c5N-b6N')
+		const later = play(V, play(V, ep, 'QL3>QL2'), 'b5N-b4W')
+		expect(later.worlds[0].b.x.ep).toBe(-1)
+		// the king rides its board to KL3: the queen's side castling right goes with it
+		const castle = pos([{ z0QL1: '0:r', a0QL1: '0:q' }], { rights: ['Q'] })
+		expect(castle.worlds[0].b.x.castle).toHaveLength(1)
+		const rode = play(V, castle, 'KL1>KL3')
+		expect(at(rode, 'd2KL3')).toEqual(['0:k'])
+		expect(rode.worlds[0].b.x.castle).toEqual([])
+		expect(rode.worlds[0].b.x.started).toEqual([true, true])
+		// the move list writes a board move as its code
+		expect(V.codeText('QL1>QL3')).toBe('QL1>QL3')
+		expect(V.codeText('QL4>QL6=n')).toBe('QL4>QL6=N')
+		expect(V.codeText('a1W-b3W')).toBeNull()
+	})
+
+	it('promotes a pawn that a board move takes to its last rank, or leaves on it (Meder art. 3.4(e))', () => {
+		// the file of a pawn decides, and on files a and d the board over the far corner
+		expect([0, 1, 2, 3, 4, 5].map((f) => lastRank(START_BOARDS, 0, f))).toEqual([9, 9, 8, 8, 9, 9])
+		expect([0, 1, 2, 3, 4, 5].map((f) => lastRank(['QL2', 'KL1', 'QL5', 'KL6'], 0, f))).toEqual([9, 8, 8, 8, 9, 9])
+		expect([0, 1, 2, 3, 4, 5].map((f) => lastRank(['QL2', 'KL3', 'QL6', 'KL6'], 1, f))).toEqual([0, 1, 1, 1, 1, 0])
+		// without a board on QL6 a pawn promotes on a8B
+		const bare = pos([{ a7B: '0:p', d5N: '1:k' }], { kings: false, boards: ['QL1', 'KL1', 'QL5', 'KL6'] })
+		expect(movesFrom(bare, 'a7B')).toEqual(PROMOS('a7B-a8B'))
+		// carried: White's z pawn rides QL4 to QL6 and lands on z9, its last rank; White picks the piece
+		const carry = pos([{ z7QL4: '0:p' }], { boards: ['QL4', 'KL1', 'QL5', 'KL6'] })
+		expect(boardCodes(carry).filter((c) => c.startsWith('QL4')))
+			.toEqual(['QL4>KL4', ...PROMOS('QL4>QL6')].sort())
+		expect(at(play(V, carry, 'QL4>QL6=n'), 'z9QL6')).toEqual(['0:n'])
+		expect(at(play(V, carry, 'QL4>KL4'), 'd7KL4')).toEqual(['0:p'])
+		// left behind: White's own empty board leaves QL6, so the pawn on a8B now stands on its last rank
+		const own = pos([{ a8B: '0:p', d5N: '1:k' }], { kings: false, boards: ['QL6', 'KL1', 'QL1', 'KL6'] })
+		expect(boardCodes(own).filter((c) => c.startsWith('QL6'))).toEqual([...PROMOS('QL6>QL4'), ...PROMOS('QL6>QL5')])
+		expect(at(play(V, own, 'QL6>QL5=r'), 'a8B')).toEqual(['0:r'])
+		// Black moves its board away from over White's pawn: the pawn becomes a queen
+		const enemy = pos([{ a8B: '0:p', d0KL1: '0:k', d5N: '1:k' }], { turn: 1, kings: false })
+		expect(boardCodes(enemy)).toEqual(['KL6>KL4', 'KL6>KL5', 'QL6>QL4', 'QL6>QL5'])
+		expect(at(play(V, enemy, 'QL6>QL4'), 'a8B')).toEqual(['0:q'])
+		// and the same for Black on a1W when White's board leaves QL1
+		const black = pos([{ a1W: '1:p' }])
+		expect(at(play(V, black, 'QL1>QL2'), 'a1W')).toEqual(['1:q'])
+	})
+})
+
+describe('Tri-D chess: attack boards and ghosts', () => {
+	it('carries a ghost part where it stands, with no roll, and keeps the boards the same in every world', () => {
+		const s = pos([
+			{ b1W: '0:k', d9KL6: '1:k', z2QL3: '0:n' },
+			{ b1W: '0:k', d9KL6: '1:k', c5N: '0:n' },
+		], { kings: false, boards: QL3 })
+		expect(outs(s, 'QL3>QL5')).toEqual([['move', 1, false]])
+		const after = play(V, s, 'QL3>QL5')
+		expect(where(after, 'c5N')).toEqual({ c5N: 0.5, z4QL5: 0.5 })
+		expect(pinsOf(after)).toEqual(['QL5,KL1,QL6,KL6'])
+		expect(budget(after, 0)).toBe(2)
+		expect(V.solidExtra(after.worlds[0].b)).toBe('QL5,KL1,QL6,KL6')
+	})
+
+	it('rolls a board move that a ghost makes impossible in some possibilities', () => {
+		// a pawn and, in half the possibilities, a knight on the board: too full there
+		const full = pos([
+			{ b1W: '0:k', d9KL6: '1:k', a3QL3: '0:p', z2QL3: '0:n' },
+			{ b1W: '0:k', d9KL6: '1:k', a3QL3: '0:p', c5N: '0:n' },
+		], { kings: false, boards: QL3 })
+		expect(outs(full, 'QL3>QL5')).toEqual([['miss', 0.5, true], ['move', 0.5, true]])
+		const moved = playKey(full, 'QL3>QL5', 'move')
+		expect(at(moved, 'a5QL5')).toEqual(['0:p'])
+		expect(where(moved, 'c5N')).toEqual({ c5N: 1 })
+		expect(pinsOf(moved)).toEqual(['QL5,KL1,QL6,KL6'])
+		const missed = playKey(full, 'QL3>QL5', 'miss')
+		expect(where(missed, 'z2QL3')).toEqual({ z2QL3: 1 })
+		expect(at(missed, 'a3QL3')).toEqual(['0:p'])
+		expect(pinsOf(missed)).toEqual(['QL3,KL1,QL6,KL6'])
+		// a Black ghost on White's empty board hands it to Black in half the possibilities
+		const contested = pos([
+			{ b1W: '0:k', d9KL6: '1:k', z2QL3: '1:n' },
+			{ b1W: '0:k', d9KL6: '1:k', c5N: '1:n' },
+		], { kings: false, boards: QL3 })
+		expect(outs(contested, 'QL3>QL1')).toEqual([['miss', 0.5, true], ['move', 0.5, true]])
+		expect(outs({ ...contested, turn: 1 }, 'QL3>QL1')).toEqual([['miss', 0.5, true], ['move', 0.5, true]])
+		expect(pinsOf(playKey(contested, 'QL3>QL1', 'move'))).toEqual(['QL1,KL1,QL6,KL6'])
+		// the ghost knight on the board: a board with a piece cannot go back, an empty one can
+		const back = pos([
+			{ b1W: '0:k', d9KL6: '1:k', z2QL3: '0:n' },
+			{ b1W: '0:k', d9KL6: '1:k', c5N: '0:n' },
+		], { kings: false, boards: QL3 })
+		expect(outs(back, 'QL3>QL1')).toEqual([['miss', 0.5, true], ['move', 0.5, true]])
+		expect(where(playKey(back, 'QL3>QL1', 'move'), 'c5N')).toEqual({ c5N: 1 })
+	})
+
+	it('keeps the pins the same in every world in random games with board moves, splits, merges and measures', () => {
+		let boardMoves = 0
+		let rolled = 0
+		for (const seed of [21, 22, 23, 24, 25, 26, 27, 28]) {
+			const rng = seededRng(seed)
+			let s = pos([{
+				d0KL1: '0:k',
+				e0KL1: '0:n',
+				a1W: '0:r',
+				b2W: '0:b',
+				c2W: '0:p',
+				z2QL3: '0:q',
+				d9KL6: '1:k',
+				e9KL6: '1:n',
+				a8B: '1:r',
+				b7B: '1:b',
+				c7B: '1:p',
+				z6QL4: '1:q',
+			}], { kings: false, boards: ['QL3', 'KL1', 'QL4', 'KL6'] })
+			for (let ply = 0; ply < 60 && !s.result; ply++) {
+				const all = legalMoves(V, s, { splits: ply % 4 === 1 }).map((m) => m.code)
+				const boards = all.filter((c) => c.includes('>'))
+				const list = boards.length && rng() < 0.4 ? boards : all
+				const code = list[Math.floor(rng() * list.length)]
+				const res = applyMove(V, s, code, rng)
+				if (code.includes('>')) {
+					boardMoves++
+					rolled += res.outcomes.length > 1 ? 1 : 0
+				}
+				for (const br of res.outcomes) {
+					expect(br.notes.filter((n) => n.startsWith('solid:') || n.startsWith('end:'))).toEqual([])
+				}
+				s = res.state
+				expect(pinsOf(s)).toHaveLength(1)
+				const x = JSON.stringify(s.worlds[0].b.x)
+				expect(s.worlds.every(({ b }) => JSON.stringify(b.x) === x)).toBe(true)
+				// no piece stands on a tab or on a square of a pin without a board
+				for (const { b } of s.worlds) {
+					for (const sq of b.sq.filter((q) => q >= 0)) {
+						expect(TAB_OF).not.toContain(sq)
+						expect(PIN_OF[sq] < 0 || b.x.boards.includes(PINS[PIN_OF[sq]]), topo.names[sq]).toBe(true)
+					}
+				}
+			}
+		}
+		expect(boardMoves).toBeGreaterThan(50)
+		expect(rolled).toBeGreaterThan(0)
+	})
+
+	it('lets the computer move a board: it carries a pawn to promotion', async () => {
+		const s = pos([{ z7QL4: '0:p', c2W: '0:p', c7B: '1:p' }], { boards: ['QL4', 'KL1', 'QL5', 'KL6'] })
+		for (const level of ['easy', 'normal', 'hard']) {
+			expect(await chooseMove(V, s, { level, rng: seededRng(5), now: workClock() }), level).toBe('QL4>QL6=q')
+		}
+	})
+})
+
 describe('Tri-D chess: end of the game', () => {
 	it('is won by capturing the king', () => {
 		const s = pos([{ d8B: '0:q', a2W: '1:p' }])
@@ -536,14 +898,20 @@ describe('Tri-D chess: end of the game', () => {
 	})
 
 	it('is won at once when the king cannot escape', () => {
-		// the rook d8KL6 guards rank 8 (z8QL6, a8QL6, a8B); the rook e9KL6 takes rank 9 across the void b9 and c9
-		const trap = pos([{ d0KL1: '0:k', d8KL6: '0:r', e0KL1: '0:r', z9QL6: '1:k' }], { kings: false })
+		// the rook d8KL6 guards rank 8 (a8QL6, a8B); the rook e9KL6 takes rank 9 across the void b9 and c9; with its
+		// pawn on z8QL6 the king's board holds two pieces and cannot move away
+		const trap = pos([{ d0KL1: '0:k', d8KL6: '0:r', e0KL1: '0:r', z9QL6: '1:k', z8QL6: '1:p' }], { kings: false })
 		expect(play(V, trap, 'e0KL1-e9KL6').result).toEqual({ winner: 0, reason: 'cannotEscape' })
 		// without the rook on rank 8 the king steps to rank 8 and the game goes on
-		const open = pos([{ d0KL1: '0:k', e0KL1: '0:r', z9QL6: '1:k' }], { kings: false })
+		const open = pos([{ d0KL1: '0:k', e0KL1: '0:r', z9QL6: '1:k', z8QL6: '1:p' }], { kings: false })
 		const s = play(V, open, 'e0KL1-e9KL6')
 		expect(s.result).toBeNull()
-		expect(movesFrom(s, 'z9QL6')).toEqual(['z9QL6-a8B', 'z9QL6-a8QL6', 'z9QL6-a9QL6', 'z9QL6-z8QL6'])
+		expect(movesFrom(s, 'z9QL6')).toEqual(['z9QL6-a8B', 'z9QL6-a8QL6', 'z9QL6-a9QL6'])
+		// without the pawn the king rides its board away: a board move is an escape too
+		const ride = pos([{ d0KL1: '0:k', d8KL6: '0:r', e0KL1: '0:r', z9QL6: '1:k' }], { kings: false })
+		const t = play(V, ride, 'e0KL1-e9KL6')
+		expect(t.result).toBeNull()
+		expect(boardCodes(t)).toEqual(['QL6>QL4', 'QL6>QL5'])
 	})
 
 	it('is drawn when only the kings are left, unless the side to move can take the other king for certain', () => {
@@ -559,7 +927,9 @@ describe('Tri-D chess: end of the game', () => {
 	})
 
 	it('is drawn when the side to move has no legal move', () => {
+		// White's board on KL1 holds a Black knight, so White cannot move it either
 		const s = pos([{
+			e0KL1: '1:n',
 			z0QL1: '0:k',
 			a0QL1: '0:p',
 			z1QL1: '0:p',
@@ -758,7 +1128,7 @@ describe('Tri-D chess: quantum rules', () => {
 		const w = { ...start, x: extras({ ep: COL_OF[S('b6N')], epVictim: S('b5N') }) }
 		const idle = V.applyMiss(w, { type: 'measure' }, 0, { hit: false })
 		// the fields keep their order: worlds are compared by the JSON text of `x`
-		expect(Object.keys(idle.x)).toEqual(['ep', 'epVictim', 'castle', 'started', 'moved'])
+		expect(Object.keys(idle.x)).toEqual(['ep', 'epVictim', 'castle', 'started', 'moved', 'boards'])
 		expect([idle.x.ep, idle.x.epVictim]).toEqual([-1, -1])
 		expect(w.x.epVictim).toBe(S('b5N'))
 		const calm = { ...start, x: extras() }

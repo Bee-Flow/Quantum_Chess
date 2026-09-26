@@ -10,8 +10,7 @@
  * tested in every possibility (the game-end roll settles disagreement). Once no Bia is left, long endgames are drawn by
  * the bare-Khun count (pieces' honour), a 64-move rule (board's honour) and the bare-Khuns rule, all counted with the
  * core's quiet counter from the last capture or promotion; these draws wait while the player to move can capture the
- * enemy Khun for certain. The research spec is handoff/research/makruk.md; the player-facing rules are in
- * docs/variants.md.
+ * enemy Khun for certain. The player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -311,8 +310,7 @@ const spec = {
 	specialMoves: false,
 	// The bare-Khuns draw is this variant's own (worldResult): decided in each possibility, so a capture that leaves
 	// only the two Khuns in some possibilities ends in the game-end roll, where the core's rule needs all of them. The
-	// core's escape rule stays on, and the variant's own draws wait for a certain Khun capture themselves
-	// (handoff/LEAD-DECISIONS.md L1).
+	// core's escape rule stays on, and the variant's own draws wait for a certain Khun capture themselves.
 	bareKingsDraw: false,
 	sides: whiteBlack(),
 	topology: topo,

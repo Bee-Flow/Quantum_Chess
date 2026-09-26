@@ -4,7 +4,7 @@
  */
 
 /**
- * The computer player's view of a Kriegspiel game (handoff/research/kriegspiel.md, section 3.6). The computer knows
+ * The computer player's view of a Kriegspiel game (docs/variants.md, Kriegspiel). The computer knows
  * exactly what a human in its seat knows: its own pieces in every possibility, every announcement of the umpire and
  * the umpire's answers to its attempts. It never reads an enemy piece, an enemy move code, the enemy budget, the en
  * passant square or the quiet counter.

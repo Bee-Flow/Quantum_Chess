@@ -4,11 +4,10 @@
  */
 
 /**
- * The drawing of the multiverse (handoff/research/multiverse-final.md section 9). Every timeline is a row, Black's
- * above White's (the other way round with the `view` option `black`, which also turns every board by 180°), and time
- * runs to the right: one column per half-turn index that some row stores, plus the column of the next board of every
- * row the side to move may play. Where time jumps by more than one column, a narrow gap marked "⋯" stands in for the
- * boards that no row stores.
+ * The drawing of the multiverse. Every timeline is a row, Black's above White's (the other way round with the `view`
+ * option `black`, which also turns every board by 180°), and time runs to the right: one column per half-turn index
+ * that some row stores, plus the column of the next board of every row the side to move may play. Where time jumps by
+ * more than one column, a narrow gap marked "⋯" stands in for the boards that no row stores.
  *
  * Drawn are every square of every stored board, exactly once (latest boards in full colour, history boards washed
  * out, the royal squares of the side to move that the opponent threatens in the danger shade), a frame per board in
@@ -448,7 +447,8 @@ function drawRow(x, grid, out, u, ctx) {
 	const by = grid.rowY[u]
 	const mid = by + n / 2
 	const first = firstShown(x, u)
-	out.labels.push({ x: LEFT / 2, y: mid - 0.3, text: 'L' + LAB[u], fit: LEFT - 0.4, kind: 'row' })
+	const name = { x: LEFT / 2, y: mid - 0.3, text: 'L' + LAB[u], fit: LEFT - 0.4, kind: 'row' }
+	out.labels.push(name)
 	let note = null
 	if (!sk.act(u)) {
 		// TRANSLATORS: under the name of an inactive timeline of the multiverse (it does not hold back the present)
@@ -461,7 +461,10 @@ function drawRow(x, grid, out, u, ctx) {
 		note = t('quantumchess', 'new')
 	}
 	if (note) {
-		out.labels.push({ x: LEFT / 2, y: mid + 0.5, text: note, fit: LEFT - 0.4, kind: 'note' })
+		// 1.5 apart: a label's text is at most as high as its width allows (1.44 for three letters), also when the
+		// board raises it to its smallest size on screen in a whole view of 8 × 8 boards
+		name.y = mid - 0.75
+		out.labels.push({ x: LEFT / 2, y: mid + 0.75, text: note, fit: LEFT - 0.4, kind: 'note' })
 	}
 	if (first > st) {
 		// the row's older boards are sealed

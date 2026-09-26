@@ -148,7 +148,10 @@
 							:label="o.label()"
 							:min="o.min"
 							:max="o.max" />
-						<NcButton v-if="o.random" @click="setup.options[o.id] = String(randomInt(o.min, o.max))">
+						<NcButton
+							v-if="o.random"
+							class="qc-variants__random"
+							@click="setup.options[o.id] = String(randomInt(o.min, o.max))">
 							{{ t('quantumchess', 'Random') }}
 						</NcButton>
 					</div>
@@ -468,6 +471,16 @@ function remove(id) {
 	display: flex;
 	align-items: flex-end;
 	gap: 8px;
+}
+
+// the field gives up width, the button keeps its whole label ("Random")
+.qc-variants__number > :first-child {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.qc-variants__random {
+	flex: none;
 }
 
 .qc-variants__describe {

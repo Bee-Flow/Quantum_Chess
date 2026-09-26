@@ -10,8 +10,8 @@
  * the bishop along diagonals and quadragonals (2 or 4), the queen and the king in all 80 directions, the knight leaps
  * 2 + 1 on any two axes, and a pawn steps forward on its board or to the next board, capturing one forward and one
  * sideways step. No castling, no double step, no en passant. The game ends by the core's classic rules: capturing the
- * king wins, a king that cannot escape loses at once, and only the two kings left (not touching) is a draw. The
- * research spec is handoff/research/hyper4d.md.
+ * king wins, a king that cannot escape loses at once, and only the two kings left (not touching) is a draw.
+ * Player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -230,7 +230,7 @@ const CENTRAL_TYPES = new Set(['n', 'b', 'q'])
 const spec = {
 	id: 'hyper4d',
 	category: 'dimensions',
-	// no castling and no en passant: the shared rules card leaves out its sentence about them (LEAD-DECISIONS L2)
+	// no castling and no en passant: the shared rules card leaves out its sentence about them
 	specialMoves: false,
 	sides: whiteBlack(),
 	/**
@@ -339,7 +339,7 @@ const spec = {
 		),
 		t('quantumchess', 'The game is drawn when only the two kings are left and they do not touch.'),
 	],
-	// No `worldResult` and the classic end-rule flags at their defaults (handoff/LEAD-DECISIONS.md L1): capturing the
+	// No `worldResult` and the classic end-rule flags at their defaults: capturing the
 	// king wins (the core's default `worldResult`), a king that cannot escape loses at once (`escapeRule`), and only
 	// the two kings left is a draw (`bareKingsDraw`) that waits while the side to move can take the other king for
 	// certain (`drawsWait`). With only kings on the board that is exactly while they touch, so the core's rule is the

@@ -4,7 +4,7 @@
  */
 
 /**
- * The classical side of the variants core (package "world" of handoff/CORE-CHANGES.md): castling placement and the
+ * The classical side of the variants core: castling placement and the
  * king-onto-rook option (Chess960), the orthodox helpers on files and multi-board topologies, en passant expiry and
  * castling rights across the worlds, attacks without royal attackers and board options of `orthodoxSpec`.
  */

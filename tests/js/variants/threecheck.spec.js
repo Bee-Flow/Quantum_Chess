@@ -5,10 +5,9 @@
 
 /**
  * Three-check (src/variants/threecheck.js): the start, the pieces, what counts as a check, the third-check win, the
- * bare-kings draw and the escape rule (the core's classic flags, handoff/LEAD-DECISIONS.md L1), how checks combine
+ * bare-kings draw and the escape rule (the core's classic flags), how checks combine
  * with splits, merges, measurements, rolls and links (the counters are solid), the texts of the counters and the
- * computer player. The cases T1-T29 are those of handoff/research/threecheck.md, section 7; T30 is item 10 of its
- * engine review (section 8.2).
+ * computer player. The cases are numbered T1-T30.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -308,7 +307,7 @@ describe('three-check: winning and drawing', () => {
 		expect(run(st([{ e4: '0:k', a2: '0:p', d5: '1:p', h8: '1:k' }]), 'e4-d5')[0].result).toBeNull()
 	})
 
-	it('leaves the escape rule and the bare-kings draw to the core\'s classic flags (LEAD-DECISIONS L1)', () => {
+	it('leaves the escape rule and the bare-kings draw to the core\'s classic flags', () => {
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait, V.specialMoves]).toEqual([true, true, true, true])
 		// the variant's own hook never decides bare kings: the core does it once, for the whole state
 		const bare = st([{ d5: '0:k', h8: '1:k' }], { checks: [1, 2] }).worlds[0].b
@@ -317,7 +316,7 @@ describe('three-check: winning and drawing', () => {
 			.toEqual({ winner: 1, reason: 'checks' })
 	})
 
-	it('wins when the enemy king cannot escape, unless a move might give the third check (L1)', () => {
+	it('wins when the enemy king cannot escape, unless a move might give the third check', () => {
 		// Qh6-g7 is a check the king on h8 cannot get out of: g7 is covered by the king on f6
 		const mate = (black, checks) => {
 			const worlds = black.map((extra) => ({ f6: '0:k', h6: '0:q', h8: '1:k', ...extra }))

@@ -127,28 +127,56 @@ the draws, follows [the quantum rules of every variant](#the-quantum-rules-of-ev
 #### Tri-Dimensional chess
 
 - **Board.** Three 4 × 4 main levels, W (White's, lowest), N (neutral) and B (Black's, highest), and four 2 × 2
-  attack boards at the back corners: QL1 and KL1 on White's queen's and king's side, QL6 and KL6 on Black's; 64
-  squares in all. In this version the attack boards never move. Board by Franz Joseph (1975), rules after Jens
-  Meder's tournament rules.
+  attack boards. Each attack board stands on one of twelve pins at the corners of the main levels: QL1 to QL6 on the
+  queen's side (files z and a) and KL1 to KL6 on the king's side (files d and e), numbered from White's end. Levels 1
+  and 2 are the back and front corners of W, 3 and 4 those of N, 5 and 6 those of B. A board overhangs the corner of
+  its pin outwards: on QL1 it holds z0, a0, z1 and a1, on QL2 z4, a4, z5 and a5. White's boards start on QL1 and KL1,
+  Black's on QL6 and KL6, so there are 64 squares at the start. Board by Franz Joseph (1975), rules after Jens Meder's
+  tournament rules.
 - **Map squares.** Seen from above, all boards form one map with files z, a–d, e and ranks 0–9. A square is named by
-  file, rank and level, so b3W and b3N are the two levels of map square b3. On screen W and B form one column with
-  the attack boards at its corners, and N stands to the right of it; a rank is drawn at the same height on every
-  board, so the levels of a map square stand side by side.
+  file, rank and board, so b3W and b3N are the two levels of map square b3, and a4QL2 is map square a4 on an attack
+  board on pin QL2. The squares of a pin exist only while a board stands on it.
+- **On screen.** W and B form one column, B above W, and N stands to the right of it. Every pin has a slot next to
+  its corner, one row further out: QL6 and KL6 above B, QL1 and KL1 below W, QL4 and KL4 above N, QL3 and KL3 below
+  N, and between B and W a band for the pins at ranks 4 and 5, which QL2 and QL5 (and KL2 and KL5) share because they
+  cover the same map squares; with boards on both, a second band opens. An empty slot is a dashed outline, and every
+  pin has a tab with its name, wooden while a board stands on the pin and pale while it is free. N's ranks 4 and 5 are
+  level with the band between B and W, and its slots with the ranks of B and W; while a second band is open, N stands
+  centred on both bands instead.
 - **Moving.** Every move is an ordinary chess move on the map, and the piece may stop on any level of the target map
   square. Moving straight up or down is not a move. A piece on any level of a map square in between blocks a queen,
   rook, bishop or a pawn's double step. Gaps without a board count as empty: pieces fly across them but cannot stop
   there.
+- **Moving an attack board.** Instead of a piece you may move an attack board that holds at most one piece (of either
+  side) to a free pin next to it: on the same side one or two numbers up or down, or across to the same number on the
+  other side. So a board on QL1 or QL6 has three neighbouring pins, on QL2 or QL5 four and on QL3 or QL4 five (QL3
+  reaches QL1, QL2, QL4, QL5 and KL3). An empty board belongs to the side it started with; a board with a piece
+  belongs to that piece's side and carries it along to the same place on the new pin. Only an empty board may move
+  backwards, towards its side's end; a board with a piece moves forwards or across. To play it, tap the board's pin
+  name, then the name of a free pin. The move is written with the two pins, such as QL1>QL3.
 - **Pawns.** A pawn steps one map square forward onto any empty level, two on its first move, and captures
-  diagonally forward onto either level. En passant lands on either level of the skipped square. A pawn promotes on
-  the last rank of the file it arrives on: rank 8 on files b and c, rank 9 on files z, a, d and e (Black: rank 1 and
-  rank 0). A pawn on a8 still has a9 ahead on the attack board.
+  diagonally forward onto either level. A pawn that has ridden a board no longer double-steps. En passant lands on
+  either level of the skipped square, and a board move in between ends it.
+- **Promotion.** A pawn promotes on the last rank of the file it arrives on: rank 8 on files b and c and rank 9 on
+  files z and e (Black: rank 1 and rank 0). On files a and d it is rank 9 while an attack board stands on the pin over
+  the far corner (QL6 or KL6), so that a pawn on a8 still has a9 ahead, and rank 8 when that pin is empty (Black:
+  rank 0 with a board on QL1 or KL1, else rank 1). A pawn that a board move carries to the last rank of its file, or
+  leaves on it because the board over the corner went away, promotes at once: to the piece the mover picks when it is
+  the mover's own pawn (QL4>QL6=Q), to a queen when it is the other side's.
 - **Castling.** From your second move on, while the king and that rook have not moved. King's side: the king and the
   rook next to it swap places. Queen's side: once the queen's home square (a0QL1, for Black a9QL6) is empty, the king
-  goes there and the corner rook goes to the king's square.
-- **Winning and draws.** As in the shared rules.
+  goes there and the corner rook goes to the king's square. A king or rook that rides a board has moved.
+- **Winning and draws.** As in the shared rules. A board move is a move like any other, so it can be the way out for
+  a king that could not escape on foot.
 - **Ghosts across levels.** A ghost on either level of a map square blocks slides across it in its possibilities,
   but a ghost on the other level of your target square does not matter. A piece split over both levels of one map
   square is a certain wall across it and an uncertain target.
+- **Ghosts and attack boards.** An attack board is never a ghost: it stands on the same pin in every possibility. A
+  ghost part standing on a board that moves rides along in the possibilities where it stands there, and stays where
+  it is in the others, so the piece stays a ghost with the same odds and the same links. When a ghost makes a board
+  move impossible in some possibilities (the board would hold two pieces there, would belong to the other side, or
+  could not go backwards with a piece on it), the move is settled by a roll: Moved (the ghost was elsewhere) or
+  Missed (it was on the board, which stays).
 
 #### 4D chess
 
@@ -185,9 +213,11 @@ the draws, follows [the quantum rules of every variant](#the-quantum-rules-of-ev
 <!-- multiverse -->
 #### Multiverse chess (5D)
 
-*5D Chess With Multiverse Time Travel*, with ghosts. All 21 official start positions are there. A new game starts on
-**Small** (5 × 5); **Very small and open** (4 × 4) is the easiest start, and **Standard** (8 × 8) is the real, long
-game and is best on a laptop.
+*5D Chess With Multiverse Time Travel*, with ghosts. The official start positions are there, 44 of them: the
+Standard family, the Simple, Small and Very Small boards, the Focused games with one kind of piece (down to *Just
+Kings* on 3 × 3), the Misc games and the checkmate practices. Only *Global Warming* is left out, the original's joke:
+an empty 1 × 1 board that is drawn before the first move. A new game starts on **Small** (5 × 5); **Very small and
+open** (4 × 4) is the easiest start, and **Standard** (8 × 8) is the real, long game and is best on a laptop.
 
 - **Timelines and turns.** Each row is a timeline and time runs to the right. You play only on the latest board of a
   timeline, when it is your move there (○ White, ● Black); every move adds a new board, and the old ones stay as the
@@ -196,9 +226,14 @@ game and is best on a laptop.
   in at most one move per turn.
 - **Time travel.** Pieces also move back in time (one step is one turn) and across timelines. Landing on another
   timeline's latest board jumps there; landing on an older board opens a new timeline, a copy of that board that only
-  your piece enters. Each player may open 1, 2 or 3 new timelines (an option, 3 by default); after that, jumps still
-  work and a king in the past can still be captured. Pieces can travel back 2 turns on boards up to 5 × 5 and 4 on
-  larger ones (an option: 2 or 4); older boards are sealed.
+  your piece enters. Each player may open 1 to 4 new timelines (an option, 3 by default; four is marked *laptop*, and
+  a game that starts with three timelines, or with two on 8 × 8, keeps three); after that, jumps still work and a king
+  in the past can still be captured. Pieces can travel back 2 turns on boards up to 5 × 5 and 4 on larger ones (an option: 2 or 4); older
+  boards are sealed.
+- **Unusual starts.** In *Timeline Fragments* the −0 timeline starts half a turn later, with Black to move: White's
+  first turn is one move on +0, Black's first turn a move on each timeline. In the checkmate practices White has a
+  lone king and Black a piece or three pawns and no king: Black wins by capturing the king, and White draws by
+  capturing the attackers (Black, left without pieces, cannot play its turn) or by holding out. Play Black to practise.
 - **Active timelines and the present.** Your n-th new timeline is *active* while your opponent has opened at least
   n − 1; an inactive timeline can still be played. The present is the earliest latest board of the active timelines,
   so an active timeline opened in the past moves the present back to its board, which becomes a must-move board.
@@ -250,12 +285,24 @@ game and is best on a laptop.
   multiverse. Pinch or Ctrl + wheel to zoom, drag to pan.
 - **Notation.** Moves are written with their board, timeline and turn, in the manner of 5dpgn:
   `(0T2)Nc3>(+1T2)c3` jumps to another timeline, `(0T2)Nc3>>(0T1)a3` opens a new one, and `x` marks a capture.
+- **Larger limits.** Four new timelines per player are meant for a laptop: on Standard (8 × 8) with 64 possibilities
+  one step of the game (the legal moves, the danger, the drawing and the move) took 0.09 to 0.13 s on a desktop
+  computer, and a saved game about 200 KB (at most about 440 KB after 1,200 moves). Standard with two timelines keeps
+  three: there a fourth took 0.13 to 0.17 s per step, over the 0.15 s a step may take, and its saved game could pass
+  500 KB after 1,200 moves. A game that starts with three timelines keeps three too: its fourth ones would need the
+  rows of −0 and +0. A travel reach of 6 turns and a fifth timeline per player are not offered. Every board has a fixed
+  place in the app's numbering of squares, 9 per timeline (the latest and 8 older ones) in 11 rows. A reach of 6 needs
+  13 places per timeline, which makes every world of every game about 10 % larger and draws 5,800 instead of 4,000
+  squares on 8 × 8, while a reach of 4 already allows every travel seen in recorded games. A fifth timeline needs up to
+  four more rows, moves −0 and +0 to other places, and took 0.14 to 0.15 s per step, the most a step may take.
 - **Differences from the original.** Capture the king instead of the check rule, so the original stalemate (not in
   check, but every turn would leave a king in check) is not a draw here: you play your turn and your king can be
   taken. Castling is allowed out of, through and into danger. Moves inside a turn are played and rolled one by one and
-  cannot be rearranged before you submit, so a move that strands your own turn loses. At most 3 new timelines per
+  cannot be rearranged before you submit, so a move that strands your own turn loses. At most 4 new timelines per
   player and a travel reach; castling and en passant only when certain; Undo replays the same rolls. As in 5D, pawns
-  and brawns always become queens (in Quantum Chess you would choose).
+  and brawns always become queens (in Quantum Chess you would choose). Apart from these differences the app plays as
+  5d-chess-js, an independent implementation of 5D chess: a test replays random games on every start position and
+  compares the legal moves, the boards that must move, Submit and 5D check at every position.
 
 <!-- /multiverse -->
 

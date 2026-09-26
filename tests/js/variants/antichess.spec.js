@@ -7,8 +7,7 @@
  * Antichess: compulsory capture in every possibility and over the whole state, the non-royal king, promotion to a
  * king, the win by losing everything or by having no move, the "no capture can ever happen again" draw, the quiet
  * counter, and how these rules meet splits, merges, rolls and links; random games check that every world keeps the
- * same en passant square, castling rights (none) and pieces, within the budget. The cases T1-T24 are those of section
- * 7 of handoff/research/antichess.md.
+ * same en passant square, castling rights (none) and pieces, within the budget. The cases are numbered T1-T24.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -181,9 +180,9 @@ describe('antichess: setup and declaration', () => {
 		expect(V.sideInfo(newGame(V), 1).text).toContain('16')
 	})
 
-	it('switches the classic end rules off: no "cannot escape" win, no bare-kings draw (LEAD-DECISIONS L1)', () => {
+	it('switches the classic end rules off: no "cannot escape" win, no bare-kings draw', () => {
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait]).toEqual([false, false, false])
-		// en passant exists, so the shared rules card keeps its castling and en passant sentence (L2)
+		// en passant exists, so the shared rules card keeps its castling and en passant sentence
 		expect(V.specialMoves).toBe(true)
 		// every move of the lone white king walks into a rook (checkmate in chess): the game simply goes on
 		const boxed = play(V, one({ a1: '0:k', b8: '1:r', h3: '1:r' }, 1), 'h3-h2')

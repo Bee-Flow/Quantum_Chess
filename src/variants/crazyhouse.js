@@ -9,7 +9,7 @@
  * rank 1 or 8). Promoted pieces are separate types (`+q`, `+r`, `+b`, `+n`) that go back into a hand as pawns. A drop
  * is a measured move: onto a square where a ghost might stand it is a roll (Dropped or Missed). Hands are the same in
  * every possibility, because a capture takes the same piece in every possibility where it happens.
- * Player-facing rules are in docs/variants.md; the research spec is handoff/research/crazyhouse.md.
+ * Player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'

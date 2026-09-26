@@ -11,7 +11,7 @@
  * (docs/rules.md 5) applies: a side whose every action leaves its king to be blown up for certain has lost at once,
  * which ends a lichess stalemate such as T17 as the capture-the-king game would. The explosion is applied world by
  * world, so a ghost is destroyed only in the possibilities where it really stands in the blast. Player-facing rules
- * are in docs/variants.md; the full spec is handoff/research/atomic.md.
+ * are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -117,7 +117,7 @@ for (const [type, value] of Object.entries(ATOMIC_VALUES)) {
 Object.assign(spec, {
 	id: 'atomic',
 	category: 'rules',
-	// The classic end rules (docs/rules.md 5 and 6, handoff/LEAD-DECISIONS.md L1). "Your king cannot escape" is stated
+	// The classic end rules (docs/rules.md 5 and 6). "Your king cannot escape" is stated
 	// on purpose rather than taken from the core's default: its test counts a blow-up next to the king as a capture of
 	// it (T1, T17), and a side without any legal move still draws (T27). The bare-kings draw is atomic's own
 	// `worldResult`, decided possibility by possibility, so that a ghost blown up in only some of them is settled by

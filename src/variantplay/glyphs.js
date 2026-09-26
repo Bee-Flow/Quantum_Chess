@@ -9,9 +9,10 @@
  * - `{ sprite: 'k' }`: a piece of the cburnett set (the orthodox pieces). Sides whose colour is not white or black
  *   (four-player chess) get the white piece tinted in their colour; `promoted: true` adds a small red "+" marker;
  *   `scale` (0 to 1) draws it smaller (Makruk's met, a small queen); `horn: true` gives a knight a unicorn's horn
- *   (the unicorn of 3D chess); `bar: true` gives a pawn a crossbar (the brawn of the multiverse);
- * - `{ sprites: ['b', 'n'] }`: a compound piece drawn as its two cburnett pieces side by side, the second in front
- *   (Capablanca's archbishop, bishop and knight, and chancellor, rook and knight);
+ *   (the unicorn of 3D chess); `bar: true` gives a pawn a crossbar (the brawn of the multiverse); `body: 'b'` or
+ *   `'r'` draws the knight's head on the base and collar of a bishop, with the bishop's cross on its neck, or rising
+ *   from a rook's turret (Capablanca's archbishop and chancellor, drawn in the same line style as the set);
+ * - `{ sprites: ['b', 'n'] }`: a compound piece drawn as its two cburnett pieces side by side, the second in front;
  * - `{ text, shape }`: a character or short text on a token: `circle` (a round token in the side's colour),
  *   `shogi` (a wooden pentagon that points at the opponent) or `xiangqi` (a round wooden disc). `text` may be a
  *   function of the side (xiangqi writes several pieces differently for Red and Black).
@@ -53,10 +54,11 @@ export function darkTextOn(hex) {
 }
 
 /**
- * How to draw a piece: `{ kind: 'sprite', symbol, tint, promoted?, scale?, horn?, bar? }` (`horn` and `bar`: the
- * colour of the horn or the crossbar, white or black), `{ kind: 'compound', parts: [{ symbol }, { symbol }], tint }` or
- * `{ kind: 'text', text, shape, fill, ink }`. A sprite glyph with `promoted: true` (a promoted pawn in the drop
- * variants, `+q`) carries a small red "+" marker.
+ * How to draw a piece: `{ kind: 'sprite', symbol, tint, promoted?, scale?, horn?, bar?, body? }` (`horn` and `bar`:
+ * the colour of the horn or the crossbar, white or black; `body`: `{ type: 'b' | 'r', color: 'white' | 'black' }`,
+ * the bishop's base or the rook's turret under the sprite), `{ kind: 'compound', parts: [{ symbol }, { symbol }],
+ * tint }` or `{ kind: 'text', text, shape, fill, ink }`. A sprite glyph with `promoted: true` (a promoted pawn in the
+ * drop variants, `+q`) carries a small red "+" marker.
  *
  * @param {object} V variant
  * @param {string} type piece type
@@ -86,6 +88,9 @@ export function glyphOf(V, type, side) {
 		}
 		if (g.bar) {
 			out.bar = color === 'b' ? 'black' : 'white'
+		}
+		if (g.body === 'b' || g.body === 'r') {
+			out.body = { type: g.body, color: color === 'b' ? 'black' : 'white' }
 		}
 		return out
 	}

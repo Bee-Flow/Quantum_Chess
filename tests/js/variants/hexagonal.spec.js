@@ -6,7 +6,7 @@
 /**
  * Gliński's hexagonal chess: the board, the setup, the movement of every piece on hexagons, the pawn's double step by
  * cell, en passant and promotion at the end of every file, the win and draw conditions, and how they meet the quantum
- * rules. The cases follow section 7 of handoff/research/hexagonal.md (C1-C10, Q1-Q13); the perft numbers match the
+ * rules. The cases are numbered C1-C10 and Q1-Q13; the perft numbers match the
  * hexchess.club engine.
  */
 
@@ -440,7 +440,7 @@ describe('hexagonal: winning and drawing', () => {
 			expect(outs(s, code), code).toEqual([(code === 'c3-f9' ? 'capture' : 'move') + ' 1'])
 			s = play(V, s, code)
 		}
-		// the classic escape rule (handoff/LEAD-DECISIONS.md L1): Black's king cannot escape, so White wins at once
+		// the classic escape rule: Black's king cannot escape, so White wins at once
 		expect(s.result).toEqual({ winner: 0, reason: 'cannotEscape' })
 		expect(resultText(V, s.result)).toBe('White wins (the king could not escape)')
 		expect(royalSquares(V, s.worlds[0].b, 1).map((q) => topo.names[q])).toEqual(['g10'])
@@ -707,8 +707,8 @@ describe('hexagonal: declaration and computer player', () => {
 		expect(rules.length).toBeGreaterThanOrEqual(3)
 		expect(rules.length).toBeLessThanOrEqual(8)
 		expect(rules.every((r) => typeof r === 'string' && r.length > 20)).toBe(true)
-		// the classic end rules of the core, with no variant copy of the result (handoff/LEAD-DECISIONS.md L1); en
-		// passant keeps the shared castling and en passant sentence (L2)
+		// the classic end rules of the core, with no variant copy of the result; en passant keeps the shared
+		// castling and en passant sentence
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait, V.specialMoves]).toEqual([true, true, true, true])
 		expect(V.worldResult).toBeUndefined()
 		// the card says what the escape rule means for stalemate and the bare-kings exception, no longer that a

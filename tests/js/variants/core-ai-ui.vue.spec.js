@@ -5,7 +5,7 @@
  */
 
 /**
- * Package "ai-ui" of handoff/CORE-CHANGES.md, components and the game composable: the focus of a layout recentres
+ * The computer and view helpers of the core, components and the game composable: the focus of a layout recentres
  * only when its key changes (U2), plain hidden squares (U10 c), the promoted marker (U13), outlines above the cells
  * (U15); in `useVariantGame` the binding attempts of an umpire (U10 d), the hidden hand-over (U10 f), no undo or
  * danger while a hidden game runs (U10 e), the own view (U10 b), compulsory captures (U8) and the resign hook (U12);

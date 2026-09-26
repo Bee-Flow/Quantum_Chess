@@ -4,7 +4,7 @@
  */
 
 /**
- * Bughouse: the test cases of handoff/research/bughouse.md section 7 (B1-B23) plus the setup, the drawing, the
+ * Bughouse: the test cases B1-B23 plus the setup, the drawing, the
  * movement of every piece type, the end of the game and the computer player.
  */
 
@@ -489,7 +489,7 @@ describe('bughouse: rules', () => {
 		expect(limit.result).toEqual({ winner: null, reason: 'moveLimit' })
 	})
 
-	it('keeps the classic end rules that fit four seats (LEAD-DECISIONS L1)', () => {
+	it('keeps the classic end rules that fit four seats', () => {
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait, V.specialMoves]).toEqual([false, false, true, true])
 		// the shared rules card keeps its castling and en passant sentence and leaves out the escape rule, which the
 		// variant's own card replaces with the bughouse rule

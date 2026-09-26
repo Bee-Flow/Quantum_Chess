@@ -11,8 +11,7 @@
  * promoted pieces included. A side to move without a move is stalemated, which is a draw; this is checked in every
  * possibility, so a ghost that might block the horde's last pawn is settled by the game-end roll. The 50-move draw
  * waits only while White can capture the Black king for certain, not while Black can capture the last White piece for
- * certain (handoff/LEAD-DECISIONS.md L1 waits for a certain king capture). The research spec is
- * handoff/research/horde.md.
+ * certain (the core's waiting draws look only at king captures). Player-facing rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -97,7 +96,7 @@ function hordeSetup() {
 Object.assign(spec, {
 	id: 'horde',
 	category: 'rules',
-	// The classic end rules (docs/rules.md 5 and 6, handoff/LEAD-DECISIONS.md L1) keep the core's defaults for Black's
+	// The classic end rules (docs/rules.md 5 and 6) keep the core's defaults for Black's
 	// king: a Black king that cannot escape loses (White, without a royal piece, never loses this way), and the 50-move
 	// draw waits while White can capture the Black king for certain. The bare-kings draw is off: White has no king, and
 	// a horde without pieces has already lost (worldResult reports 'horde' first).

@@ -4,7 +4,7 @@
  */
 
 /**
- * Crazyhouse: the test cases of handoff/research/crazyhouse.md section 7 (Z1-Z14, Q1-Q15, F1) plus the setup, the
+ * Crazyhouse: the test cases Z1-Z14, Q1-Q15 and F1 plus the setup, the
  * movement of every piece type and the computer player.
  */
 

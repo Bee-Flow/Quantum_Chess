@@ -14,7 +14,12 @@
  * the move list; King of the Hill explains its hill; the board draws threat lines with a halo and an arrowhead, keeps
  * the zoomed part in view when it turns, ends a mouse pan whose button was let go outside it, pins the names of the
  * boards in a zoomed view and offers "Recentre"; the pieces draw compound pieces, the unicorn and the met, and put the
- * badge of a text token in the corner of its square.
+ * badge of a text token in the corner of its square. From the third review: the umpire's announcements of one move
+ * share a line, a budget the viewer may not know is a caption, the game buttons sit two to a row (three in one) and
+ * never cut a label, the hand-over prompt is on a card, a bughouse name at the edge of a zoomed view moves into it, an
+ * empty point of the last move (xiangqi) gets a ring that gives way to a choice and to the focus, the river its
+ * centred inscription, and Capablanca's archbishop and chancellor are a knight's head on a bishop's base and in a
+ * rook's turret.
  */
 
 import { flushPromises, mount } from '@vue/test-utils'
@@ -28,6 +33,8 @@ import VariantPiece from '../../../src/variantplay/components/VariantPiece.vue'
 import VariantGameView from '../../../src/views/VariantGameView.vue'
 import VariantsView from '../../../src/views/VariantsView.vue'
 import { glyphOf } from '../../../src/variantplay/glyphs.js'
+import { recordsSince } from '../../../src/variantplay/panel.js'
+import { recordLines } from '../../../src/variantplay/texts.js'
 import {
 	createVariantGame,
 	listVariantGames,
@@ -45,6 +52,7 @@ import kriegspiel from '../../../src/variants/kriegspiel.js'
 import makruk from '../../../src/variants/makruk.js'
 import raumschach from '../../../src/variants/raumschach.js'
 import shogi from '../../../src/variants/shogi.js'
+import xiangqi from '../../../src/variants/xiangqi.js'
 import { stateOf } from './helpers.js'
 
 const registry = vi.hoisted(() => ({ variants: {}, full: false }))
@@ -212,6 +220,29 @@ function shows(vb, x, y) {
 	return x >= vb[0] && x <= vb[0] + vb[2] && y >= vb[1] && y <= vb[1] + vb[3]
 }
 
+/**
+ * A top-level style rule of a component, with its nested rules: the text between its braces (jsdom does no layout,
+ * so the layout rules are read from the source).
+ *
+ * @param {string} file the component, from the repository root
+ * @param {string} selector the rule's selector, as written at the start of a line
+ * @return {string}
+ */
+function styleRule(file, selector) {
+	const here = dirname(fileURLToPath(import.meta.url))
+	const source = readFileSync(resolve(here, '../../..', file), 'utf8')
+	const start = source.indexOf('\n' + selector + ' {')
+	expect(start, selector).toBeGreaterThan(0)
+	let depth = 0
+	for (let i = source.indexOf('{', start); i < source.length; i++) {
+		depth += source[i] === '{' ? 1 : source[i] === '}' ? -1 : 0
+		if (depth === 0) {
+			return source.slice(source.indexOf('{', start) + 1, i)
+		}
+	}
+	return ''
+}
+
 beforeEach(() => {
 	localStorage.clear()
 	registry.full = false
@@ -376,6 +407,56 @@ describe('Kriegspiel', () => {
 		expect(lines.some((l) => /moved\.|No pawn tries\./.test(l))).toBe(false)
 		w.unmount()
 	})
+
+	it('says the umpire\'s announcements of a move in one line, and captions the budget it hides', async () => {
+		const moves = ['e2-e4', 'd7-d5', 'e4-d5']
+		const w = await mountGame(kriegspiel, newGame(kriegspiel), { moves })
+		// the hand-over prompt sits on a card over the blurred board
+		const card = w.find('.qc-vgame__curtain .qc-vgame__curtain-card')
+		expect(card.text()).toContain('Pass the device to Black.')
+		expect(card.find('button').text()).toBe('I am Black: show my board')
+		await card.find('button').trigger('click')
+		// the records since Black's own move: one line each, with all of its announcements
+		let s = newGame(kriegspiel)
+		for (const code of moves) {
+			s = applyOutcome(kriegspiel, s, code, 0)
+		}
+		const want = recordsSince(s.history, 1).map((h) => recordLines(kriegspiel, h, 1).join(' ')).filter(Boolean)
+		expect(want).toHaveLength(2)
+		expect(recordLines(kriegspiel, s.history[1], 1).length).toBeGreaterThan(1)
+		const report = w.findAll('.qc-vgame__box--report .qc-vgame__report-line').map((l) => l.text())
+		expect(report).toEqual(want)
+		// White's budget is hidden from Black: a caption beside a question mark, no pips
+		const white = w.findAll('.qc-vgame__player')[0]
+		expect(white.find('.qc-vgame__budget--unknown .qc-vgame__budget-count').text()).toBe('Budget hidden')
+		expect(white.find('.qc-vgame__unknown-track').text()).toBe('?')
+		expect(white.findAll('.qc-vgame__pip')).toHaveLength(0)
+		// the game buttons: two to a row (see the next test)
+		expect(w.find('.qc-vgame__actions').findAll('button, a').map((b) => b.text()))
+			.toEqual(['Undo', 'Flip board', 'Resign', 'New game'])
+		w.unmount()
+	})
+
+	it('puts the game buttons two to a row, three in one row, and never cuts a label', async () => {
+		// the game over: Resign is gone, three buttons are left
+		const w = await mountGame(koth, newGame(koth), { moves: ['e2-e4'] })
+		await button(w, 'Resign').trigger('click')
+		await flushPromises()
+		expect(w.find('.qc-vgame__actions').findAll('button, a').map((b) => b.text()))
+			.toEqual(['Undo', 'Flip board', 'New game'])
+		w.unmount()
+		const rule = styleRule('src/views/VariantGameView.vue', '.qc-vgame__actions')
+		// a wrapping row of buttons that share it: at most two of 40 % each, three of 28 % each
+		expect(rule).toContain('display: flex')
+		expect(rule).toContain('flex-wrap: wrap')
+		expect(rule).toMatch(/> \* \{\s*flex: 1 1 40%;/)
+		const three = '> :first-child:nth-last-child(3)'
+		expect(rule).toContain(`${three},\n\t${three} ~ * {\n\t\tflex-basis: 28%;`)
+		// a button keeps the width of its label ("Retourner l'échiquier" was cut to "Retourner l'échiq…" in two
+		// columns of a grid): NcButton hides what overflows, so a button that may shrink below its label cuts it
+		expect(rule).toContain('min-width: max-content')
+		expect(rule).not.toMatch(/min-width: 0|minmax\(0/)
+	})
 })
 
 describe('the legends under the board', () => {
@@ -500,6 +581,75 @@ describe('the board', () => {
 		desk.unmount()
 	})
 
+	it('moves a player\'s name that the edge of a zoomed view would cut into the view (bughouse)', async () => {
+		pointer(true)
+		const s = applyOutcome(bughouse, newGame(bughouse), 'A:e2-A:e4', 0)
+		const w = await measuredBoard(bughouse, s, {}, 390, 390)
+		const vb = viewBox(w)
+		const placed = bughouse.layoutOf(s).layout.labels.filter((l) => l.strong)
+		const drawn = w.findAll('.qc-vboard__label--strong')
+		expect(drawn.map((d) => d.text())).toEqual(placed.map((l) => l.text))
+		let moved = 0
+		drawn.forEach((d, i) => {
+			const x = Number(d.attributes('x'))
+			const half = 0.08 + 0.12 * placed[i].text.length
+			if (placed[i].x + half > vb[0] && placed[i].x - half < vb[0] + vb[2]) {
+				expect(x - half).toBeGreaterThanOrEqual(vb[0])
+				expect(x + half).toBeLessThanOrEqual(vb[0] + vb[2])
+			}
+			moved += Math.abs(x - placed[i].x) > 1e-6 ? 1 : 0
+		})
+		expect(moved).toBeGreaterThan(0)
+		// the whole drawing: every name where the layout puts it
+		await button(w, 'Whole board').trigger('click')
+		expect(w.findAll('.qc-vboard__label--strong').map((d) => Number(d.attributes('x'))))
+			.toEqual(placed.map((l) => l.x))
+		w.unmount()
+	})
+
+	it('rings an empty point of the last move (xiangqi) and writes the river\'s inscription', () => {
+		const s = newGame(xiangqi)
+		const sq = (name) => xiangqi.topology.names.indexOf(name)
+		const marks = { [sq('b2')]: ['last'], [sq('b1')]: ['last'] }
+		const w = mount(VariantBoard, { props: { variant: xiangqi, state: s, marks } })
+		const cell = (name) => w.find(`[data-square="${name}"]`)
+		expect(cell('b2').classes()).toContain('qc-vboard__cell--last')
+		expect(cell('b2').classes()).toContain('qc-vboard__cell--vacant')
+		// under a piece the mark stays a disc, a halo around the piece
+		expect(cell('b1').classes()).toContain('qc-vboard__cell--last')
+		expect(cell('b1').classes()).not.toContain('qc-vboard__cell--vacant')
+		const here = dirname(fileURLToPath(import.meta.url))
+		const source = readFileSync(resolve(here, '../../../src/variantplay/components/VariantBoard.vue'), 'utf8')
+		const selector = '\n.qc-vboard__cell--last.qc-vboard__cell--vacant .qc-vboard__shape--point {'
+		const rule = source.slice(source.indexOf(selector), source.indexOf('}', source.indexOf(selector)))
+		expect(rule).toContain('fill: transparent')
+		expect(rule).toMatch(/stroke: #/)
+		expect(w.findAll('.qc-vboard__label--river').map((l) => l.text())).toEqual(['楚河', '漢界'])
+		w.unmount()
+	})
+
+	it('lets the ring of an empty point give way to a point being chosen and to the keyboard focus', () => {
+		// the ring's rule has three classes and comes after the rules of the choice and of the focus (as many classes):
+		// without rules of its own after it, the first target of a split lost its fill there and a focused target its
+		// focus ring (the ring stayed amber)
+		const file = 'src/variantplay/components/VariantBoard.vue'
+		const here = dirname(fileURLToPath(import.meta.url))
+		const source = readFileSync(resolve(here, '../../..', file), 'utf8')
+		const ring = source.indexOf('\n.qc-vboard__cell--last.qc-vboard__cell--vacant .qc-vboard__shape--point {')
+		const pick = '.qc-vboard__cell--vacant.qc-vboard__cell--selected .qc-vboard__shape--point,\n'
+			+ '.qc-vboard__cell--vacant.qc-vboard__cell--pick .qc-vboard__shape--point'
+		const focus = '.qc-vboard__cell--vacant:focus-visible .qc-vboard__shape--point'
+		expect(source.indexOf(pick)).toBeGreaterThan(ring)
+		expect(source.indexOf(focus)).toBeGreaterThan(ring)
+		expect(styleRule(file, pick))
+			.toContain('fill: color-mix(in srgb, transparent 55%, var(--color-primary-element))')
+		expect(styleRule(file, focus)).toContain('stroke: var(--color-primary-element)')
+		// the river's inscription: the space after its last character counts in the centring, so it moves back by half
+		const river = styleRule(file, '.qc-vboard__label--river')
+		const spacing = Number(/letter-spacing: ([\d.]+)px/.exec(river)[1])
+		expect(Number(/transform: translateX\(([\d.]+)px\)/.exec(river)[1])).toBeCloseTo(spacing / 2, 9)
+	})
+
 	it('draws the bughouse names bold and larger', () => {
 		const w = mount(VariantBoard, { props: { variant: bughouse, state: newGame(bughouse) } })
 		const names = w.findAll('.qc-vboard__label--strong').map((l) => l.text()).sort()
@@ -510,8 +660,9 @@ describe('the board', () => {
 })
 
 describe('the pieces', () => {
-	it('draw a compound piece as its two pieces side by side, the second in front', () => {
-		const glyph = glyphOf(capablanca, 'a', 0)
+	it('draw a compound glyph as its two pieces side by side, the second in front', () => {
+		const C = { types: { x: { glyph: { sprites: ['b', 'n'] } } }, sides: [{ color: 'white' }, { color: 'black' }] }
+		const glyph = glyphOf(C, 'x', 0)
 		expect(glyph).toEqual({
 			kind: 'compound',
 			parts: [{ symbol: 'qc-piece-cburnett-wB' }, { symbol: 'qc-piece-cburnett-wN' }],
@@ -521,8 +672,39 @@ describe('the pieces', () => {
 		const uses = w.findAll('use')
 		expect(uses.map((u) => u.attributes('href'))).toEqual(['#qc-piece-cburnett-wB', '#qc-piece-cburnett-wN'])
 		expect(Number(uses[0].attributes('x'))).toBeLessThan(Number(uses[1].attributes('x')))
-		expect(glyphOf(capablanca, 'c', 1).parts.map((p) => p.symbol))
-			.toEqual(['qc-piece-cburnett-bR', 'qc-piece-cburnett-bN'])
+	})
+
+	it('draw the archbishop as a knight on a bishop\'s base, the chancellor as a knight in a rook\'s turret', () => {
+		const archbishop = glyphOf(capablanca, 'a', 0)
+		expect(archbishop).toEqual({
+			kind: 'sprite',
+			symbol: 'qc-piece-cburnett-wN',
+			tint: null,
+			body: { type: 'b', color: 'white' },
+		})
+		const w = mount(VariantPiece, { props: { glyph: archbishop, size: 1 } })
+		// the knight's head: smaller than a knight and raised above the base line
+		const head = w.find('use')
+		expect(head.attributes('href')).toBe('#qc-piece-cburnett-wN')
+		expect(Number(head.attributes('width'))).toBeCloseTo(0.78, 9)
+		expect(Number(head.attributes('y'))).toBeLessThan(-0.5)
+		// the bishop's base, collar and the cross on the neck, in front of the head, in the white piece's colours
+		const body = w.find('.qc-vpiece__body')
+		expect(body.attributes('fill')).toBe('#fff')
+		expect(body.findAll('path')).toHaveLength(3)
+		expect(body.findAll('path')[2].attributes('stroke')).toBe('#000')
+		expect(head.element.compareDocumentPosition(body.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+		const chancellor = glyphOf(capablanca, 'c', 1)
+		expect(chancellor).toMatchObject({ symbol: 'qc-piece-cburnett-bN', body: { type: 'r', color: 'black' } })
+		const c = mount(VariantPiece, { props: { glyph: chancellor, size: 1 } })
+		// a black turret: cburnett's light lines, one of them inside the crown, which parts it from the black head
+		expect(c.find('.qc-vpiece__body').attributes('fill')).toBe('#000')
+		const light = c.findAll('.qc-vpiece__body path').filter((p) => p.attributes('stroke') === '#ececec')
+		expect(light).toHaveLength(1)
+		expect(light[0].attributes('d')).toContain('M12.2 24.4v-3.2')
+		// the white turret has no light lines
+		const white = mount(VariantPiece, { props: { glyph: glyphOf(capablanca, 'c', 0), size: 1 } })
+		expect(white.findAll('.qc-vpiece__body path').some((p) => p.attributes('stroke') === '#ececec')).toBe(false)
 	})
 
 	it('draw the unicorn as a knight with a horn, the met as a small queen and the khon as a bishop', () => {

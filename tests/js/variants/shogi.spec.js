@@ -6,9 +6,8 @@
 /**
  * Shogi (src/variants/shogi.js): the setup, the movement of every piece, promotion, drops with their three
  * restrictions, the end of the game (king capture, the escape rule, impasse, no move, quiet rule, move limit), the
- * quantum interactions and the texts. The cases S1-S12, Q1-Q12, Q15 and Q16 are those of the research spec
- * (handoff/research/shogi.md, section 7; it has no Q13 and Q14). The spec's S11 predates the core's escape rule (lead
- * decision L1 in handoff/LEAD-DECISIONS.md): the stalemate it builds now ends the game at once.
+ * quantum interactions and the texts, in the cases S1-S12, Q1-Q12, Q15 and Q16 (there is no Q13 or Q14). The
+ * stalemate that S11 builds ends the game at once by the core's escape rule.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -343,7 +342,7 @@ describe('shogi: captures and drops', () => {
 		expect(legal(turned, [[1, 'g'], [1, 'p']], 1, 'g@9h')).toBe(true)
 		expect(legal({ '5a': '1:k', '9i': '0:k', '8i': '0:n' }, [[1, 'p']], 1, 'p@9h')).toBe(true)
 		// S11: a pawn drop that does not attack the king is legal, even when every reply loses the king. That is
-		// stalemate, which loses in shogi: the core's escape rule ends the game at once (lead decision L1)
+		// stalemate, which loses in shogi: the core's escape rule ends the game at once
 		const s11 = make([{ '5i': '0:k', '2c': '0:s', '1a': '1:k' }], 0, [[0, 'p']])
 		expect(isLegal(V, s11, 'p@1b')).toBe(true)
 		expect(isLegal(V, s11, 'p@2b')).toBe(true)

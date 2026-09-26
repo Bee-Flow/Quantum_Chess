@@ -4,7 +4,7 @@
  */
 
 /**
- * Package "ai-ui" of handoff/CORE-CHANGES.md, pure parts: the computer's reply side (U3), its split candidates (U4)
+ * The computer and view helpers of the core, pure parts: the computer's reply side (U3), its split candidates (U4)
  * and forcing moves (U14), the last-move squares (U1), the panel helpers (U5, U6, U10, U12, U16) and the texts (U7,
  * U9, U11, U17), plus the glyph of a promoted sprite piece (U13).
  */
@@ -33,7 +33,7 @@ import {
 } from '../../../src/variantplay/texts.js'
 import { aiSplits, chooseMove, mightForce } from '../../../src/variants/core/ai.js'
 import { orthodoxSpec } from '../../../src/variants/core/orthodoxVariant.js'
-import { branches, legalMoves, newGame, T } from '../../../src/variants/core/quantum.js'
+import { branches, isLegal, newGame, T } from '../../../src/variants/core/quantum.js'
 import { defineVariant } from '../../../src/variants/core/variant.js'
 import { play, stateOf, workClock } from './helpers.js'
 
@@ -81,9 +81,9 @@ describe('U3: the side whose reply the computer searches', () => {
 	it('by default avoids a capture that the next side takes back', async () => {
 		const s = stateOf(V, [[position, 1]])
 		const code = await chooseMove(V, s, { level: 'normal', rng: () => 0.5, now: workClock() })
-		// the quiet moves tie; the checks among them (d1-e2) are tried first since they count as forcing (A1)
+		// any other legal move will do; here a safe split of the queen (QUANTUM.spread) edges out the quiet moves
 		expect(code).not.toBe('d1-d5')
-		expect(legalMoves(V, s).map((m) => m.code)).toContain(code)
+		expect(isLegal(V, s, code)).toBe(true)
 	})
 
 	it('searches no reply when replySide gives null', async () => {

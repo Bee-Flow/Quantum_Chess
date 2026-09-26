@@ -6,7 +6,7 @@
 /**
  * Horde: the 36-pawn setup, first-rank double steps without en passant, Black-only castling, the two ways to win,
  * the per-possibility stalemate draw, the quiet counter, and how these rules meet splits, rolls, links, the game-end
- * roll and measurements. The cases T1-T25 are those of section 7 of handoff/research/horde.md.
+ * roll and measurements. The cases are numbered T1-T25.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -409,7 +409,7 @@ describe('horde: winning and drawing', () => {
 		expect(play(V, q3, 'h7-h5').quiet).toBe(0)
 	})
 
-	it('ends a classical stalemate of Black as a White win: the Black king cannot escape (L1)', () => {
+	it('ends a classical stalemate of Black as a White win: the Black king cannot escape', () => {
 		expect(V.escapeRule).toBe(true)
 		expect(V.drawsWait).toBe(true)
 		expect(V.bareKingsDraw).toBe(false)
@@ -429,7 +429,7 @@ describe('horde: winning and drawing', () => {
 		expect(codes(w)).toEqual(['a2-a3'])
 	})
 
-	it('counts a chance to take the last White piece as an escape for the Black king (L1)', () => {
+	it('counts a chance to take the last White piece as an escape for the Black king', () => {
 		// the queen on d8 attacks the king on a8 and covers b8; a rook 50% on d1 might take it, White's last piece
 		const ghost = stateOf(V, [
 			[place('Qd4 ka8 pa7 pb7 rd1'), 1],
@@ -479,7 +479,7 @@ describe('horde: winning and drawing', () => {
 		expect(play(V, ghosts(['a5', 'f4']), 'a1-h1').result).toBeNull()
 	})
 
-	it('lets the 50-move draw wait for a certain king capture, not for a certain take of the last piece (L1)', () => {
+	it('lets the 50-move draw wait for a certain king capture, not for a certain take of the last piece', () => {
 		// Black steps next to the queen on the 100th quiet ply: White takes the king for certain, so no draw yet
 		const w = one(place('Qd1 ke8 ra7'), 1)
 		w.quiet = 99

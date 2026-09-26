@@ -8,8 +8,7 @@
  * (checked against Fairy-Stockfish), the four castling shapes with the king moved onto its rook (also by clicking the
  * board), the castling rights, castling and en passant in quantum positions (certain, never rolled, blocked by ghosts),
  * the classic end rules of the core (bare kings, "cannot escape" with castling as an escape, waiting draws), random
- * games from start positions with every castling shape, and the computer player. The cases C1-C20 are those of
- * handoff/research/chess960.md, section 7.
+ * games from start positions with every castling shape, and the computer player. The cases are numbered C1-C20.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -281,7 +280,7 @@ describe('chess960: declaration, numbering and setup', () => {
 		expect(optionLines(V, { position: 959 })).toEqual(['Start position (0–959): RKRNNQBB (959)'])
 	})
 
-	it('keeps the classic end rules of the core; its card says only what is special (LEAD-DECISIONS L1, L2)', () => {
+	it('keeps the classic end rules of the core; its card says only what is special', () => {
 		// the core's capture-the-king, escape rule, bare-kings draw and waiting draws, with no copy of its own
 		expect(V.worldResult).toBeUndefined()
 		const flags = ['escapeRule', 'bareKingsDraw', 'drawsWait', 'specialMoves']
@@ -405,7 +404,7 @@ describe('chess960: moves of the pieces', () => {
 	})
 
 	it('counts the same moves as Fairy-Stockfish from shuffled start positions', () => {
-		// "go perft 2" (and 3 where no king can step into attack) with UCI_Chess960 in handoff/ext/Fairy-Stockfish
+		// "go perft 2" (and 3 where no king can step into attack) with UCI_Chess960 in Fairy-Stockfish
 		const reference = { 0: [20, 400], 3: [21, 441], 959: [20, 400] }
 		Object.assign(reference, { 74: [20, 400, 8876], 310: [18, 324, 6672], 518: [20, 400, 8902] })
 		for (const [n, want] of Object.entries(reference)) {

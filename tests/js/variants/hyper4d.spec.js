@@ -6,7 +6,7 @@
 /**
  * 4D chess (src/variants/hyper4d.js, TessChess on a 4 × 4 × 4 × 4 hypercube): the board and its drawing, the start
  * position, the movement of every piece across the boards, promotion, the end of the game, the computer player and
- * the quantum cases of the research spec (handoff/research/hyper4d.md, section 7: H1-H12, HQ1-HQ14).
+ * the quantum cases (H1-H12, HQ1-HQ14).
  */
 
 import { describe, expect, it } from 'vitest'
@@ -209,7 +209,7 @@ function cells(...groups) {
 	return groups.join(' ').split(' ').filter(Boolean).sort()
 }
 
-/** The start position as the spec lists it (section 2.3). */
+/** The start position, square by square. */
 const START = {
 	A1b1: '0:r',
 	A1c1: '0:n',
@@ -356,10 +356,10 @@ describe('4D chess: board and setup', () => {
 		expect(rules.length).toBeGreaterThanOrEqual(3)
 		expect(rules.length).toBeLessThanOrEqual(8)
 		rules.forEach((r) => expect(r.length).toBeGreaterThan(10))
-		// no castling and no en passant, so the shared card leaves out its sentence about them (LEAD-DECISIONS L2)
+		// no castling and no en passant, so the shared card leaves out its sentence about them
 		expect(V.specialMoves).toBe(false)
 		expect(sharedRules(V).some((r) => r.includes('Castling') || r.includes('en passant'))).toBe(false)
-		// the classic end rules come from the core (L1), and the shared card explains the escape rule
+		// the classic end rules come from the core, and the shared card explains the escape rule
 		expect([V.escapeRule, V.bareKingsDraw, V.drawsWait]).toEqual([true, true, true])
 		expect(sharedRules(V).some((r) => r.includes('cannot escape'))).toBe(true)
 		expect(rules.some((r) => /no checkmate|only by capturing/i.test(r))).toBe(false)
@@ -551,7 +551,7 @@ describe('4D chess: end of the game', () => {
 		expect(play(V, after, 'C3c3-C2b2').result).toEqual({ winner: 1, reason: 'king' })
 		// the draw only waited: a king that steps away instead leaves two kings that do not touch
 		expect(play(V, after, 'C3c3-D4d4').result).toEqual({ winner: null, reason: 'bareKings' })
-		// the bare-kings draw is the core's (bareKingsDraw, drawsWait), not a second copy in the variant (L1)
+		// the bare-kings draw is the core's (bareKingsDraw, drawsWait), not a second copy in the variant
 		expect(V.worldResult).toBeUndefined()
 		expect(worldResult(V, world({ B2b2: '0:k', D4d4: '1:k' }), 0)).toBeNull()
 		expect(worldResult(V, world({ B2b2: '0:k', D4d4: '1:k', A1a1: '0:p' }), 0)).toBeNull()
@@ -578,7 +578,7 @@ describe('4D chess: end of the game', () => {
 		expect(play(V, waiting, 'D4a4-D4a3').result).toEqual({ winner: null, reason: 'quiet' })
 	})
 
-	it('wins at once when the enemy king cannot escape, also against ghosts (L1)', () => {
+	it('wins at once when the enemy king cannot escape, also against ghosts', () => {
 		// a queen next to the king in the corner, guarded by its own king: every cell the king could go to is taken
 		const mate = { B2b2: '0:k', C1c1: '0:q', D4d4: '1:k' }
 		const cornered = { winner: 0, reason: 'cannotEscape' }
@@ -593,7 +593,7 @@ describe('4D chess: end of the game', () => {
 		expect(play(V, ghosts(mate, [['1:n', ['C3a2', 'A4a1']]]), 'C1c1-C3c3').result).toBeNull()
 	})
 
-	it('counts a split whose two halves block two lines to the king as an escape (L1)', () => {
+	it('counts a split whose two halves block two lines to the king as an escape', () => {
 		// the queens on D4b4 and D4d2 take the cornered king through D4c4 and D4d3, and the rook and the knight guard
 		// the three flight cells the queens miss: no single move blocks both lines
 		const base = { A1a1: '0:k', D4b4: '0:q', A4d2: '0:q', C1d4: '0:r', B2d4: '0:n', D4d4: '1:k' }

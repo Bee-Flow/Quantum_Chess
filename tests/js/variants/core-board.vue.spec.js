@@ -5,7 +5,7 @@
  */
 
 /**
- * The generic board and view items of the multiverse spec (multiverse-final.md 7.2), on inline test variants: the
+ * The generic board and view features added for multiverse chess, on inline test variants: the
  * move warning (H4), the history record in the move list (H5), the focus box, the lifted zoom cap, touch panning and
  * the pinch (H6), Split and Measure checked against the variant (H7), undo with one replay (H9), the black view
  * preselected against the computer (H10), the variant's last-move marks (H11), no "Flip board" (H12), threat

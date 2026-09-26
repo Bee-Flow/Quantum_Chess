@@ -4,7 +4,7 @@
  */
 
 /**
- * What a Kriegspiel player knows and what the umpire says (handoff/research/kriegspiel.md, sections 3.1 to 3.5):
+ * What a Kriegspiel player knows and what the umpire says (docs/variants.md, Kriegspiel):
  * the squares a side sees, the board as a side knows it (every enemy piece removed), the moves a player may try, and
  * the announcement after every move: captures with their square and whether a pawn or a piece was taken, check with
  * its directions and its chance, and the number of pawn tries of the side to move.

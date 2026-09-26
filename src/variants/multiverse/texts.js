@@ -4,11 +4,10 @@
  */
 
 /**
- * The records and texts of multiverse chess (handoff/research/multiverse-final.md sections 6.12 to 6.14 and 11.3):
- * what a history record stores about a move (new timelines, travel arrows, the absolute code of a split, merge or
- * measurement, the present moving back, which-path memory, the move's squares on the boards it produced), the
- * last-move marks of a whole turn, and the player-facing texts (move codes, record lines, the player rows, the Submit
- * button, the reasons a game ended).
+ * The records and texts of multiverse chess: what a history record stores about a move (new timelines, travel arrows,
+ * the absolute code of a split, merge or measurement, the present moving back, which-path memory, the move's squares on
+ * the boards it produced), the last-move marks of a whole turn, and the player-facing texts (move codes, record lines,
+ * the player rows, the Submit button, the reasons a game ended).
  *
  * Records hold data only (numbers and codes in the move notation), never words: the texts are made when they are
  * shown, in the reader's language.

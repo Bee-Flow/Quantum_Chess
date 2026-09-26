@@ -28,7 +28,7 @@ const spec = Object.assign(orthodoxSpec(), {
 	category: 'uncertainty',
 	hidden: true,
 	hiddenStyle: 'fog',
-	// The classic "your king cannot escape" and the waiting draws apply (LEAD-DECISIONS L1): a king that can be taken
+	// The classic "your king cannot escape" and the waiting draws apply: a king that can be taken
 	// for certain stands on a square the attacker sees. Bare kings are no draw, as on chess.com: the kings cannot see
 	// each other, so a king that steps next to the enemy king unaware is taken, and either side can still win.
 	bareKingsDraw: false,

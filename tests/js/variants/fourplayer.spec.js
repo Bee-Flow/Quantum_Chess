@@ -6,7 +6,7 @@
 /**
  * Four-player chess: the cross-shaped board, the four armies and their directions, castling along a file, en passant
  * for the next player only, promotion by mode, elimination (free for all) and teams, the fair-share budget, a player
- * who cannot move, and how the quantum rules interact with them. The cases follow handoff/research/fourplayer.md 7.
+ * who cannot move, and how the quantum rules interact with them.
  */
 
 import { describe, expect, it } from 'vitest'

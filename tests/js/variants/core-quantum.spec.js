@@ -4,7 +4,7 @@
  */
 
 /**
- * The generic hooks and rule fixes of the quantum layer (package "quantum" of handoff/CORE-CHANGES.md): idle worlds and
+ * The generic hooks and rule fixes of the quantum layer: idle worlds and
  * `applyMiss`, certain moves, `unifyWorlds`, the outcome labels after the settling rolls, compulsory capture, the
  * budget rule, king danger, the quiet counter, the history record, sitting out and the `squareView` guard.
  */

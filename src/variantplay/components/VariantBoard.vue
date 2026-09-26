@@ -15,10 +15,12 @@
   attacker's centre, so the glyphs under it stay legible (the threat lines of the multiverse); `kind: 'travel'` is a
   blue, half-transparent arrow on a white casing, bowed through the control point (`cx`, `cy`) when it has one, both
   ends kept clear of the pieces; `kind: 'next'` a dashed grey outline (a placeholder); `kind: 'hill'` thinner, in a
-  warm dark brown. A label with `strong: true` is bold and a little larger (the players' names of bughouse). A label
-  with `fit` (the width it has, in layout units) keeps at least 11 px on screen as far as that width allows. A board's
-  label is drawn on a light chip above the outlines; on a board that fills the screen (`fill`) it keeps 11 to 15 px on
-  screen and is left out when it no longer fits over its board (a whole view of many small boards). A board with
+  warm dark brown. A label with `strong: true` is bold and a little larger (the players' names of bughouse), and a
+  zoomed view moves it inwards when it would be cut at its edge. A label with `fit` (the width it has, in layout units)
+  keeps at least 11 px on screen as far as that width allows; a label's `kind` gives it a class of its own (`river`:
+  the inscription of the xiangqi river). The last move marks an empty point (xiangqi) with a ring. A board's label is
+  drawn on a light chip above the outlines; on a board that fills the screen (`fill`) it keeps 11 to 15 px on screen
+  and is left out when it no longer fits over its board (a whole view of many small boards). A board with
   `frame: 'light'` or `'dark'` gets a band of that colour (whose move it is on that board in the multiverse), and one
   with `lift` has its label that much higher (above a halo). `layout.caption` is a line of text above the drawing (the
   multiverse's header). Area shades: `frame`, `wood`, `river`, and the multiverse's halos `must` (gold) and `optional`
@@ -698,11 +700,6 @@ function labelFont(l, base) {
 	return Math.min(Math.max(base, Math.min(wanted, room)), LABEL_MAX_PX * unitSize.value)
 }
 
-const labels = computed(() => labelSpots.value.map((l) => {
-	const font = labelFont(l, l.strong ? 0.36 : 0.32)
-	return { ...l, font: Number(font.toFixed(4)), sized: l.fit > 0 }
-}))
-
 /**
  * Place a length of the view along one axis: centred on the drawing when it is larger, else inside it.
  *
@@ -736,6 +733,33 @@ const viewBox = computed(() => {
 	const v = shown.value
 	return [v.x, v.y, v.w, v.h].map((e) => Number(e.toFixed(4))).join(' ')
 })
+
+/**
+ * The x of a bold label (a player's name) in a zoomed view: moved inwards as far as it sticks out of the part shown,
+ * when a part of it is in view, so that a name at the edge of the view is not cut ("A" of "Black A"). Its width is
+ * the estimate of the drawing's extent (`full`), with a little room.
+ *
+ * @param {object} l label (drawn coordinates)
+ * @return {number}
+ */
+function keptInView(l) {
+	if (!l.strong || zoom.value <= 1) {
+		return l.x
+	}
+	const v = shown.value
+	const half = 0.08 + 0.12 * String(l.text).length + 0.05
+	const lo = v.x + half
+	const hi = v.x + v.w - half
+	if (l.x + half <= v.x || l.x - half >= v.x + v.w || lo > hi) {
+		return l.x
+	}
+	return Math.min(Math.max(l.x, lo), hi)
+}
+
+const labels = computed(() => labelSpots.value.map((l) => {
+	const font = labelFont(l, l.strong ? 0.36 : 0.32)
+	return { ...l, x: keptInView(l), font: Number(font.toFixed(4)), sized: l.fit > 0 }
+}))
 
 /** The font size of a pinned board name, in layout units (a board label's). */
 const PIN_FONT = 0.36
@@ -1462,6 +1486,10 @@ function cellClasses(c) {
 	if (c.fog) {
 		out.push('qc-vboard__cell--fog')
 	}
+	// an empty point (xiangqi): the last move's mark is a ring there, not a disc that would read as a faded piece
+	if (c.shape === 'point' && !c.pieces.length) {
+		out.push('qc-vboard__cell--vacant')
+	}
 	return out
 }
 
@@ -1627,6 +1655,25 @@ function cellLabel(c) {
 
 .qc-vboard__cell--last .qc-vboard__shape {
 	fill: color-mix(in srgb, var(--qc-sq-light) 55%, #f7cb4d);
+}
+
+// on a board of points (xiangqi) an empty point of the last move gets an amber ring: a filled disc there would read
+// as a faded piece (under a piece the disc shows as a halo)
+.qc-vboard__cell--last.qc-vboard__cell--vacant .qc-vboard__shape--point {
+	fill: transparent;
+	stroke: #c08a00;
+	stroke-width: 0.06;
+}
+
+// the ring gives way to a point being chosen (the first target of a split) and to the keyboard focus
+.qc-vboard__cell--vacant.qc-vboard__cell--selected .qc-vboard__shape--point,
+.qc-vboard__cell--vacant.qc-vboard__cell--pick .qc-vboard__shape--point {
+	fill: color-mix(in srgb, transparent 55%, var(--color-primary-element));
+}
+
+.qc-vboard__cell--vacant:focus-visible .qc-vboard__shape--point {
+	stroke: var(--color-primary-element);
+	stroke-width: 0.08;
 }
 
 // the moves of the turn in progress (a turn of several moves, the multiverse): mint, apart from the opponent's yellow
@@ -1849,6 +1896,18 @@ function cellLabel(c) {
 // the label of a placeholder: grey like its dashed outline, still readable
 .qc-vboard__label--next {
 	fill: #6f7a80;
+}
+
+// the inscription in the river of xiangqi: large, faint, in the characters' serif; the space after the last character
+// counts in the centring, so the text moves back by half of it to stand centred on its x
+.qc-vboard__label--river {
+	fill: #4b6b7a;
+	fill-opacity: 0.55;
+	font-family: 'Noto Serif CJK TC', 'Noto Serif CJK JP', 'Noto Serif SC', 'Songti TC', 'Songti SC', serif;
+	font-size: 0.56px;
+	font-weight: bold;
+	letter-spacing: 0.4px;
+	transform: translateX(0.2px);
 }
 
 // a light chip behind a board's label or pin, so lines and pieces under it do not cut it

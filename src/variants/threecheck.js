@@ -8,7 +8,7 @@
  * check when, after it, a piece of the mover other than its king attacks the enemy king; a double check counts once.
  * The counters of checks given (`x.checks`, White first) are part of the solid structure (`solidExtra`), so a check
  * that happened in some possibilities only is settled by the solid roll at once and the counters are always certain.
- * The classic end rules of the core stay on (handoff/LEAD-DECISIONS.md L1): "your king cannot escape" wins, and only
+ * The classic end rules of the core stay on (docs/rules.md 5 and 6): "your king cannot escape" wins, and only
  * the two kings left is a draw, which waits while the side to move can take the other king. Player-facing rules are in
  * docs/variants.md.
  */
@@ -191,7 +191,7 @@ Object.assign(spec, {
 
 	// A captured king loses, the third check wins. The escape rule and the bare-kings draw (which waits while the side
 	// to move can take the other king) are the core's classic flags (`escapeRule`, `bareKingsDraw`, `drawsWait`),
-	// left at their defaults: this hook must not return 'bareKings' as well (LEAD-DECISIONS L1).
+	// left at their defaults: this hook must not return 'bareKings' as well.
 	worldResult(w) {
 		const alive = [hasRoyal(spec, w, 0), hasRoyal(spec, w, 1)]
 		if (!alive[0] || !alive[1]) {

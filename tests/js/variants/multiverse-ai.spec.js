@@ -4,15 +4,17 @@
  */
 
 /**
- * The computer player of multiverse chess (handoff/research/multiverse-final.md section 6.15, tests A1 to A5): the 5D
- * terms of the evaluation, the pruned view of the must-move boards (exact, and keeping the branch that moves the
- * present back), no answer inside the own turn, the time share of a turn, and games: the computer plays whole legal
- * turns, never strands itself while a way out exists, takes a king, keeps its time budget and beats a random mover.
+ * The computer player of multiverse chess (docs/variants.md, "Multiverse chess (5D)"; tests A1 to A5): the 5D terms
+ * of the evaluation, the pruned view of the must-move boards (exact, keeping the branch that moves the present back
+ * and every split of a must-move board, across boards and in time), no answer inside the own turn, the time share of
+ * a turn, what a piece would attack on its next turn (`aiThreats`), and games: the computer plays whole legal turns,
+ * never strands itself while a way out exists, takes a king, keeps its time budget, beats a random mover and plays
+ * quantum moves on Small.
  */
 
 import { describe, expect, it } from 'vitest'
 import { seededRng } from '../../../src/engine/index.js'
-import { chooseMove, evaluateState, LEVELS } from '../../../src/variants/core/ai.js'
+import { chooseMove, evaluateState, LEVELS, quantumTerms } from '../../../src/variants/core/ai.js'
 import {
 	applyMove,
 	applyOutcome,
@@ -21,12 +23,22 @@ import {
 	legalMoves,
 	newGame,
 	ordinaryMoves,
+	parseCode,
 	splitsFrom,
 	stateAfter,
 	T,
 } from '../../../src/variants/core/quantum.js'
+import { OFF } from '../../../src/variants/core/world.js'
 import V from '../../../src/variants/multiverse.js'
-import { aiTimeShare, evaluate, replySide, scans, viewFilter, WEIGHTS } from '../../../src/variants/multiverse/ai.js'
+import {
+	aiTimeShare,
+	evaluate,
+	pieceThreats,
+	replySide,
+	scans,
+	viewFilter,
+	WEIGHTS,
+} from '../../../src/variants/multiverse/ai.js'
 import { SUBMIT } from '../../../src/variants/multiverse/moves.js'
 import { buildWorld } from '../../../src/variants/multiverse/setup.js'
 import { LAB, mandatory, playable, ROWS } from '../../../src/variants/multiverse/skeleton.js'
@@ -189,6 +201,21 @@ const A5 = [
 	'(−1T3)b5>(+1T3)b5',
 	'(+1T4)c2>>(+1T3)c2',
 	SUBMIT,
+]
+
+/**
+ * White must move on −1 and +1 and may play L0; its knight on (+1)c2 can split onto two cells of L0's latest board
+ * and onto two cells of an older board of L0 (a time split, which opens a timeline).
+ */
+const CROSS = [
+	'(0T1)c2-c3',
+	'(0T1)a4-a3',
+	'(0T2)b2-b3',
+	'(0T2)d5>>(0T1)d3',
+	'(−1T2)c3-d4',
+	'(0T3)b1>>(0T2)c2',
+	'(−1T2)c5-d4',
+	'(+1T2)a5>(0T3)a4',
 ]
 
 /** After test S3's branch: Black must move on +1 and may play L0. */
@@ -375,8 +402,9 @@ describe('the computer player', () => {
 				codes.push(code)
 				s = applyMove(V, s, code, rng).state
 			}
-			const takes = !s.result && legalMoves(V, s)
-				.some((m) => m.to >= 0 && s.worlds.some(({ b }) => b.board[m.to] === queen))
+			// an answer that captures the queen in some outcome (a pawn step onto one of its parts only probes)
+			const takes = !s.result && legalMoves(V, s).some((m) => branches(V, s, m.code)
+				.some((br) => br.worlds.some(({ b }) => b.sq[queen] === OFF)))
 			expect(takes, 'seed ' + seed + ': ' + codes.join(' ')).toBe(false)
 		}
 	}, 30000)
@@ -470,5 +498,65 @@ describe('the computer player', () => {
 			}
 		}
 		expect(wins).toBeGreaterThanOrEqual(5)
+	}, 60000)
+})
+
+describe('quantum moves', () => {
+	it('tells what a piece would attack on its next turn, in the past too', () => {
+		const s = one(S9)
+		const b = s.worlds[0].b
+		const knight = b.board[sq('(0)e3')]
+		const victims = pieceThreats(b, 0, knight).map((m) => V.topology.names[b.sq[m.capture]]).sort()
+		expect(victims).toEqual(['(0)d5', '(0)~1e5'])
+		expect(V.aiThreats).toBe(pieceThreats)
+		// inside a turn of two boards: the queen has played L0 and cannot move again now, but on its next turn it
+		// attacks the king and the pawn c4
+		const n = run(one(A4), ['(0T5)c1-c2'])
+		expect([n.turn, mandatory(X(n)).map((u) => LAB[u])]).toEqual([0, ['+1']])
+		const w = n.worlds[0].b
+		const queen = w.board[sq('(0)c2')]
+		expect(ordinaryMoves(V, n).some((m) => m.from === sq('(0)c2'))).toBe(false)
+		const hit = pieceThreats(w, 0, queen).map((m) => m.capture)
+		expect(hit.some((id) => V.royalTypes.has(w.ty[id]))).toBe(true)
+		expect(hit).toContain(w.board[sq('(0)c4')])
+	})
+
+	it('keeps every split of a must-move board in its view, across boards and in time', () => {
+		const s = run(start(), CROSS)
+		expect([s.turn, mandatory(X(s)).map((u) => LAB[u])]).toEqual([0, ['−1', '+1']])
+		const view = V.aiView(s, 0, 'normal')
+		expect(view).not.toBe(s)
+		const f = sq('(+1)c2')
+		const codes = splitsFrom(V, view, f).map((m) => m.code)
+		expect(codes).toEqual(splitsFrom(V, s, f).map((m) => m.code))
+		expect(codes).toContain('(+1)c2-(0)b1|(0)b2')
+		expect(codes).toContain('(+1)c2-(0)~1c2|(0)~1b3')
+		// the quantum terms see the enemy's next turn on the other board: a part on b2 could be taken there
+		expect(quantumTerms(V, view, '(+1)c2-(0)b1|(0)c2').total).toBeGreaterThan(0)
+		expect(quantumTerms(V, view, '(+1)c2-(0)b1|(0)b2').total).toBe(0)
+	})
+
+	it('plays quantum moves on Small at the normal level', async () => {
+		let splits = 0
+		let quantum = 0
+		for (let g = 1; g <= 3; g++) {
+			const rng = seededRng(g)
+			let s = start()
+			let mine = 0
+			for (let ply = 0; ply < 60 && !s.result; ply++) {
+				const code = await chooseMove(V, s, { level: 'normal', rng, now: workClock() })
+				const type = code === SUBMIT ? 'submit' : parseCode(V, code).type
+				if (type === 'split' || type === 'merge' || type === 'measure') {
+					mine++
+					splits += type === 'split' ? 1 : 0
+				}
+				s = applyMove(V, s, code, rng).state
+			}
+			expect(mine, 'game ' + g).toBeGreaterThanOrEqual(1)
+			quantum += mine
+		}
+		// before the quantum terms: 4 quantum moves in these three games, 5 in 187 plies of four
+		expect(quantum).toBeGreaterThanOrEqual(8)
+		expect(splits).toBeGreaterThanOrEqual(6)
 	}, 60000)
 })

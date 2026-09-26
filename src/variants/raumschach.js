@@ -8,10 +8,10 @@
  * in a 5 × 5 × 5 cube of five levels, A at the bottom (White's home) to E at the top (Black's home). Rooks move
  * through the faces of a cell, bishops through its edges, unicorns through its corners and the queen all three ways;
  * the knight leaps 2 + 1 across levels too. Pawns step one cell forward or one level up and capture in five
- * directions; there is no castling, no double step and no en passant. The game ends by the core's classic rules
- * (handoff/LEAD-DECISIONS.md L1): capturing the king wins, a king that cannot escape loses at once, and only the two
- * kings left is the core's bare-kings draw, which waits while a king can be captured for certain (so while the kings
- * touch). The research spec is handoff/research/raumschach.md; player-facing rules are in docs/variants.md.
+ * directions; there is no castling, no double step and no en passant. The game ends by the core's classic rules:
+ * capturing the king wins, a king that cannot escape loses at once, and only the two kings left is the core's
+ * bare-kings draw, which waits while a king can be captured for certain (so while the kings touch). Player-facing
+ * rules are in docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -93,7 +93,7 @@ const ADVANCE = [0, 1].map((side) => coords.map(([, y, z]) => 3 * (side === 0 ? 
 const CENTRAL = new Set(['q', 'b', 'u', 'n'])
 
 /**
- * The start position (section 2.3 of the spec): White's officers on rank 1 of level A (R N K N R) and of level B
+ * The start position: White's officers on rank 1 of level A (R N K N R) and of level B
  * (B U Q B U), its pawns on rank 2 of both; Black's array is White's turned through the centre of the cube.
  */
 const START = {}
@@ -110,7 +110,7 @@ for (let z = 0; z < BACK.length; z++) {
 const spec = {
 	id: 'raumschach',
 	category: 'dimensions',
-	// no castling and no en passant: the shared rules card leaves out its sentence about them (LEAD-DECISIONS L2)
+	// no castling and no en passant: the shared rules card leaves out its sentence about them
 	specialMoves: false,
 	sides: whiteBlack(),
 	topology,
@@ -168,7 +168,7 @@ const spec = {
 	setup() {
 		return worldFrom(spec, START)
 	},
-	// No `worldResult` and the classic end-rule flags at their defaults (handoff/LEAD-DECISIONS.md L1): capturing the
+	// No `worldResult` and the classic end-rule flags at their defaults: capturing the
 	// king wins (the core's default `worldResult`), a king that cannot escape loses at once (`escapeRule`), and only
 	// the two kings left is a draw (`bareKingsDraw`) that waits while the side to move can take the other king for
 	// certain (`drawsWait`). Kings are solid, so with only kings on the board that is exactly while they touch: the
@@ -218,7 +218,7 @@ const spec = {
 			'A pawn that reaches the far rank of the opponent\'s home level (White: rank 5 of E; Black: rank 1 of A) must become a queen, rook, bishop, knight or unicorn.',
 		),
 		t('quantumchess', 'There is no castling, no double step and no en passant.'),
-		// how a game is won (capture the king, a king that cannot escape) is on the shared card (LEAD-DECISIONS L1)
+		// how a game is won (capture the king, a king that cannot escape) is on the shared card
 		t('quantumchess', 'If only the two kings are left and they do not touch, the game is drawn.'),
 	],
 }

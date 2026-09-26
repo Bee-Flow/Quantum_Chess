@@ -5,8 +5,9 @@
 
 <!--
   One piece of a variant board, drawn in SVG user units around (0, 0): a cburnett sprite (possibly smaller, a knight
-  with a unicorn's horn, or a pawn with a crossbar: the multiverse's brawn), a compound of two sprites side by side
-  (Capablanca's archbishop and chancellor), or a text token (round, shogi pentagon or xiangqi disc). A promoted sprite
+  with a unicorn's horn, a pawn with a crossbar: the multiverse's brawn, or a knight's head on a bishop's base or in a
+  rook's turret: Capablanca's archbishop and chancellor), a compound of two sprites side by side, or a text token
+  (round, shogi pentagon or xiangqi disc). A promoted sprite
   piece carries a small red disc with a white "+" at its top right. A ghost part is faded and carries a probability
   ring (a track with an arc of its chance, as on the Quantum Chess board) and its percentage in a badge at its bottom
   right. The ring and the badge are drawn above the fade, so they stay sharp. With `unit` (the size of one CSS pixel
@@ -65,6 +66,42 @@
 						stroke="#ececec"
 						stroke-width="0.9"
 						stroke-linecap="round" />
+				</g>
+				<!-- the bishop's base or the rook's turret in front of the knight's head (cburnett's lines) -->
+				<g
+					v-if="glyph.body"
+					class="qc-vpiece__body"
+					:transform="`translate(${-size / 2}, ${-size / 2}) scale(${size / 45})`"
+					:fill="glyph.body.color === 'black' ? '#000' : '#fff'"
+					stroke="#000"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					:filter="glyph.tint ? `url(#${tintId})` : undefined">
+					<template v-if="glyph.body.type === 'b'">
+						<path :d="BISHOP_BASE" stroke-linecap="butt" />
+						<path :d="BISHOP_COLLAR" stroke-linecap="butt" />
+						<path
+							:d="BISHOP_LINES"
+							fill="none"
+							:stroke="bodyLine"
+							stroke-linejoin="miter" />
+					</template>
+					<template v-else>
+						<path :d="ROOK_BASE" stroke-linecap="butt" />
+						<path :d="ROOK_FLARE" />
+						<path :d="ROOK_TOWER" stroke-linecap="butt" stroke-linejoin="miter" />
+						<path :d="ROOK_TAPER" />
+						<path :d="ROOK_MERLONS" stroke-linecap="butt" />
+						<path :d="ROOK_RIM" fill="none" stroke-linejoin="miter" />
+						<path
+							v-if="glyph.body.color === 'black'"
+							:d="ROOK_LIGHT"
+							fill="none"
+							stroke="#ececec"
+							stroke-width="1"
+							stroke-linejoin="miter" />
+					</template>
 				</g>
 				<g
 					v-if="glyph.promoted"
@@ -163,6 +200,27 @@ const RING_MIN_PX = 2
 /** The bottom-right corner of the square from the middle of a piece, in piece sizes (a square is about 1.08). */
 const CORNER = 0.53
 
+// The knight's head on a bishop's base or in a rook's turret, in the 45-unit box of the cburnett pieces: the knight
+// is drawn smaller and higher (its top left corner and its size), the bishop's base and collar or the rook's turret,
+// step and base (the rook's crown lowered by 11 units) in front of it, in the lines of cburnett's bishop and rook.
+/** The size of the knight's head over a body, in the 45-unit box. */
+const HEAD = 35.1
+/** The top left corner of the knight's head over a bishop's base and in a rook's turret, in the 45-unit box. */
+const HEAD_AT = { b: { x: 2, y: -0.8 }, r: { x: 4, y: -3 } }
+const BISHOP_BASE = 'M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5'
+	+ '-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.354.49-2.323.47-3-.5 1.354-1.94 3-2 3-2z'
+const BISHOP_COLLAR = 'M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4h-10s-2.5 1.5-2.5 4c0 0-.5.5 0 2z'
+/** The collar's two bands and the bishop's cross, on the knight's neck. */
+const BISHOP_LINES = 'M17.5 26h10M15 30h15M26.3 14v4.6M24 16.3h4.6'
+const ROOK_BASE = 'M9 39h27v-3H9v3zm3-3v-4h21v4H12z'
+const ROOK_FLARE = 'M31 29.5l1.5 2.5h-20l1.5-2.5'
+const ROOK_TOWER = 'M31 28v1.5H14V28'
+const ROOK_TAPER = 'M34 25l-3 3H14l-3-3'
+const ROOK_MERLONS = 'M11 25v-5h4v2h5v-2h5v2h5v-2h4v5'
+const ROOK_RIM = 'M11 25h23'
+/** The light lines of the black rook, and one inside its crown, which parts it from the black knight behind it. */
+const ROOK_LIGHT = 'M12 35.5h21m-20-4h19m-18-2h17M11 25h23M12.2 24.4v-3.2h1.6v2h7.4v-2h2.6v2h7.4v-2h1.6v3.2'
+
 /**
  * The sprites drawn, `{ symbol, x, y, w }` in user units: one sprite (smaller with `scale`), or the two sprites of a
  * compound piece side by side, the first a little behind and to the left, the second in front and to the right.
@@ -177,10 +235,19 @@ const sprites = computed(() => {
 			{ symbol: g.parts[1].symbol, x: 0.16 * s, y: 0.051 * s, w: 0.86 * s },
 		]
 	}
+	if (g.body) {
+		// the knight's head, smaller and higher, over the body drawn in front of it
+		const at = HEAD_AT[g.body.type]
+		const u = s / 45
+		return [{ symbol: g.symbol, x: u * (at.x + HEAD / 2) - s / 2, y: u * (at.y + HEAD / 2) - s / 2, w: u * HEAD }]
+	}
 	// a smaller piece keeps its base on the base line of the full-size pieces
 	const w = s * (g.scale ?? 1)
 	return [{ symbol: g.symbol, x: 0, y: (s - w) * 0.37, w }]
 })
+
+/** The colour of the lines inside a body: black on a white piece, light grey on a black one (as cburnett's). */
+const bodyLine = computed(() => (props.glyph.body?.color === 'black' ? '#ececec' : '#000'))
 
 const ghost = computed(() => props.p < 0.995)
 const opacity = computed(() => {
@@ -248,6 +315,7 @@ const pentagon = computed(() => {
 }
 
 .qc-vpiece__promoted,
+.qc-vpiece__body,
 .qc-vpiece__horn,
 .qc-vpiece__bar,
 .qc-vpiece__ring {

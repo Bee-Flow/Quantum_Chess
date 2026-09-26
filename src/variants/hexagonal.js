@@ -9,11 +9,10 @@
  * diagonals through its corners (three bishops per side, one per shade), king and queen in all twelve directions, the
  * knight to the twelve nearest cells no queen reaches. Pawns move up their file, capture onto the two forward edge
  * neighbours, double-step from any of their side's pawn starting cells, capture en passant and promote at the far end
- * of their file. No castling. The classic end rules of the core apply (handoff/LEAD-DECISIONS.md L1): capture the
- * king; a king that cannot escape loses at once, so a classical stalemate or mate ends the game in favour of the side
- * that delivered it, as Gliński scores stalemate; only the two kings left is a draw unless the side to move can take
- * the other king. A side with no move at all loses. The research spec is handoff/research/hexagonal.md; the
- * player-facing rules are in docs/variants.md.
+ * of their file. No castling. The classic end rules of the core apply: capture the king; a king that cannot escape
+ * loses at once, so a classical stalemate or mate ends the game in favour of the side that delivered it, as Gliński
+ * scores stalemate; only the two kings left is a draw unless the side to move can take the other king. A side with no
+ * move at all loses. The player-facing rules are in docs/variants.md.
  *
  * Squares use "doubled" coordinates (q, h): q is the file relative to f (-5 to 5) and h the height of the cell centre
  * in half cells, with f6 at (0, 0). The mirror between White and Black is (q, h) -> (q, -h), which is the core's
@@ -261,7 +260,7 @@ const spec = {
 	applyMiss(b) {
 		return clearEnPassant(b)
 	},
-	// The classic end rules come from the core defaults (handoff/LEAD-DECISIONS.md L1), with no variant copy: the
+	// The classic end rules come from the core defaults, with no variant copy: the
 	// default `worldResult` (capture the king), `escapeRule` (a king that cannot escape loses at once),
 	// `bareKingsDraw` and `drawsWait` (the bare-kings draw waits while the side to move can take the other king).
 	// Gliński scores stalemate in favour of the stalemating side, and the escape rule already ends a classical

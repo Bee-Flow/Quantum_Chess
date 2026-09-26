@@ -11,6 +11,9 @@
  * - every `docs/….md` path named in the code exists;
  * - no comment cites a planning document by its abbreviation and a section number, carries a module marker or an
  *   owner tag, or has a TODO without an issue number;
+ * - no code and no Markdown document outside the session folder names the working notes of a development session
+ *   (the handoff/ folder, its decision, change and research files), which are not shipped; only the files that
+ *   configure that folder name it;
  * - outside the rules engine and the computer player, a section sign only appears on a line that names
  *   docs/engine-rules.md;
  * - every relative link in the maintained Markdown documents resolves to an existing file.
@@ -57,6 +60,21 @@ const ENGINE = [
 	'tests/fixtures/',
 ]
 const SECTION = '\u00a7'
+/** The working notes of a development session, kept in handoff/ while it runs and never shipped. */
+const SESSION_FOLDER = 'handoff/'
+const SESSION_NOTES = new RegExp([
+	'\\bhandoff\\b',
+	'\\bLEAD-DECISIONS\\b',
+	'\\bCORE-CHANGES\\b',
+	'\\bIMPLEMENTING\\.md\\b',
+	'\\bmultiverse-final\\b',
+	'\\blead decisions?\\b',
+	'\\bresearch spec\\b',
+].join('|'), 'i')
+const SESSION_PROBLEM = 'names the session notes in handoff/, which are not shipped; state the rule itself, or name '
+	+ 'docs/variants.md or docs/development/architecture.md'
+/** The files that configure the session folder (ignore, lint and licence exclusions) and so name it on purpose. */
+const NAMES_SESSION_FOLDER = ['Makefile', 'eslint.config.js', 'tools/check-line-length.mjs']
 const FORBIDDEN = [
 	[
 		new RegExp(`\\b(spec|gd|er) ?${SECTION}`, 'i'),
@@ -65,6 +83,7 @@ const FORBIDDEN = [
 	[/\u2039[a-z-]+\u203a/, 'module marker'],
 	[/\bOwner: /, 'owner tag'],
 	[/\b(TODO|FIXME)\b(?!\(#\d+\))/, 'a TODO names its issue: TODO(#123)'],
+	[SESSION_NOTES, SESSION_PROBLEM, NAMES_SESSION_FOLDER],
 ]
 const TEXT = /\.(js|mjs|cjs|vue|php|md|yml|yaml|json|xml|scss|css|html|txt)$|^Makefile$|\/Makefile$/
 
@@ -104,8 +123,8 @@ for (const file of codeFiles) {
 				report(file, i + 1, `${path} does not exist`)
 			}
 		}
-		for (const [pattern, problem] of FORBIDDEN) {
-			if (pattern.test(text)) {
+		for (const [pattern, problem, allowedIn = []] of FORBIDDEN) {
+			if (pattern.test(text) && !allowedIn.includes(file)) {
 				report(file, i + 1, problem)
 			}
 		}
@@ -121,7 +140,12 @@ for (const file of codeFiles) {
 
 const documents = files.filter((file) => file.endsWith('.md'))
 for (const file of documents) {
+	// the code files among the documents had the session-notes check with the other forbidden patterns above
+	const checkNotes = !file.startsWith(SESSION_FOLDER) && !codeFiles.includes(file)
 	readFileSync(join(ROOT, file), 'utf8').split('\n').forEach((text, i) => {
+		if (checkNotes && SESSION_NOTES.test(text)) {
+			report(file, i + 1, SESSION_PROBLEM)
+		}
 		for (const match of text.matchAll(/\]\(([^)\s]+)\)/g)) {
 			const target = match[1].split('#')[0]
 			if (target === '' || /^[a-z][a-z0-9+.-]*:/i.test(target)) {

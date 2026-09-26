@@ -25,9 +25,9 @@ const spec = Object.assign(orthodoxSpec(), {
 	hiddenStyle: 'plain',
 	// attempts are binding: no odds preview, and results are shown without odds
 	umpire: true,
-	// The classic end rules (escapeRule, bareKingsDraw, drawsWait) stay on (handoff/LEAD-DECISIONS.md L1): the core
+	// The classic end rules (escapeRule, bareKingsDraw, drawsWait) stay on, as in every two-sided variant: the core
 	// decides them on the real board, like the classical umpire who announces checkmate, and the whole board is
-	// shown when the game ends. This replaces the opt-out of the research spec's K-14.
+	// shown when the game ends.
 	rules: () => [
 		t('quantumchess', 'You see only your own pieces. The umpire sees the whole board.'),
 		t(

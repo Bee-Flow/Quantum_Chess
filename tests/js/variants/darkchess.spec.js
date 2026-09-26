@@ -6,7 +6,7 @@
 /**
  * Fog of war (darkchess): the setup, the moves, what each side sees (own pieces, move targets and the en passant
  * victim, over all possibilities), capture-the-king without check, and the computer's view, which must depend only on
- * what a human in its seat can see. The cases D1-D18 are those of handoff/research/darkchess.md, section 7.
+ * what a human in its seat can see. The cases are numbered D1-D18.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -170,7 +170,7 @@ describe('darkchess: the orthodox game', () => {
 		const rules = V.rules()
 		expect(rules.length).toBeGreaterThanOrEqual(3)
 		expect(rules.length).toBeLessThanOrEqual(8)
-		// the shared card explains capture-the-king, the escape rule, castling and en passant (LEAD-DECISIONS L1, L2)
+		// the shared card explains capture-the-king, the escape rule, castling and en passant
 		expect(rules.join(' ')).not.toMatch(/checkmate|only by capturing/i)
 		expect(V.specialMoves).toBe(true)
 		for (const ty of Object.keys(V.types)) {

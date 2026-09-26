@@ -4,8 +4,7 @@
  */
 
 /**
- * The static geometry of multiverse chess and its skeleton (handoff/research/multiverse-final.md sections 4 and 6.2
- * to 6.5).
+ * The static geometry of multiverse chess and its skeleton.
  *
  * Time is counted in half turns: `v = 2·T + c` (c 0 White to move ○, 1 Black ●), so T1 ○ is 2 and T0 ● is 1; a
  * piece's step in time changes v by 2. Timelines are lines `l` (single start: L0 = 0, White's new lines +1, +2 …,
@@ -37,6 +36,12 @@ export const MINUS = '−'
 export const START_LINES = Object.freeze([[0, 0], [-1, 0], [-1, 1]])
 /** The storage rows of −0 and +0 in an even start. */
 const EVEN_ROW = 9
+/**
+ * The most new timelines per player that the storage rows hold, per start mode: lines up to ±4 on a single start
+ * (rows 0 … 8) and on an even start (rows 1 … 8 beside −0 and +0), but only ±3 around the three rows of a
+ * three-timeline start, whose lines ±5 would need the rows of −0 and +0.
+ */
+export const MAX_NEW = Object.freeze([4, 4, 3])
 
 /** File letters. */
 const FILES = 'abcdefgh'
@@ -54,9 +59,9 @@ function lineNumber(l) {
 }
 
 /**
- * The storage row of line `l`, or -1 outside the largest capacity `[l0 − 3, l1 + 3]` of the start mode (a line
- * outside the capacity of a game never exists; checking it before mapping keeps the even-start zig-zag from wrapping
- * onto −0 and +0).
+ * The storage row of line `l`, or -1 outside the capacity `[l0 − MAX_NEW, l1 + MAX_NEW]` of the start mode (a line
+ * outside the capacity of a game never exists; checking it before mapping keeps the zig-zag from wrapping onto −0 and
+ * +0).
  *
  * @param {number} l line
  * @param {number} md start mode (0 single, 1 even, 2 three rows)
@@ -64,7 +69,7 @@ function lineNumber(l) {
  */
 export function uOf(l, md) {
 	const [l0, l1] = START_LINES[md]
-	if (l < l0 - 3 || l > l1 + 3) {
+	if (l < l0 - MAX_NEW[md] || l > l1 + MAX_NEW[md]) {
 		return -1
 	}
 	if (md === 1) {

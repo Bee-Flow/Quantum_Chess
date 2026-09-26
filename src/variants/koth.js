@@ -8,8 +8,8 @@
  * (d4, e4, d5, e5, "the hill") wins at once. The one check-like rule of the variant: a king may not step onto a hill
  * square that an enemy piece attacks once the king stands there. It is tested per world inside the move generator,
  * so with ghosts a hill step rolls between "Missed" (attacked in that possibility) and the win. Capturing the enemy
- * king still wins, and so does a king that cannot escape; two lone kings are no draw. The research spec is
- * handoff/research/koth.md.
+ * king still wins, and so does a king that cannot escape; two lone kings are no draw. Player-facing rules are in
+ * docs/variants.md.
  */
 
 import { t } from '@nextcloud/l10n'

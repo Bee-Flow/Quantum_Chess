@@ -8,9 +8,9 @@
  * the right; pieces move along files, ranks, back in time and across timelines, a move onto an older board opens a
  * new timeline, and a turn is a move on every must-move board. The quantum rules follow three principles: boards are
  * certain, pieces are quantum; timelines are AND, possibilities are OR; a move always makes its boards, the dice only
- * decide what happens to the piece. The research spec is handoff/research/multiverse-final.md; the modules in
- * multiverse/ hold the geometry and skeleton, the pieces, the setups, the moves, the rules, the records and texts,
- * the drawing and the computer's hooks.
+ * decide what happens to the piece. The player's rules are in docs/variants.md; the modules in multiverse/ hold the
+ * geometry and skeleton, the pieces, the setups, the moves, the rules, the records and texts, the drawing and the
+ * computer's hooks.
  */
 
 import { t } from '@nextcloud/l10n'
@@ -54,15 +54,27 @@ const SETUP_LABELS = {
 	verysmallopen: () => t('quantumchess', 'Very small and open: the easiest start for learning'),
 	standard: () => t('quantumchess', 'Standard: the full game, long, best on a laptop'),
 	smallcentered: () => t('quantumchess', 'Small with the king in the centre'),
+	smallflipped: () => t('quantumchess', 'Small, flipped: the kings in opposite corners'),
+	smallopen: () => t('quantumchess', 'Small and open: three pawns each, one on the back rank'),
 	verysmall: () => t('quantumchess', 'Very small'),
 	noqueens: () => t('quantumchess', 'Simple, no queens'),
+	nobishops: () => t('quantumchess', 'Simple, no bishops'),
+	noknights: () => t('quantumchess', 'Simple, no knights'),
+	norooks: () => t('quantumchess', 'Simple, no rooks'),
+	knightsbishops: () => t('quantumchess', 'Knights against bishops: White has knights, Black bishops'),
+	simpleset: () => t('quantumchess', 'Simple set: one bishop and one knight each'),
 	turnzero: () => t('quantumchess', 'Standard with turn zero: Black can travel back to turn 0'),
 	twotimelines: () => t('quantumchess', 'Standard on two timelines, −0 and +0'),
 	princess: () => t('quantumchess', 'Standard with princesses'),
 	reversed: () => t('quantumchess', 'Reversed royalty: the queen is royal, the king is not'),
 	defended: () => t('quantumchess', 'Defended pawn: queen and knight swapped'),
 	halfreflected: () => t('quantumchess', 'Half reflected: Black\'s king and queen swapped'),
+	justkings: () => t('quantumchess', 'Only kings'),
+	justpawns: () => t('quantumchess', 'Kings and pawns'),
 	justknights: () => t('quantumchess', 'Kings and knights'),
+	justbishops: () => t('quantumchess', 'Kings and bishops'),
+	justrooks: () => t('quantumchess', 'Kings and rooks'),
+	justqueens: () => t('quantumchess', 'Kings and queens'),
 	justunicorns: () => t('quantumchess', 'Kings and unicorns'),
 	justdragons: () => t('quantumchess', 'Kings and dragons'),
 	justbrawns: () => t('quantumchess', 'Kings and brawns'),
@@ -70,7 +82,18 @@ const SETUP_LABELS = {
 	royalqueens: () => t('quantumchess', 'Royal queen showdown'),
 	excessive: () => t('quantumchess', 'Excessive: three kings each, with unicorns and dragons'),
 	marauders: () => t('quantumchess', 'Timeline marauders: three timelines'),
+	battlegrounds: () => t('quantumchess', 'Timeline battlegrounds: three timelines, large armies'),
 	invasion: () => t('quantumchess', 'Timeline invasion: two timelines'),
+	formations: () => t('quantumchess', 'Timeline formations: your king on one timeline, your pawns on the other'),
+	tactician: () => t('quantumchess', 'Timeline tactician: each army on its own timeline'),
+	strategos: () => t('quantumchess', 'Timeline strategos: each army on its own timeline, with a unicorn'),
+	skirmish: () => t('quantumchess', 'Timeline skirmish: two timelines, small armies'),
+	fragments: () => t('quantumchess', 'Timeline fragments: two timelines, one starting half a turn later'),
+	mateknight: () => t('quantumchess', 'Checkmate practice: a knight against a lone king'),
+	matebishop: () => t('quantumchess', 'Checkmate practice: a bishop against a lone king'),
+	materook: () => t('quantumchess', 'Checkmate practice: a rook against a lone king'),
+	matequeen: () => t('quantumchess', 'Checkmate practice: a queen against a lone king'),
+	matepawns: () => t('quantumchess', 'Checkmate practice: three pawns against a lone king'),
 }
 
 /** The official names of the setups in 5D chess (names of the original game, not translated). */
@@ -79,15 +102,27 @@ const OFFICIAL = {
 	verysmallopen: 'Very Small – Open',
 	standard: 'Standard',
 	smallcentered: 'Small – Centered',
+	smallflipped: 'Small – Flipped',
+	smallopen: 'Small – Open',
 	verysmall: 'Very Small',
 	noqueens: 'Simple – No Queens',
+	nobishops: 'Simple – No Bishops',
+	noknights: 'Simple – No Knights',
+	norooks: 'Simple – No Rooks',
+	knightsbishops: 'Simple – Knights vs. Bishops',
+	simpleset: 'Simple – Simple Set',
 	turnzero: 'Standard – Turn Zero',
 	twotimelines: 'Standard – Two Timelines',
 	princess: 'Standard – Princess',
 	reversed: 'Standard – Reversed Royalty',
 	defended: 'Standard – Defended Pawn',
 	halfreflected: 'Standard – Half Reflected',
+	justkings: 'Focused – Just Kings',
+	justpawns: 'Focused – Just Pawns',
 	justknights: 'Focused – Just Knights',
+	justbishops: 'Focused – Just Bishops',
+	justrooks: 'Focused – Just Rooks',
+	justqueens: 'Focused – Just Queens',
 	justunicorns: 'Focused – Just Unicorns',
 	justdragons: 'Focused – Just Dragons',
 	justbrawns: 'Focused – Just Brawns',
@@ -95,7 +130,19 @@ const OFFICIAL = {
 	royalqueens: 'Misc – Royal Queen Showdown',
 	excessive: 'Misc – Excessive',
 	marauders: 'Misc – Timeline Marauders',
+	battlegrounds: 'Misc – Timeline Battlegrounds',
 	invasion: 'Misc – Timeline Invasion',
+	formations: 'Misc – Timeline Formations',
+	// the original's spelling
+	tactician: 'Misc – Timeline Tactitian',
+	strategos: 'Misc – Timeline Strategos',
+	skirmish: 'Misc – Timeline Skirmish',
+	fragments: 'Misc – Timeline Fragments',
+	mateknight: 'Checkmate Practice – Knight',
+	matebishop: 'Checkmate Practice – Bishop',
+	materook: 'Checkmate Practice – Rook',
+	matequeen: 'Checkmate Practice – Queen',
+	matepawns: 'Checkmate Practice – Pawns',
 }
 
 /**
@@ -110,7 +157,29 @@ function brawnNote() {
 	)
 }
 
-/** A sentence on the unusual pieces of a setup. */
+/**
+ * The unicorn's move, for the setups that have unicorns.
+ *
+ * @return {string}
+ */
+function unicornNote() {
+	return t('quantumchess', 'Unicorns (U) move along three axes at once.')
+}
+
+/**
+ * Who wins a checkmate practice, where Black has no king. Written without an apostrophe: the game's options panel
+ * escapes the setup's description once more.
+ *
+ * @return {string}
+ */
+function practiceNote() {
+	return t(
+		'quantumchess',
+		'Black has no king to lose: Black wins by capturing the white king, White draws by capturing the attackers or by holding out. Play Black to practise.',
+	)
+}
+
+/** A sentence on the unusual pieces or the start of a setup. */
 const PIECE_NOTES = {
 	princess: () => t('quantumchess', 'The princess (S) moves like a rook or a bishop.'),
 	reversed: () => t(
@@ -119,7 +188,7 @@ const PIECE_NOTES = {
 	),
 	defended: () => t('quantumchess', 'The queen and a knight swap places.'),
 	halfreflected: () => t('quantumchess', 'Black\'s king and queen swap places.'),
-	justunicorns: () => t('quantumchess', 'Unicorns (U) move along three axes at once.'),
+	justunicorns: unicornNote,
 	justdragons: () => t('quantumchess', 'Dragons (D) move along all four axes at once.'),
 	justbrawns: brawnNote,
 	kingofkings: () => t('quantumchess', 'Common kings (C) move like kings but are not royal.'),
@@ -129,6 +198,16 @@ const PIECE_NOTES = {
 		'Unicorns (U) move along three axes at once, dragons (D) along all four. Losing any one king loses.',
 	),
 	marauders: brawnNote,
+	strategos: unicornNote,
+	fragments: () => t(
+		'quantumchess',
+		'Timeline −0 starts half a turn later, with Black to move, so White first moves on +0 alone. Unicorns (U) move along three axes at once.',
+	),
+	mateknight: practiceNote,
+	matebishop: practiceNote,
+	materook: practiceNote,
+	matequeen: practiceNote,
+	matepawns: practiceNote,
 }
 
 /**
@@ -143,12 +222,13 @@ function describeSetup(id) {
 	if (!S) {
 		return null
 	}
+	// shown as plain text: the label is not escaped ("Black's", not "Black&#39;s")
 	// TRANSLATORS: a 5D start position: label, official English name, board size: "Very small (Very Small, 4 × 4)"
 	const main = t('quantumchess', '{label} ({name}, {size} × {size})', {
 		label: SETUP_LABELS[id](),
 		name: OFFICIAL[id],
 		size: S.n,
-	})
+	}, undefined, { escape: false, sanitize: false })
 	return PIECE_NOTES[id] ? main + ' ' + PIECE_NOTES[id]() : main
 }
 
@@ -180,6 +260,8 @@ const spec = {
 				{ id: '1', label: () => t('quantumchess', 'One') },
 				{ id: '2', label: () => t('quantumchess', 'Two') },
 				{ id: '3', label: () => t('quantumchess', 'Three') },
+				// not on three starting timelines (the storage rows) nor on two 8 × 8 ones (too slow): capOf keeps 3
+				{ id: '4', label: () => t('quantumchess', 'Four (laptop)') },
 			],
 		},
 		{
@@ -214,7 +296,7 @@ const spec = {
 		t('quantumchess', 'On your turn move once on every board marked “must move” (gold, in the present, “Now”); boards marked “optional” (blue) you may play too. The turn ends by itself when no board is left, otherwise press Submit turn. Each move is played at once (and rolled if its result is uncertain); Undo never changes a roll.'),
 		t('quantumchess', 'Pieces move along files, ranks, back in time (one step is one turn) and across timelines, keeping their pattern: the rook along one axis, the bishop two, the unicorn (U) three, the dragon (D) four, the queen any; the king steps one along any axes, the knight two along one and one along another; the princess (S) moves as rook or bishop, the royal queen (Y) as a queen, the common king (C) as a king. Landing on the latest board of another timeline jumps there; landing on an older board opens a new timeline that only your piece enters.'),
 		t('quantumchess', 'Pawns and brawns (W) step forward or one timeline towards the opponent, capture diagonally or one timeline forward and one turn back or ahead, and become queens; a brawn also captures sideways or one rank forward together with one timeline forward, or one rank forward and one turn back. Capture any enemy king or royal queen, also one in the past, to win.'),
-		t('quantumchess', 'Each player may open at most the number of new timelines set for the game (1 to 3). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Pieces can travel back only as far as the game allows (2 or 4 turns); older boards are sealed: they are no longer shown, and nothing can travel there.'),
+		t('quantumchess', 'Each player may open at most the number of new timelines set for the game (1 to 4; at most 3 when the game starts with three timelines, or with two on 8 × 8). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Pieces can travel back only as far as the game allows (2 or 4 turns); older boards are sealed: they are no longer shown, and nothing can travel there.'),
 		t('quantumchess', 'Boards are certain, pieces are quantum: which boards exist, the present and whose turn it is are the same in every possibility. Timelines are AND, possibilities are OR. Kings, royal queens, common kings, pawns and brawns are solid: they never split.'),
 		t('quantumchess', 'A move always makes its boards; the dice only decide what happens to the piece. So a ghost can travel: where it really stood it arrives, elsewhere the new boards appear without it. A Missed move still uses its board, and a Measure is your move on the board of the part you measure; the rest of your turn goes on.'),
 		t('quantumchess', 'Both halves of a split land on one board: yours, another timeline’s latest board, or a board in the past. Merges start from one board. You measure only a part on a board you may play. The past is quantum too: new timelines copy ghosts as twins, and after a merge the past remembers both paths until those boards are sealed.'),
@@ -250,7 +332,7 @@ const spec = {
 	boardLegend: (state) => legendOf(spec, state),
 	// time must keep running to the right: no "Flip board" (the `view` option puts Black at the bottom)
 	flipBoard: false,
-	// the classic end rules (LEAD-DECISIONS L1, multiverse-final.md F18): turns of several moves have the stuck test
+	// the classic end rules of docs/rules.md, adapted: turns of several moves have the stuck test
 	// instead of the escape rule, and bare kings are no draw because kings can still reach each other through time
 	escapeRule: false,
 	bareKingsDraw: false,
