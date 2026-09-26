@@ -4,8 +4,8 @@
 -->
 
 <!--
-  The play tiles of Home: 2 × 2 on phones, 4 × 1 on wide screens. Online is hidden when online games are disabled; AI
-  opponent is greyed out, with the reason, when no LLM source is available.
+  The play tiles of Home, in a grid that fills the width; the last one opens the chess variants. Online is hidden
+  when online games are disabled; AI opponent is greyed out, with the reason, when no LLM source is available.
 -->
 <template>
 	<ul class="qc-tiles">
@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { mdiAccountMultipleOutline, mdiCreationOutline, mdiEarth, mdiRobotOutline } from '@mdi/js'
+import { mdiAccountMultipleOutline, mdiCreationOutline, mdiCubeOutline, mdiEarth, mdiRobotOutline } from '@mdi/js'
 import { t } from '@nextcloud/l10n'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -72,6 +72,12 @@ const tiles = computed(() => {
 		title: t('quantumchess', 'Pass & play'),
 		subtitle: t('quantumchess', 'Two players, one device'),
 	})
+	out.push({
+		mode: 'variants',
+		icon: mdiCubeOutline,
+		title: t('quantumchess', 'Chess variants'),
+		subtitle: t('quantumchess', '3D, 4D, shogi, xiangqi and more, all quantum'),
+	})
 	return out
 })
 
@@ -81,7 +87,9 @@ const tiles = computed(() => {
  * @param {object} tile tile
  */
 function choose(tile) {
-	if (!tile.disabled) {
+	if (tile.mode === 'variants') {
+		router.push({ name: 'variants' })
+	} else if (!tile.disabled) {
 		router.push({ name: 'new-game', query: { mode: tile.mode } })
 	}
 }

@@ -30,7 +30,14 @@ export default [
 		// Outside the rules engine and the computer player, import them through their entry points only
 		// (docs/development/architecture.md, "Dependency rules").
 		files: ['src/**/*.{js,vue}', 'tests/js/**/*.js'],
-		ignores: ['src/engine/**', 'src/ai/**', 'tests/js/engine/**', 'tests/js/ai/**'],
+		ignores: [
+			'src/engine/**',
+			'src/ai/**',
+			'src/variants/**',
+			'tests/js/engine/**',
+			'tests/js/ai/**',
+			'tests/js/variants/**',
+		],
 		rules: {
 			'no-restricted-imports': ['error', {
 				patterns: [
@@ -41,6 +48,10 @@ export default [
 					{
 						regex: '^\\.{1,2}/(?:.*/)?ai/(?!client\\.js$|levels\\.js$)',
 						message: 'Import the computer player through ai/client.js or ai/levels.js.',
+					},
+					{
+						regex: '^\\.{1,2}/(?:.*/)?variants/(?!index\\.js$)',
+						message: 'Import the chess variants through variants/index.js.',
 					},
 				],
 			}],

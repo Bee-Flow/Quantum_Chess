@@ -9,8 +9,8 @@
 	<!-- The App Store texts are English only: the App Store caches the description regardless of the
 	     language, so visitors could see another language than they chose. The app itself is translated (l10n/). -->
 	<name>Quantum Chess</name>
-	<summary>Chess with superposition, measurement and entanglement: play colleagues, the computer or an AI</summary>
-	<description><![CDATA[**Quantum Chess** is chess in which a piece can stand on two squares at once, until something asks where it really is. It lives inside your Nextcloud: challenge colleagues and family with the notifications, avatars and dashboard you already use.
+	<summary>Chess with superposition, measurement and entanglement: play colleagues, the computer or an AI, and 20 variants up to 5D</summary>
+	<description><![CDATA[**Quantum Chess** is chess in which a piece can stand on two squares at once, until something asks where it really is. It lives inside your Nextcloud: challenge colleagues and family with the notifications, avatars and dashboard you already use. Twenty chess variants, from 5D chess with multiverse time travel to shogi and xiangqi, bring the same quantum rules to other boards.
 
 ### How it plays
 - Pieces move as in chess. There is no check: capture the enemy king to win, or leave it no escape.
@@ -25,6 +25,14 @@
 - ✨ **AI opponents** with a personality, powered by Nextcloud Assistant, your organisation's provider or your own API key (OpenAI-compatible services such as OpenAI, Mistral, OpenRouter, Groq, Gemini, Ollama or LocalAI, and Anthropic)
 - 🪑 **Pass & play** on one device
 
+### Chess variants
+- **Multiverse chess (5D)**, the quantum version of 5D Chess With Multiverse Time Travel: timelines side by side, pieces that travel back in time and to other timelines, turns with a move on every board that must move, and ghosts across the whole multiverse, past boards included; every official piece and 44 official start positions, starting on the quick 5 × 5 board
+- Nineteen more variants: 3D chess, Tri-Dimensional chess and 4D chess; Kriegspiel and Fog of war; Chess960, Atomic, Crazyhouse, Bughouse, Antichess, King of the Hill, Three-check and Horde; Hexagonal, Four-player and Capablanca chess; Shogi, Xiangqi and Makruk
+- Every variant keeps the quantum rules (split, merge, measure, land = roll, pass = link) and, where they fit, the classic end rules: capture the king, or leave it no escape
+- Play the built-in computer (Easy, Normal or Hard) or pass & play for two or four players, with a hand-over screen for the hidden-information variants
+- Made for phones too: large boards zoom with a pinch and pan with a finger
+- Played on your own device: online play and ratings stay with classic Quantum Chess
+
 ### Learn
 - Eleven short interactive lessons: the essentials in about ten minutes
 - Eleven machine-verified puzzles
@@ -38,7 +46,7 @@
 - API keys are stored encrypted on your server and never reach the browser. Nothing is sent anywhere except to the AI provider you choose.
 - In English, Dutch, German and French
 ]]></description>
-	<version>1.0.3</version>
+	<version>2.0.0</version>
 	<licence>agpl</licence>
 	<author homepage="https://beeflow.nl">BeeFlow</author>
 	<namespace>QuantumChess</namespace>
@@ -58,6 +66,9 @@
 	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/05-ai-opponent.png</screenshot>
 	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/06-dark.png</screenshot>
 	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/07-phone.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/08-variants.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/09-multiverse.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/10-variant-boards.png</screenshot>
 	<dependencies>
 		<php min-version="8.1" min-int-size="64"/>
 		<nextcloud min-version="32" max-version="35"/>

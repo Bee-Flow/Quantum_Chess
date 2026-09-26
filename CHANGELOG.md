@@ -12,6 +12,49 @@ release as its release notes.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-26
+
+Quantum Chess 2: twenty chess variants with the quantum element of the classic game, led by 5D chess with multiverse
+time travel. The variants are played on your own device; online play, ratings and the rules engine of classic Quantum
+Chess are unchanged.
+
+### Added
+
+- **Multiverse chess (5D)**, the quantum version of *5D Chess With Multiverse Time Travel*: timelines as rows and time
+  as columns; pieces that travel back in time and to other timelines, where a move onto an older board opens a new
+  timeline (up to three per player, or four on a laptop: an option); turns with a move on every must-move board of the present, ended by
+  *Submit turn*; every official piece (unicorn, dragon, princess, brawn, common king and royal queen) and 44
+  official start positions, *Small* (5 × 5) by default. Boards are certain and pieces are quantum: ghosts, twins and
+  links on every board, the past included. A turn that cannot be finished ends the game as checkmate or stalemate, and a
+  move that would strand your own turn asks first.
+- **Nineteen more chess variants**, grouped as in the app:
+  - *Other dimensions*: 3D chess (Raumschach), Tri-Dimensional chess with movable attack boards and 4D chess.
+  - *Hidden information*: Kriegspiel and Fog of war.
+  - *Different rules*: Chess960, Atomic, Crazyhouse, Bughouse, Antichess, King of the Hill, Three-check and Horde.
+  - *Different boards and more players*: Hexagonal chess, Four-player chess and Capablanca chess.
+  - *Regional relatives*: Shogi, Xiangqi and Makruk.
+- **The quantum rules on every board**: split, merge, Measure and ordinary moves; "land = roll, pass = link", drops
+  included; kings, pawns and the pieces a variant names always solid; castling and en passant only when they are
+  certain; a roll whenever the game would end in some possibilities but not in others; a budget of 8 arrangements per
+  side.
+- **The classic end rules** in the two-player variants with a king and one move per turn: capture the king instead of
+  check, "your king cannot escape", and the bare-kings and 50-move draws, which wait while a king can be captured for
+  certain; a variant with its own goal keeps it.
+- **Computer player** for every variant with three levels (Easy, Normal and Hard), running in your browser and keeping
+  the board responsive while it thinks. It plays the quantum moves too: splits that fork, dodge or block, merges that
+  capture and measurements that settle a danger. In the hidden-information variants it sees only what its own side
+  may see.
+- **Pass & play** for two players, or four in Bughouse and Four-player chess, on one device; against the computer you
+  take one seat and the computer plays all the others. In Kriegspiel and Fog of war each player sees only their own
+  view: a hand-over screen covers the board between turns, and the whole board is revealed when the game ends.
+- **Variant screens**: *Chess variants* in the navigation and on the home page, with the catalogue by category and
+  your games on this device; a New game dialog for the opponent, level, side and the variant's options; a game screen
+  for any board shape with the variant's rules next to the shared quantum rules, pieces in hand, the odds of every roll
+  before you confirm, a numbered move list, and undo that never rolls a result again.
+- **Phones and tablets**: large boards zoom with the buttons, a pinch or Ctrl + wheel and pan with a finger; 4D chess,
+  Bughouse and 5D chess open on the boards you play, and the move controls stay at the bottom of the screen.
+- **Languages**: the variants are in English, Dutch, German and French, like the rest of the app.
+
 ## [1.0.3] - 2026-09-25
 
 ### Changed
@@ -63,7 +106,8 @@ The first release: chess with superposition, measurement and entanglement, insid
   addresses, rate limits, a first-use notice before any AI request, and clean-up when an account is deleted.
 - **Languages**: English, Dutch, German and French.
 
-[Unreleased]: https://github.com/bee-flow/quantum_chess/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/bee-flow/quantum_chess/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/bee-flow/quantum_chess/releases/tag/v2.0.0
 [1.0.3]: https://github.com/bee-flow/quantum_chess/releases/tag/v1.0.3
 [1.0.2]: https://github.com/bee-flow/quantum_chess/releases/tag/v1.0.2
 [1.0.1]: https://github.com/bee-flow/quantum_chess/releases/tag/v1.0.1

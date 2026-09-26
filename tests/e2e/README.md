@@ -18,6 +18,7 @@
 | `trainer.spec.mjs` | Lessons and a puzzle solved by clicking; the progress survives a reload |
 | `coach-review.spec.mjs` | The coach during a computer game, then the post-game review |
 | `settings.spec.mjs` | The admin and personal settings pages |
+| `variants.spec.mjs` | The catalogue of the twenty chess variants; a multiverse (5D) game against the computer with a turn ended by Submit turn, a reload and "Continue on this device"; every variant tile starts a game against the computer in which the player splits a piece and the computer answers |
 | `api/*.spec.mjs` | The HTTP API without a browser: online games and notifications (`games`), the LLM and settings routes (`ai`), the app page and the per-user routes (`pages`) |
 
 The shared configuration is `playwright.config.mjs`, the shared code is in `helpers/`.
@@ -130,6 +131,13 @@ check error answers with `expectApiError()`. When the tests of a file build on e
 | `resetAppData({ adminSettings? })` | Delete all games, moves, chat, ratings, user settings, notifications and cache of the app (needs the server on this machine) |
 | `setUserSetting(user, key, value)`, `setAppConfig(key, value, type?)` | Change a user setting or an admin setting of the app |
 | `env`, `getUser(user)`, `appUrl(suffix)` | The configuration above |
+| `variantRecord(page)`, `waitForVariantTurn(page, side, options?)` | The saved record of the variant game on the page (its states unpacked); wait until a side is to move |
+| `squareName(V, state, sq)`, `boardCell(page, name)`, `clickCell(page, name)` | The cells of a variant board |
+| `playVariantMove(page, V, state, move)` | Play a legal move or split of the rules module through the board, confirming a roll |
+| `seedVariantGame(page, game)`, `replayVariant(V, initial, codes)` | Store a variant game in the browser storage as the game screen saves one |
+
+The last four rows are the chess variants' helpers in `helpers/variants.mjs`, imported from there: they load the rules
+modules of `src/variants/`, which pick the moves a test plays through the board.
 
 ### Tips
 

@@ -18,6 +18,9 @@ seeds a demo on a running Nextcloud and captures every screen with Playwright, s
 | `05-ai-opponent.png` | A game against an AI opponent with a persona comment | desktop |
 | `06-dark.png` | A game in the dark theme | desktop |
 | `07-phone.png` | The game screen on a phone | phone |
+| `08-variants.png` | The catalogue of the chess variants | desktop |
+| `09-multiverse.png` | Multiverse chess (5D) on the whole board: three timelines, ghosts on present and past boards, the gold and blue halos of the boards to play, the travel arrows and the 5D check lines | desktop |
+| `10-variant-boards.png` | The boards of a shogi and a hexagonal chess game with split pieces, each taken from its game screen | desktop |
 
 ## Producing them
 
@@ -29,13 +32,21 @@ QC_BASE_URL=http://127.0.0.1:8080 QC_NC_ROOT=/path/to/nextcloud npm run screensh
 plays the local games through the board with forced rolls, seeds the online lobby through the API
 (`tools/screenshots/seed-demo.mjs`: it ends the pending invitations and running games of the demo users from
 `tests/e2e/README.md` and creates a fresh set), lets a local fake OpenAI-compatible server answer as the AI opponent,
-and writes the eight files above into this directory, replacing the old ones. Review the images before committing
-them.
+writes the variant games into the browser storage as the game screen saves them, and writes the files above into this
+directory, replacing the old ones. Review the images before committing them.
+
+```sh
+npm run screenshots -- variants                  # only 08 to 10
+npm run screenshots -- 02 09                     # only the images whose names start with 02 or 09
+npm run screenshots -- --out=/tmp/shots          # into another directory, to compare them first
+```
 
 ## Rules for the images
 
 - **Sizes**: desktop 1440 × 900 CSS pixels at device scale factor 1; phone 390 × 844 at scale 2; the small thumbnail
-  720 × 450 (the desktop image scaled down).
+  720 × 450 (the desktop image scaled down). The two boards of `10-variant-boards.png` are taken at scale 2, since the
+  composite shows them smaller.
+- **Number**: the App Store takes at most ten screenshots (`info.xsd`), and `info.xml` lists all ten.
 - **Content**: the default theme and board theme, English, no personal names other than the demo users, no real API
   keys or server addresses, no browser chrome.
 - **Format**: PNG, losslessly optimised (for example `oxipng -o 4 --strip safe *.png`), under 1 MB each.
