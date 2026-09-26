@@ -5,9 +5,10 @@
 
 /**
  * The drawing of multiverse chess (handoff/research/multiverse-final.md section 9, scenarios U1 to U5): every stored
- * square drawn exactly once, the rows and columns, the present band, the must-move and optional halos, the branch
- * connectors, the travel arrows, the placeholders of the next boards, the threat lines of 5D check, the names, the
- * focus and its key, and Black's view.
+ * square drawn exactly once, the rows and columns, the present band, the must-move and optional halos, the frames in
+ * the colour of the side to move, the branch connectors, the travel arrows, the placeholders of the next boards, the
+ * threat lines of 5D check (from the board the capture would be made from), the names and pins, the focus (its frames,
+ * stops and key, also at the end of a game), the legend, and Black's view.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -23,9 +24,12 @@ import {
 	T,
 } from '../../../src/variants/core/quantum.js'
 import V from '../../../src/variants/multiverse.js'
-import { layoutOf, threats } from '../../../src/variants/multiverse/layout.js'
+import { layoutOf, legendOf, threats } from '../../../src/variants/multiverse/layout.js'
 import { buildWorld } from '../../../src/variants/multiverse/setup.js'
 import { mandatory, ROWS, skeleton, sqOf, uOf } from '../../../src/variants/multiverse/skeleton.js'
+
+/** A no-break space: board labels keep a time and its mark together (`T1 ○`). */
+const NB = '\u00a0'
 
 /**
  * A square by its static name.
@@ -208,7 +212,7 @@ function checkLayout(s) {
 		})
 	}
 	const { width, height } = lay.layout
-	expect(height).toBeGreaterThanOrEqual(0.75 * width - 1e-9)
+	expect(lay.layout.fill).toBe(true)
 	expect(lay.size).toBe(s.worlds[0].b.board.length)
 	for (const c of lay.cells) {
 		expect(lay.names[c.sq]).toMatch(/^Timeline .+, turn \d+, (White|Black) to move: [a-h][1-8]$/)
@@ -224,9 +228,14 @@ function checkLayout(s) {
 		}
 	}
 	expect(lay.layout.outlines.filter((o) => o.kind === 'threat')).toHaveLength(threats(V, s).length)
+	for (const b of lay.layout.boards) {
+		expect(b.frame).toBe(b.label.includes('●') ? 'dark' : 'light')
+		expect(b.pin).toMatch(/^L\S+ T\d+\u00a0[○●]/)
+	}
 	const f = lay.layout.focus
 	expect(f.x > 0 && f.x < width && f.y > 0 && f.y < height).toBe(true)
-	expect(f.zoom >= 1 && f.zoom <= 4).toBe(true)
+	expect(f.box.w > 0 && f.box.h > 0).toBe(true)
+	expect([f.minPx, f.maxPx]).toEqual([32, 64])
 }
 
 /**
@@ -265,16 +274,26 @@ describe('the drawing of the multiverse', () => {
 		const s = start()
 		const lay = L(s)
 		expect(lay.cells).toHaveLength(25)
-		expect(lay.layout.boards.map((b) => b.label)).toEqual(['L0 T1 ○ · must move'])
-		expect(lay.layout.areas.map((a) => a.shade)).toEqual(['frame', 'wood'])
+		expect(lay.layout.boards.map((b) => b.label)).toEqual([`L0 T1${NB}○ · must move`])
+		// a light frame (White to move there), the label lifted above the gold halo
+		expect(lay.layout.boards[0]).toMatchObject({ frame: 'light', pin: `L0 T1${NB}○ · must move` })
+		expect(lay.layout.boards[0].lift).toBeCloseTo(0.42, 9)
+		expect(lay.layout.areas.map((a) => a.shade)).toEqual(['frame', 'must'])
 		expect(lay.layout.outlines).toHaveLength(4)
 		expect(lay.layout.outlines.every((o) => o.kind === 'next')).toBe(true)
 		expect(lay.layout.lines).toEqual([])
-		expect(lay.layout.height).toBeGreaterThanOrEqual(0.75 * lay.layout.width)
 		expect(lay.layout.zoomable).toBe(true)
+		expect(lay.layout.fill).toBe(true)
 		expect(lay.size).toBe(s.worlds[0].b.board.length)
-		const texts = lay.layout.labels.map((l) => l.text)
-		expect(texts).toEqual(['New timelines: White 0/3 · Black 0/3', 'Now', 'L0', 'T1 ●'])
+		// the header is text above the drawing; the labels say how much room they have
+		expect(lay.layout.caption).toBe('New timelines: White 0/3 · Black 0/3 · Travel back: 2 turns')
+		expect(lay.layout.labels.map((l) => [l.text, l.kind])).toEqual([
+			['Now', 'now'],
+			['L0', 'row'],
+			[`T1${NB}●`, 'next'],
+		])
+		expect(lay.layout.labels.every((l) => l.fit > 0)).toBe(true)
+		expect(L(start('standard')).layout.caption).toBe('New timelines: White 0/3 · Black 0/3 · Travel back: 4 turns')
 		// a1 is dark and at the bottom left of its board, e5 light at the top right
 		const board = lay.layout.boards[0]
 		const a1 = cellOf(lay, sq('(0)a1'))
@@ -290,46 +309,49 @@ describe('the drawing of the multiverse', () => {
 		const lay = L(s)
 		const labels = lay.layout.labels.map((l) => l.text)
 		expect(labels.filter((l) => /^L/.test(l) || l === 'new')).toEqual(['L0', 'L+1', 'new'])
-		expect(lay.layout.areas.map((a) => a.shade).sort()).toEqual(['frame', 'river', 'wood'])
+		expect(lay.layout.areas.map((a) => a.shade).sort()).toEqual(['frame', 'must', 'optional'])
 		expect(lay.layout.boards.map((b) => b.label)).toEqual([
-			'T1 ○',
-			'T1 ●',
-			'T2 ○',
-			'L0 T2 ● · optional',
-			'L+1 T1 ● · must move',
+			`T1${NB}○`,
+			`T1${NB}●`,
+			`T2${NB}○`,
+			`L0 T2${NB}● · optional`,
+			`L+1 T1${NB}● · must move`,
 		])
+		// a history board pins its name with its timeline
+		expect(lay.layout.boards.map((b) => b.pin).slice(0, 3)).toEqual([`L0 T1${NB}○`, `L0 T1${NB}●`, `L0 T2${NB}○`])
 		// Black is in 5D check: the White knight on L+1 can take the king on (0T2 ○) a5
 		expect(royalDanger(V, s, 1)).toBe(1)
 		expect(lay.cells.filter((c) => c.shade === 'danger').map((c) => nameOf(c.sq))).toEqual(['(0)~1a5'])
 		const threat = lay.layout.outlines.filter((o) => o.kind === 'threat')
 		expect(threat).toHaveLength(1)
+		// Black must move on L+1: passing it, the knight would capture from the next board, the placeholder T2 ○
+		const [ax, ay] = centre(lay, sq('(+1)a3'))
 		expect([threat[0].x1, threat[0].y1, threat[0].x2, threat[0].y2])
-			.toEqual([...centre(lay, sq('(+1)a3')), ...centre(lay, sq('(0)~1a5'))])
-		// the connector runs from the right edge of the parent board (0T1 ○) to the left edge of (+1T1 ●)
+			.toEqual([ax + 6.1, ay, ...centre(lay, sq('(0)~1a5'))])
+		// so it runs back in time or straight across, never forward
+		expect(threat[0].x2).toBeLessThanOrEqual(threat[0].x1)
+		// the connector runs from the right edge of the parent board (0T1 ○) to the left edge of (+1T1 ●), in the
+		// colour of the side that opened the timeline (White)
 		const parent = lay.layout.boards[0]
 		const child = lay.layout.boards[4]
 		expect(lay.layout.lines).toEqual([
-			{ x1: parent.x + 5, y1: parent.y + 2.5, x2: child.x, y2: child.y + 2.5 },
+			{ x1: parent.x + 5, y1: parent.y + 2.5, x2: child.x, y2: child.y + 2.5, color: '#b3a58c' },
 		])
 		expect(child.x).toBeGreaterThan(parent.x)
 		expect(child.y).toBeGreaterThan(parent.y)
-		// the travel arrow: from the square the knight left, (0T2 ○) c3, to the one it reached, (+1T1 ●) a3
+		// the travel arrow: from the square the knight left on L0's new board, (0T2 ●) c3, to the one it reached,
+		// (+1T1 ●) a3, bowed: down its column, then along the new row (the board draws the head)
 		const travel = lay.layout.outlines.filter((o) => o.kind === 'travel')
-		expect(travel).toHaveLength(3)
-		const [x1, y1] = centre(lay, sq('(0)~1c3'))
+		expect(travel).toHaveLength(1)
+		const [x1, y1] = centre(lay, sq('(0)c3'))
 		const [x2, y2] = centre(lay, sq('(+1)a3'))
-		expect(travel[0]).toEqual({ x1, y1, x2, y2, kind: 'travel' })
-		const shaft = Math.atan2(y1 - y2, x1 - x2)
-		for (const head of travel.slice(1)) {
-			expect([head.x1, head.y1]).toEqual([x2, y2])
-			expect(Math.hypot(head.x2 - x2, head.y2 - y2)).toBeCloseTo(0.4, 9)
-			const turn = Math.abs(Math.atan2(head.y2 - y2, head.x2 - x2) - shaft)
-			expect(Math.min(turn, 2 * Math.PI - turn)).toBeCloseTo((25 * Math.PI) / 180, 9)
-		}
+		expect(travel[0]).toEqual({ x1, y1, x2, y2, cx: x1, cy: y2, kind: 'travel' })
+		// the legend names what is drawn
+		expect(legendOf(V, s).map((l) => l.kind)).toEqual(['must', 'optional', 'threat', 'travel'])
 		// placeholders after both boards Black may play, labelled with the board a move there makes
 		expect(lay.layout.outlines.filter((o) => o.kind === 'next')).toHaveLength(8)
-		expect(labels).toContain('T2 ○')
-		expect(labels).toContain('T3 ○')
+		expect(labels).toContain(`T2${NB}○`)
+		expect(labels).toContain(`T3${NB}○`)
 		expect(lay.names[sq('(+1)a3')]).toBe('Timeline +1, turn 1, Black to move: a3')
 		expect(lay.names[sq('(0)~1a5')]).toBe('Timeline 0, turn 2, White to move: a5')
 		checkLayout(s)
@@ -350,8 +372,10 @@ describe('the drawing of the multiverse', () => {
 		expect(lay.layout.lines).toEqual([])
 		const threat = lay.layout.outlines.filter((o) => o.kind === 'threat')
 		expect(threat).toHaveLength(1)
+		// Black must move on L0: the knight's capture would start from the next board (the placeholder), same square
+		const [bx, by] = centre(lay, sq('(0)b3'))
 		expect([threat[0].x1, threat[0].y1, threat[0].x2, threat[0].y2])
-			.toEqual([...centre(lay, sq('(0)b3')), ...centre(lay, sq('(0)c5'))])
+			.toEqual([bx + 6.1, by, ...centre(lay, sq('(0)c5'))])
 		checkLayout(s)
 	})
 
@@ -376,7 +400,7 @@ describe('the drawing of the multiverse', () => {
 		const s2 = run(start('small', { view: 'black' }), BRANCH)
 		const lay2 = L(s2)
 		expect(cellOf(lay2, sq('(0)~1a1')).x).toBeLessThan(cellOf(lay2, sq('(0)a1')).x)
-		expect(lay2.layout.focus.key.endsWith('/1')).toBe(true)
+		expect(lay2.layout.focus.key.split('/')[4]).toBe('1')
 		checkLayout(blackView(s))
 		checkLayout(s2)
 	})
@@ -401,7 +425,7 @@ describe('the drawing of the multiverse', () => {
 		expect(xs[0]).toBe(3)
 		expect(xs[1] - xs[0]).toBeCloseTo(6.1, 9)
 		expect(xs[3] - xs[2]).toBeCloseTo(6.1 + 1.2, 9)
-		expect(boards.filter((b) => b.x === xs[3]).map((b) => b.label)).toEqual(['T8 ○', 'T8 ○'])
+		expect(boards.filter((b) => b.x === xs[3]).map((b) => b.label)).toEqual([`T8${NB}○`, `T8${NB}○`])
 		const next = lay.layout.outlines.filter((o) => o.kind === 'next')
 		expect(Math.min(...next.map((o) => o.x1))).toBeCloseTo(xs[7] + 6.1, 9)
 		const labels = lay.layout.labels
@@ -411,13 +435,27 @@ describe('the drawing of the multiverse', () => {
 		expect(gap[0].x).toBeGreaterThan(xs[2] + 5)
 		expect(gap[0].x).toBeLessThan(xs[3])
 		expect(labels.map((l) => l.text)).toContain('inactive')
-		expect(labels.map((l) => l.text)).toContain('New timelines: White 2/3 · Black 0/3')
-		// both parent boards are sealed: the connectors start in the left margin of L0
+		expect(lay.layout.caption).toBe('New timelines: White 2/3 · Black 0/3 · Travel back: 2 turns')
+		// the inactive timeline: a hatched band behind its row, and its latest board says so
+		expect(lay.layout.areas.filter((a) => a.shade === 'inactive')).toHaveLength(1)
+		expect(boards.map((b) => b.label)).toContain(`L+2 T4${NB}● · inactive`)
+		// both parent boards are sealed: the connectors leave L0 just below its middle (clear of its "⋯" and name), run
+		// down in a lane of their own right of the names and turn into the first board of their row
 		const rowY = (lab) => labels.find((l) => l.text === lab).y + 0.3
-		expect(lay.layout.lines).toEqual([
-			{ x1: 2.7, y1: rowY('L0'), x2: xs[3], y2: rowY('L+1') },
-			{ x1: 2.7, y1: rowY('L0'), x2: xs[0], y2: rowY('L+2') },
+		const white = '#b3a58c'
+		const r = (v) => +v.toFixed(9)
+		const lines = lay.layout.lines.map((l) => ({ ...l, x1: r(l.x1), x2: r(l.x2), y1: r(l.y1), y2: r(l.y2) }))
+		expect(lines).toEqual([
+			{ x1: 2.2, y1: r(rowY('L0') + 0.45), x2: 2.2, y2: r(rowY('L+1')), color: white },
+			{ x1: 2.2, y1: r(rowY('L+1')), x2: r(xs[3]), y2: r(rowY('L+1')), color: white },
+			{ x1: 2.45, y1: r(rowY('L0') + 0.45), x2: 2.45, y2: r(rowY('L+2')), color: white },
+			{ x1: 2.45, y1: r(rowY('L+2')), x2: r(xs[0]), y2: r(rowY('L+2')), color: white },
 		])
+		// the "⋯" of the sealed boards is not on a lane
+		for (const dots of gap.slice(1)) {
+			expect(lines.some((l) => l.x1 === l.x2 && Math.abs(l.x1 - dots.x) < 0.3 && dots.y >= Math.min(l.y1, l.y2)
+				&& dots.y <= Math.max(l.y1, l.y2))).toBe(false)
+		}
 		checkLayout(s)
 	})
 
@@ -426,7 +464,7 @@ describe('the drawing of the multiverse', () => {
 		const lay = L(s)
 		const band = lay.layout.areas.find((a) => a.shade === 'frame')
 		// the present is T1 ●: the column of (0T1 ●) and (+1T1 ●)
-		const column = lay.layout.boards.filter((b) => b.label.includes('T1 ●'))
+		const column = lay.layout.boards.filter((b) => b.label.includes(`T1${NB}●`))
 		expect(column).toHaveLength(2)
 		for (const b of column) {
 			expect(band.x < b.x && band.x + band.w > b.x + b.w).toBe(true)
@@ -446,28 +484,41 @@ describe('the drawing of the multiverse', () => {
 				&& a.y < b.y && a.y + a.h > b.y + b.h).map((a) => a.shade)
 		}
 		let lay = L(s)
-		expect(halo(lay, 'L+1 T1 ● · must move')).toEqual(['wood'])
-		expect(halo(lay, 'L0 T2 ● · optional')).toEqual(['river'])
-		expect(halo(lay, 'T2 ○')).toEqual([])
+		expect(halo(lay, `L+1 T1${NB}● · must move`)).toEqual(['must'])
+		expect(halo(lay, `L0 T2${NB}● · optional`)).toEqual(['optional'])
+		expect(halo(lay, `T2${NB}○`)).toEqual([])
+		// the focus: every board Black may play with its placeholder, the must-move one alone as the smaller frame;
+		// "next board" steps through them, must-move first
+		const must = lay.layout.boards.find((b) => b.label === `L+1 T1${NB}● · must move`)
+		const opt = lay.layout.boards.find((b) => b.label === `L0 T2${NB}● · optional`)
+		const f = lay.layout.focus
+		expect(f.stops).toEqual([{ x: must.x + 2.5, y: must.y + 2.5 }, { x: opt.x + 2.5, y: opt.y + 2.5 }])
+		expect(f.box.w).toBeCloseTo(opt.x + 6.1 + 5 - must.x + 0.8 + 0.6, 9)
+		expect(f.alt.box.w).toBeCloseTo(6.1 + 5 + 0.8 + 0.6, 9)
+		expect(f.alt.box.h).toBeCloseTo(5 + 1.4 + 0.6, 9)
+		expect([f.minPx, f.fineMinPx, f.maxPx]).toEqual([32, 26, 64])
 		// after the must-move board is played, L0 is still optional and Submit is legal
 		s = run(s, ['(+1T1)e4-e3'])
 		lay = L(s)
 		expect(mandatory(s.worlds[0].b.x)).toEqual([])
 		expect(lay.layout.boards.filter((b) => b.label.includes(' · ')).map((b) => b.label)).toEqual([
-			'L0 T2 ● · optional',
+			`L0 T2${NB}● · optional`,
 		])
-		expect(halo(lay, 'L+1 T2 ○')).toEqual([])
-		// the focus falls back to the boards Black may play
-		const opt = lay.layout.boards.find((b) => b.label === 'L0 T2 ● · optional')
-		expect([lay.layout.focus.x, lay.layout.focus.y]).toEqual([opt.x + 2.5, opt.y + 2.5])
+		expect(halo(lay, `L+1 T2${NB}○`)).toEqual([])
+		// the focus falls back to the boards Black may play: the optional board and its placeholder, and the board
+		// of Black's king that the knight still threatens (0T2 ○), a column to the left
+		const opt2 = lay.layout.boards.find((b) => b.label === `L0 T2${NB}● · optional`)
+		const king = lay.layout.boards.find((b) => b.label === `T2${NB}○` && b.y === opt2.y)
+		expect(lay.layout.focus.x).toBeCloseTo((king.x + opt2.x + 6.1 + 5) / 2, 9)
+		expect(lay.layout.focus.alt).toBeUndefined()
 		// after Submit White must move on L+1; L0 stays on Black's board T2 ●, which White cannot play
 		s = run(s, ['submit'])
 		lay = L(s)
 		expect(lay.layout.boards.filter((b) => b.label.includes(' · ')).map((b) => b.label)).toEqual([
-			'L+1 T2 ○ · must move',
+			`L+1 T2${NB}○ · must move`,
 		])
-		expect(lay.layout.boards.map((b) => b.label)).toContain('L0 T2 ●')
-		expect(halo(lay, 'L0 T2 ●')).toEqual([])
+		expect(lay.layout.boards.map((b) => b.label)).toContain(`L0 T2${NB}●`)
+		expect(halo(lay, `L0 T2${NB}●`)).toEqual([])
 	})
 
 	it('draws the arrow of a jump onto another timeline and keeps it for the opponent\'s turn', () => {
@@ -484,21 +535,22 @@ describe('the drawing of the multiverse', () => {
 		expect(s.turn).toBe(1)
 		const lay = L(s)
 		const travel = lay.layout.outlines.filter((o) => o.kind === 'travel')
-		expect(travel).toHaveLength(3)
-		// from the board the knight left, (0T5 ○), now history, to the board it produced, (+1T5 ●)
-		expect(nameOf(sq('(0)~3e1'))).toBe('(0)~3e1')
-		const [x1, y1] = centre(lay, sq('(0)~3e1'))
+		expect(travel).toHaveLength(1)
+		// from the square the knight left on L0's new board, (0T5 ●), to the board it produced, (+1T5 ●): the same
+		// time, so the arrow is vertical (a jump across timelines, not into the future)
+		const [x1, y1] = centre(lay, sq('(0)e1'))
 		const [x2, y2] = centre(lay, sq('(+1)e3'))
 		expect(travel[0]).toEqual({ x1, y1, x2, y2, kind: 'travel' })
+		expect(x1).toBe(x2)
 		// Black's first move of its turn keeps White's arrow (the opponent's last turn), on the same squares
 		const s2 = run(s, ['(0T5)e5-d5'])
 		expect(s2.turn).toBe(1)
 		const lay2 = L(s2)
 		const travel2 = lay2.layout.outlines.filter((o) => o.kind === 'travel')
-		expect(travel2).toHaveLength(3)
+		expect(travel2).toHaveLength(1)
 		expect(travel2[0]).toEqual({
-			x1: centre(lay2, sq('(0)~3e1'))[0],
-			y1: centre(lay2, sq('(0)~3e1'))[1],
+			x1: centre(lay2, sq('(0)~4e1'))[0],
+			y1: centre(lay2, sq('(0)~4e1'))[1],
 			x2: centre(lay2, sq('(+1)e3'))[0],
 			y2: centre(lay2, sq('(+1)e3'))[1],
 			kind: 'travel',
@@ -511,7 +563,30 @@ describe('the drawing of the multiverse', () => {
 		checkLayout(s2)
 	})
 
-	it('shows no halos, placeholders or threats when the game is over, and focuses on the present column', () => {
+	it('bows a jump that passes other timelines out into the gap right of its column', () => {
+		// White's knight on L0 jumps two timelines up to L−2 (all three rows at T5 ○)
+		const s0 = one({
+			s: 0,
+			c: [0, 2],
+			rows: {
+				0: { st: 2, en: 10, boards: { 10: '4k/5/5/5/K3N' } },
+				[-1]: { st: 9, en: 10, parent: [0, 8], boards: { 10: '4k/5/5/5/K4' } },
+				[-2]: { st: 9, en: 10, parent: [0, 8], boards: { 10: '4k/5/5/5/K4' } },
+			},
+		})
+		const code = legalMoves(V, s0).map((m) => m.code).find((c) => c.startsWith('(0T5)e1>(−2T5)'))
+		const s = run(s0, [code])
+		const lay = L(s)
+		const [arrow] = lay.layout.outlines.filter((o) => o.kind === 'travel')
+		const board = lay.layout.boards.find((b) => b.label.startsWith(`L0 T5${NB}●`))
+		expect(code).toBeDefined()
+		// the curve's middle is halfway to its control point: in the gap right of the column
+		const middle = (arrow.x1 + arrow.x2) / 4 + arrow.cx / 2
+		expect(middle).toBeCloseTo(board.x + 5 + 1.1 / 2, 9)
+		expect(arrow.cy).toBeCloseTo((arrow.y1 + arrow.y2) / 2, 9)
+	})
+
+	it('at the end focuses on what decided the game: the capture, or the royal pieces that could be taken', () => {
 		const s = run(start(), BRANCH)
 		const over = { ...s, result: { winner: 0, reason: 'resign' } }
 		const lay = L(over)
@@ -519,10 +594,27 @@ describe('the drawing of the multiverse', () => {
 		expect(lay.layout.outlines.filter((o) => o.kind !== 'travel')).toEqual([])
 		expect(lay.cells.some((c) => c.shade === 'danger')).toBe(false)
 		expect(lay.layout.boards.every((b) => !b.label.includes(' · '))).toBe(true)
-		const column = lay.layout.boards.filter((b) => b.label.includes('T1 ●'))
-		expect(lay.layout.focus.x).toBe(column[0].x + 2.5)
-		expect(lay.layout.focus.y).toBe((column[0].y + column[1].y + 5) / 2)
+		// the boards the loser had to move on
+		const board = lay.layout.boards.find((b) => b.label.startsWith(`L+1 T1${NB}●`))
+		expect(lay.layout.focus.x).toBeCloseTo(board.x + 2.5, 9)
+		expect(lay.layout.focus.stops).toEqual([])
 		expect(lay.layout.focus.key).not.toBe(L(s).layout.focus.key)
+		// checkmate: the threat lines and the danger squares stay (they are the reason), and the royal boards are the
+		// smaller frame
+		const mate = L({ ...s, result: { winner: 0, reason: 'checkmate' } })
+		expect(mate.layout.outlines.filter((o) => o.kind === 'threat')).toHaveLength(1)
+		expect(mate.cells.filter((c) => c.shade === 'danger').map((c) => nameOf(c.sq))).toEqual(['(0)~1a5'])
+		const royal = mate.layout.boards.find((b) => b.label === `T2${NB}○`)
+		expect([mate.layout.focus.alt.x, mate.layout.focus.alt.y]).toEqual([royal.x + 2.5, royal.y + 2.2])
+		// a king captured: the boards of the capture
+		const k = run(start(), ['(0T1)d1-c3', '(0T1)d4-d3', '(0T2)c3>>(0T1)a3', '(+1T1)b4-a3'])
+		const won = { ...k, result: { winner: 1, reason: 'king' } }
+		const cells = won.history.at(-1).info.cells
+		const end = L(won).layout.focus
+		const target = L(won).layout.boards.find((b) => b.label.startsWith(`L+1 T2${NB}○`))
+		expect(cells.every(([u]) => u === cells[0][0])).toBe(true)
+		expect(end.x).toBeCloseTo(target.x + 2.5, 9)
+		expect(end.key.endsWith(cells.map((c) => c.slice(0, 2).join('.')).join(','))).toBe(true)
 	})
 
 	it('frames the boards to play in the focus with a box for touch screens', () => {
@@ -530,25 +622,26 @@ describe('the drawing of the multiverse', () => {
 		const lay = L(s)
 		const board = lay.layout.boards[0]
 		const f = lay.layout.focus
-		expect([f.x, f.y]).toEqual([board.x + 2.5, board.y + 2.5])
-		// a single 5 × 5 board: at least 2.2 column pitches wide, the board and a margin of 1 high
-		expect(f.box).toEqual({ w: 2.2 * 6.1, h: 7 })
-		const zoom = Math.min(lay.layout.width / f.box.w, lay.layout.height / f.box.h)
-		expect(f.zoom).toBeCloseTo(Math.min(4, Math.max(1, zoom)), 9)
-		expect(f.key).toBe('0/2/1/0/0')
+		// the board, its placeholder and the room of its label, with a margin
+		expect(f.x).toBeCloseTo(board.x + (6.1 + 5) / 2, 9)
+		expect(f.y).toBeCloseTo(board.y + (5 + 0.4 - 1) / 2, 9)
+		expect(f.box.w).toBeCloseTo(6.1 + 5 + 0.8 + 0.6, 9)
+		expect(f.box.h).toBeCloseTo(5 + 1.4 + 0.6, 9)
+		expect(f.zoom).toBeUndefined()
+		expect(f.key).toBe('0/2/1/0/0//')
 		// Standard: 8 × 8 boards with wider gaps
 		const std = L(start('standard'))
-		expect(std.layout.focus.box).toEqual({ w: 2.2 * 9.6, h: 10 })
-		// two must-move boards: the box holds both
+		expect(std.layout.focus.box.w).toBeCloseTo(9.6 + 8 + 0.8 + 0.6, 9)
+		// three must-move boards: the box holds all of them
 		const two = L(start('marauders'))
 		const must = two.layout.boards.filter((b) => b.label.endsWith('must move'))
 		expect(must.map((b) => b.label)).toEqual([
-			'L−1 T1 ○ · must move',
-			'L0 T1 ○ · must move',
-			'L+1 T1 ○ · must move',
+			`L−1 T1${NB}○ · must move`,
+			`L0 T1${NB}○ · must move`,
+			`L+1 T1${NB}○ · must move`,
 		])
-		expect(two.layout.focus.box.h).toBeCloseTo(must[2].y + 5 - must[0].y + 2, 9)
-		expect(two.layout.focus.y).toBeCloseTo((must[0].y + must[2].y + 5) / 2, 9)
+		expect(two.layout.focus.box.h).toBeCloseTo(must[2].y + 5.4 - (must[0].y - 1) + 0.6, 9)
+		expect(two.layout.focus.stops.map((p) => p.y)).toEqual(must.map((b) => b.y + 2.5))
 	})
 
 	it('keeps a layout for the same drawing and makes a new one when anything drawn changes', () => {

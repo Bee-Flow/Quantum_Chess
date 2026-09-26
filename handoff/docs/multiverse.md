@@ -17,7 +17,10 @@
   present) while your opponent has opened at least n − 1; an inactive timeline can still be played.
 - **All official pieces.** Rook, bishop, queen, king and knight keep their pattern in all four directions (file,
   rank, time and timeline); the unicorn moves along three of them at once, the dragon along all four, the princess
-  like a rook or bishop; the royal queen is royal, the common king is not. 21 official start positions.
+  like a rook or bishop; the royal queen is royal, the common king is not. 21 official start positions. Kings, royal
+  queens, common kings, pawns and brawns are solid (they never split). The unusual pieces are drawn as letters: U
+  unicorn, D dragon, S princess, Y royal queen, C common king; the brawn is a pawn with a crossbar (W in the move
+  list).
 - **Pawns and brawns.** They step one rank forward or one timeline towards the opponent's timelines, make a double
   step while unmoved (on the board or across two timelines), and capture diagonally forward on their board or one
   timeline forward and one turn back or ahead on the same square. A brawn also captures sideways or one rank forward
@@ -37,10 +40,16 @@
   square, so finding one settles all. After a merge the past remembers both paths (and they count for your budget of
   8) until those boards are sealed.
 - **Winning.** Capture a king or royal queen on any board, also in the past; with several kings, losing any one
-  loses. The danger line is 5D's check: the chance your opponent could take a king if you passed your must-move
-  boards now, with the threatened squares tinted and joined to the attacker. If your turn cannot be finished from
+  loses. The danger line is 5D's check: the chance your opponent could take a king or royal queen if you passed
+  your must-move boards now, naming the boards where it stands; the threatened squares are tinted and joined by a
+  red line to the attacker, drawn on the board the capture would be made from (in pass & play the line always
+  speaks for the player to move). If your turn cannot be finished from
   its start, the game ends: checkmate when a king of yours can be taken for certain, otherwise stalemate (a draw). A
   move after which you cannot finish your turn loses, also when its roll decides it; the game asks first.
+- **Reading the board.** Boards where White is to move have a light frame, Black's a dark one; must-move boards
+  have a gold halo, optional ones a blue halo, and an inactive timeline is hatched. Dashed outlines show where the
+  next board of a timeline will appear, blue arrows the travel of the last turns. Moves are written in the manner of
+  5dpgn: `(0T2)Nc3>(+1T2)c3` jumps to another timeline, `(0T2)Nc3>>(0T1)a3` opens a new one, `x` marks a capture.
 - **Draws.** Stalemate as above, 300 moves in a row without a capture or a pawn or brawn move, and 1,200 moves in
   the game (Submit turn counts as a move in both). The quiet-move draw waits while the player to move can capture an
   enemy king or royal queen for certain. Two bare kings are not a draw: kings can still reach each other through

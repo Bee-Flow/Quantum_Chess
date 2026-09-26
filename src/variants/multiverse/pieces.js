@@ -148,7 +148,13 @@ for (const type of LIVE_TYPES) {
 	const b = baseType(type)
 	const royal = b === 'k' || b === 'y'
 	const solid = royal || b === 'c' || b === 'p' || b === 'w'
-	const glyph = 'kqrbnp'.includes(b) ? { sprite: b } : { text: b.toUpperCase(), shape: 'circle' }
+	// a brawn is a pawn with a crossbar; the other unusual pieces are letters (U, D, S, Y, C)
+	let glyph = { text: b.toUpperCase(), shape: 'circle' }
+	if ('kqrbnp'.includes(b)) {
+		glyph = { sprite: b }
+	} else if (b === 'w') {
+		glyph = { sprite: 'p', bar: true }
+	}
 	// the variant generates every move itself; a common king that moves does not reset the quiet-move counter
 	TYPES[type] = { name: NAMES[b], moves: [], royal, solid, splittable: !solid, value: VALUES[b], glyph }
 	if (b === 'c') {

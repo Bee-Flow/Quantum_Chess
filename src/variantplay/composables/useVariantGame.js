@@ -26,10 +26,18 @@
  *
  * Optional variant hooks read here: `moveWarning(state, code)` (a text: the move waits for confirmation with it, also a
  * certain move), `lastMoveMarks(state)` (the squares marked as the last move, instead of the last record's squares;
- * not in hidden variants) and the declaration flag `flipBoard: false` (the board is never turned by "Flip board").
- * Split mode marks only second targets that make a legal split with the first, Measure checks the tapped part itself
- * (a variant may forbid some parts, `allowQuantum`). Undo takes back the human's last move and the computer's moves
- * after it with one replay. `saveFailed` tells when the browser storage refused the record.
+ * not in hidden variants), `turnMarks(state)` (the squares of the turn in progress, marked `turn`), `refusalText`
+ * (whether a tap on an own piece without moves gets the notice `noMove`) and the declaration flag `flipBoard: false`
+ * (the board is never turned by "Flip board", and in pass & play the view is always the side to move's, as with
+ * "Turn the board to the player to move"). Split mode marks only second targets that make a legal split with the
+ * first, Measure checks the tapped part itself (a variant may forbid some parts, `allowQuantum`); a refused tap on a
+ * part of an own ghost says that the square is the reason (`measureHere`, `mergeHere`), a Split on an enemy piece
+ * `notYours`. After a split, merge or measurement the mode goes back to Move when the same side moves again (a turn of
+ * several moves). Undo takes back the human's last move and the computer's moves after it with one replay.
+ * `saveFailed` tells when the browser storage refused the record.
+ *
+ * The danger line (`danger`) speaks for `dangerSide`: in pass & play (every side human, not hidden) the side to move,
+ * whose turn it is on the device, otherwise the viewer.
  *
  * A move waiting for confirmation (`pending`: a roll or the variant's warning) keeps its squares marked (the from
  * square selected, the targets as targets) and carries the type of the piece that moves and whether it captures (not
@@ -61,6 +69,7 @@ import {
 	moveSquares,
 	sidePieceAt,
 	sidePieceType,
+	turnMoveMarks,
 } from '../marks.js'
 import { needsConfirmation, refusalKind, resignResult } from '../panel.js'
 import { rollMemoKey } from '../rolls.js'
@@ -112,7 +121,8 @@ export function useVariantGame(id) {
 
 	/**
 	 * The side whose view is shown: the only human, or in pass & play the side to move (the mover until the device is
-	 * passed, in hidden games).
+	 * passed, in hidden games; with "Turn the board to the player to move", or in a variant that is never turned), else
+	 * the first human.
 	 */
 	const viewer = computed(() => {
 		if (!state.value) {
@@ -127,7 +137,20 @@ export function useVariantGame(id) {
 		if (humanSides.value.length === 0) {
 			return 0
 		}
-		return V.value?.hidden || record.value?.autoFlip ? state.value.turn : humanSides.value[0]
+		const follows = V.value?.hidden || record.value?.autoFlip || V.value?.flipBoard === false
+		return follows ? state.value.turn : humanSides.value[0]
+	})
+
+	/**
+	 * The side the danger line speaks for: in pass & play (every side human) the side to move, which holds the device,
+	 * otherwise the viewer.
+	 */
+	const dangerSide = computed(() => {
+		if (!state.value || !V.value) {
+			return 0
+		}
+		const all = humanSides.value.length > 1 && humanSides.value.length === V.value.sides.length
+		return all && !V.value.hidden ? state.value.turn : viewer.value
 	})
 
 	const rotation = computed(() => {
@@ -284,6 +307,7 @@ export function useVariantGame(id) {
 		}
 		const index = res.outcomes.indexOf(res.branch)
 		const mover = state.value.turn
+		const quantum = code.includes('|') || code.startsWith('?')
 		// the type of the piece that moved, for the move list (the states before the moves are not kept)
 		const type = movedType(code)
 		// with an umpire every own move gets the same result box: whether it rolled is hidden information
@@ -302,6 +326,10 @@ export function useVariantGame(id) {
 		notice.value = null
 		refused.value = []
 		clearSelection()
+		// a turn of several moves: the next board is played with an ordinary move far more often than not
+		if (quantum && res.state.turn === mover && !res.state.result) {
+			mode.value = 'move'
+		}
 		commit(res.state, [...record.value.moves, type ? { code, i: index, t: type } : { code, i: index }])
 		afterChange({ side: mover, code, key: res.branch.key })
 	}
@@ -393,7 +421,7 @@ export function useVariantGame(id) {
 			if (pieceAt(sq) >= 0 && isLegal(Vv, own.value, code)) {
 				attempt(code)
 			} else {
-				notice.value = { kind: 'noMeasure' }
+				notice.value = { kind: ghostPart(sq) ? 'measureHere' : 'noMeasure' }
 			}
 			return
 		}
@@ -417,6 +445,8 @@ export function useVariantGame(id) {
 		if (!sel.value.length) {
 			if (moves.value.some((m) => m.from === sq)) {
 				sel.value = [sq]
+			} else {
+				stuckNotice(sq)
 			}
 			return
 		}
@@ -428,6 +458,9 @@ export function useVariantGame(id) {
 		const matches = moves.value.filter((m) => m.from === f && m.to === sq)
 		if (!matches.length) {
 			sel.value = moves.value.some((m) => m.from === sq) ? [sq] : []
+			if (!sel.value.length) {
+				stuckNotice(sq)
+			}
 			return
 		}
 		if (matches.length > 1) {
@@ -435,6 +468,39 @@ export function useVariantGame(id) {
 			return
 		}
 		attempt(matches[0].code)
+	}
+
+	/**
+	 * A tap on an own piece that has no move: the variant's notice `noMove` when it has one (the multiverse: the piece
+	 * stands on a board that cannot be played now); other variants say nothing, as before.
+	 *
+	 * @param {number} sq square
+	 */
+	function stuckNotice(sq) {
+		if (pieceAt(sq) >= 0 && V.value.refusalText?.(state.value, 'noMove', sq)) {
+			notice.value = { kind: 'noMove', sq }
+		}
+	}
+
+	/**
+	 * Whether a square holds a part of a ghost of the side to move (a piece that stands on more than one square).
+	 *
+	 * @param {number} sq square
+	 * @return {boolean}
+	 */
+	function ghostPart(sq) {
+		const id = pieceAt(sq)
+		return id >= 0 && pieceLocations(own.value, id).filter((l) => l.sq >= 0).length > 1
+	}
+
+	/**
+	 * Whether a square holds a piece of another side (on the own view).
+	 *
+	 * @param {number} sq square
+	 * @return {boolean}
+	 */
+	function enemyAt(sq) {
+		return own.value.worlds.some(({ b }) => b.board[sq] >= 0 && b.sd[b.board[sq]] !== state.value.turn)
 	}
 
 	/**
@@ -480,7 +546,7 @@ export function useVariantGame(id) {
 			if (splitTargets(V.value, own.value, sq).length >= 2) {
 				sel.value = [sq]
 			} else {
-				notice.value = { kind: 'noSplit' }
+				notice.value = { kind: pieceAt(sq) < 0 && enemyAt(sq) ? 'notYours' : 'noSplit' }
 			}
 			return
 		}
@@ -510,7 +576,7 @@ export function useVariantGame(id) {
 			if (mergesFrom(V.value, own.value, sq).length) {
 				sel.value = [sq]
 			} else {
-				notice.value = { kind: 'noMerge' }
+				notice.value = { kind: ghostPart(sq) ? 'mergeHere' : 'noMerge' }
 			}
 			return
 		}
@@ -571,6 +637,9 @@ export function useVariantGame(id) {
 		}
 		for (const s of lastMoveMarks(V.value, state.value, viewer.value)) {
 			add(s, 'last')
+		}
+		for (const s of turnMoveMarks(V.value, state.value)) {
+			add(s, 'turn')
 		}
 		// the selection and the targets belong to the viewer's own turn only
 		if (!interactive.value) {
@@ -649,12 +718,15 @@ export function useVariantGame(id) {
 		return out
 	})
 
-	/** The chance that the viewer's king can be taken; never computed while a hidden game runs (it would leak). */
+	/**
+	 * The chance that a king of `dangerSide` can be taken (the side to move in pass & play, else the viewer); never
+	 * computed while a hidden game runs (it would leak).
+	 */
 	const danger = computed(() => {
 		if (!V.value || !state.value || state.value.result || secret.value) {
 			return 0
 		}
-		return royalDanger(V.value, state.value, viewer.value)
+		return royalDanger(V.value, state.value, dangerSide.value)
 	})
 
 	/**
@@ -810,6 +882,7 @@ export function useVariantGame(id) {
 		isHumanTurn,
 		interactive,
 		viewer,
+		dangerSide,
 		rotation,
 		hidden,
 		moves,

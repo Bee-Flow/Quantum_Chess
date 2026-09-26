@@ -400,7 +400,7 @@ describe('the board', () => {
 		const line = w.find('.qc-vboard__outline--threat')
 		const head = w.find('.qc-vboard__head')
 		const tip = head.attributes('points').split(' ')[0].split(',').map(Number)
-		expect(tip[0]).toBeCloseTo(4.5 - 0.22, 3)
+		expect(tip[0]).toBeCloseTo(4.5 - 0.35, 3)
 		expect(tip[1]).toBeCloseTo(7.5, 3)
 		expect(Number(halo.attributes('x2'))).toBeCloseTo(tip[0], 3)
 		// the shaft ends under the head, the halo is drawn first

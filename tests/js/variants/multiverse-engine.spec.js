@@ -225,7 +225,23 @@ describe('setups and options', () => {
 		expect(V.options[0].default).toBe('small')
 		expect(SETUP_ORDER.length).toBe(21)
 		expect(V.options[0].describe('justunicorns')).toContain('5 × 5')
-		expect(V.rules()).toHaveLength(8)
+		// the plain label, the official name and the size, then the pieces
+		expect(V.options[0].describe('defended'))
+			.toBe('Defended pawn: queen and knight swapped (Standard – Defended Pawn, 8 × 8) The queen and a knight swap places.')
+		expect(V.options[0].describe('marauders')).toContain('Brawns (W) are pawns that also capture sideways')
+		expect(V.options[2].values[0].label()).toBe('Automatic (2 turns up to 5 × 5, 4 on larger boards)')
+		const rules = V.rules()
+		expect(rules).toHaveLength(10)
+		// the pieces with their letters, active timelines, the solid pieces, the notation, royal queens
+		expect(rules[2]).toContain('the unicorn (U) three')
+		expect(rules[2]).toContain('the knight two along one and one along another')
+		expect(rules[3]).toContain('a brawn also captures sideways')
+		expect(rules[4]).toContain('Your n-th new timeline is active')
+		expect(rules[5]).toContain('Kings, royal queens, common kings, pawns and brawns are solid')
+		expect(rules[6]).toContain('a Measure is your move on the board of the part you measure')
+		expect(rules[8]).toContain('a king or royal queen of yours can be taken for certain')
+		expect(rules[9]).toContain('(0T2)Nc3>>(0T1)a3 opens a new one')
+		expect(rules[1]).toContain('Each move is played at once (and rolled if its result is uncertain)')
 	})
 
 	it('declares the classic end rules and limits of the final spec', () => {
@@ -437,7 +453,7 @@ describe('turns, branches, jumps and the present', () => {
 		expect(V.actions(s)[0].label).toBe('Submit turn (a king of yours can be taken: 100 %)')
 		s = run(s, [SUBMIT])
 		expect([s.turn, mustLines(s), s.worlds[0].b.x.t]).toEqual([0, [1], 0])
-		expect(V.actions(s)[0].label).toBe('Submit turn (move on 1 more board first)')
+		expect(V.actions(s)[0].label).toBe('Submit turn (1 more board first)')
 		s = run(s, ['(+1T2)b2-b3'])
 		expect([s.turn, isLegal(V, s, SUBMIT)]).toEqual([1, false])
 		expect(lastMoveMarks(s).map((q) => V.topology.names[q])).toEqual(['(+1)b2', '(+1)b3'])
@@ -581,7 +597,7 @@ describe('quantum rules in the multiverse', () => {
 		})
 		expect(V.infoText(miss.history.at(-1))).toEqual([
 			'Missed: timeline +1 opened anyway, nobody arrived',
-			'The present moves back to T1 ●',
+			'The present moved back to T1\u00a0●',
 		])
 	})
 
@@ -595,7 +611,12 @@ describe('quantum rules in the multiverse', () => {
 		const ts = run(s, ['(0)c3-(0)~3a3|(0)~3e3'])
 		expect([ts.worlds.length, loc(ts, knight), ts.worlds[0].b.x.tl[2], ts.worlds[0].b.x.c, ts.turn])
 			.toEqual([2, ['(+1)a3 50', '(+1)e3 50'], [3, 3, 0, 2], [1, 0], 1])
-		expect(V.codeText('(0)c3-(0)~3a3|(0)~3e3', ts.history.at(-1))).toBe('(0T2)c3-(0T1)a3|(0T1)e3')
+		// the move list: a time split opens a timeline (>>), its second half on the same board as the first
+		expect(V.codeText('(0)c3-(0)~3a3|(0)~3e3', ts.history.at(-1))).toBe('(0T2)c3>>(0T1)a3|e3')
+		expect(V.codeText('(0)c3-(0)~3a3|(0)~3e3', ts.history.at(-1), { type: 'n' })).toBe('(0T2)Nc3>>(0T1)a3|e3')
+		// the same move waiting for confirmation, written from the state before it
+		expect(V.codeText('(0)c3-(0)~3a3|(0)~3e3', null, { type: 'n', state: s })).toBe('(0T2)Nc3>>(0T1)a3|e3')
+		expect(V.codeText('(0)c3-(0)d1|(0)a4', null, { type: 'n', state: s })).toBe('(0T2)Nc3-d1|a4')
 	})
 
 	it('a measurement uses the board of the part, and only a part on a board the side may play', () => {

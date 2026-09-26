@@ -870,7 +870,8 @@ describe('Multiverse chess: quantum', () => {
 		expect([s.worlds.length, budget(s, 0)]).toEqual([2, 2])
 		const record = s.history.at(-1)
 		expect(record.info.memory).toEqual([0, 4])
-		expect(V.infoText(record)).toContain('The past still remembers both paths until (0T2) ○ is sealed')
+		expect(V.infoText(record)).toContain('The past still remembers both paths until (0T2)\u00a0○ is sealed')
+		expect(V.codeText(record.code, record, { type: 'n' })).toBe('(0T2)Nc3|e3-d1')
 		s = run(s, ['(0T2)b4-b3', '(0T3)e2-e3', '(0T3)c4-c3'])
 		expect([s.worlds.length, budget(s, 0), row(s, 0)[1]]).toEqual([2, 2, 8])
 		s = run(s, ['(0T4)d1-c3'])
@@ -1280,7 +1281,11 @@ describe('Multiverse chess: limits and records', () => {
 		const submit = play(V, { ...twoBoards, quiet: 298 }, '(0T5)a1-a2')
 		expect([submit.result, submit.quiet, isLegal(V, submit, 'submit')]).toEqual([null, 299, true])
 		expect(play(V, submit, 'submit').result).toEqual({ winner: null, reason: 'quiet' })
-		expect(V.reasonText('quiet')).toBe('300 moves in a row without a capture or a pawn or brawn move')
+		expect(V.reasonText('quiet'))
+			.toBe('300 moves in a row (Submit turn counts) without a capture or a pawn or brawn move')
+		expect(V.reasonText('moveLimit')).toBe('1,200 moves in the game (Submit turn counts)')
+		expect(V.reasonText('king')).toBe('a king or royal queen was captured')
+		expect(V.reasonText('stranded')).toBe('stranded: the loser\'s own move left its turn impossible to finish')
 	})
 
 	it('R1 records: a branch', () => {
@@ -1321,9 +1326,11 @@ describe('Multiverse chess: limits and records', () => {
 		// the turn passed
 		expect(t.turn).toBe(1)
 		expect(V.lastMoveMarks(t).map(nameOf)).toEqual(['(0)e1', '(0)e2', '(+1)e1', '(+1)e3'])
+		expect(V.turnMarks(t)).toEqual([])
 		t = run(t, ['(0T5)e5-d5'])
-		// White's marks on L0 followed their board into the past
-		expect(V.lastMoveMarks(t).map(nameOf)).toEqual(['(0)~4e1', '(0)~4e2', '(+1)e1', '(+1)e3', '(0)e5', '(0)d5'])
+		// White's marks on L0 followed their board into the past; Black's own move of this turn is marked apart
+		expect(V.lastMoveMarks(t).map(nameOf)).toEqual(['(0)~4e1', '(0)~4e2', '(+1)e1', '(+1)e3'])
+		expect(V.turnMarks(t).map(nameOf)).toEqual(['(0)e5', '(0)d5'])
 	})
 })
 
@@ -1331,11 +1338,13 @@ describe('Multiverse chess: the drawing', () => {
 	it('U1 start layout', () => {
 		const { cells, layout } = V.layoutOf(start())
 		expect(cells.length).toBe(25)
-		expect(layout.boards.map((b) => b.label)).toEqual(['L0 T1 ○ · must move'])
-		expect((layout.areas ?? []).map((a) => a.shade)).toEqual(['frame', 'wood'])
+		expect(layout.boards.map((b) => b.label)).toEqual(['L0 T1\u00a0○ · must move'])
+		expect((layout.areas ?? []).map((a) => a.shade)).toEqual(['frame', 'must'])
 		// the placeholder of the next board
 		expect((layout.outlines ?? []).length).toBe(4)
-		expect(layout.height).toBeGreaterThanOrEqual(0.75 * layout.width)
+		// the board fills the screen's height; the header is text above it
+		expect(layout.fill).toBe(true)
+		expect(layout.caption).toBe('New timelines: White 0/3 · Black 0/3 · Travel back: 2 turns')
 	})
 
 	it('U2 after a branch', () => {
@@ -1343,7 +1352,7 @@ describe('Multiverse chess: the drawing', () => {
 		const { cells, layout } = V.layoutOf(s)
 		const rowLabels = layout.labels.map((l) => l.text).filter((text) => /^L/.test(text) || text === 'new')
 		expect(rowLabels.sort()).toEqual(['L+1', 'L0', 'new'])
-		expect((layout.areas ?? []).map((a) => a.shade).sort()).toEqual(['frame', 'river', 'wood'])
+		expect((layout.areas ?? []).map((a) => a.shade).sort()).toEqual(['frame', 'must', 'optional'])
 		// the connector
 		expect((layout.lines ?? []).length).toBe(1)
 		// Black is in 5D check: the White knight on L+1 can take the king on (0T2 ○) a5
@@ -1494,4 +1503,81 @@ describe('Multiverse chess: the computer', () => {
 		}
 		expect(stranded).toEqual([])
 	}, 60000)
+})
+
+describe('Multiverse chess: the texts of the app', () => {
+	const NB = ' '
+
+	it('writes ordinary moves in the manner of 5dpgn: the piece letter after the board, x for a capture', () => {
+		const s = run(start(), ['(0T1)d1-c3', '(0T1)b4-c3'])
+		const [knight, pawn] = s.history
+		expect(V.codeText(knight.code, knight, { type: 'n' })).toBe('(0T1)Nd1-c3')
+		expect(V.codeText(pawn.code, pawn, { type: 'p0' })).toBe('(0T1)b4xc3')
+		// a move not yet played: the capture from the preview, a brawn is W, travel keeps > and >>
+		expect(V.codeText('(0T3)d1>>(0T1)f3', null, { type: 'q' })).toBe('(0T3)Qd1>>(0T1)f3')
+		expect(V.codeText('(0T2)a5>(+1T2)a5', null, { type: 'w0', capture: true })).toBe('(0T2)Wa5>x(+1T2)a5')
+		expect(V.codeText('(0T6)b7-b8=Q', null, { type: 'p' })).toBe('(0T6)b7-b8=Q')
+		// a move saved without its type keeps no letter
+		expect(V.codeText(knight.code, knight)).toBe('(0T1)d1-c3')
+		expect(V.codeText('submit')).toBe('Submit turn')
+	})
+
+	it('names the boards of the danger line, the end, and says king or royal queen', () => {
+		const s = afterBranch()
+		expect(V.dangerText(s, 1, '100 %')).toBe(`Your king is in danger on (0T2)${NB}○: 100 %`)
+		// another side than the side to move: the generic line
+		expect(V.dangerText(s, 0, '100 %')).toBeNull()
+		expect(V.endNote({ ...s, result: { winner: 0, reason: 'checkmate' } }))
+			.toBe(`A royal piece could be taken for certain on (0T2)${NB}○.`)
+		const k = run(start(), ['(0T1)d1-c3', '(0T1)d4-d3', '(0T2)c3>>(0T1)a3'])
+		// the square as the move list writes it: a capture through a branch names the past board it aimed at
+		expect(V.endNote({ ...k, result: { winner: 0, reason: 'king' } }))
+			.toBe('The royal piece on (0T1)a3 was captured.')
+		expect(V.endNote(s)).toBeNull()
+		// royal queens and no king: the Submit button and the danger line say royal queen (Black has no board to
+		// play, the knight threatens its royal queen on White's board)
+		const q = one({ s: 1, rows: { 0: { st: 6, en: 12, boards: { 12: '2y2/5/1N3/5/Y4' } } } })
+		expect(V.actions(q)[0].label).toBe('Submit turn (your royal queen can be taken: 100 %)')
+		expect(V.dangerText(q, 1, '100 %')).toBe(`Your royal queen is in danger on (0T6)${NB}○: 100 %`)
+	})
+
+	it('says what is left of a turn, and why a tap was refused', () => {
+		let s = afterBranch()
+		expect(V.turnHint(s)).toBeNull()
+		s = run(s, ['(+1T1)e4-e3'])
+		expect(V.turnHint(s)).toBe('Required boards done: move on an optional board (blue), or press Submit turn.')
+		expect(V.refusalText(s, 'measureHere'))
+			.toBe('Measure through a part on a board you may play now (gold or blue).')
+		// a piece on a board that cannot be played now, and one on a board that can
+		expect(V.refusalText(s, 'noMove', sq('(+1)e3'))).toContain('only on the boards marked must move or optional')
+		expect(V.refusalText(s, 'noMove', sq('(0)a5'))).toBe('This piece has no move now.')
+		expect(V.refusalText(s, 'noSplit')).toBeNull()
+	})
+
+	it('counts new timelines in the player rows and lists few must-move boards', () => {
+		const s = start('marauders')
+		expect(V.sideInfo(s, 0).text).toBe(`New timelines 0/3 · Must move: L−1 T1${NB}○, L0 T1${NB}○, L+1 T1${NB}○`)
+		expect(V.sideInfo(s, 1).text).toBe('New timelines 0/3')
+		expect(V.sideInfo(s, 1).title).toContain('Its next one counts for the present')
+	})
+
+	it('writes a measured square with its board and turn, in the pending box and in the record', () => {
+		const s = run(s1(), ['(0T1)a4-a3'])
+		expect(V.outcomeSquare('(0)e3', { state: s })).toBe('(0T2)e3')
+		const measured = run(s, [['?(0)c3', 1]])
+		const record = measured.history.at(-1)
+		expect(record.info.at).toBe('(0T2)e3')
+		expect(V.outcomeSquare('(0)e3', { record })).toBe('(0T2)e3')
+		expect(V.codeText(record.code, record)).toBe('?(0T2)c3')
+	})
+
+	it('explains the drawing in a legend of what is drawn', () => {
+		expect(V.boardLegend(start()).map((l) => l.text)).toEqual(['Must move'])
+		expect(V.boardLegend(afterBranch()).map((l) => l.kind)).toEqual(['must', 'optional', 'threat', 'travel'])
+	})
+
+	it('draws the brawn as a pawn with a crossbar', () => {
+		expect(V.types.w0.glyph).toEqual({ sprite: 'p', bar: true })
+		expect(V.types.u.glyph).toEqual({ text: 'U', shape: 'circle' })
+	})
 })

@@ -4,17 +4,18 @@
 -->
 
 <!--
-  One piece of a variant board, drawn in SVG user units around (0, 0): a cburnett sprite (possibly smaller, or a knight
-  with a unicorn's horn), a compound of two sprites side by side (Capablanca's archbishop and chancellor), or a text
-  token (round, shogi pentagon or xiangqi disc). A promoted sprite piece carries a small red disc with a white "+" at
-  its top right. A ghost part is faded and carries a probability ring (a track with an arc of its chance, as on the
-  Quantum Chess board) and its percentage in a badge at its bottom right. The ring and the badge are drawn above the
-  fade, so they stay sharp. With `unit` (the size of one CSS pixel in user units, from the board) the badge text is at
-  least 11 px and the ring at least 2 px on screen; on a raised badge the "%" sign is left out, and a piece smaller
-  than 30 px on screen shows only its ring (a badge would cover it). On a text token (its character fills the middle)
-  the badge sits in the corner of the square, below and right of the character, and never carries the "%" sign. The
-  accessible name of the square always says the percentage. Pieces of a side drawn in its own colour (four-player
-  chess) fade only a little, so their hue stays recognisable.
+  One piece of a variant board, drawn in SVG user units around (0, 0): a cburnett sprite (possibly smaller, a knight
+  with a unicorn's horn, or a pawn with a crossbar: the multiverse's brawn), a compound of two sprites side by side
+  (Capablanca's archbishop and chancellor), or a text token (round, shogi pentagon or xiangqi disc). A promoted sprite
+  piece carries a small red disc with a white "+" at its top right. A ghost part is faded and carries a probability
+  ring (a track with an arc of its chance, as on the Quantum Chess board) and its percentage in a badge at its bottom
+  right. The ring and the badge are drawn above the fade, so they stay sharp. With `unit` (the size of one CSS pixel
+  in user units, from the board) the badge text is at least 11 px (9.5 px on a piece under 30 px) and the ring at
+  least 2 px on screen; on a raised badge the "%" sign is left out, and a piece smaller than 24 px on screen shows only
+  its ring (a badge would cover it). On a text token (its character fills the middle) the badge sits in the corner of
+  the square, below and right of the character, and never carries the "%" sign. The accessible name of the square
+  always says the percentage. Pieces of a side drawn in its own colour (four-player chess) fade only a little, so
+  their hue stays recognisable.
 -->
 <template>
 	<g class="qc-vpiece">
@@ -43,6 +44,26 @@
 						d="M8.3 8.9 L10.2 7.9 M10.1 11.5 L12.2 10.3"
 						:stroke="glyph.horn === 'black' ? '#ececec' : '#000'"
 						stroke-width="0.8"
+						stroke-linecap="round" />
+				</g>
+				<g
+					v-if="glyph.bar"
+					class="qc-vpiece__bar"
+					:transform="`translate(${-size / 2}, ${-size / 2}) scale(${size / 45})`">
+					<rect
+						x="8.5"
+						y="21.4"
+						width="28"
+						height="4.8"
+						rx="2.2"
+						:fill="glyph.bar === 'black' ? '#000' : '#fff'"
+						stroke="#000"
+						stroke-width="1.5" />
+					<path
+						v-if="glyph.bar === 'black'"
+						d="M11 23.8 H34"
+						stroke="#ececec"
+						stroke-width="0.9"
 						stroke-linecap="round" />
 				</g>
 				<g
@@ -131,8 +152,12 @@ const props = defineProps({
 
 /** The smallest badge text on screen, in CSS pixels. */
 const BADGE_MIN_PX = 11
+/** The smallest badge text on a small piece (under 30 px), in CSS pixels. */
+const BADGE_SMALL_PX = 9.5
+/** A piece under this size on screen gets the small badge, in CSS pixels. */
+const BADGE_FULL_PX = 30
 /** The smallest piece on screen that carries a badge, in CSS pixels. */
-const BADGE_PIECE_PX = 30
+const BADGE_PIECE_PX = 24
 /** The thinnest ring on screen, in CSS pixels. */
 const RING_MIN_PX = 2
 /** The bottom-right corner of the square from the middle of a piece, in piece sizes (a square is about 1.08). */
@@ -171,7 +196,8 @@ const arc = computed(() => arcPath(props.p, ringRadius.value, 0, 0))
 
 /**
  * The badge of a ghost, or null: its text, font size, pill size and centre. It sits at the bottom right of the piece;
- * its text is 0.2 of the piece, raised to 11 CSS px when the board is small. A piece under 30 px has none.
+ * its text is 0.2 of the piece, raised to 11 CSS px when the board is small (9.5 px on a piece under 30 px). A piece
+ * under 24 px has none.
  */
 const badge = computed(() => {
 	if (!ghost.value || (props.unit > 0 && props.size < BADGE_PIECE_PX * props.unit)) {
@@ -180,7 +206,8 @@ const badge = computed(() => {
 	const percent = Math.max(1, Math.round(props.p * 100))
 	const token = props.glyph.kind === 'text'
 	const natural = props.size * (token ? 0.17 : 0.2)
-	const floor = BADGE_MIN_PX * props.unit
+	const small = props.unit > 0 && props.size < BADGE_FULL_PX * props.unit
+	const floor = (small ? BADGE_SMALL_PX : BADGE_MIN_PX) * props.unit
 	const raised = floor > natural
 	const font = raised ? floor : natural
 	const text = raised || token ? String(percent) : percent + '%'
@@ -222,6 +249,7 @@ const pentagon = computed(() => {
 
 .qc-vpiece__promoted,
 .qc-vpiece__horn,
+.qc-vpiece__bar,
 .qc-vpiece__ring {
 	pointer-events: none;
 }

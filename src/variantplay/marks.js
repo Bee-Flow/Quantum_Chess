@@ -5,10 +5,10 @@
 
 /**
  * Pure helpers for the square marks of a variant board: the squares of the last move (or of the last turn, with the
- * variant's `lastMoveMarks(state)`), the squares of a move waiting for confirmation, the piece a click selects, and
- * what the board may show and let the keyboard reach without revealing hidden information (move targets and focus
- * only while the viewer is the player to move, and on a square the viewer cannot see only when the variant builds the
- * viewer's attempts from what the viewer knows).
+ * variant's `lastMoveMarks(state)`, and of the turn in progress with `turnMarks(state)`), the squares of a move
+ * waiting for confirmation, the piece a click selects, and what the board may show and let the keyboard reach without
+ * revealing hidden information (move targets and focus only while the viewer is the player to move, and on a square
+ * the viewer cannot see only when the variant builds the viewer's attempts from what the viewer knows).
  */
 
 import { parseCode } from '../variants/index.js'
@@ -118,6 +118,23 @@ export function lastMoveMarks(V, state, viewer) {
 		return Array.isArray(list) ? [...new Set(list.filter((sq) => Number.isInteger(sq) && sq >= 0))] : []
 	}
 	return lastMoveSquares(V, last)
+}
+
+/**
+ * The squares of the moves the side to move has already made in a turn of several moves (the variant's
+ * `turnMarks(state)`, the multiverse), marked apart from the opponent's last turn. Never in a hidden-information
+ * variant.
+ *
+ * @param {object} V variant
+ * @param {object} state state
+ * @return {number[]} squares without repeats
+ */
+export function turnMoveMarks(V, state) {
+	if (V.hidden || !V.turnMarks) {
+		return []
+	}
+	const list = V.turnMarks(state)
+	return Array.isArray(list) ? [...new Set(list.filter((sq) => Number.isInteger(sq) && sq >= 0))] : []
 }
 
 /**

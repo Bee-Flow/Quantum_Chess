@@ -7,8 +7,9 @@
  * The texts of variant games: outcome labels, follow-up rolls, results, the lines a variant adds to a move record,
  * option values, move codes (and the move list's long algebraic notation) and the rules shared by every variant. A
  * variant may add its own texts with the optional hooks `noteText(note)`, `reasonText(reason)`,
- * `infoText(record, viewer, { brief })` and `codeText(code, record)`, and describe option values with
- * `options[i].describe(value)`.
+ * `infoText(record, viewer, { brief })`, `codeText(code, record, { type, capture, state })`, `outcomeSquare(key,
+ * { record, state })` (a square named by an outcome, as the move list writes it) and `dangerText(state, side,
+ * percent)` (the danger line), and describe option values with `options[i].describe(value)`.
  */
 
 import { n, t } from '@nextcloud/l10n'
@@ -33,13 +34,20 @@ export function percent(p) {
 
 /**
  * The label of an outcome key. A drop (a code with `@`) reads "Dropped", and its miss says that the piece stays in
- * hand, without a reason: a drop misses on a square that was taken, but in shogi also where a pawn drop would mate.
+ * hand, without a reason: a drop misses on a square that was taken, but in shogi also where a pawn drop would mate. A
+ * square (where a measured ghost was found) is written by the variant's `outcomeSquare(key, { record, state })` when
+ * it has one (the multiverse adds the board's turn: `(+2T1)d3`), with the move's history record or, for a move not yet
+ * played, the state before it.
  *
  * @param {string} key miss, move, capture, split, gone or a square name
  * @param {string} [code] the move code
+ * @param {object} [where] where the move is
+ * @param {object} [where.V] variant
+ * @param {object|null} [where.record] the move's history record
+ * @param {object|null} [where.state] the state before the move
  * @return {string}
  */
-export function outcomeText(key, code = '') {
+export function outcomeText(key, code = '', { V = null, record = null, state = null } = {}) {
 	const drop = typeof code === 'string' && code.includes('@')
 	switch (key) {
 		case 'miss':
@@ -52,9 +60,29 @@ export function outcomeText(key, code = '') {
 			return t('quantumchess', 'Split')
 		case 'gone':
 			return t('quantumchess', 'No longer on the board')
-		default:
-			return t('quantumchess', 'On {square}', { square: key })
+		default: {
+			const own = V?.outcomeSquare ? V.outcomeSquare(key, { record, state }) : null
+			return t('quantumchess', 'On {square}', { square: typeof own === 'string' && own ? own : key })
+		}
 	}
+}
+
+/**
+ * The danger line: "Your king is in danger: 50 %", or the variant's own `dangerText(state, side, percent)` (the
+ * multiverse names the boards and says king or royal queen).
+ *
+ * @param {object} V variant
+ * @param {object} state state
+ * @param {number} side the side whose danger it is
+ * @param {number} p the chance
+ * @return {string}
+ */
+export function dangerLine(V, state, side, p) {
+	const own = V.dangerText ? V.dangerText(state, side, percent(p)) : null
+	if (typeof own === 'string' && own) {
+		return own
+	}
+	return t('quantumchess', 'Your king is in danger: {percent}', { percent: percent(p) })
 }
 
 /**
@@ -179,7 +207,7 @@ export function sharedRules(V = null) {
 			'quantumchess',
 			'Kings and pawns (and the pieces the variant names) are always solid: their moves are settled at once.',
 		),
-		t('quantumchess', 'Measure: spend your turn to find out where one of your ghosts really is.'),
+		t('quantumchess', 'Measure: instead of a move, find out where one of your ghosts really is.'),
 	]
 	if (V?.specialMoves !== false) {
 		out.push(t(
@@ -300,8 +328,9 @@ const BOARD_NAME = /^([A-Z0-9]+):(.+)$/
  * `Nf3|h3-g5`, a drop `N@f3` and a measurement `?f3`. On several boards whose squares are named `A:e4` (bughouse), the
  * board is written once, in front (`A: Ng1-f3|h3`). Where square names begin with a capital letter (the levels of 3D
  * and 4D chess, `Bc2`), a space keeps the piece letter apart (`N Bb1-Bc3`). The variant's own
- * `codeText(code, record)` comes first; a code that is none of these (castling `O-O`) is written by `codeText`. A move
- * whose piece is not known (games saved before the move list kept it) is written without a letter.
+ * `codeText(code, record, { type, capture, state })` comes first (the multiverse writes its moves in the manner of
+ * 5dpgn); a code that is none of these (castling `O-O`) is written by `codeText`. A move whose piece is not known
+ * (games saved before the move list kept it) is written without a letter.
  *
  * @param {object} V variant
  * @param {string} code move code
@@ -309,10 +338,11 @@ const BOARD_NAME = /^([A-Z0-9]+):(.+)$/
  * @param {object|null} [opts.record] the history record of the move (its captures), or null
  * @param {string|null} [opts.type] the type of the piece that moved, or null when it is not known
  * @param {boolean} [opts.capture] without a record: whether the move captures
+ * @param {object|null} [opts.state] without a record: the state before the move
  * @return {string}
  */
-export function moveText(V, code, { record = null, type = null, capture = false } = {}) {
-	const own = V.codeText ? V.codeText(code, record) : null
+export function moveText(V, code, { record = null, type = null, capture = false, state = null } = {}) {
+	const own = V.codeText ? V.codeText(code, record, { type, capture, state }) : null
 	if (typeof own === 'string' && own) {
 		return own
 	}

@@ -86,7 +86,9 @@
 				</section>
 			</div>
 
-			<div class="qc-vgame__board" :class="{ 'qc-vgame__board--hands': hands.length }">
+			<div
+				class="qc-vgame__board"
+				:class="{ 'qc-vgame__board--hands': hands.length, 'qc-vgame__board--fill': fillBoard }">
 				<VariantBoard
 					class="qc-vgame__drawing"
 					:variant="V"
@@ -97,6 +99,7 @@
 					:viewer="game.curtain.value ? -1 : game.viewer.value"
 					:focusable="focusable"
 					:label="boardLabel"
+					:hold="game.thinking.value"
 					@square="game.click" />
 				<div
 					v-for="g in hands"
@@ -143,21 +146,27 @@
 					<span class="qc-vgame__fog-swatch" aria-hidden="true" />
 					{{ t('quantumchess', 'Fog: squares you cannot see.') }}
 				</p>
-				<p v-for="(l, i) in boardLegend" :key="'legend' + i" class="qc-vgame__legend">
-					<span
-						v-if="l.kind === 'hill'"
-						class="qc-vgame__legend-swatch qc-vgame__legend-swatch--hill"
-						aria-hidden="true" />
-					{{ l.text }}
+				<p v-if="boardLegend.length" class="qc-vgame__legend qc-vgame__legend--items">
+					<span v-for="(l, i) in boardLegend" :key="'legend' + i" class="qc-vgame__legend-item">
+						<span
+							v-if="LEGEND_SWATCHES.includes(l.kind)"
+							class="qc-vgame__legend-swatch"
+							:class="'qc-vgame__legend-swatch--' + l.kind"
+							aria-hidden="true" />
+						{{ l.text }}
+					</span>
 				</p>
 			</div>
 
 			<section v-if="!game.curtain.value" class="qc-vgame__info">
-				<ul v-if="gameOptions.length" class="qc-vgame__options">
-					<li v-for="(line, i) in gameOptions" :key="i">
-						{{ line }}
-					</li>
-				</ul>
+				<details v-if="gameOptions.length" class="qc-vgame__options-box" :open="wide">
+					<summary>{{ t('quantumchess', 'Game options') }}</summary>
+					<ul class="qc-vgame__options">
+						<li v-for="(line, i) in gameOptions" :key="i">
+							{{ line }}
+						</li>
+					</ul>
+				</details>
 
 				<ul class="qc-vgame__players">
 					<li
@@ -208,6 +217,7 @@
 				<p class="qc-vgame__status" role="status" aria-live="polite">
 					<template v-if="state.result">
 						<strong>{{ resultText(V, state.result) }}</strong>
+						<span v-if="endNote" class="qc-vgame__end-note">{{ endNote }}</span>
 					</template>
 					<template v-else-if="game.thinking.value">
 						<NcLoadingIcon :size="16" inline /> {{
@@ -221,11 +231,7 @@
 						{{ t('quantumchess', 'You must capture: only moves that might capture are allowed.') }}
 					</span>
 					<span v-if="game.danger.value > 0 && !state.result && !V.hidden" class="qc-vgame__danger">
-						{{ t(
-							'quantumchess',
-							'Your king is in danger: {percent}',
-							{ percent: percent(game.danger.value) },
-						) }}
+						{{ dangerLine(V, state, game.dangerSide.value, game.danger.value) }}
 					</span>
 				</p>
 
@@ -239,6 +245,7 @@
 				</section>
 
 				<div
+					v-if="!state.result"
 					class="qc-vgame__modes"
 					role="group"
 					:aria-label="t('quantumchess', 'Move type')">
@@ -268,6 +275,10 @@
 						:disabled="!game.isHumanTurn.value || Boolean(game.handover.value) || !a.legal"
 						@click="game.attempt(a.code)">
 						{{ a.label }}
+					</NcButton>
+					<!-- a turn of several moves is often taken back move by move: Undo sits beside Submit turn -->
+					<NcButton :disabled="!game.canUndo.value" @click="game.undo">
+						{{ t('quantumchess', 'Undo') }}
 					</NcButton>
 				</div>
 
@@ -309,7 +320,9 @@
 						<p>{{ t('quantumchess', 'This move is settled by a roll:') }}</p>
 						<ul class="qc-vgame__outcomes">
 							<li v-for="(o, i) in game.pending.value.outcomes" :key="i">
-								<strong>{{ percent(o.p) }}</strong> {{ outcomeText(o.key, game.pending.value.code) }}
+								<strong>{{ percent(o.p) }}</strong> {{
+									outcomeText(o.key, game.pending.value.code, { V, state })
+								}}
 								<small v-for="nt in o.notes" :key="nt"> · {{ noteText(V, nt) }}</small>
 								<small v-if="endText(V, o.result, o.notes)" class="qc-vgame__ends">
 									· {{ endText(V, o.result, o.notes) }}
@@ -317,7 +330,18 @@
 							</li>
 						</ul>
 					</template>
-					<div class="qc-vgame__choices">
+					<!-- a move the variant warns about: Cancel is the safe choice and comes first -->
+					<div v-if="game.pending.value.warning" class="qc-vgame__choices">
+						<NcButton variant="primary" @click="game.cancel">
+							{{ t('quantumchess', 'Cancel') }}
+						</NcButton>
+						<NcButton variant="secondary" @click="game.confirm">
+							{{ game.pending.value.outcomes.length
+								? t('quantumchess', 'Play and roll')
+								: t('quantumchess', 'Play anyway') }}
+						</NcButton>
+					</div>
+					<div v-else class="qc-vgame__choices">
 						<NcButton variant="primary" @click="game.confirm">
 							{{ game.pending.value.outcomes.length
 								? t('quantumchess', 'Play and roll')
@@ -337,7 +361,7 @@
 				</p>
 			</section>
 
-			<p v-if="!game.curtain.value" class="qc-vgame__hint qc-vgame__hint--mode">
+			<p v-if="!game.curtain.value && !state.result" class="qc-vgame__hint qc-vgame__hint--mode">
 				{{ modeHint }}
 			</p>
 
@@ -345,13 +369,13 @@
 				<section v-if="showRoll" class="qc-vgame__box qc-vgame__box--roll">
 					<p v-if="V.umpire">
 						{{ t('quantumchess', 'Result: {result}', {
-							result: outcomeText(game.lastRoll.value.key, game.lastRoll.value.code),
+							result: outcomeText(game.lastRoll.value.key, game.lastRoll.value.code, rollWhere),
 						}) }}
 					</p>
 					<template v-else>
 						<p>
 							{{ t('quantumchess', 'Roll: {result} ({percent})', {
-								result: outcomeText(game.lastRoll.value.key, game.lastRoll.value.code),
+								result: outcomeText(game.lastRoll.value.key, game.lastRoll.value.code, rollWhere),
 								percent: percent(game.lastRoll.value.p),
 							}) }}
 						</p>
@@ -368,16 +392,26 @@
 					<h3 v-if="V.umpire" class="qc-vgame__box-title">
 						{{ t('quantumchess', 'Umpire') }}
 					</h3>
-					<p v-for="(line, i) in report" :key="i" class="qc-vgame__report-line">
-						{{ line }}
-					</p>
+					<template v-for="(group, g) in reportGroups" :key="g">
+						<h3 v-if="group.title" class="qc-vgame__box-title">
+							{{ group.title }}
+						</h3>
+						<p v-for="(line, i) in group.lines" :key="i" class="qc-vgame__report-line">
+							{{ line }}
+						</p>
+					</template>
 				</section>
 
 				<p v-if="refusedText" class="qc-vgame__hint">
 					{{ refusedText }}
 				</p>
 
-				<section ref="movesEl" class="qc-vgame__moves" :aria-label="t('quantumchess', 'Moves')">
+				<section
+					ref="movesEl"
+					class="qc-vgame__moves"
+					:class="{ 'qc-vgame__moves--scrolled': movesScrolled }"
+					:aria-label="t('quantumchess', 'Moves')"
+					@scroll="movesScrolled = $event.target.scrollTop > 2">
 					<ol class="qc-vgame__move-rows" :class="{ 'qc-vgame__move-rows--pairs': pairs }">
 						<li v-for="row in moveList" :key="row.n" class="qc-vgame__move-row">
 							<span class="qc-vgame__move-number">{{ row.n }}.</span>
@@ -393,23 +427,34 @@
 												aria-hidden="true" />
 											<span
 												class="qc-vgame__code"
-												:class="{ 'qc-vgame__code--hidden': h.secret }">{{ h.text }}</span>
+												:class="{ 'qc-vgame__code--hidden': h.secret }"><template
+													v-for="(part, j) in codeParts(h.text)"
+													:key="j">{{ part }}<wbr></template></span>
 										</div>
 										<small v-if="h.result" class="qc-vgame__rolled">{{ h.result }}</small>
-										<small
-											v-for="(line, j) in h.lines"
-											:key="j"
-											class="qc-vgame__move-line">{{ line }}</small>
+										<template v-if="!pairs">
+											<small
+												v-for="(line, j) in h.lines"
+												:key="j"
+												class="qc-vgame__move-line">{{ line }}</small>
+										</template>
 									</div>
 								</template>
 								<span v-else-if="k === 0" class="qc-vgame__move-none" aria-hidden="true">…</span>
+							</div>
+							<!-- with a column per side, the lines of the row's moves span both columns -->
+							<div v-if="pairs && row.lines.length" class="qc-vgame__move-notes">
+								<small
+									v-for="(line, j) in row.lines"
+									:key="j"
+									class="qc-vgame__move-line">{{ line }}</small>
 							</div>
 						</li>
 					</ol>
 				</section>
 
 				<div class="qc-vgame__actions">
-					<NcButton :disabled="!game.canUndo.value" @click="game.undo">
+					<NcButton v-if="!actions.length" :disabled="!game.canUndo.value" @click="game.undo">
 						{{ t('quantumchess', 'Undo') }}
 					</NcButton>
 					<NcButton v-if="V.flipBoard !== false" @click="game.flipped.value = !game.flipped.value">
@@ -441,6 +486,7 @@ import { glyphOf, pieceSpin, sideFill, typeName } from '../variantplay/glyphs.js
 import { focusSquares } from '../variantplay/marks.js'
 import { budgetPips, handGroups, moveRows, recordsSince, sideInfoOf, sortHand } from '../variantplay/panel.js'
 import {
+	dangerLine,
 	endText,
 	moveText,
 	noteText,
@@ -468,6 +514,59 @@ const controlsEl = ref(null)
 const movesEl = ref(null)
 
 const variantRules = computed(() => (V.value?.rules ? V.value.rules() : []))
+
+/**
+ * The legend kinds drawn with a swatch: the hill of King of the Hill, the multiverse's halos, inactive timelines and
+ * lines.
+ */
+const LEGEND_SWATCHES = ['hill', 'must', 'optional', 'inactive', 'threat', 'travel']
+
+/**
+ * Whether the screen is wide (the panel beside the board): the game's options are then shown open, on a narrow screen
+ * folded under "Game options".
+ */
+const wide = ref(true)
+try {
+	wide.value = window.matchMedia?.('(min-width: 1024px)').matches ?? true
+} catch {
+	// no media queries: keep them open
+}
+
+/** Where a game ended, under the result (the variant's `endNote(state)`: the multiverse names the boards). */
+const endNote = computed(() => {
+	if (!state.value?.result || !V.value?.endNote) {
+		return ''
+	}
+	const text = V.value.endNote(state.value)
+	return typeof text === 'string' ? text : ''
+})
+
+/** The record of the last roll's move, for the square of an outcome (`outcomeText`). */
+const rollWhere = computed(() => {
+	const last = state.value?.history.at(-1)
+	return { V: V.value, record: last && last.code === game.lastRoll.value?.code ? last : null }
+})
+
+/**
+ * Whether the board fills the screen's height (`layout.fill`, the multiverse): it then leaves room for its caption,
+ * its legend and, on a narrow screen, the move controls below it.
+ */
+const fillBoard = computed(() => Boolean(V.value?.layoutOf && state.value
+	&& V.value.layoutOf(state.value).layout?.fill))
+
+/** Whether the move list is scrolled away from its first row (its top then fades out). */
+const movesScrolled = ref(false)
+
+/**
+ * A move code in parts, after which a line may break: after `|`, `-` and `>` or `>>` (not between the two), so a
+ * long code of the multiverse wraps between its squares, not inside one.
+ *
+ * @param {string} text move code as shown
+ * @return {string[]}
+ */
+function codeParts(text) {
+	return String(text).split(/(?<=\||-|>>|[^>]>(?!>))/)
+}
 const allSquares = computed(() => new Set(Array.from({ length: V.value?.topology.size ?? 0 }, (_, i) => i)))
 
 /**
@@ -540,7 +639,7 @@ const handoverResult = computed(() => {
 /** The move waiting for confirmation, in the notation of the move list. */
 const pendingText = computed(() => {
 	const p = game.pending.value
-	return p ? moveText(V.value, p.code, { type: p.type ?? null, capture: Boolean(p.capture) }) : ''
+	return p ? moveText(V.value, p.code, { type: p.type ?? null, capture: Boolean(p.capture), state: state.value }) : ''
 })
 
 const modeHint = computed(() => {
@@ -554,8 +653,11 @@ const modeHint = computed(() => {
 			return t('quantumchess', 'Choose two parts of one ghost, then the square where they meet.')
 		case 'measure':
 			return t('quantumchess', 'Choose one of your ghosts to find out where it really is.')
-		default:
-			return t('quantumchess', 'Choose a piece, then its target square.')
+		default: {
+			// the variant's own hint for the rest of a turn (the multiverse, once the must-move boards are played)
+			const own = V.value?.turnHint && state.value ? V.value.turnHint(state.value) : null
+			return typeof own === 'string' && own ? own : t('quantumchess', 'Choose a piece, then its target square.')
+		}
 	}
 })
 
@@ -620,6 +722,11 @@ const noticeText = computed(() => {
 	if (!n) {
 		return ''
 	}
+	// the variant's own words, where its rules are the reason (the multiverse: the board, not the piece)
+	const own = V.value?.refusalText ? V.value.refusalText(state.value, n.kind, n.sq ?? -1) : null
+	if (typeof own === 'string' && own) {
+		return own
+	}
 	switch (n.kind) {
 		case 'umpire':
 			return t('quantumchess', 'The umpire says: that move is not possible. Try another one.')
@@ -634,6 +741,12 @@ const noticeText = computed(() => {
 			return t('quantumchess', 'Choose a part of one of your ghosts.')
 		case 'noMeasure':
 			return t('quantumchess', 'Choose one of your ghosts.')
+		case 'measureHere':
+			return t('quantumchess', 'This ghost cannot be measured from this square.')
+		case 'mergeHere':
+			return t('quantumchess', 'These parts cannot merge from here.')
+		case 'notYours':
+			return t('quantumchess', 'Choose one of your pieces.')
 		default:
 			return ''
 	}
@@ -644,14 +757,37 @@ const refusedText = computed(() => (V.value?.umpire && game.refused.value.length
 	? t('quantumchess', 'Refused this turn: {moves}', { moves: game.refused.value.join(', ') })
 	: ''))
 
-/** The lines of the records since the viewer's own last move: announcements, "Blue is out", sides that sat out. */
-const report = computed(() => {
+/**
+ * The report's lines in groups: one per run of records of one side. In a variant whose turn has several moves (its
+ * `actions`, the multiverse) each group is headed with whose turn it was ("Last turn of White"), so an old line is not
+ * read as the present.
+ */
+const reportGroups = computed(() => {
 	if (!V.value || !state.value) {
 		return []
 	}
 	const viewer = game.viewer.value
-	return recordsSince(state.value.history, viewer).flatMap((h) => recordLines(V.value, h, viewer))
+	const groups = []
+	for (const h of recordsSince(state.value.history, viewer)) {
+		const lines = recordLines(V.value, h, viewer)
+		if (!lines.length) {
+			continue
+		}
+		const last = groups[groups.length - 1]
+		if (last && last.side === h.side) {
+			last.lines.push(...lines)
+		} else {
+			const title = V.value.actions && !V.value.umpire
+				? t('quantumchess', 'Last turn of {side}', { side: sideName(V.value, h.side) })
+				: null
+			groups.push({ side: h.side, title, lines: [...lines] })
+		}
+	}
+	return groups
 })
+
+/** The lines of the records since the viewer's own last move: announcements, "Blue is out", sides that sat out. */
+const report = computed(() => reportGroups.value.flatMap((g) => g.lines))
 
 /**
  * The type of the piece that moved in a history record, as the saved move list keeps it (`t`), or null (games saved
@@ -700,11 +836,14 @@ const historyRows = computed(() => {
 /** Whether the move list has a column per side (a two-player game). */
 const pairs = computed(() => V.value?.sides.length === 2)
 
-/** The numbered rows of the move list (`moveRows`), each cell with the rows of its records. */
-const moveList = computed(() => moveRows(state.value?.history ?? [], V.value?.sides.length ?? 2).map((row) => ({
-	n: row.n,
-	cells: row.cells.map((cell) => (cell ? cell.items.map((i) => historyRows.value[i]) : null)),
-})))
+/**
+ * The numbered rows of the move list (`moveRows`), each cell with the rows of its records, and the lines of all its
+ * records (shown under the row, across both columns, in a two-player game).
+ */
+const moveList = computed(() => moveRows(state.value?.history ?? [], V.value?.sides.length ?? 2).map((row) => {
+	const cells = row.cells.map((cell) => (cell ? cell.items.map((i) => historyRows.value[i]) : null))
+	return { n: row.n, cells, lines: cells.flatMap((cell) => (cell ?? []).flatMap((h) => h.lines)) }
+}))
 
 // the newest move is at the end of the list: keep it in view
 watch(() => state.value?.history.length, async () => {
@@ -899,6 +1038,11 @@ function pieceTypeAt(sq) {
 	--qc-vboard-reserve: 250px;
 }
 
+// a board that fills the screen's height: room for its caption and zoom buttons above it and its legend below
+.qc-vgame__board--fill {
+	--qc-vboard-reserve: 200px;
+}
+
 // a slim bar (the status and the move types; the hint stays below it) that leaves the board as much of the screen
 // as it can; the drawing is kept short enough to fit above it with the title (3D chess opens whole)
 @media (max-width: 1023px) {
@@ -918,6 +1062,11 @@ function pieceTypeAt(sq) {
 	}
 
 	.qc-vgame__board--hands {
+		--qc-vboard-reserve: 340px;
+	}
+
+	// and the move controls, which stay at the bottom of the screen
+	.qc-vgame__board--fill {
 		--qc-vboard-reserve: 340px;
 	}
 }
@@ -1123,6 +1272,11 @@ function pieceTypeAt(sq) {
 	list-style: none;
 }
 
+.qc-vgame__options-box summary {
+	color: var(--color-text-maxcontrast);
+	cursor: pointer;
+}
+
 // a sample of the hill of King of the Hill: its light and dark green, with its border
 .qc-vgame__legend-swatch {
 	flex: none;
@@ -1135,6 +1289,46 @@ function pieceTypeAt(sq) {
 .qc-vgame__legend-swatch--hill {
 	border: 1.5px solid #6b4f2c;
 	background: linear-gradient(135deg, #b4d3a4 50%, #7fac75 50%);
+}
+
+// the multiverse: the gold and blue halos, a threat line and a travel arrow
+.qc-vgame__legend-swatch--must {
+	border: 1.5px solid #9a6b00;
+	background: #e9b949;
+}
+
+.qc-vgame__legend-swatch--optional {
+	border: 1.5px solid #2a7ab0;
+	background: #9cc7e2;
+}
+
+.qc-vgame__legend-swatch--inactive {
+	border: 1px solid #c9d0d4;
+	background: repeating-linear-gradient(45deg, #c9d0d4 0 2px, #f1f3f4 2px 5px);
+}
+
+.qc-vgame__legend-swatch--threat,
+.qc-vgame__legend-swatch--travel {
+	width: 18px;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--qc-ring-danger, #d0263a);
+}
+
+.qc-vgame__legend-swatch--travel {
+	background: #1f6fb2;
+}
+
+// several short legend items share a line
+.qc-vgame__legend--items {
+	flex-wrap: wrap;
+	gap: 4px 14px;
+}
+
+.qc-vgame__legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
 }
 
 .qc-vgame__legend {
@@ -1176,6 +1370,12 @@ function pieceTypeAt(sq) {
 	margin-top: 4px;
 	color: var(--qc-danger, #c90000);
 	font-weight: bold;
+}
+
+// where the game was decided, under the result
+.qc-vgame__end-note {
+	display: block;
+	margin-top: 4px;
 }
 
 .qc-vgame__choices,
@@ -1354,6 +1554,11 @@ function pieceTypeAt(sq) {
 	font-size: 13px;
 }
 
+// scrolled: the top fades, so a half-cut first row reads as more above
+.qc-vgame__moves--scrolled {
+	mask-image: linear-gradient(to bottom, transparent 0, #000 22px);
+}
+
 // one numbered row per move (two players: a column per side) or per turn
 .qc-vgame__move-rows {
 	margin: 0;
@@ -1401,11 +1606,20 @@ function pieceTypeAt(sq) {
 	align-items: center;
 	gap: 6px;
 	min-width: 0;
-	overflow-wrap: anywhere;
+	// a code breaks between its squares (`<wbr>`), inside one only when a square alone is too long
+	overflow-wrap: break-word;
 }
 
 .qc-vgame__move-line {
 	color: var(--color-text-maxcontrast);
+}
+
+// the lines of a row's moves, across both columns of a two-player game
+.qc-vgame__move-notes {
+	display: flex;
+	grid-column: 2 / -1;
+	flex-direction: column;
+	min-width: 0;
 }
 
 .qc-vgame__code {

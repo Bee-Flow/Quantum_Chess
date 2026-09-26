@@ -16,7 +16,7 @@
 		<header class="qc-variants__head">
 			<h2>{{ t('quantumchess', 'Chess variants') }}</h2>
 			<p>
-				{{ t('quantumchess', 'Twenty ways to play, from 3D and 4D chess to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link.') }}
+				{{ t('quantumchess', 'Twenty ways to play, from 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link.') }}
 			</p>
 		</header>
 
@@ -160,8 +160,9 @@
 						{{ describeOption(o) }}
 					</p>
 				</fieldset>
+				<!-- a variant that is never turned (the multiverse) always shows the player to move's danger line -->
 				<NcCheckboxRadioSwitch
-					v-if="setup.opponent === 'local' && !setup.variant.hidden"
+					v-if="setup.opponent === 'local' && !setup.variant.hidden && setup.variant.flipBoard !== false"
 					v-model="setup.autoFlip">
 					{{ t('quantumchess', 'Turn the board to the player to move') }}
 				</NcCheckboxRadioSwitch>

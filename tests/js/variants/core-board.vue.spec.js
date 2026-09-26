@@ -459,8 +459,11 @@ describe('H7: Split and Measure follow the variant\'s allowQuantum', () => {
 		const game = await startGame(Q, s)
 		game.setMode('measure')
 		game.click(sq('f3'))
-		expect(game.notice.value).toEqual({ kind: 'noMeasure' })
+		// a part of one of the player's own ghosts: the notice says that the square is the reason, not the piece
+		expect(game.notice.value).toEqual({ kind: 'measureHere' })
 		expect(game.pending.value).toBeNull()
+		game.click(sq('e8'))
+		expect(game.notice.value).toEqual({ kind: 'noMeasure' })
 		game.click(sq('h3'))
 		expect(game.notice.value).toBeNull()
 		expect(game.pending.value?.code).toBe('?h3')
@@ -659,8 +662,11 @@ describe('H13: threat outlines', () => {
 		const w = mount(VariantBoard, { props, attachTo: document.body })
 		const outlines = w.findAll('.qc-vboard__outline')
 		expect(outlines.map((o) => o.classes().includes('qc-vboard__outline--threat'))).toEqual([true, false, false])
-		// turned with the board
-		expect(Number(outlines[0].attributes('x1'))).toBe(5)
+		// turned with the board, and starting a little after the attacker's centre
+		expect(Number(outlines[0].attributes('x1'))).toBeCloseTo(5 - 0.35, 6)
+		// a travel arrow is a path with its own head
+		expect(outlines[1].element.tagName.toLowerCase()).toBe('path')
+		expect(outlines[1].classes()).toContain('qc-vboard__outline--travel')
 		const children = [...w.find('svg.qc-vboard').element.children]
 		const lastCell = children.findLastIndex((el) => el.classList.contains('qc-vboard__cell'))
 		expect(children.indexOf(outlines[0].element)).toBeGreaterThan(lastCell)
@@ -701,8 +707,10 @@ describe('the badges and the probability ring', () => {
 		const big = mount(VariantPiece, { props: { glyph, size: 0.92, p: 0.25, unit: 1 / 90 } })
 		expect(big.find('.qc-vpiece__badge text').text()).toBe('25%')
 		expect(Number(big.find('.qc-vpiece__badge text').attributes('font-size'))).toBeCloseTo(0.184, 5)
-		// a piece under 30 px shows only its ring: a badge would cover it
-		const tiny = mount(VariantPiece, { props: { glyph, size: 0.92, p: 0.5, unit: 1 / 30 } })
+		// a piece under 30 px gets a smaller badge (9.5 px), one under 24 px only its ring: a badge would cover it
+		const small = mount(VariantPiece, { props: { glyph, size: 0.92, p: 0.5, unit: 1 / 30 } })
+		expect(Number(small.find('.qc-vpiece__badge text').attributes('font-size')) * 30).toBeCloseTo(9.5, 5)
+		const tiny = mount(VariantPiece, { props: { glyph, size: 0.92, p: 0.5, unit: 1 / 25 } })
 		expect(tiny.find('.qc-vpiece__badge').exists()).toBe(false)
 		expect(tiny.find('.qc-vpiece__arc').exists()).toBe(true)
 	})

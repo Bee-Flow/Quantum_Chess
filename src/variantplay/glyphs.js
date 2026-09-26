@@ -9,7 +9,7 @@
  * - `{ sprite: 'k' }`: a piece of the cburnett set (the orthodox pieces). Sides whose colour is not white or black
  *   (four-player chess) get the white piece tinted in their colour; `promoted: true` adds a small red "+" marker;
  *   `scale` (0 to 1) draws it smaller (Makruk's met, a small queen); `horn: true` gives a knight a unicorn's horn
- *   (the unicorn of 3D chess);
+ *   (the unicorn of 3D chess); `bar: true` gives a pawn a crossbar (the brawn of the multiverse);
  * - `{ sprites: ['b', 'n'] }`: a compound piece drawn as its two cburnett pieces side by side, the second in front
  *   (Capablanca's archbishop, bishop and knight, and chancellor, rook and knight);
  * - `{ text, shape }`: a character or short text on a token: `circle` (a round token in the side's colour),
@@ -53,8 +53,8 @@ export function darkTextOn(hex) {
 }
 
 /**
- * How to draw a piece: `{ kind: 'sprite', symbol, tint, promoted?, scale?, horn? }` (`horn`: the colour of the
- * horn, white or black), `{ kind: 'compound', parts: [{ symbol }, { symbol }], tint }` or
+ * How to draw a piece: `{ kind: 'sprite', symbol, tint, promoted?, scale?, horn?, bar? }` (`horn` and `bar`: the
+ * colour of the horn or the crossbar, white or black), `{ kind: 'compound', parts: [{ symbol }, { symbol }], tint }` or
  * `{ kind: 'text', text, shape, fill, ink }`. A sprite glyph with `promoted: true` (a promoted pawn in the drop
  * variants, `+q`) carries a small red "+" marker.
  *
@@ -83,6 +83,9 @@ export function glyphOf(V, type, side) {
 		}
 		if (g.horn) {
 			out.horn = color === 'b' ? 'black' : 'white'
+		}
+		if (g.bar) {
+			out.bar = color === 'b' ? 'black' : 'white'
 		}
 		return out
 	}
