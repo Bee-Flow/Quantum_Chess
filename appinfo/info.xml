@@ -9,7 +9,7 @@
 	<!-- The App Store texts are English only: the App Store caches the description regardless of the
 	     language, so visitors could see another language than they chose. The app itself is translated (l10n/). -->
 	<name>Quantum Chess</name>
-	<summary>Chess with superposition, measurement and entanglement: play colleagues, the computer or an AI</summary>
+	<summary>Chess with superposition, measurement and entanglement: play colleagues, the computer or an AI, and 20 variants up to 5D</summary>
 	<description><![CDATA[**Quantum Chess** is chess in which a piece can stand on two squares at once, until something asks where it really is. It lives inside your Nextcloud: challenge colleagues and family with the notifications, avatars and dashboard you already use. Twenty chess variants, from 5D chess with multiverse time travel to shogi and xiangqi, bring the same quantum rules to other boards.
 
 ### How it plays
@@ -66,6 +66,9 @@
 	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/05-ai-opponent.png</screenshot>
 	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/06-dark.png</screenshot>
 	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/07-phone.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/08-variants.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/09-multiverse.png</screenshot>
+	<screenshot>https://raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/10-variant-boards.png</screenshot>
 	<dependencies>
 		<php min-version="8.1" min-int-size="64"/>
 		<nextcloud min-version="32" max-version="35"/>
