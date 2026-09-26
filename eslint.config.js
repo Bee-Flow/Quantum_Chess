@@ -17,8 +17,6 @@ export default [
 			'playwright-report/**',
 			'test-results/**',
 			'tests/fixtures/**/*.json',
-			// the session hand-over notes and throwaway research tools of the version 2 work
-			'handoff/**',
 		],
 	},
 	...recommendedJavascript,

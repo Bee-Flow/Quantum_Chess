@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url'
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const CODE = /\.(php|js|mjs|cjs|vue|scss|css|ya?ml)$/
 /** Built, vendored and generated files, whose .editorconfig sections unset the limit, and the session hand-over. */
-const SKIPPED = /^(js|assets|vendor|node_modules|l10n|build|tests\/fixtures\/engine|handoff)\//
+const SKIPPED = /^(js|assets|vendor|node_modules|l10n|build|tests\/fixtures\/engine)\//
 /**
  * String literals (single, double or back quotes, on one line) and URLs, with the concatenation operator that leads
  * a continuation line and the punctuation that closes them.
