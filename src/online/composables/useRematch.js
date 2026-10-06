@@ -44,11 +44,18 @@ export function useRematch({ gameId, api, me, act, pollNow }, deps) {
 	let since = 0
 	let requested = false
 
-	/** `pending` while the viewer's own offer waits, `offered` when the other player offers one. */
+	/**
+	 * `pending` while the viewer's own offer waits, `offered` when the other player offers one. A rematch of a game
+	 * with more than two seats is `offered` while the viewer is invited to it and has not taken their seat, else
+	 * `pending` until every seat is taken.
+	 */
 	const rematchState = computed(() => {
 		const r = rematchGame.value
 		if (!r || r.status !== 'pending') {
 			return null
+		}
+		if (Array.isArray(r.seats)) {
+			return r.invited ? 'offered' : 'pending'
 		}
 		return r.creator?.userId === me ? 'pending' : 'offered'
 	})

@@ -264,9 +264,28 @@ final class SeatedGamesTest extends TestCase {
 		$this->assertSame([], VariantTurn::of($this->stored[100])->muted);
 	}
 
-	public function testNoRematchYet(): void {
+	public function testARematchMovesEveryPlayerOnBySeat(): void {
 		$this->started();
 		$this->gameplay()->resign(100, 'alice');
-		$this->assertApiError('invalid_status', fn () => $this->invitations()->rematch(100, 'bob'));
+		$this->assertApiError('not_found', fn () => $this->invitations()->rematch(100, 'erin'));
+		$rematch = $this->invitations()->rematch(100, 'bob');
+		$id = (int)$rematch->getId();
+		$this->assertSame(['dave', 'alice', 'bob', 'carol'], $rematch->seatUids(), 'the last seat moves to seat 0');
+		$this->assertSame([Game::STATUS_PENDING, 'bob', 100, 'fourplayer', 0], [
+			$rematch->getStatus(),
+			$rematch->getCreatorUid(),
+			$rematch->getRematchOf(),
+			$rematch->getVariant() === 'fourplayer' ? 'fourplayer' : null,
+			$rematch->getRatedRequested(),
+		]);
+		$this->assertSame($id, $this->stored[100]->getRematchId());
+		$this->assertSame($id, (int)$this->invitations()->rematch(100, 'bob')->getId(), 'asking again changes nothing');
+		foreach (['carol', 'alice'] as $uid) {
+			$this->invitations()->rematch(100, $uid);
+		}
+		$this->assertSame(Game::STATUS_PENDING, $this->stored[$id]->getStatus());
+		$this->invitations()->rematch(100, 'dave');
+		$this->assertSame(Game::STATUS_ACTIVE, $this->stored[$id]->getStatus(), 'every seat taken: the rematch starts');
+		$this->assertSame(['dave', 'alice', 'bob', 'carol'], $this->stored[$id]->seatUids());
 	}
 }

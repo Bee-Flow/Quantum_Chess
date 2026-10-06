@@ -537,12 +537,16 @@ export const requestRematch = async (id) => game(await request('post', `/games/$
 export const getStats = () => request('get', '/stats')
 
 /**
- * The leaderboard, optionally of one group.
+ * The leaderboard of classic Quantum Chess or of a two-player chess variant, optionally of one group.
  *
- * @param {{group?: string}} [query] group id
+ * @param {{group?: string, variant?: string}} [query] group id and variant id
  * @return {Promise<object>}
  */
-export const getLeaderboard = ({ group } = {}) => request('get', '/leaderboard', { params: group ? { group } : {} })
+export function getLeaderboard({ group, variant } = {}) {
+	return request('get', '/leaderboard', {
+		params: { ...(group ? { group } : {}), ...(variant ? { variant } : {}) },
+	})
+}
 
 /**
  * Count a finished local game in the statistics.

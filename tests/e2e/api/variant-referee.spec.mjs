@@ -65,10 +65,18 @@ test.beforeAll(async () => {
 })
 
 test('a Kriegspiel game starts with a view for each player', async () => {
+	const rated = (await api('carol', 'POST', 'api/games', {
+		opponent: uid('bob'),
+		variant: 'kriegspiel',
+		timeControl: 'corr:3d',
+	})).game
+	expect(rated.ratedRequested, 'a game the server rules is rated unless asked otherwise').toBe(true)
+	await api('carol', 'POST', `api/games/${rated.id}/cancel`)
 	game = (await api('carol', 'POST', 'api/games', {
 		opponent: uid('bob'),
 		variant: 'kriegspiel',
 		color: 'w',
+		rated: false,
 		timeControl: 'corr:3d',
 	})).game
 	await api('bob', 'POST', `api/games/${game.id}/accept`)
@@ -141,6 +149,7 @@ test('Fog of war previews the odds of a move to the player to move', async () =>
 		opponent: uid('bob'),
 		variant: 'darkchess',
 		color: 'w',
+		rated: false,
 		timeControl: 'corr:3d',
 	})).game
 	await api('bob', 'POST', `api/games/${g.id}/accept`)
@@ -157,4 +166,28 @@ test('Fog of war previews the odds of a move to the player to move', async () =>
 		'only the player to move gets the odds',
 	)
 	await api('dave', 'POST', `api/games/${g.id}/abort`)
+})
+
+test('a rated Kriegspiel game counts in the Kriegspiel ratings only', async () => {
+	let g = (await api('dave', 'POST', 'api/games', {
+		opponent: uid('carol'),
+		variant: 'kriegspiel',
+		rated: true,
+		timeControl: 'corr:3d',
+	})).game
+	g = (await api('carol', 'POST', `api/games/${g.id}/accept`)).game
+	expect(g.rated, 'started as a rated game').toBe(true)
+	const white = g.white.userId === uid('dave') ? 'dave' : 'carol'
+	const black = white === 'dave' ? 'carol' : 'dave'
+	await api(white, 'POST', `api/games/${g.id}/v/moves`, { code: 'e2-e4', ply: 0 })
+	await api(black, 'POST', `api/games/${g.id}/v/moves`, { code: 'e7-e5', ply: 1 })
+	const classic = (await api(black, 'GET', 'api/stats')).online.ratedGames
+	const done = (await api(black, 'POST', `api/games/${g.id}/resign`)).game
+	expect([done.status, done.rated, done.ratingChange?.w > 0]).toEqual(['finished', true, true])
+	const stats = await api(black, 'GET', 'api/stats')
+	expect(stats.online.ratedGames, 'the classic rating stays as it is').toBe(classic)
+	const kriegspiel = stats.variants.find((v) => v.variant === 'kriegspiel')
+	expect(kriegspiel?.ratedGames ?? 0, 'the Kriegspiel rating counts the game').toBeGreaterThanOrEqual(1)
+	const board = await api(black, 'GET', 'api/leaderboard?variant=kriegspiel')
+	expect(board.variant).toBe('kriegspiel')
 })

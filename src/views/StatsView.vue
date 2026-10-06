@@ -77,13 +77,53 @@
 					</div>
 				</dl>
 				<RatingGraph :history="stats.ratingHistory ?? []" />
+				<table v-if="variantRows.length" class="qc-stats__table" data-test="stats-variants">
+					<caption class="qc-stats__caption">
+						{{ t('quantumchess', 'Chess variants') }}
+					</caption>
+					<thead>
+						<tr>
+							<th scope="col">
+								{{ t('quantumchess', 'Variant') }}
+							</th>
+							<th scope="col" class="qc-stats__num">
+								{{ t('quantumchess', 'Rating') }}
+							</th>
+							<th scope="col" class="qc-stats__num">
+								{{ t('quantumchess', 'Games') }}
+							</th>
+							<th scope="col" class="qc-stats__num">
+								{{ t('quantumchess', 'Won / lost / drawn') }}
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="v in variantRows" :key="v.variant">
+							<td>{{ v.name }}</td>
+							<td class="qc-stats__num">
+								{{ v.ratedGames ? formatRating(v.rating, v.provisional) : '–' }}
+							</td>
+							<td class="qc-stats__num">
+								{{ v.games }}
+							</td>
+							<td class="qc-stats__num">
+								{{ v.wins }} / {{ v.losses }} / {{ v.draws }}
+							</td>
+						</tr>
+					</tbody>
+				</table>
 			</section>
 
 			<section v-if="board && board.mode !== 'off'" class="qc-stats__section">
 				<h3 class="qc-stats__heading">
 					{{ t('quantumchess', 'Leaderboard') }}
 				</h3>
-				<LeaderboardTable :board="board" :group="group" @group="setGroup" />
+				<LeaderboardTable
+					:board="board"
+					:group="group"
+					:variant="variant"
+					@group="setGroup"
+					@variant="setVariant" />
 			</section>
 
 			<section class="qc-stats__section" data-test="stats-local">
@@ -149,16 +189,24 @@ import { personaById } from '../llm/personas.js'
 import { getLeaderboard, getStats, saveMultiplayerSettings } from '../services/api.js'
 import { formatRating } from '../services/format.js'
 import { features } from '../services/initialState.js'
+import { catalogEntry } from '../variants/index.js'
 
 const multiplayer = features.multiplayer
 const stats = ref(null)
 const board = ref(null)
 const group = ref(null)
+/** The chess variant of the leaderboard, null for classic Quantum Chess */
+const variant = ref(null)
 const loading = ref(false)
 const saving = ref(false)
 const error = ref(null)
 
 const online = computed(() => stats.value?.online ?? { rating: 1200, games: 0, wins: 0, losses: 0, draws: 0 })
+/** The player's ratings and results in the chess variants they played online (a rating once a game was rated). */
+const variantRows = computed(() => (stats.value?.variants ?? []).map((v) => ({
+	...v,
+	name: catalogEntry(v.variant)?.name() ?? v.variant,
+})))
 const localRows = computed(() => {
 	const local = stats.value?.local ?? {}
 	const rows = LEVELS.map((level, i) => {
@@ -181,7 +229,7 @@ async function load() {
 	try {
 		const [s, b] = await Promise.all([
 			getStats(),
-			multiplayer ? getLeaderboard({ group: group.value }).catch(() => null) : null,
+			multiplayer ? getLeaderboard({ group: group.value, variant: variant.value }).catch(() => null) : null,
 		])
 		stats.value = s
 		board.value = b
@@ -201,7 +249,21 @@ async function load() {
 async function setGroup(id) {
 	group.value = id
 	try {
-		board.value = await getLeaderboard({ group: id })
+		board.value = await getLeaderboard({ group: id, variant: variant.value })
+	} catch (e) {
+		error.value = e
+	}
+}
+
+/**
+ * Show the leaderboard of classic Quantum Chess or of a chess variant.
+ *
+ * @param {string|null} id variant id, null for classic Quantum Chess
+ */
+async function setVariant(id) {
+	variant.value = id
+	try {
+		board.value = await getLeaderboard({ group: group.value, variant: id })
 	} catch (e) {
 		error.value = e
 	}
@@ -327,6 +389,12 @@ onMounted(load)
 		color: var(--color-text-maxcontrast);
 		font-weight: normal;
 	}
+}
+
+.qc-stats__caption {
+	padding: 16px 8px 4px;
+	font-weight: bold;
+	text-align: start;
 }
 
 .qc-stats__num {

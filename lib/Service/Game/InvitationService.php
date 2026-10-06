@@ -49,8 +49,10 @@ class InvitationService {
 	 * play online, then each field, then the rules for rated games, open challenges and group scopes, then who may be
 	 * invited, and last the user's limits.
 	 *
-	 * A request with a `variant` creates a game of that chess variant, with the option values in `options`. Variant
-	 * games are never rated (docs/development/online-variants.md).
+	 * A request with a `variant` creates a game of that chess variant, with the option values in `options`. A
+	 * two-seat variant game is rated when the creator asks for it and the opponent accepts, as a classic game; without
+	 * `rated` the server-ruled variants (Kriegspiel, Fog of war) are rated and the others not. Games with more than
+	 * two seats are never rated (docs/development/online-variants.md, phase 5).
 	 *
 	 * @param array<string, mixed> $request `opponent`, `color` (w, b or r), `rated`, `timeControl`, `message`,
 	 *                                      `scopeGroup` (open challenges only), `variant` and `options`
@@ -73,12 +75,12 @@ class InvitationService {
 		if (!in_array($color, ['w', 'b', 'r'], true)) {
 			throw ApiException::invalidArgument('color', $this->l->t('Invalid colour'));
 		}
-		$rated = $request['rated'] ?? true;
+		[$variant, $options] = $this->variantOf($request);
+		$rated = $request['rated'] ?? ($variant === null || VariantCatalog::isRefereed($variant));
 		if (!is_bool($rated)) {
 			throw ApiException::invalidArgument('rated', $this->l->t('Invalid value'));
 		}
-		[$variant, $options] = $this->variantOf($request);
-		if ($variant !== null) {
+		if ($variant !== null && VariantCatalog::seatCount($variant) > 2) {
 			$rated = false;
 		}
 		$timeControl = $request['timeControl'] ?? TimeControl::DEFAULT->value;
@@ -291,9 +293,11 @@ class InvitationService {
 	private function requestRematch(int $id, string $uid): Game {
 		$old = $this->lifecycle->load($id, $uid);
 		$color = $old->colorOf($uid);
-		// a rematch of a game with more than two seats comes with ratings and rematches (online-variants.md, phase 5)
-		if ($color === null || !$old->hasEnded() || $old->isMultiSeat()) {
+		if ($color === null || !$old->hasEnded()) {
 			throw $this->errors->invalidStatus();
+		}
+		if ($old->isMultiSeat()) {
+			return $this->requestSeatedRematch($old, $uid, $color);
 		}
 		$rematchId = $old->getRematchId();
 		$existing = $rematchId === null ? null : $this->repository->find($rematchId);
@@ -341,6 +345,53 @@ class InvitationService {
 			$this->repository->save($old);
 			$this->transaction->afterCommit(fn () => $this->notifications->invite($game));
 			return $game;
+		});
+	}
+
+	/**
+	 * A rematch of a game with more than two seats: the same variant, options, time control and colour choice, every
+	 * player one seat on (SeatedInvitations::rotated). The player who asks takes their seat; the others are invited and
+	 * answer on their own. Asking again returns the pending rematch, or takes the asker's seat in it.
+	 *
+	 * @throws ApiException
+	 */
+	private function requestSeatedRematch(Game $old, string $uid, string $color): Game {
+		$rematchId = $old->getRematchId();
+		$existing = $rematchId === null ? null : $this->repository->find($rematchId);
+		if ($existing !== null) {
+			$existing = $this->lifecycle->resolveLazy($existing);
+			$waiting = in_array($existing->getStatus(), [Game::STATUS_PENDING, Game::STATUS_OPEN], true);
+			if ($waiting && $existing->isInviteeOf($uid)) {
+				return $this->seated->accept($existing, $uid);
+			}
+			if (($waiting || $existing->getStatus() === Game::STATUS_ACTIVE) && $existing->isParticipant($uid)) {
+				return $existing;
+			}
+		}
+		$players = SeatedInvitations::rotated($old);
+		if (in_array(null, $players, true)) {
+			throw new ApiException(ApiError::UserNotFound, $this->l->t('You can\'t invite this user'));
+		}
+		$seats = $this->seated->seatsOf($uid, $players, count($players));
+		$now = $this->clock->now();
+		$game = new Game();
+		$game->setCreatorUid($uid);
+		$game->setColorChoice($old->getColorChoice() === 'r' ? 'r' : 'w');
+		$this->setStart($game, $old->getVariant(), $old->getVariantOptionValues());
+		$game->setPly(0);
+		$game->setTurn('0');
+		$game->setRev(1);
+		$game->setRatedRequested(0);
+		$game->setRated(0);
+		$game->setTimeControl($old->getTimeControl());
+		$game->setExpiresAt($now + self::REMATCH_EXPIRY);
+		$game->setRematchOf($old->getId());
+		$game->setCreatedAt($now);
+		$game->setUpdatedAt($now);
+		return $this->seated->create($game, $uid, $seats, function (Game $game) use ($old, $color): void {
+			$old->setRematchId($game->getId());
+			$this->lifecycle->addSystemLine($old, 'rematch_offered', ['color' => $color]);
+			$this->repository->save($old);
 		});
 	}
 

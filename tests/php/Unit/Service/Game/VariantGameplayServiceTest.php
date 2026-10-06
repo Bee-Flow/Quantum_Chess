@@ -79,7 +79,7 @@ final class VariantGameplayServiceTest extends TestCase {
 			'rated' => true,
 		]);
 		$this->assertSame(
-			['chess960', '{"position":518}', 1, 2, 0, '{"v":1,"turns":0,"pending":null}'],
+			['chess960', '{"position":518}', 1, 2, 1, '{"v":1,"turns":0,"pending":null}'],
 			[
 				$game->getVariant(),
 				$game->getVariantOptions(),
@@ -88,7 +88,7 @@ final class VariantGameplayServiceTest extends TestCase {
 				$game->getRatedRequested(),
 				$game->getState(),
 			],
-			'variant games are never rated',
+			'a two-player variant game may be rated',
 		);
 		$game = $this->invitations()->accept((int)$game->getId(), 'bob');
 		$this->assertSame([Game::STATUS_ACTIVE, 'alice', 'bob', 0], [

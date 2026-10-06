@@ -13,13 +13,15 @@ use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\GameMapper;
 use OCA\QuantumChess\Db\Rating;
 use OCA\QuantumChess\Db\RatingMapper;
+use OCA\QuantumChess\Db\VariantRating;
+use OCA\QuantumChess\Db\VariantRatingMapper;
 use OCA\QuantumChess\Service\Player\RatingService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Elo ratings and result counts.
+ * Elo ratings and result counts, of classic Quantum Chess and per chess variant.
  */
 #[CoversClass(RatingService::class)]
 final class RatingServiceTest extends TestCase {
@@ -40,7 +42,12 @@ final class RatingServiceTest extends TestCase {
 		$mapper = $this->ratingMapper($rows, $calls);
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1790000000);
-		$service = new RatingService($mapper, $this->createMock(GameMapper::class), $time);
+		$service = new RatingService(
+			$mapper,
+			$this->createMock(VariantRatingMapper::class),
+			$this->createMock(GameMapper::class),
+			$time,
+		);
 
 		$bob = new Rating();
 		$bob->setUid('bob');
@@ -128,6 +135,7 @@ final class RatingServiceTest extends TestCase {
 		$mapper = $this->ratingMapper($rows, $calls);
 		$service = new RatingService(
 			$mapper,
+			$this->createMock(VariantRatingMapper::class),
 			$this->createMock(GameMapper::class),
 			$this->createMock(ITimeFactory::class),
 		);
@@ -145,22 +153,117 @@ final class RatingServiceTest extends TestCase {
 		$this->assertNull($game->getRatingWDelta());
 	}
 
-	public function testVariantGamesCountNowhere(): void {
+	/**
+	 * A VariantRatingMapper over `$rows` (by `uid|variant`) that logs inserts, locks and updates.
+	 *
+	 * @param array<string, VariantRating> $rows
+	 * @param list<string> $calls
+	 */
+	private function variantMapper(array &$rows, array &$calls): VariantRatingMapper {
+		$mapper = $this->createMock(VariantRatingMapper::class);
+		$mapper->method('find')->willReturnCallback(function (string $uid, string $variant) use (&$rows) {
+			return $rows[$uid . '|' . $variant] ?? null;
+		});
+		$mapper->method('insertIfMissing')->willReturnCallback(
+			function (string $uid, string $variant, int $start, int $now) use (&$rows, &$calls): void {
+				$calls[] = 'insert ' . $uid . ' ' . $variant;
+				$row = new VariantRating();
+				$row->setUid($uid);
+				$row->setVariant($variant);
+				$row->setRating($start);
+				$row->setPeak($start);
+				$row->setUpdatedAt($now);
+				$rows[$uid . '|' . $variant] ??= $row;
+			},
+		);
+		$mapper->method('lock')->willReturnCallback(function (string $uid, string $variant) use (&$calls): void {
+			$calls[] = 'lock ' . $uid . ' ' . $variant;
+		});
+		$mapper->method('update')->willReturnCallback(function (VariantRating $row) use (&$calls) {
+			$calls[] = 'update ' . $row->getUid() . ' ' . $row->getVariant();
+			return $row;
+		});
+		$mapper->method('findByUid')->willReturnCallback(function (string $uid) use (&$rows) {
+			return array_values(array_filter($rows, fn (VariantRating $r) => $r->getUid() === $uid));
+		});
+		return $mapper;
+	}
+
+	public function testVariantGamesCountInTheVariantsOwnRatings(): void {
 		$rows = [];
 		$calls = [];
+		$vrows = [];
+		$vcalls = [];
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getTime')->willReturn(1790000000);
 		$service = new RatingService(
 			$this->ratingMapper($rows, $calls),
+			$this->variantMapper($vrows, $vcalls),
 			$this->createMock(GameMapper::class),
-			$this->createMock(ITimeFactory::class),
+			$time,
 		);
 		$game = new Game();
 		$game->setWhiteUid('alice');
 		$game->setBlackUid('bob');
 		$game->setStatus(Game::STATUS_FINISHED);
-		$game->setRated(0);
+		$game->setRated(1);
 		$game->setResult('1-0');
-		$game->setVariant('atomic');
+		$game->setVariant('kriegspiel');
 		$service->applyResult($game);
-		$this->assertSame([[], []], [$rows, $calls]);
+		$this->assertSame([[], []], [$rows, $calls], 'the classic ratings stay as they are');
+		$this->assertSame(
+			[1220, 1180],
+			[$vrows['alice|kriegspiel']->getRating(), $vrows['bob|kriegspiel']->getRating()],
+		);
+		$this->assertSame([20, -20], [$game->getRatingWDelta(), $game->getRatingBDelta()]);
+		$this->assertSame([
+			'insert alice kriegspiel', 'lock alice kriegspiel', 'insert bob kriegspiel', 'lock bob kriegspiel',
+			'update alice kriegspiel', 'update bob kriegspiel',
+		], $vcalls);
+		$this->assertSame(1220, $service->getVariant('alice', 'kriegspiel')['rating'] ?? null);
+		$this->assertSame(
+			[['variant' => 'kriegspiel', 'rating' => 1220, 'ratedGames' => 1, 'wins' => 1]],
+			array_map(fn (array $v) => [
+				'variant' => $v['variant'],
+				'rating' => $v['rating'],
+				'ratedGames' => $v['ratedGames'],
+				'wins' => $v['wins'],
+			], $service->variantRatings('alice')),
+		);
+
+		$atomic = new Game();
+		$atomic->setWhiteUid('bob');
+		$atomic->setBlackUid('alice');
+		$atomic->setStatus(Game::STATUS_FINISHED);
+		$atomic->setRated(0);
+		$atomic->setResult('1/2-1/2');
+		$atomic->setVariant('atomic');
+		$service->applyResult($atomic);
+		$this->assertSame([1200, 1, 0], [
+			$vrows['bob|atomic']->getRating(),
+			$vrows['bob|atomic']->getDraws(),
+			$vrows['bob|atomic']->getRatedGames(),
+		], 'an unrated variant game only counts');
+	}
+
+	public function testGamesOfFourCountNowhere(): void {
+		$rows = [];
+		$calls = [];
+		$vrows = [];
+		$vcalls = [];
+		$service = new RatingService(
+			$this->ratingMapper($rows, $calls),
+			$this->variantMapper($vrows, $vcalls),
+			$this->createMock(GameMapper::class),
+			$this->createMock(ITimeFactory::class),
+		);
+		$game = new Game();
+		$game->setStatus(Game::STATUS_FINISHED);
+		$game->setRated(0);
+		$game->setResult('*');
+		$game->setVariant('fourplayer');
+		$game->setSeatCount(4);
+		$service->applyResult($game);
+		$this->assertSame([[], [], [], []], [$rows, $calls, $vrows, $vcalls]);
 	}
 }

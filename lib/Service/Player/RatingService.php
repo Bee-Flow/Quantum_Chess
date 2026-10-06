@@ -13,6 +13,8 @@ use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\GameMapper;
 use OCA\QuantumChess\Db\Rating;
 use OCA\QuantumChess\Db\RatingMapper;
+use OCA\QuantumChess\Db\VariantRating;
+use OCA\QuantumChess\Db\VariantRatingMapper;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -20,6 +22,10 @@ use OCP\AppFramework\Utility\ITimeFactory;
  *
  * Every player starts at 1200 and never drops below 100. The K-factor is 40 during the first ten rated games (the
  * rating is provisional) and 20 afterwards. Unrated games count in the results but not in the rating.
+ *
+ * Classic Quantum Chess and every chess variant have ratings of their own: a two-seat variant game counts in the
+ * players' rows for that variant (`qchess_vratings`), never in the classic ones. Games with more than two seats count
+ * nowhere. The leaderboard choice (`listed`) stays on the classic row and holds for every board.
  */
 class RatingService {
 	public const START = 1200;
@@ -31,6 +37,7 @@ class RatingService {
 
 	public function __construct(
 		private readonly RatingMapper $mapper,
+		private readonly VariantRatingMapper $variants,
 		private readonly GameMapper $games,
 		private readonly ITimeFactory $time,
 	) {
@@ -121,15 +128,78 @@ class RatingService {
 	}
 
 	/**
+	 * The player's rating and results in a chess variant, or null before their first finished game of it.
+	 *
+	 * @return array{rating: int, provisional: bool, ratedGames: int, peak: int, games: int, wins: int, losses: int,
+	 *     draws: int, lastRatedAt: ?int}|null
+	 */
+	public function getVariant(string $uid, string $variant): ?array {
+		$row = $this->variants->find($uid, $variant);
+		return $row === null ? null : $this->variantArray($row);
+	}
+
+	/**
+	 * The player's ratings in the chess variants they have played online, most rated games first.
+	 *
+	 * @return list<array{variant: string, rating: int, provisional: bool, ratedGames: int, peak: int, games: int,
+	 *     wins: int, losses: int, draws: int, lastRatedAt: ?int}>
+	 */
+	public function variantRatings(string $uid): array {
+		return array_map(
+			fn (VariantRating $row) => ['variant' => $row->getVariant()] + $this->variantArray($row),
+			$this->variants->findByUid($uid),
+		);
+	}
+
+	/**
+	 * @return array{rating: int, provisional: bool, ratedGames: int, peak: int, games: int, wins: int, losses: int,
+	 *     draws: int, lastRatedAt: ?int}
+	 */
+	private function variantArray(VariantRating $row): array {
+		return [
+			'rating' => $row->getRating(),
+			'provisional' => $row->getRatedGames() < self::PROVISIONAL_GAMES,
+			'ratedGames' => $row->getRatedGames(),
+			'peak' => $row->getPeak(),
+			'games' => $row->getGames(),
+			'wins' => $row->getWins(),
+			'losses' => $row->getLosses(),
+			'draws' => $row->getDraws(),
+			'lastRatedAt' => $row->getLastRatedAt(),
+		];
+	}
+
+	/**
+	 * The player's row of a variant, created when missing; with `$lock` locked first (see `row`).
+	 */
+	private function variantRow(string $uid, string $variant, int $now, bool $lock = false): VariantRating {
+		$row = $this->variants->find($uid, $variant);
+		if ($row === null) {
+			$this->variants->insertIfMissing($uid, $variant, self::START, $now);
+		}
+		if ($lock) {
+			$this->variants->lock($uid, $variant);
+		}
+		if ($row === null || $lock) {
+			$row = $this->variants->find($uid, $variant);
+		}
+		if ($row === null) {
+			throw new \RuntimeException('The variant rating row of a player could not be created.');
+		}
+		return $row;
+	}
+
+	/**
 	 * Records a finished game: the results of both players whose accounts still exist, and the Elo change when the
 	 * game is rated. It runs inside the transaction that finishes the game and sets the game's rating fields; the
-	 * caller saves the game. Chess variant games count nowhere: the ratings and records are those of classic Quantum
-	 * Chess.
+	 * caller saves the game. A two-seat chess variant game counts in the players' rows of that variant; a game with
+	 * more than two seats counts nowhere.
 	 */
 	public function applyResult(Game $game): void {
-		if ($game->getStatus() !== Game::STATUS_FINISHED || $game->isVariant()) {
+		if ($game->getStatus() !== Game::STATUS_FINISHED || $game->isMultiSeat()) {
 			return;
 		}
+		$variant = $game->isVariant() ? (string)$game->getVariant() : null;
 		$now = $this->time->getTime();
 		$white = $game->getWhiteUid();
 		$black = $game->getBlackUid();
@@ -138,14 +208,16 @@ class RatingService {
 			'0-1' => 0.0,
 			default => 0.5,
 		};
-		/** @var array<string, Rating> $rows */
+		/** @var array<string, Rating|VariantRating> $rows */
 		$rows = [];
 		$uids = array_values(array_filter([$white, $black], fn ($uid) => $uid !== null));
 		// Both rows are locked in ascending uid order before they are read, and written in that order too, so two
 		// games of one player that finish at the same time neither lose an update nor deadlock.
 		sort($uids);
 		foreach ($uids as $uid) {
-			$rows[$uid] = $this->row($uid, $now, true);
+			$rows[$uid] = $variant === null
+				? $this->row($uid, $now, true)
+				: $this->variantRow($uid, $variant, $now, true);
 		}
 		$rated = $game->getRated() === 1 && $white !== null && $black !== null;
 		$deltas = ['w' => 0, 'b' => 0];
@@ -180,7 +252,11 @@ class RatingService {
 				$row->setLastRatedAt($now);
 			}
 			$row->setUpdatedAt($now);
-			$this->mapper->update($row);
+			if ($row instanceof VariantRating) {
+				$this->variants->update($row);
+			} else {
+				$this->mapper->update($row);
+			}
 		}
 	}
 
@@ -204,6 +280,31 @@ class RatingService {
 			}
 		}
 		return array_reverse($points);
+	}
+
+	/**
+	 * The players who may appear on the leaderboard of a chess variant (as `leaderboardRows`), with the leaderboard
+	 * choice of their classic row.
+	 *
+	 * @return list<array{uid: string, rating: int, provisional: bool, ratedGames: int, wins: int, losses: int,
+	 *     draws: int, listed: ?bool}>
+	 */
+	public function variantLeaderboardRows(string $variant, int $minGames, int $activeSince): array {
+		$out = [];
+		foreach ($this->variants->findEligible($variant, $minGames, $activeSince) as $row) {
+			$listed = $this->mapper->findByUid($row->getUid())?->getListed();
+			$out[] = [
+				'uid' => $row->getUid(),
+				'rating' => $row->getRating(),
+				'provisional' => $row->getRatedGames() < self::PROVISIONAL_GAMES,
+				'ratedGames' => $row->getRatedGames(),
+				'wins' => $row->getWins(),
+				'losses' => $row->getLosses(),
+				'draws' => $row->getDraws(),
+				'listed' => $listed === null ? null : $listed === 1,
+			];
+		}
+		return $out;
 	}
 
 	/**
@@ -244,5 +345,6 @@ class RatingService {
 
 	public function deleteUser(string $uid): void {
 		$this->mapper->deleteByUid($uid);
+		$this->variants->deleteByUid($uid);
 	}
 }

@@ -92,15 +92,20 @@ class SeatedInvitations {
 	 * message), with its seats, and invites the named players.
 	 *
 	 * @param list<?string> $seats the user id per seat (null for an open seat)
+	 * @param ?\Closure(Game): void $also more work in the same transaction, with the stored game (a rematch marks the
+	 *                                    old game)
 	 */
-	public function create(Game $game, string $uid, array $seats): Game {
+	public function create(Game $game, string $uid, array $seats, ?\Closure $also = null): Game {
 		$open = in_array(null, $seats, true);
 		$accepted = array_map(fn (?string $player) => $player === $uid, $seats);
 		$game->setStatus($open ? Game::STATUS_OPEN : Game::STATUS_PENDING);
 		$game->setOpponentUid(null);
 		$game->setState(VariantTurn::start($seats, $accepted)->json());
-		return $this->transaction->run(function () use ($game, $uid, $seats, $accepted): Game {
+		return $this->transaction->run(function () use ($game, $uid, $seats, $accepted, $also): Game {
 			$game = $this->repository->insert($game);
+			if ($also !== null) {
+				$also($game);
+			}
 			foreach ($seats as $number => $player) {
 				$seat = new Seat();
 				$seat->setGameId((int)$game->getId());
@@ -123,6 +128,22 @@ class SeatedInvitations {
 			});
 			return $game;
 		});
+	}
+
+	/**
+	 * The players of a rematch of a game with more than two seats: every player moves on by one seat (the player of
+	 * the last seat takes seat 0), so that over as many rematches as there are seats everyone plays every seat.
+	 *
+	 * @return list<?string>
+	 */
+	public static function rotated(Game $old): array {
+		$players = $old->seatUids();
+		if ($players === []) {
+			return [];
+		}
+		$last = array_pop($players);
+		array_unshift($players, $last);
+		return $players;
 	}
 
 	/**

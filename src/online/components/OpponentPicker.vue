@@ -5,9 +5,9 @@
 
 <!--
   The online options of the New game dialog: an open challenge or an invited opponent (recent opponents first, then a
-  user search), the time per move and whether the game is rated (not for a game that is never rated, `unrated`: the
-  chess variants). With `timeOnly`, the time per move alone: a game with more than two seats chooses its players in
-  SeatPicker.
+  user search), the time per move and whether the game is rated (not for a game that is never rated, `unrated`: a
+  chess variant with more than two seats). With `timeOnly`, the time per move alone: a game with more than two seats
+  chooses its players in SeatPicker.
 -->
 <template>
 	<NcCheckboxRadioSwitch v-if="features.openChallenges && !timeOnly" v-model="open" type="switch">
@@ -68,7 +68,7 @@ const rated = defineModel('rated', { type: Boolean, default: false })
 defineProps({
 	/** Why the game cannot be rated with this opponent, in words, or null */
 	ratedBlocked: { type: String, default: null },
-	/** Whether the game is never rated (the chess variants), so that there is nothing to choose */
+	/** Whether the game is never rated (a variant with more than two seats), so that there is nothing to choose */
 	unrated: { type: Boolean, default: false },
 	/** Only the time per move: the players are chosen elsewhere (SeatPicker) */
 	timeOnly: { type: Boolean, default: false },
