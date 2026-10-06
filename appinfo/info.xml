@@ -46,7 +46,7 @@
 - API keys are stored encrypted on your server and never reach the browser. Nothing is sent anywhere except to the AI provider you choose.
 - In English, Dutch, German and French
 ]]></description>
-	<version>2.0.0</version>
+	<version>2.0.1</version>
 	<licence>agpl</licence>
 	<author homepage="https://beeflow.nl">BeeFlow</author>
 	<namespace>QuantumChess</namespace>
