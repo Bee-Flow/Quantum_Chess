@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace OCA\QuantumChess\Service\Game;
 
+use OCP\IL10N;
+
 /**
  * What the server knows about the chess variants for online play (docs/development/online-variants.md): which
  * variants exist and can be played online, their seats and their teams. The rules themselves run in the browser only.
@@ -52,6 +54,36 @@ final class VariantCatalog {
 
 	/** The teams of a four-seat team game: the seats with the same parity play together. */
 	private const PAIRS = [[0, 2], [1, 3]];
+
+	/**
+	 * The translated name of a variant, as the catalogue shows it (the same strings as src/variants/catalog.js), or
+	 * the id of an unknown variant.
+	 */
+	public static function name(IL10N $l, string $id): string {
+		return match ($id) {
+			'raumschach' => $l->t('3D chess (Raumschach)'),
+			'trid' => $l->t('Tri-Dimensional chess'),
+			'hyper4d' => $l->t('4D chess'),
+			'multiverse' => $l->t('Multiverse chess (5D)'),
+			'kriegspiel' => $l->t('Kriegspiel'),
+			'darkchess' => $l->t('Fog of war'),
+			'chess960' => $l->t('Chess960'),
+			'atomic' => $l->t('Atomic'),
+			'crazyhouse' => $l->t('Crazyhouse'),
+			'bughouse' => $l->t('Bughouse'),
+			'antichess' => $l->t('Antichess'),
+			'koth' => $l->t('King of the Hill'),
+			'threecheck' => $l->t('Three-check'),
+			'horde' => $l->t('Horde'),
+			'hexagonal' => $l->t('Hexagonal chess'),
+			'fourplayer' => $l->t('Four-player chess'),
+			'capablanca' => $l->t('Capablanca chess'),
+			'shogi' => $l->t('Shogi'),
+			'xiangqi' => $l->t('Xiangqi'),
+			'makruk' => $l->t('Makruk'),
+			default => $id,
+		};
+	}
 
 	/** @return list<string> the ids of every variant, in the order of the catalogue */
 	public static function ids(): array {

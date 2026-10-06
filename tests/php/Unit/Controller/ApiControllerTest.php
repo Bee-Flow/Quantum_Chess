@@ -28,6 +28,7 @@ use OCA\QuantumChess\Service\Game\GameplayService;
 use OCA\QuantumChess\Service\Game\GameQueryService;
 use OCA\QuantumChess\Service\Game\GameSerializer;
 use OCA\QuantumChess\Service\Game\InvitationService;
+use OCA\QuantumChess\Service\Game\VariantGameplayService;
 use OCA\QuantumChess\Service\Player\PreferencesService;
 use OCA\QuantumChess\Service\Player\StatsService;
 use OCA\QuantumChess\Service\Player\TrainerProgressService;
@@ -105,6 +106,7 @@ final class ApiControllerTest extends TestCase {
 			$this->queries,
 			$this->invitations,
 			$this->gameplay,
+			$this->createMock(VariantGameplayService::class),
 			$this->createMock(ChatService::class),
 			$this->serializer,
 			new GameClock($time),

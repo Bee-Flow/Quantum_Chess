@@ -44,6 +44,16 @@ return [
 		['name' => 'game#mute', 'url' => '/api/games/{id}/mute', 'verb' => 'PUT', 'requirements' => $id],
 		['name' => 'game#rematch', 'url' => '/api/games/{id}/rematch', 'verb' => 'POST', 'requirements' => $id],
 
+		// Online games of the chess variants: the server rolls, the browsers rule
+		['name' => 'game#variantMove', 'url' => '/api/games/{id}/v/moves', 'verb' => 'POST', 'requirements' => $id],
+		[
+			'name' => 'game#settle',
+			'url' => '/api/games/{id}/v/moves/{ply}/settle',
+			'verb' => 'POST',
+			'requirements' => $id + ['ply' => '\\d+'],
+		],
+		['name' => 'game#dispute', 'url' => '/api/games/{id}/v/dispute', 'verb' => 'POST', 'requirements' => $id],
+
 		// Statistics, leaderboard, trainer progress, preferences, personal data
 		['name' => 'stats#mine', 'url' => '/api/stats', 'verb' => 'GET'],
 		['name' => 'stats#leaderboard', 'url' => '/api/leaderboard', 'verb' => 'GET'],

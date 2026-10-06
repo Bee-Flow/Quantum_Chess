@@ -12,6 +12,8 @@ namespace OCA\QuantumChess\Service\Game;
 use OCA\QuantumChess\Db\ChatMapper;
 use OCA\QuantumChess\Db\ChatMessage;
 use OCA\QuantumChess\Db\Game;
+use OCA\QuantumChess\Db\Seat;
+use OCA\QuantumChess\Db\SeatMapper;
 use OCA\QuantumChess\Engine\Engine;
 use OCA\QuantumChess\Exception\ApiException;
 use OCA\QuantumChess\Exception\GameConflictException;
@@ -38,6 +40,7 @@ class GameLifecycle {
 		private readonly AppSettings $settings,
 		private readonly Engine $engine,
 		private readonly GameErrors $errors,
+		private readonly SeatMapper $seats,
 	) {
 	}
 
@@ -90,7 +93,9 @@ class GameLifecycle {
 					return;
 				}
 				$at = (int)$due;
-				$outcome = $this->clock->resolveTimeout($game, $this->repository->state($game));
+				// The server keeps no board of a variant game.
+				$state = $game->isVariant() ? [] : $this->repository->state($game);
+				$outcome = $this->clock->resolveTimeout($game, $state);
 				if ($outcome['status'] === Game::STATUS_ABORTED) {
 					$this->abort($game, $outcome['reason'], $at);
 				} else {
@@ -108,7 +113,7 @@ class GameLifecycle {
 
 	/**
 	 * Starts an accepted invitation or a joined open challenge: colours, the rated decision, the first deadline and
-	 * the start of the hash chain.
+	 * the start of the hash chain. A variant game also gets its seats: seat 0 plays as White, seat 1 as Black.
 	 */
 	public function start(Game $game, int $now): void {
 		$creator = (string)$game->getCreatorUid();
@@ -128,7 +133,27 @@ class GameLifecycle {
 			}
 		}
 		$game->setDeadlineAt($this->clock->deadlineFrom($game->getTimeControl(), $now));
-		$game->setChain($this->engine->chainStart((int)$game->getId(), $white, $black, $game->getCreatedAt()));
+		if ($game->isVariant()) {
+			$game->setChain(VariantChain::start(
+				(int)$game->getId(),
+				(string)$game->getVariant(),
+				$game->getVariantOptionValues(),
+				[$white, $black],
+				$game->getCreatedAt(),
+			));
+			$game->setSeatToMove(0);
+			foreach ([$white, $black] as $number => $uid) {
+				$seat = new Seat();
+				$seat->setGameId((int)$game->getId());
+				$seat->setSeat($number);
+				$seat->setUid($uid);
+				$seat->setTeam(null);
+				$seat->setAcceptedAt($now);
+				$this->seats->insert($seat);
+			}
+		} else {
+			$game->setChain($this->engine->chainStart((int)$game->getId(), $white, $black, $game->getCreatedAt()));
+		}
 		$game->setStatus(Game::STATUS_ACTIVE);
 		$game->setStartedAt($now);
 		$game->setExpiresAt(null);

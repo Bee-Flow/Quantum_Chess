@@ -22,6 +22,10 @@ use OCP\IL10N;
  * Creating games: invitations to a user, open challenges that anyone allowed may join, their answers, and rematches.
  */
 class InvitationService {
+	/** The most seats a variant game may have for now: two (the four-seat variants come later). */
+	private const MAX_VARIANT_SEATS = 2;
+	/** The longest canonical JSON of a variant game's options. */
+	private const MAX_OPTIONS_LENGTH = 1000;
 	/** Seconds until a rematch offer expires (one day). */
 	public const REMATCH_EXPIRY = GameClock::DAY;
 
@@ -46,8 +50,11 @@ class InvitationService {
 	 * play online, then each field, then the rules for rated games, open challenges and group scopes, then who may be
 	 * invited, and last the user's limits.
 	 *
-	 * @param array<string, mixed> $request `opponent`, `color` (w, b or r), `rated`, `timeControl`, `message` and
-	 *                                      `scopeGroup` (open challenges only)
+	 * A request with a `variant` creates a game of that chess variant, with the option values in `options`. Variant
+	 * games are never rated (docs/development/online-variants.md).
+	 *
+	 * @param array<string, mixed> $request `opponent`, `color` (w, b or r), `rated`, `timeControl`, `message`,
+	 *                                      `scopeGroup` (open challenges only), `variant` and `options`
 	 * @throws ApiException
 	 */
 	public function create(string $uid, array $request): Game {
@@ -70,6 +77,10 @@ class InvitationService {
 		$rated = $request['rated'] ?? true;
 		if (!is_bool($rated)) {
 			throw ApiException::invalidArgument('rated', $this->l->t('Invalid value'));
+		}
+		[$variant, $options] = $this->variantOf($request);
+		if ($variant !== null) {
+			$rated = false;
 		}
 		$timeControl = $request['timeControl'] ?? TimeControl::DEFAULT->value;
 		if (!is_string($timeControl) || TimeControl::tryFrom($timeControl) === null) {
@@ -116,7 +127,7 @@ class InvitationService {
 		$game->setOpponentUid($opponent);
 		$game->setColorChoice($rated ? 'r' : $color);
 		$game->setStatus($isOpen ? Game::STATUS_OPEN : Game::STATUS_PENDING);
-		$game->setState($this->engine->serializeState($this->engine->initialState()));
+		$this->setStart($game, $variant, $options);
 		$game->setPly(0);
 		$game->setTurn('w');
 		$game->setRev(1);
@@ -300,7 +311,11 @@ class InvitationService {
 			$game->setOpponentUid($other);
 			$game->setColorChoice(Game::otherColor($color));
 			$game->setStatus(Game::STATUS_PENDING);
-			$game->setState($this->engine->serializeState($this->engine->initialState()));
+			$this->setStart(
+				$game,
+				$old->isVariant() ? $old->getVariant() : null,
+				$old->isVariant() ? $old->getVariantOptionValues() : [],
+			);
 			$game->setRev(1);
 			$game->setRatedRequested($old->getRatedRequested());
 			$game->setTimeControl($old->getTimeControl());
@@ -315,5 +330,55 @@ class InvitationService {
 			$this->transaction->afterCommit(fn () => $this->notifications->invite($game));
 			return $game;
 		});
+	}
+
+	/**
+	 * The variant and its options that a request asks for: `[null, []]` for classic Quantum Chess.
+	 *
+	 * @param array<string, mixed> $request
+	 * @return array{0: ?string, 1: array<string, string|int|bool>}
+	 * @throws ApiException
+	 */
+	private function variantOf(array $request): array {
+		$variant = $request['variant'] ?? null;
+		if ($variant === null || $variant === '') {
+			return [null, []];
+		}
+		if (!is_string($variant) || !VariantCatalog::isOnline($variant)
+			|| VariantCatalog::seatCount($variant) > self::MAX_VARIANT_SEATS) {
+			throw ApiException::invalidArgument('variant', $this->l->t('This chess variant cannot be played online.'));
+		}
+		$options = $request['options'] ?? [];
+		if (!is_array($options) || ($options !== [] && array_is_list($options))) {
+			throw ApiException::invalidArgument('options', $this->l->t('Invalid value'));
+		}
+		try {
+			$json = VariantChain::canonicalOptions($options);
+		} catch (\InvalidArgumentException) {
+			throw ApiException::invalidArgument('options', $this->l->t('Invalid value'));
+		}
+		if (strlen($json) > self::MAX_OPTIONS_LENGTH) {
+			throw ApiException::invalidArgument('options', $this->l->t('Invalid value'));
+		}
+		/** @var array<string, string|int|bool> $options */
+		return [$variant, $options];
+	}
+
+	/**
+	 * The start of a new game: the start position of classic Quantum Chess, or for a variant game its variant, its
+	 * options (as canonical JSON), the rules version and the server's record of the turns.
+	 *
+	 * @param array<string, string|int|bool> $options
+	 */
+	private function setStart(Game $game, ?string $variant, array $options): void {
+		if ($variant === null) {
+			$game->setState($this->engine->serializeState($this->engine->initialState()));
+			return;
+		}
+		$game->setVariant($variant);
+		$game->setVariantOptions(VariantChain::canonicalOptions($options));
+		$game->setVariantRules(VariantCatalog::RULES_VERSION);
+		$game->setSeatCount(VariantCatalog::seatCount($variant));
+		$game->setState(VariantTurn::start()->json());
 	}
 }

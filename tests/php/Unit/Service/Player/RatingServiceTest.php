@@ -144,4 +144,23 @@ final class RatingServiceTest extends TestCase {
 		);
 		$this->assertNull($game->getRatingWDelta());
 	}
+
+	public function testVariantGamesCountNowhere(): void {
+		$rows = [];
+		$calls = [];
+		$service = new RatingService(
+			$this->ratingMapper($rows, $calls),
+			$this->createMock(GameMapper::class),
+			$this->createMock(ITimeFactory::class),
+		);
+		$game = new Game();
+		$game->setWhiteUid('alice');
+		$game->setBlackUid('bob');
+		$game->setStatus(Game::STATUS_FINISHED);
+		$game->setRated(0);
+		$game->setResult('1-0');
+		$game->setVariant('atomic');
+		$service->applyResult($game);
+		$this->assertSame([[], []], [$rows, $calls]);
+	}
 }

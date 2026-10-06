@@ -112,6 +112,27 @@ final class NotifierTest extends TestCase {
 		$this->assertSame('https://cloud/apps/quantumchess/#/game/42', $n->getLink());
 	}
 
+	public function testVariantGamesNameTheVariant(): void {
+		$game = $this->game();
+		$game->setVariant('atomic');
+		$game->setStatus(Game::STATUS_PENDING);
+		$invite = $this->notifier($game)->prepare($this->incoming('invite', [
+			'actor' => 'alice',
+			'timeControl' => 'corr:1d',
+			'rated' => false,
+			'color' => 'r',
+			'variant' => 'atomic',
+		]), 'en');
+		$this->assertSame('Alice invited you to a game of Atomic', $invite->getParsedSubject());
+		$game->setStatus(Game::STATUS_ACTIVE);
+		$turn = $this->notifier($game)
+			->prepare($this->incoming('your_turn', ['actor' => 'alice', 'ply' => 3, 'variant' => 'atomic']), 'en');
+		$this->assertSame(
+			['Your move in Atomic against Alice', ''],
+			[$turn->getParsedSubject(), $turn->getParsedMessage()],
+		);
+	}
+
 	public function testRecipientLanguage(): void {
 		$game = $this->game();
 		$l = $this->l10n(['{user} offers a draw' => '{user} bietet Remis an', 'Move %d' => 'Zug %d']);

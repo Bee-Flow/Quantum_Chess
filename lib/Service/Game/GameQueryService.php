@@ -15,6 +15,8 @@ use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\GameMapper;
 use OCA\QuantumChess\Db\Move;
 use OCA\QuantumChess\Db\MoveMapper;
+use OCA\QuantumChess\Db\VariantMove;
+use OCA\QuantumChess\Db\VariantMoveMapper;
 use OCA\QuantumChess\Exception\ApiException;
 use OCA\QuantumChess\Notification\NotificationService;
 use OCA\QuantumChess\Service\Settings\AppSettings;
@@ -34,6 +36,7 @@ class GameQueryService {
 	public function __construct(
 		private readonly GameMapper $games,
 		private readonly MoveMapper $moves,
+		private readonly VariantMoveMapper $variantMoves,
 		private readonly ChatMapper $chat,
 		private readonly GameLifecycle $lifecycle,
 		private readonly InvitePolicy $policy,
@@ -190,7 +193,7 @@ class GameQueryService {
 	/**
 	 * A game with all its moves and chat lines. Someone who may only join the game sees neither.
 	 *
-	 * @return array{game: Game, moves: list<Move>, chat: list<ChatMessage>}
+	 * @return array{game: Game, moves: list<Move>|list<VariantMove>, chat: list<ChatMessage>}
 	 * @throws ApiException not_found
 	 */
 	public function getFull(int $id, string $uid): array {
@@ -198,14 +201,21 @@ class GameQueryService {
 		if (!$game->isParticipant($uid)) {
 			return ['game' => $game, 'moves' => [], 'chat' => []];
 		}
-		return ['game' => $game, 'moves' => $this->moves->findByGame($id), 'chat' => $this->chat->findByGame($id)];
+		return ['game' => $game, 'moves' => $this->movesOf($game, 0), 'chat' => $this->chat->findByGame($id)];
 	}
 
 	/**
 	 * What changed since the client's revision: nothing, or the game with the moves from `$ply` and the chat lines
 	 * after `$chatId`.
 	 *
-	 * @return array{changed: bool, rev: int, now: int, game?: Game, moves?: list<Move>, chat?: list<ChatMessage>}
+	 * @return array{
+	 *     changed: bool,
+	 *     rev: int,
+	 *     now: int,
+	 *     game?: Game,
+	 *     moves?: list<Move>|list<VariantMove>,
+	 *     chat?: list<ChatMessage>,
+	 * }
 	 * @throws ApiException not_found
 	 */
 	public function poll(int $id, string $uid, int $rev, int $ply, int $chatId): array {
@@ -220,9 +230,21 @@ class GameQueryService {
 			'rev' => $game->getRev(),
 			'now' => $now,
 			'game' => $game,
-			'moves' => $participant ? $this->moves->findByGame($id, max(0, $ply)) : [],
+			'moves' => $participant ? $this->movesOf($game, max(0, $ply)) : [],
 			'chat' => $participant ? $this->chat->findByGame($id, max(0, $chatId)) : [],
 		];
+	}
+
+	/**
+	 * The moves of a game from `$fromPly`: classic moves, or the moves of a chess variant game.
+	 *
+	 * @return list<Move>|list<VariantMove>
+	 */
+	private function movesOf(Game $game, int $fromPly): array {
+		$id = (int)$game->getId();
+		return $game->isVariant()
+			? $this->variantMoves->findByGame($id, $fromPly)
+			: $this->moves->findByGame($id, $fromPly);
 	}
 
 	/**

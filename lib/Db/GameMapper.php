@@ -269,9 +269,9 @@ class GameMapper extends QBMapper {
 		];
 	}
 
-	/** Deletes a game with its moves and chat lines. */
+	/** Deletes a game with its moves, chat lines and seats. */
 	public function deleteWithChildren(int $gameId): void {
-		foreach ([MoveMapper::TABLE, ChatMapper::TABLE] as $table) {
+		foreach ([MoveMapper::TABLE, VariantMoveMapper::TABLE, SeatMapper::TABLE, ChatMapper::TABLE] as $table) {
 			$qb = $this->db->getQueryBuilder();
 			$qb->delete($table)
 				->where($qb->expr()->eq('game_id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))

@@ -123,10 +123,11 @@ class RatingService {
 	/**
 	 * Records a finished game: the results of both players whose accounts still exist, and the Elo change when the
 	 * game is rated. It runs inside the transaction that finishes the game and sets the game's rating fields; the
-	 * caller saves the game.
+	 * caller saves the game. Chess variant games count nowhere: the ratings and records are those of classic Quantum
+	 * Chess.
 	 */
 	public function applyResult(Game $game): void {
-		if ($game->getStatus() !== Game::STATUS_FINISHED) {
+		if ($game->getStatus() !== Game::STATUS_FINISHED || $game->isVariant()) {
 			return;
 		}
 		$now = $this->time->getTime();

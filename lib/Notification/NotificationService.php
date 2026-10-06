@@ -60,6 +60,7 @@ class NotificationService {
 			'rated' => $game->getRatedRequested() === 1,
 			'color' => $choice === 'w' ? 'b' : ($choice === 'b' ? 'w' : 'r'),
 			'message' => $game->getInviteMessage(),
+			'variant' => $game->isVariant() ? $game->getVariant() : null,
 		], 'invite', 'invites');
 	}
 
@@ -130,6 +131,22 @@ class NotificationService {
 				'weight' => $weight,
 				'capturedType' => $capturedType,
 			],
+		], 'turn', 'yourTurn');
+	}
+
+	/**
+	 * Tells the player to move in a chess variant game that the turn passed to them. The server does not know the
+	 * rules of the variants, so the notification does not describe the move.
+	 */
+	public function variantTurn(Game $game, string $actor): void {
+		$to = $game->uidOf($game->getTurn());
+		if ($to === null || $to === $actor) {
+			return;
+		}
+		$this->send($to, $game, 'your_turn', [
+			'actor' => $actor,
+			'ply' => $game->getPly(),
+			'variant' => $game->getVariant(),
 		], 'turn', 'yourTurn');
 	}
 
