@@ -207,7 +207,14 @@ class GameplayService {
 		$game = $this->lifecycle->loadActive($id, $uid);
 		$color = (string)$game->colorOf($uid);
 		return $this->transaction->run(function () use ($game, $color, $uid): Game {
-			$this->lifecycle->finish($game, $color === 'w' ? '0-1' : '1-0', 'resignation', $this->clock->now());
+			if ($game->isVariant()) {
+				$seat = VariantGameplayService::seatOfColor($game, $color);
+				$result = VariantGameplayService::lossOf($game, $seat, 'resign');
+				$now = $this->clock->now();
+				VariantGameplayService::finishWith($game, $result, 'resignation', $now, $this->lifecycle);
+			} else {
+				$this->lifecycle->finish($game, $color === 'w' ? '0-1' : '1-0', 'resignation', $this->clock->now());
+			}
 			$this->lifecycle->addSystemLine($game, 'resigned', ['color' => $color]);
 			$this->repository->save($game);
 			$this->transaction->afterCommit(fn () => $this->notifications->gameOver($game, $uid));
@@ -253,6 +260,9 @@ class GameplayService {
 		}
 		$game = $this->lifecycle->loadActive($id, $uid);
 		$color = (string)$game->colorOf($uid);
+		if ($game->isMultiSeat()) {
+			return $this->seatedDraw($game, $color, $action);
+		}
 		$other = Game::otherColor($color);
 		$offer = $game->getDrawOffer();
 		if ($action === 'offer' && $offer === $other) {
@@ -299,7 +309,80 @@ class GameplayService {
 	 * moves in one turn (5D chess), so the passed turns count there instead of the plies.
 	 */
 	public static function canAbort(Game $game): bool {
+		if ($game->isMultiSeat()) {
+			return !VariantTurn::of($game)->everyonePlayed($game->getSeatCount());
+		}
 		return $game->isVariant() ? !VariantTurn::of($game)->bothHavePlayed() : $game->getPly() < 2;
+	}
+
+	/**
+	 * A draw offer in a game with more than two seats: an offer is the offering seat's vote, every other seat accepts
+	 * with its own vote (offering while an offer is open accepts it), and the game is drawn once every seat agrees. Any
+	 * seat may decline, which closes the offer. There is no cool-down.
+	 *
+	 * @throws ApiException
+	 */
+	private function seatedDraw(Game $game, string $color, string $action): Game {
+		$seat = (int)$color;
+		$offer = $game->getDrawOffer();
+		$turn = VariantTurn::of($game);
+		if ($action === 'offer' && $offer !== null) {
+			$action = $offer === $color ? 'offer' : 'accept';
+		}
+		if ($action === 'offer') {
+			if ($offer === $color) {
+				throw new ApiException(ApiError::DrawNotAllowed, $this->l->t('You cannot offer a draw right now.'),
+					['availableAtPly' => null]);
+			}
+			return $this->transaction->run(function () use ($game, $color, $seat, $turn): Game {
+				$game->setDrawOffer($color);
+				$game->setDrawOfferPly($game->getPly());
+				$game->setState($turn->withDrawVotes([$seat])->json());
+				$this->lifecycle->addSystemLine($game, 'draw_offered', ['color' => $color]);
+				$this->repository->save($game);
+				$this->transaction->afterCommit(fn () => $this->notifications->drawOffered($game));
+				return $game;
+			});
+		}
+		if ($offer === null || $offer === $color) {
+			throw new ApiException(ApiError::NoDrawOffer, $this->l->t('There is no draw offer to answer.'));
+		}
+		return $this->transaction->run(function () use ($game, $action, $color, $seat, $turn): Game {
+			$votes = $turn->drawVotes;
+			$agreed = false;
+			if ($action === 'accept') {
+				$votes[] = $seat;
+				$agreed = count(array_unique($votes)) >= $game->getSeatCount();
+			}
+			if ($agreed) {
+				$game->setState($turn->withDrawVotes([])->json());
+				VariantGameplayService::finishWith(
+					$game,
+					VariantResult::of([], 'agreement'),
+					'agreement',
+					$this->clock->now(),
+					$this->lifecycle,
+				);
+				$this->lifecycle->addSystemLine($game, 'draw_accepted', ['color' => $color]);
+			} elseif ($action === 'accept') {
+				$game->setState($turn->withDrawVotes($votes)->json());
+			} else {
+				$game->setDrawOffer(null);
+				$game->setDrawOfferPly(null);
+				$game->setState($turn->withDrawVotes([])->json());
+				$this->lifecycle->addSystemLine($game, 'draw_declined', ['color' => $color]);
+			}
+			$this->repository->save($game);
+			$this->transaction->afterCommit(function () use ($game, $action, $agreed): void {
+				if ($action === 'decline' || $agreed) {
+					$this->notifications->drawClosed($game);
+				}
+				if ($agreed) {
+					$this->notifications->gameOver($game);
+				}
+			});
+			return $game;
+		});
 	}
 
 	/**

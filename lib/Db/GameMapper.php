@@ -66,9 +66,17 @@ class GameMapper extends QBMapper {
 		return $updated;
 	}
 
+	/**
+	 * The games of `$uid`: a player column holds the user, or (a variant game with more than two seats) one of its
+	 * seats does.
+	 */
 	private function userExpr(IQueryBuilder $qb, string $uid): \OCP\DB\QueryBuilder\ICompositeExpression {
 		$param = $qb->createNamedParameter($uid);
-		return $qb->expr()->orX(...array_map(fn (string $col) => $qb->expr()->eq($col, $param), self::USER_COLUMNS));
+		$seats = $this->db->getQueryBuilder();
+		$seats->select('s.game_id')->from(SeatMapper::TABLE, 's')->where($seats->expr()->eq('s.uid', $param));
+		$parts = array_map(fn (string $col) => $qb->expr()->eq($col, $param), self::USER_COLUMNS);
+		$parts[] = $qb->expr()->in('id', $qb->createFunction($seats->getSQL()));
+		return $qb->expr()->orX(...$parts);
 	}
 
 	/**

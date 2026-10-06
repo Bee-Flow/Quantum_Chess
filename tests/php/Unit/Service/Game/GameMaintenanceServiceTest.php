@@ -140,7 +140,7 @@ final class GameMaintenanceServiceTest extends TestCase {
 			[$stats['expired'], $stats['timedOut'], $stats['abandoned'], $stats['chatPurged'], $stats['gamesPurged']],
 		);
 		$this->assertSame([
-			'begin', 'save #1 rev 1→2', 'commit', 'notify inviteClosed(#1)',
+			'begin', 'save #1 rev 1→2', 'commit', 'notify inviteClosed(#1, NULL)',
 			'begin', 'rate #3 1-0', 'chat #3 timeout {"color":"b"}', 'save #3 rev 5→6', 'commit',
 			'notify gameOver(#3, NULL)',
 			'begin', 'purge chat #6', 'save #6 rev 5→6', 'commit',

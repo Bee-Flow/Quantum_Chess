@@ -27,6 +27,11 @@ use OCP\DB\Types;
  * players settled (`variantResult`), and seats instead of colours: `seatCount` seats in the `qchess_seats` table, of
  * which `seatToMove` is to move. Classic games leave `variant` null.
  *
+ * A two-seat variant game keeps the colours of classic games: seat 0 plays as White, seat 1 as Black. A game with more
+ * seats (`isMultiSeat`, Four-player chess and Bughouse) names a side by its seat number instead: `colorOf` and `turn`
+ * are `'0'` to `'3'`, and the players of its seats are kept in its `state` record (`seatUids`, written by
+ * VariantTurn), so that the game answers who plays in it without reading the seats table.
+ *
  * @method string|null getCreatorUid()
  * @method void setCreatorUid(?string $v)
  * @method string|null getOpponentUid()
@@ -220,15 +225,73 @@ class Game extends Entity {
 		return is_array($options) ? $options : [];
 	}
 
-	public function isParticipant(string $uid): bool {
-		return $uid !== ''
-			&& in_array($uid, [$this->whiteUid, $this->blackUid, $this->creatorUid, $this->opponentUid], true);
+	/** Whether this is a variant game with more than two seats (Four-player chess, Bughouse). */
+	public function isMultiSeat(): bool {
+		return $this->isVariant() && $this->seatCount > 2;
 	}
 
-	/** The colour of `$uid` once the game has started, else null. */
+	/**
+	 * The players of a game with more than two seats by seat, invited or not yet accepted ones included; null for an
+	 * open seat or a deleted account. A two-seat game answers `[white, black]`.
+	 *
+	 * @return list<?string>
+	 */
+	public function seatUids(): array {
+		if (!$this->isMultiSeat()) {
+			return [$this->whiteUid, $this->blackUid];
+		}
+		$data = json_decode($this->state, true);
+		$seats = is_array($data) && is_array($data['seats'] ?? null) ? $data['seats'] : [];
+		$out = [];
+		for ($i = 0; $i < $this->seatCount; $i++) {
+			$out[] = is_string($seats[$i] ?? null) && $seats[$i] !== '' ? $seats[$i] : null;
+		}
+		return $out;
+	}
+
+	/**
+	 * Whether `$uid` is invited to this game and has not answered yet: the invited opponent of a pending game, or the
+	 * player of a seat of a game with more than two seats who has not taken it.
+	 */
+	public function isInviteeOf(string $uid): bool {
+		if ($uid === '' || !$this->isAwaitingOpponent()) {
+			return false;
+		}
+		if (!$this->isMultiSeat()) {
+			return $this->status === self::STATUS_PENDING && $this->opponentUid === $uid;
+		}
+		$seat = array_search($uid, $this->seatUids(), true);
+		if ($seat === false) {
+			return false;
+		}
+		$data = json_decode($this->state, true);
+		return !(is_array($data) && ($data['accepted'][$seat] ?? false) === true);
+	}
+
+	public function isParticipant(string $uid): bool {
+		if ($uid === '') {
+			return false;
+		}
+		if ($this->isMultiSeat() && in_array($uid, $this->seatUids(), true)) {
+			return true;
+		}
+		return in_array($uid, [$this->whiteUid, $this->blackUid, $this->creatorUid, $this->opponentUid], true);
+	}
+
+	/**
+	 * The colour of `$uid` once the game has started, else null. In a game with more than two seats, the seat number as
+	 * text (`'0'` to `'3'`), once its player has taken the seat.
+	 */
 	public function colorOf(string $uid): ?string {
 		if ($uid === '') {
 			return null;
+		}
+		if ($this->isMultiSeat()) {
+			if ($this->startedAt === null) {
+				return null;
+			}
+			$seat = array_search($uid, $this->seatUids(), true);
+			return $seat === false ? null : (string)$seat;
 		}
 		if ($this->whiteUid === $uid) {
 			return 'w';
@@ -240,11 +303,34 @@ class Game extends Entity {
 	}
 
 	public function uidOf(string $color): ?string {
+		if ($this->isMultiSeat()) {
+			return ctype_digit($color) ? ($this->seatUids()[(int)$color] ?? null) : null;
+		}
 		return $color === 'w' ? $this->whiteUid : $this->blackUid;
 	}
 
-	/** The other player: by colour once the game has started, else the creator or the invited opponent. */
+	/**
+	 * The other players of `$uid`, in seat order (for a classic game, the opponent).
+	 *
+	 * @return list<string>
+	 */
+	public function othersOf(string $uid): array {
+		if (!$this->isMultiSeat()) {
+			$other = $this->opponentOf($uid);
+			return $other === null ? [] : [$other];
+		}
+		$all = array_merge($this->seatUids(), [$this->creatorUid]);
+		return array_values(array_unique(array_filter($all, fn (?string $o) => $o !== null && $o !== $uid)));
+	}
+
+	/**
+	 * The other player: by colour once the game has started, else the creator or the invited opponent. In a game with
+	 * more than two seats, the first other player.
+	 */
 	public function opponentOf(string $uid): ?string {
+		if ($this->isMultiSeat()) {
+			return $this->othersOf($uid)[0] ?? null;
+		}
 		$color = $this->colorOf($uid);
 		if ($color !== null) {
 			return $this->uidOf(self::otherColor($color));
@@ -281,6 +367,9 @@ class Game extends Entity {
 	 * The ply from which `$color` may offer a draw again after a declined offer, or null when nothing limits it.
 	 */
 	public function drawAvailableAtPly(string $color): ?int {
+		if ($color !== 'w' && $color !== 'b') {
+			return null;
+		}
 		$last = $color === 'w' ? $this->lastDrawW : $this->lastDrawB;
 		return $last === null ? null : $last + self::DRAW_COOLDOWN_PLIES;
 	}

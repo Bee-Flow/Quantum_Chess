@@ -139,7 +139,7 @@ final class InvitationServiceTest extends TestCase {
 			$game->getExpiresAt(),
 			$game->getInviteMessage(),
 		], 'rated games always get random colours');
-		$this->assertSame(['insert game #100', 'notify invite(#100)'], $this->log);
+		$this->assertSame(['insert game #100', 'notify invite(#100, NULL)'], $this->log);
 		$long = $this->invitations()->create('alice', ['opponent' => 'bob', 'message' => str_repeat('é', 250)]);
 		$this->assertSame(200, mb_strlen((string)$long->getInviteMessage()));
 	}
@@ -159,7 +159,13 @@ final class InvitationServiceTest extends TestCase {
 		]);
 		$this->assertSame($this->engine->chainStart(7, 'alice', 'bob', self::NOW - 600), $game->getChain());
 		$this->assertSame(
-			['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)', 'notify inviteAccepted(#7, false)'],
+			[
+				'begin',
+				'save #7 rev 1→2',
+				'commit',
+				'notify inviteClosed(#7, NULL)',
+				'notify inviteAccepted(#7, false, NULL)',
+			],
 			$this->log,
 		);
 	}
@@ -226,7 +232,7 @@ final class InvitationServiceTest extends TestCase {
 		$game = $this->invitations()->decline(7, 'bob');
 		$this->assertSame([Game::STATUS_DECLINED, self::NOW], [$game->getStatus(), $game->getFinishedAt()]);
 		$this->assertSame(
-			['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)', 'notify inviteDeclined(#7)'],
+			['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7, NULL)', 'notify inviteDeclined(#7, NULL)'],
 			$this->log,
 		);
 	}
@@ -235,7 +241,7 @@ final class InvitationServiceTest extends TestCase {
 		$this->store(GameBuilder::open());
 		$game = $this->invitations()->cancel(7, 'alice');
 		$this->assertSame([Game::STATUS_CANCELLED, self::NOW], [$game->getStatus(), $game->getFinishedAt()]);
-		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)'], $this->log);
+		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7, NULL)'], $this->log);
 		$this->store(GameBuilder::pending());
 		$this->assertSame(
 			['invalid_status', 409, []],
@@ -280,7 +286,7 @@ final class InvitationServiceTest extends TestCase {
 			[Game::STATUS_EXPIRED, self::NOW],
 			[$this->stored[7]->getStatus(), $this->stored[7]->getFinishedAt()],
 		);
-		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7)'], $this->log);
+		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7, NULL)'], $this->log);
 	}
 
 	public function testJoin(): void {
@@ -290,7 +296,7 @@ final class InvitationServiceTest extends TestCase {
 			[Game::STATUS_ACTIVE, 'carol', 'alice', 'carol'],
 			[$game->getStatus(), $game->getOpponentUid(), $game->getWhiteUid(), $game->getBlackUid()],
 		);
-		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteAccepted(#7, true)'], $this->log);
+		$this->assertSame(['begin', 'save #7 rev 1→2', 'commit', 'notify inviteAccepted(#7, true, NULL)'], $this->log);
 	}
 
 	public function testJoinThatLosesTheRace(): void {
@@ -317,7 +323,7 @@ final class InvitationServiceTest extends TestCase {
 		$this->assertSame(100, $this->stored[7]->getRematchId());
 		$this->assertSame([
 			'begin', 'insert game #100', 'chat #7 rematch_offered {"color":"b"}', 'save #7 rev 5→6', 'commit',
-			'notify invite(#100)',
+			'notify invite(#100, NULL)',
 		], $this->log);
 	}
 

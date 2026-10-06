@@ -119,14 +119,22 @@ class GameMaintenanceService {
 			$this->transaction->run(function () use ($game, $uid, $accountDeleted, &$remaining): void {
 				$color = $game->colorOf($uid);
 				if ($game->getStatus() === Game::STATUS_ACTIVE && $color !== null) {
-					$winner = $color === 'w' ? '0-1' : '1-0';
+					$reason = $accountDeleted ? 'player_deleted' : 'resignation';
 					if ($accountDeleted) {
 						$game->setRated(0);
 						$game->setUnratedReason('deleted');
-						$this->lifecycle->finish($game, $winner, 'player_deleted', $this->clock->now());
+					}
+					if ($game->isVariant()) {
+						$seat = VariantGameplayService::seatOfColor($game, $color);
+						$loss = VariantGameplayService::lossOf($game, $seat, $accountDeleted ? 'deleted' : 'resign');
+						$now = $this->clock->now();
+						VariantGameplayService::finishWith($game, $loss, $reason, $now, $this->lifecycle);
+					} else {
+						$this->lifecycle->finish($game, $color === 'w' ? '0-1' : '1-0', $reason, $this->clock->now());
+					}
+					if ($accountDeleted) {
 						$remaining = $game->opponentOf($uid);
 					} else {
-						$this->lifecycle->finish($game, $winner, 'resignation', $this->clock->now());
 						$this->lifecycle->addSystemLine($game, 'resigned', ['color' => $color]);
 					}
 					$this->repository->save($game);

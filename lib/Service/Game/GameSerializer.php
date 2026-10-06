@@ -142,7 +142,40 @@ class GameSerializer {
 			'variantOptions' => (object)$game->getVariantOptionValues(),
 			'variantRules' => $game->getVariantRules(),
 			'variantResult' => $game->getVariantResult(),
-		] : []);
+			'seatCount' => $game->getSeatCount(),
+			'invited' => $game->isInviteeOf($viewer),
+		] + ($game->isMultiSeat() ? ['seats' => $this->seats($game)] : []) : []);
+	}
+
+	/**
+	 * The seats of a game with more than two seats: the player (null for an open seat), whether they took the seat,
+	 * and the team.
+	 *
+	 * @return list<array{seat: int, player: ?array, accepted: bool, team: ?int}>
+	 */
+	private function seats(Game $game): array {
+		$turn = VariantTurn::of($game);
+		$out = [];
+		foreach ($game->seatUids() as $number => $uid) {
+			$out[] = [
+				'seat' => $number,
+				'player' => $uid === null ? null : $this->userRef($uid),
+				'accepted' => $turn->accepted[$number] ?? false,
+				'team' => VariantCatalog::teamOf((string)$game->getVariant(), $game->getVariantOptionValues(), $number),
+			];
+		}
+		return $out;
+	}
+
+	/** Whether the player of `$color` muted the game's chat. */
+	private function muted(Game $game, ?string $color): bool {
+		if ($color === null) {
+			return false;
+		}
+		if ($game->isMultiSeat()) {
+			return in_array((int)$color, VariantTurn::of($game)->muted, true);
+		}
+		return ($color === 'w' ? $game->getMuteW() : $game->getMuteB()) === 1;
 	}
 
 	/**
@@ -205,7 +238,7 @@ class GameSerializer {
 		$offer = $game->getDrawOffer();
 		$now = $this->clock->now();
 		$state = json_decode($game->getState(), true);
-		$rematch = $game->hasEnded() && $color !== null && $game->opponentOf($viewer) !== null;
+		$rematch = $game->hasEnded() && $color !== null && $game->opponentOf($viewer) !== null && !$game->isMultiSeat();
 		$chatOpen = $this->settings->chatEnabled() && ChatService::isOpen($game, $now);
 		return $dto + [
 			'state' => !$game->isVariant() && is_array($state) ? $state : null,
@@ -220,13 +253,14 @@ class GameSerializer {
 			'ratingBefore' => $game->getRatingWBefore() === null
 				? null
 				: ['w' => $game->getRatingWBefore(), 'b' => $game->getRatingBBefore()],
-			'muted' => $color !== null && ($color === 'w' ? $game->getMuteW() : $game->getMuteB()) === 1,
+			'muted' => $this->muted($game, $color),
 			'chatCount' => $game->getChatCount(),
 			'chatOpen' => $chatOpen && $color !== null,
 			'now' => $now,
 		] + ($game->isVariant() ? [
 			'seatToMove' => $game->getSeatToMove(),
 			'pendingPly' => VariantTurn::of($game)->pending,
+			'drawVotes' => VariantTurn::of($game)->drawVotes,
 		] : []);
 	}
 

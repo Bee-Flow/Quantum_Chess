@@ -108,7 +108,9 @@ class ChatService {
 			throw $this->errors->invalidStatus();
 		}
 		return $this->transaction->run(function () use ($game, $color, $muted): bool {
-			if ($color === 'w') {
+			if ($game->isMultiSeat()) {
+				$game->setState(VariantTurn::of($game)->withMuted((int)$color, $muted)->json());
+			} elseif ($color === 'w') {
 				$game->setMuteW($muted ? 1 : 0);
 			} else {
 				$game->setMuteB($muted ? 1 : 0);
