@@ -28,8 +28,9 @@ import { formatDeadline } from '../services/format.js'
  * @return {boolean}
  */
 export function isParticipant(game, me) {
+	const seated = (game?.seats ?? []).map((s) => s.player?.userId)
 	return !!game && !!me
-		&& [game.creator?.userId, game.opponent?.userId, game.white?.userId, game.black?.userId].includes(me)
+		&& [game.creator?.userId, game.opponent?.userId, game.white?.userId, game.black?.userId, ...seated].includes(me)
 }
 
 /**

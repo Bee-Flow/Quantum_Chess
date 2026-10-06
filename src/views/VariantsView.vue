@@ -11,8 +11,9 @@
   at the bottom when the human plays Black. A game that the browser storage refuses is not opened: the dialog stays
   open and says that the game could not be saved on this device.
 
-  Online (a two-player variant without hidden information, when online games are available to the user): an invited
-  opponent or an open challenge, the time per move and the side (or random), with the variant's options; the game is
+  Online (a variant without hidden information, when online games are available to the user): an invited opponent or
+  an open challenge and the side (or random), or with more than two seats a player or an open seat per seat
+  (SeatPicker) and whether the seats are drawn at random; then the time per move and the variant's options. The game is
   created on the server and opens in the online game screen (route /game/:id) once it starts. Online variant games are
   never rated.
 -->
@@ -115,7 +116,16 @@
 						{{ t('quantumchess', 'Online') }}
 					</NcCheckboxRadioSwitch>
 				</fieldset>
-				<template v-if="setup.opponent === 'online'">
+				<template v-if="setup.opponent === 'online' && setup.variant.sides.length > 2">
+					<SeatPicker
+						v-model="setup.online.players"
+						:sides="setup.variant.sides.map((x, i) => sideName(setup.variant, i))" />
+					<NcCheckboxRadioSwitch v-model="setup.online.randomSeats" type="switch">
+						{{ t('quantumchess', 'Random seats: draw the seats when every player has joined') }}
+					</NcCheckboxRadioSwitch>
+					<OpponentPicker v-model:timeControl="setup.online.timeControl" unrated timeOnly />
+				</template>
+				<template v-else-if="setup.opponent === 'online'">
 					<OpponentPicker
 						v-model:open="setup.online.open"
 						v-model:opponent="setup.online.opponent"
@@ -237,8 +247,9 @@ import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcTextField from '@nextcloud/vue/components/NcTextField'
 import OpponentPicker from '../online/components/OpponentPicker.vue'
+import SeatPicker from '../online/components/SeatPicker.vue'
 import { createGame } from '../services/api.js'
-import { features } from '../services/initialState.js'
+import { currentUser, features } from '../services/initialState.js'
 import { createVariantGame, deleteVariantGame, listVariantGames } from '../variantplay/variantGames.js'
 import {
 	CATALOG,
@@ -314,7 +325,7 @@ async function openSetup(entry) {
 		options: {},
 		autoFlip: false,
 		notSaved: false,
-		online: { open: false, opponent: null, timeControl: 'corr:3d', color: 'r' },
+		online: { open: false, opponent: null, timeControl: 'corr:3d', color: 'r', players: [], randomSeats: false },
 		busy: false,
 		error: null,
 	}
@@ -327,7 +338,8 @@ async function openSetup(entry) {
 	}
 	// the dialog is still open for this variant (compare ids: the ref holds a reactive copy of the entry)
 	if (setup.value?.entry.id === entry.id) {
-		setup.value = { ...setup.value, variant: V, options }
+		const players = V.sides.map((x, i) => (i === 0 ? 'me' : null))
+		setup.value = { ...setup.value, variant: V, options, online: { ...setup.value.online, players } }
 	}
 }
 
@@ -362,12 +374,24 @@ watch(() => [setup.value?.variant, setup.value?.side, setup.value?.opponent], ([
  * @return {boolean}
  */
 function onlineFor(entry) {
-	return Boolean(features.multiplayer) && isOnlineVariant(entry.id) && seatCount(entry.id) === 2
+	return Boolean(features.multiplayer) && isOnlineVariant(entry.id)
 }
 
-/** Whether an online game has an opponent: an invited user, or an open challenge. */
-const onlineReady = computed(() => setup.value?.opponent !== 'online'
-	|| setup.value.online.open || Boolean(setup.value.online.opponent))
+/**
+ * Whether an online game has its players: an invited user or an open challenge, or with more than two seats a player
+ * or an open seat (where open challenges are allowed) in every seat.
+ */
+const onlineReady = computed(() => {
+	const s = setup.value
+	if (s?.opponent !== 'online') {
+		return true
+	}
+	if (seatCount(s.entry.id) > 2) {
+		return s.online.players.length === seatCount(s.entry.id)
+			&& s.online.players.every((p) => p === 'me' || p?.id || (p === null && features.openChallenges))
+	}
+	return s.online.open || Boolean(s.online.opponent)
+})
 
 /**
  * Create an online game on the server and open it.
@@ -380,14 +404,24 @@ async function startOnline(V, options) {
 	s.busy = true
 	s.error = null
 	try {
-		const game = await createGame({
-			opponent: s.online.open ? null : s.online.opponent.id,
-			color: s.online.color,
-			rated: false,
-			timeControl: s.online.timeControl,
-			variant: V.id,
-			options,
-		})
+		const seated = V.sides.length > 2
+		const game = await createGame(seated
+			? {
+					players: s.online.players.map((p) => (p === 'me' ? currentUser.uid : p?.id ?? null)),
+					color: s.online.randomSeats ? 'r' : 'w',
+					rated: false,
+					timeControl: s.online.timeControl,
+					variant: V.id,
+					options,
+				}
+			: {
+					opponent: s.online.open ? null : s.online.opponent.id,
+					color: s.online.color,
+					rated: false,
+					timeControl: s.online.timeControl,
+					variant: V.id,
+					options,
+				})
 		setup.value = null
 		router.push({ name: 'online-game', params: { id: game.id } })
 	} catch (e) {

@@ -6,14 +6,15 @@
 <!--
   The online options of the New game dialog: an open challenge or an invited opponent (recent opponents first, then a
   user search), the time per move and whether the game is rated (not for a game that is never rated, `unrated`: the
-  chess variants).
+  chess variants). With `timeOnly`, the time per move alone: a game with more than two seats chooses its players in
+  SeatPicker.
 -->
 <template>
-	<NcCheckboxRadioSwitch v-if="features.openChallenges" v-model="open" type="switch">
+	<NcCheckboxRadioSwitch v-if="features.openChallenges && !timeOnly" v-model="open" type="switch">
 		{{ t('quantumchess', 'Open challenge: anyone who can find me may join') }}
 	</NcCheckboxRadioSwitch>
 	<NcSelectUsers
-		v-if="!open"
+		v-if="!open && !timeOnly"
 		v-model="opponent"
 		:inputLabel="t('quantumchess', 'Opponent')"
 		:placeholder="t('quantumchess', 'Search for a colleague')"
@@ -47,11 +48,10 @@
 
 <script setup>
 import { t } from '@nextcloud/l10n'
-import { ref } from 'vue'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcSelectUsers from '@nextcloud/vue/components/NcSelectUsers'
-import { getRecentOpponents, searchUsers } from '../../services/api.js'
 import { features } from '../../services/initialState.js'
+import { useUserSearch } from '../composables/useUserSearch.js'
 
 /** An open challenge instead of an invitation */
 const open = defineModel('open', { type: Boolean, default: false })
@@ -70,6 +70,8 @@ defineProps({
 	ratedBlocked: { type: String, default: null },
 	/** Whether the game is never rated (the chess variants), so that there is nothing to choose */
 	unrated: { type: Boolean, default: false },
+	/** Only the time per move: the players are chosen elsewhere (SeatPicker) */
+	timeOnly: { type: Boolean, default: false },
 })
 
 const timeControls = [
@@ -79,48 +81,7 @@ const timeControls = [
 	{ id: 'corr:none', label: t('quantumchess', 'No deadline') },
 ]
 
-const userOptions = ref([])
-const searching = ref(false)
-let searchSeq = 0
-
-/**
- * An NcSelectUsers option for a user.
- *
- * @param {{userId: string, displayName: string, subline?: string}} u the user
- * @return {{id: string, user: string, displayName: string, subname: string}}
- */
-const toOption = (u) => ({ id: u.userId, user: u.userId, displayName: u.displayName, subname: u.subline ?? '' })
-
-getRecentOpponents().then((users) => {
-	if (userOptions.value.length === 0) {
-		userOptions.value = users.map(toOption)
-	}
-}).catch(() => {})
-
-/**
- * Search users; only the answer to the latest search is shown.
- *
- * @param {string} term search text
- */
-async function onSearch(term) {
-	const seq = ++searchSeq
-	if (!term || term.length < 1) {
-		return
-	}
-	searching.value = true
-	try {
-		const users = await searchUsers(term, { limit: 10 })
-		if (seq === searchSeq) {
-			userOptions.value = users.map(toOption)
-		}
-	} catch {
-		// keep the list
-	} finally {
-		if (seq === searchSeq) {
-			searching.value = false
-		}
-	}
-}
+const { userOptions, searching, onSearch } = useUserSearch()
 </script>
 
 <style lang="scss" scoped>

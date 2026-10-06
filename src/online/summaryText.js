@@ -37,6 +37,9 @@ export function timeControlText(tc) {
  * @return {UserRef|null}
  */
 export function otherPlayer(g, me) {
+	if (Array.isArray(g.seats)) {
+		return otherPlayers(g, me)[0] ?? null
+	}
 	if (g.white && g.black) {
 		return g.white.userId === me ? g.black : g.white
 	}
@@ -54,6 +57,11 @@ export function otherPlayer(g, me) {
  * @return {string}
  */
 export function colorText(g, me) {
+	if (Array.isArray(g.seats)) {
+		return g.colorChoice === 'r'
+			? t('quantumchess', 'Seats are drawn at the start')
+			: t('quantumchess', 'Seats as chosen by {name}', { name: g.creator?.displayName ?? '' })
+	}
 	let color = g.myColor
 	if (!color && g.colorChoice && g.colorChoice !== 'r') {
 		color = g.creator?.userId === me ? g.colorChoice : otherColor(g.colorChoice)
@@ -109,4 +117,29 @@ export function outcomeText(g) {
  */
 export function variantText(game) {
 	return game?.variant ? (catalogEntry(game.variant)?.name() ?? game.variant) : ''
+}
+
+/**
+ * The other players of a game with more than two seats (`seats`), in seat order; for any other game the opponent.
+ *
+ * @param {GameSummary} g the game
+ * @param {string|null} me viewer uid
+ * @return {UserRef[]}
+ */
+export function otherPlayers(g, me) {
+	if (!Array.isArray(g?.seats)) {
+		const other = otherPlayer(g, me)
+		return other ? [other] : []
+	}
+	return g.seats.map((s) => s.player).filter((p) => p && p.userId !== me)
+}
+
+/**
+ * The players of a game with more than two seats in seat order, an open seat included: "Alice, Bob, open seat, Carol".
+ *
+ * @param {GameSummary} g the game
+ * @return {string}
+ */
+export function seatsText(g) {
+	return (g?.seats ?? []).map((s) => s.player?.displayName ?? t('quantumchess', 'open seat')).join(', ')
 }

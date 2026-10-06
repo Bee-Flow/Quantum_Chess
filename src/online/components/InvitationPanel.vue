@@ -30,6 +30,9 @@
 				<li v-if="g.variant" data-test="invite-variant">
 					{{ variantText(g) }}
 				</li>
+				<li v-if="g.seats" data-test="invite-seats">
+					{{ t('quantumchess', 'Players: {names}', { names: seatsText(g) }) }}
+				</li>
 				<li>{{ timeControlText(g.timeControl) }}</li>
 				<li>{{ g.ratedRequested ? t('quantumchess', 'Rated') : t('quantumchess', 'Casual (unrated)') }}</li>
 				<li>{{ colorText(g, me) }}</li>
@@ -90,7 +93,7 @@ import NcAvatar from '@nextcloud/vue/components/NcAvatar'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import { useBusyAction } from '../../composables/useBusyAction.js'
 import { formatRelative } from '../../services/format.js'
-import { colorText, otherPlayer, timeControlText, variantText } from '../summaryText.js'
+import { colorText, otherPlayer, seatsText, timeControlText, variantText } from '../summaryText.js'
 
 const props = defineProps({
 	/** The online game controller */
@@ -107,6 +110,16 @@ const live = computed(() => g.value.status === 'pending' || g.value.status === '
 const mode = computed(() => {
 	const game = g.value
 	const mine = game.creator?.userId === props.me
+	if (Array.isArray(game.seats) && live.value) {
+		// a game with more than two seats: the invited players answer one by one, open seats are joined
+		if (game.invited) {
+			return 'invited'
+		}
+		if (mine) {
+			return game.status === 'open' ? 'own-open' : 'waiting'
+		}
+		return game.seats.some((s) => s.player?.userId === props.me) ? 'seated' : 'join'
+	}
 	if (game.status === 'pending') {
 		return mine ? 'waiting' : 'invited'
 	}
@@ -124,7 +137,11 @@ const title = computed(() => {
 				? t('quantumchess', '{name} wants a rematch', { name })
 				: t('quantumchess', '{name} invites you to a game', { name })
 		case 'waiting':
-			return t('quantumchess', 'Waiting for {name} to accept', { name })
+			return Array.isArray(g.value.seats)
+				? t('quantumchess', 'Waiting for every seat to be taken')
+				: t('quantumchess', 'Waiting for {name} to accept', { name })
+		case 'seated':
+			return t('quantumchess', 'Waiting for every seat to be taken')
 		case 'join':
 			return t('quantumchess', '{name} is looking for an opponent', { name })
 		case 'own-open':

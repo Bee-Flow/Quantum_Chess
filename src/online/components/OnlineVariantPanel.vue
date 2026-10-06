@@ -72,11 +72,12 @@
 </template>
 
 <script setup>
-import { t } from '@nextcloud/l10n'
+import { n, t } from '@nextcloud/l10n'
 import { computed, ref } from 'vue'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import GameChat from './GameChat.vue'
 import { resultText } from '../../game/resultText.js'
+import { reasonText } from '../../variantplay/texts.js'
 import { sideName } from '../../variants/index.js'
 
 const props = defineProps({
@@ -119,8 +120,9 @@ const players = computed(() => {
 	if (!V.value || !g.value) {
 		return []
 	}
-	return [0, 1].map((seat) => {
-		const color = seat === 0 ? 'w' : 'b'
+	const multi = Array.isArray(g.value.seats)
+	return V.value.sides.map((side, seat) => {
+		const color = multi ? String(seat) : seat === 0 ? 'w' : 'b'
 		return {
 			seat,
 			side: sideName(V.value, seat),
@@ -141,8 +143,43 @@ const ended = computed(() => {
 	if (!game || (game.status !== 'finished' && game.status !== 'aborted')) {
 		return null
 	}
+	if (Array.isArray(game.seats)) {
+		return seatedEnd(game)
+	}
 	return resultText(game.result ?? '*', game.resultReason ?? 'aborted', c.names.value)
 })
+
+/**
+ * How a game with more than two seats ended: the winning players from the variant result code ("win:0,2/king"), a
+ * draw, or an aborted or annulled game, with the reason.
+ *
+ * @param {object} game the game
+ * @return {{title: string, reason: string}}
+ */
+function seatedEnd(game) {
+	const reason = game.resultReason ?? ''
+	if (game.status === 'aborted') {
+		if (reason === 'disputed') {
+			const why = t('quantumchess', 'The players’ devices disagreed about a move')
+			return { title: t('quantumchess', 'Game annulled'), reason: why }
+		}
+		return { title: t('quantumchess', 'Game aborted'), reason: '' }
+	}
+	const match = /^win:([\d,]+)\//.exec(game.variantResult ?? '')
+	const winners = match ? match[1].split(',').map((n) => c.names.value[n]) : []
+	const title = winners.length
+		// TRANSLATORS: the winners of a game of four, such as "Alice & Carol won"
+		? n('quantumchess', '{names} won', '{names} won', winners.length, { names: winners.join(' & ') })
+		: t('quantumchess', 'Draw')
+	const words = {
+		resignation: t('quantumchess', 'A player resigned'),
+		timeout: t('quantumchess', 'A player ran out of time'),
+		abandoned: t('quantumchess', 'The game was abandoned'),
+		agreement: t('quantumchess', 'Draw by agreement'),
+		player_deleted: t('quantumchess', 'A player’s account was deleted'),
+	}
+	return { title, reason: words[reason] ?? (V.value ? reasonText(V.value, reason) : reason) }
+}
 
 /** The open draw offer in words. */
 const drawOffer = computed(() => {
@@ -150,9 +187,16 @@ const drawOffer = computed(() => {
 	if (!offer || g.value?.status !== 'active') {
 		return ''
 	}
-	return offer.by === g.value.myColor
+	const text = offer.by === g.value.myColor
 		? t('quantumchess', 'You offered a draw.')
 		: t('quantumchess', '{name} offers a draw.', { name: c.names.value[offer.by] })
+	const votes = g.value.drawVotes
+	if (!Array.isArray(g.value.seats) || !Array.isArray(votes)) {
+		return text
+	}
+	// TRANSLATORS: a draw offer in a game of four: how many players agreed so far
+	const count = { agreed: votes.length, all: g.value.seats.length }
+	return text + ' ' + t('quantumchess', '{agreed} of {all} agree.', count)
 })
 </script>
 
