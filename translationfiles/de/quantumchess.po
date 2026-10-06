@@ -9,7 +9,7 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/App.vue:13 src/App.vue:90 src/settings/components/AdminSettings.vue:13 src/settings/components/AdminSettings.vue:16 src/settings/components/PersonalSettings.vue:12 src/settings/components/PersonalSettings.vue:17 src/views/VariantsView.vue:54 lib/Dashboard/GamesWidget.php:62 lib/Notification/Notifier.php:53 lib/Settings/Section.php:32
+#: src/App.vue:13 src/App.vue:90 src/settings/components/AdminSettings.vue:13 src/settings/components/AdminSettings.vue:16 src/settings/components/PersonalSettings.vue:12 src/settings/components/PersonalSettings.vue:17 src/views/VariantsView.vue:59 lib/Dashboard/GamesWidget.php:63 lib/Notification/Notifier.php:54 lib/Settings/Section.php:32
 msgid "Quantum Chess"
 msgstr "Quantum Chess"
 
@@ -17,15 +17,15 @@ msgstr "Quantum Chess"
 msgid "Quantum Chess navigation"
 msgstr "Quantum-Chess-Navigation"
 
-#: src/app/components/AppNavigation.vue:13 src/app/components/NewGameDialog.vue:12 src/game/components/GameOverDialog.vue:56 src/game/components/LocalGameHost.vue:17 src/online/components/InvitationPanel.vue:74 src/views/HomeView.vue:60 src/views/VariantGameView.vue:475 lib/Dashboard/GamesWidget.php:100
+#: src/app/components/AppNavigation.vue:13 src/app/components/NewGameDialog.vue:12 src/game/components/GameOverDialog.vue:56 src/game/components/LocalGameHost.vue:17 src/online/components/InvitationPanel.vue:77 src/views/HomeView.vue:60 src/views/VariantGameView.vue:485 lib/Dashboard/GamesWidget.php:101
 msgid "New game"
 msgstr "Neue Partie"
 
-#: src/app/components/AppNavigation.vue:18 src/online/components/InvitationPanel.vue:71 src/online/components/OnlineGameHost.vue:20
+#: src/app/components/AppNavigation.vue:18 src/online/components/InvitationPanel.vue:74 src/online/components/OnlineGameHost.vue:23 src/views/OnlineVariantGame.vue:18
 msgid "Home"
 msgstr "Start"
 
-#: src/app/components/AppNavigation.vue:23 src/home/components/PlayTiles.vue:78 src/views/VariantGameView.vue:56 src/views/VariantsView.vue:17
+#: src/app/components/AppNavigation.vue:23 src/home/components/PlayTiles.vue:78 src/views/VariantGameView.vue:62 src/views/VariantsView.vue:22
 msgid "Chess variants"
 msgstr "Schachvarianten"
 
@@ -33,7 +33,7 @@ msgstr "Schachvarianten"
 msgid "Trainer"
 msgstr "Trainer"
 
-#: src/app/components/AppNavigation.vue:33 src/views/VariantGameView.vue:70
+#: src/app/components/AppNavigation.vue:33 src/views/VariantGameView.vue:76
 msgid "Rules"
 msgstr "Regeln"
 
@@ -41,7 +41,7 @@ msgstr "Regeln"
 msgid "Statistics"
 msgstr "Statistik"
 
-#: src/app/components/AppNavigation.vue:46 src/game/components/PlayerCard.vue:188 src/online/components/lobby/LobbyOnlineSections.vue:15 src/online/onlinePlayers.js:98
+#: src/app/components/AppNavigation.vue:46 src/game/components/PlayerCard.vue:188 src/online/components/OnlineVariantPanel.vue:27 src/online/components/lobby/LobbyOnlineSections.vue:15 src/online/onlinePlayers.js:98
 msgid "Your move"
 msgstr "Du bist am Zug"
 
@@ -57,7 +57,7 @@ msgstr "Warte auf Gegner"
 msgid "On this device"
 msgstr "Auf diesem Gerät"
 
-#: src/app/components/AppNavigation.vue:113 src/views/VariantsView.vue:39
+#: src/app/components/AppNavigation.vue:113 src/views/VariantsView.vue:44
 msgid "Delete from this device"
 msgstr "Von diesem Gerät löschen"
 
@@ -69,7 +69,7 @@ msgstr "Einstellungen"
 msgid "Open challenge"
 msgstr "Offene Herausforderung"
 
-#: src/app/components/AppNavigation.vue:208 src/views/VariantsView.vue:33
+#: src/app/components/AppNavigation.vue:208 src/views/VariantsView.vue:38
 msgid "Finished"
 msgstr "Beendet"
 
@@ -133,7 +133,7 @@ msgstr "Anzahl der Möglichkeiten zeigen"
 msgid "Physics names (superposition, measurement, entanglement)"
 msgstr "Physikalische Begriffe (Superposition, Messung, Verschränkung)"
 
-#: src/app/components/AppSettingsDialog.vue:102 src/game/components/GamePanel.vue:86 src/game/components/MoveList.vue:17 src/game/components/MoveStrip.vue:8 src/views/ReviewView.vue:127 src/views/VariantGameView.vue:421
+#: src/app/components/AppSettingsDialog.vue:102 src/game/components/GamePanel.vue:86 src/game/components/MoveList.vue:17 src/game/components/MoveStrip.vue:8 src/views/ReviewView.vue:127 src/views/VariantGameView.vue:431
 msgid "Moves"
 msgstr "Züge"
 
@@ -229,7 +229,7 @@ msgstr "Bereich der Möglichkeiten"
 msgid "Describe the position"
 msgstr "Die Stellung beschreiben"
 
-#: src/app/components/AppSettingsDialog.vue:213 src/app/components/NewGameDialog.vue:113 src/board/components/BoardControls.vue:36 src/llm/components/AiNoticeDialog.vue:26 src/online/components/OnlineGameHost.vue:95 src/online/components/lobby/LobbyOnlineSections.vue:79 src/views/VariantGameView.vue:344 src/views/VariantGameView.vue:359
+#: src/app/components/AppSettingsDialog.vue:213 src/app/components/NewGameDialog.vue:113 src/board/components/BoardControls.vue:36 src/llm/components/AiNoticeDialog.vue:26 src/online/components/OnlineGameHost.vue:99 src/online/components/lobby/LobbyOnlineSections.vue:79 src/views/VariantGameView.vue:353 src/views/VariantGameView.vue:368
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -313,7 +313,7 @@ msgstr "Züge mit Wurf"
 msgid "Slow"
 msgstr "Langsam"
 
-#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:934 src/views/VariantsView.vue:220
+#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:956 src/views/VariantsView.vue:268
 msgid "Normal"
 msgstr "Normal"
 
@@ -333,15 +333,15 @@ msgstr "Standard"
 msgid "Your colour"
 msgstr "Deine Farbe"
 
-#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:155
+#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:140 src/views/VariantsView.vue:195
 msgid "Random"
 msgstr "Zufällig"
 
-#: src/app/components/ColorChoice.vue:39 src/app/components/NewGameDialog.vue:78 src/app/components/NewGameDialog.vue:308 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:25 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:58 src/game/resultText.js:35 src/game/resultText.js:115 src/online/onlinePlayers.js:74 src/review/reviewGame.js:52 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:27 src/variants/multiverse.js:240 src/variants/multiverse.js:288 src/views/LocalGameView.vue:119
+#: src/app/components/ColorChoice.vue:39 src/app/components/NewGameDialog.vue:78 src/app/components/NewGameDialog.vue:308 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:25 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:58 src/game/resultText.js:35 src/game/resultText.js:117 src/online/onlinePlayers.js:74 src/review/reviewGame.js:52 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:27 src/variants/multiverse.js:240 src/variants/multiverse.js:288 src/views/LocalGameView.vue:119
 msgid "White"
 msgstr "Weiß"
 
-#: src/app/components/ColorChoice.vue:40 src/app/components/NewGameDialog.vue:83 src/app/components/NewGameDialog.vue:309 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:28 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:59 src/game/resultText.js:36 src/game/resultText.js:116 src/online/onlinePlayers.js:74 src/review/reviewGame.js:53 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:28 src/variants/multiverse.js:241 src/variants/multiverse.js:289 src/variants/xiangqi.js:358 src/views/LocalGameView.vue:120
+#: src/app/components/ColorChoice.vue:40 src/app/components/NewGameDialog.vue:83 src/app/components/NewGameDialog.vue:309 src/engine/ui/pieces.js:88 src/game/components/MoveList.vue:28 src/game/components/RollLog.vue:113 src/game/localPlayers.js:35 src/game/localPlayers.js:59 src/game/resultText.js:36 src/game/resultText.js:118 src/online/onlinePlayers.js:74 src/review/reviewGame.js:53 src/trainer/composables/usePlayback.js:29 src/variants/core/orthodoxVariant.js:28 src/variants/multiverse.js:241 src/variants/multiverse.js:289 src/variants/xiangqi.js:358 src/views/LocalGameView.vue:120
 msgid "Black"
 msgstr "Schwarz"
 
@@ -349,7 +349,7 @@ msgstr "Schwarz"
 msgid "Mode"
 msgstr "Modus"
 
-#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:105
+#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:145
 msgid "Level"
 msgstr "Stufe"
 
@@ -369,11 +369,11 @@ msgstr "Brett zur Seite am Zug drehen"
 msgid "Message (optional)"
 msgstr "Nachricht (optional)"
 
-#: src/app/components/NewGameDialog.vue:164 src/home/components/PlayTiles.vue:48 src/views/StatsView.vue:50
+#: src/app/components/NewGameDialog.vue:164 src/home/components/PlayTiles.vue:48 src/views/StatsView.vue:50 src/views/VariantsView.vue:115
 msgid "Online"
 msgstr "Online"
 
-#: src/app/components/NewGameDialog.vue:165 src/game/localPlayers.js:27 src/game/localPlayers.js:50 src/home/components/PlayTiles.vue:55 src/views/VariantsView.vue:94
+#: src/app/components/NewGameDialog.vue:165 src/game/localPlayers.js:27 src/game/localPlayers.js:50 src/home/components/PlayTiles.vue:55 src/views/VariantsView.vue:99
 msgid "Computer"
 msgstr "Computer"
 
@@ -381,7 +381,7 @@ msgstr "Computer"
 msgid "AI opponent"
 msgstr "KI-Gegner"
 
-#: src/app/components/NewGameDialog.vue:173 src/home/components/PlayTiles.vue:72 src/views/VariantsView.vue:101
+#: src/app/components/NewGameDialog.vue:173 src/home/components/PlayTiles.vue:72 src/views/VariantsView.vue:106
 msgid "Pass & play"
 msgstr "Zu zweit"
 
@@ -393,11 +393,11 @@ msgstr "Herausforderung erstellen"
 msgid "Send invitation"
 msgstr "Einladung senden"
 
-#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:177
+#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:220
 msgid "Start game"
 msgstr "Partie starten"
 
-#: src/app/components/NewGameDialog.vue:331
+#: src/app/components/NewGameDialog.vue:331 src/views/VariantsView.vue:394
 msgid "The game could not be created. Please try again."
 msgstr "Die Partie konnte nicht erstellt werden. Bitte versuche es erneut."
 
@@ -446,7 +446,7 @@ msgstr "Hoher Kontrast"
 msgid "Blue"
 msgstr "Blau"
 
-#: src/board/components/BoardControls.vue:15 src/views/VariantGameView.vue:259
+#: src/board/components/BoardControls.vue:15 src/views/VariantGameView.vue:268
 msgid "Move type"
 msgstr "Zugart"
 
@@ -454,22 +454,22 @@ msgstr "Zugart"
 msgid "Play"
 msgstr "Spielen"
 
-#: src/board/components/BoardControls.vue:70 src/game/components/MoveList.vue:22 src/views/VariantGameView.vue:599
+#: src/board/components/BoardControls.vue:70 src/game/components/MoveList.vue:22 src/views/VariantGameView.vue:619
 msgid "Move"
 msgstr "Zug"
 
 #. TRANSLATORS: move type that makes a piece a ghost on two squares (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:72 src/trainer/lessons/L02-split.js:15 src/variantplay/texts.js:60 src/views/VariantGameView.vue:600
+#: src/board/components/BoardControls.vue:72 src/trainer/lessons/L02-split.js:15 src/variantplay/texts.js:60 src/views/VariantGameView.vue:620
 msgid "Split"
 msgstr "Teilen"
 
 #. TRANSLATORS: move type that joins two parts of a ghost (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:74 src/views/VariantGameView.vue:601
+#: src/board/components/BoardControls.vue:74 src/views/VariantGameView.vue:621
 msgid "Merge"
 msgstr "Vereinen"
 
 #. TRANSLATORS: move type that settles where a ghost really is (a game term: see the glossary)
-#: src/board/components/BoardControls.vue:76 src/rules/sections.js:422 src/views/VariantGameView.vue:602
+#: src/board/components/BoardControls.vue:76 src/rules/sections.js:422 src/views/VariantGameView.vue:622
 msgid "Measure"
 msgstr "Messen"
 
@@ -567,7 +567,7 @@ msgid_plural "%n possibilities"
 msgstr[0] "%n Möglichkeit"
 msgstr[1] "%n Möglichkeiten"
 
-#: src/board/components/PromotionPicker.vue:14 src/views/VariantGameView.vue:294
+#: src/board/components/PromotionPicker.vue:14 src/views/VariantGameView.vue:303
 msgid "Promote to"
 msgstr "Umwandeln in"
 
@@ -587,7 +587,7 @@ msgstr "Dein König wäre zu {risk} schlagbar. {move} macht ihn {safer}."
 msgid "Show the safer move"
 msgstr "Sichereren Zug zeigen"
 
-#: src/board/components/SafetyNetDialog.vue:81 src/views/VariantGameView.vue:349 src/views/VariantGameView.vue:356
+#: src/board/components/SafetyNetDialog.vue:81 src/views/VariantGameView.vue:358 src/views/VariantGameView.vue:365
 msgid "Play anyway"
 msgstr "Trotzdem spielen"
 
@@ -1164,7 +1164,7 @@ msgstr "Beide Wege sind in jeder Möglichkeit versperrt."
 msgid "A piece can stand on at most 4 squares."
 msgstr "Eine Figur kann auf höchstens 4 Feldern stehen."
 
-#: src/engine/ui/reasons.js:73 src/views/VariantGameView.vue:597
+#: src/engine/ui/reasons.js:73 src/views/VariantGameView.vue:617
 msgid "Budget full: merge or measure a piece first."
 msgstr "Budget voll: Vereine oder miss zuerst eine Figur."
 
@@ -1172,7 +1172,7 @@ msgstr "Budget voll: Vereine oder miss zuerst eine Figur."
 msgid "One of the parts can't reach that square."
 msgstr "Einer der Teile kann dieses Feld nicht erreichen."
 
-#: src/engine/ui/reasons.js:79 src/views/VariantGameView.vue:742
+#: src/engine/ui/reasons.js:79 src/views/VariantGameView.vue:762
 msgid "That move is not possible."
 msgstr "Dieser Zug ist nicht möglich."
 
@@ -1407,7 +1407,7 @@ msgstr "Stummschalten"
 msgid "Unmute"
 msgstr "Ton an"
 
-#: src/game/components/ControlsRow.vue:35 lib/Dashboard/GamesWidget.php:101
+#: src/game/components/ControlsRow.vue:35 lib/Dashboard/GamesWidget.php:102
 msgid "More"
 msgstr "Mehr"
 
@@ -1427,11 +1427,11 @@ msgstr "Einstellungen…"
 msgid "Undo takes the move back. The dice remember: the same move here gives the same result."
 msgstr "Rückgängig nimmt den Zug zurück. Die Würfel merken es sich: Derselbe Zug ergibt hier dasselbe Ergebnis."
 
-#: src/game/components/ControlsRow.vue:73 src/game/components/GameScreen.vue:154 src/online/onlineBanners.js:51 src/views/VariantGameView.vue:289 src/views/VariantGameView.vue:466
+#: src/game/components/ControlsRow.vue:73 src/game/components/GameScreen.vue:154 src/online/onlineBanners.js:51 src/views/VariantGameView.vue:298 src/views/VariantGameView.vue:476
 msgid "Undo"
 msgstr "Rückgängig"
 
-#: src/game/components/ControlsRow.vue:79 src/game/components/GameScreen.vue:164 src/game/components/GameScreen.vue:197 src/online/components/OnlineGameHost.vue:160 src/online/components/OnlineGameHost.vue:180 src/views/VariantGameView.vue:472
+#: src/game/components/ControlsRow.vue:79 src/game/components/GameScreen.vue:164 src/game/components/GameScreen.vue:197 src/online/components/OnlineGameHost.vue:164 src/online/components/OnlineGameHost.vue:184 src/views/VariantGameView.vue:482
 msgid "Resign"
 msgstr "Aufgeben"
 
@@ -1457,7 +1457,7 @@ msgstr[1] "%n seltene Ergebnisse"
 msgid "Converging captures: {n}"
 msgstr "Vereinigungsschläge: {n}"
 
-#: src/game/components/GameOverDialog.vue:60 src/online/components/OnlineGameHost.vue:121
+#: src/game/components/GameOverDialog.vue:60 src/online/components/OnlineGameHost.vue:125
 msgid "Review with the coach"
 msgstr "Mit dem Coach analysieren"
 
@@ -1473,15 +1473,15 @@ msgstr "Stufe {n} spielen ({name})"
 msgid "Rematch requested ✓"
 msgstr "Revanche angefragt ✓"
 
-#: src/game/components/GameOverDialog.vue:76 src/game/components/ResultBar.vue:25 src/online/components/lobby/RecentGames.vue:46 src/online/components/lobby/RecentGames.vue:47 lib/Notification/Notifier.php:210
+#: src/game/components/GameOverDialog.vue:76 src/game/components/ResultBar.vue:25 src/online/components/lobby/RecentGames.vue:46 src/online/components/lobby/RecentGames.vue:47 lib/Notification/Notifier.php:219
 msgid "Rematch"
 msgstr "Revanche"
 
-#: src/game/components/GameOverDialog.vue:130 src/game/resultText.js:119
+#: src/game/components/GameOverDialog.vue:130 src/game/resultText.js:123
 msgid "Game aborted"
 msgstr "Partie abgebrochen"
 
-#: src/game/components/GameOverDialog.vue:133 src/game/resultText.js:121 src/online/summaryText.js:95
+#: src/game/components/GameOverDialog.vue:133 src/game/resultText.js:125 src/online/summaryText.js:97
 msgid "Draw"
 msgstr "Remis"
 
@@ -1536,7 +1536,7 @@ msgstr "Zurück zur laufenden Partie (L)"
 msgid "Let the engine move"
 msgstr "Die Engine ziehen lassen"
 
-#: src/game/components/GameScreen.vue:188 src/online/components/OnlineGameHost.vue:167
+#: src/game/components/GameScreen.vue:188 src/online/components/OnlineGameHost.vue:171
 msgid "Resign this game?"
 msgstr "Diese Partie aufgeben?"
 
@@ -1544,7 +1544,7 @@ msgstr "Diese Partie aufgeben?"
 msgid "The game ends and counts as a loss."
 msgstr "Die Partie endet und zählt als Niederlage."
 
-#: src/game/components/GameScreen.vue:194 src/online/components/OnlineGameHost.vue:177
+#: src/game/components/GameScreen.vue:194 src/online/components/OnlineGameHost.vue:181
 msgid "Keep playing"
 msgstr "Weiterspielen"
 
@@ -1552,7 +1552,7 @@ msgstr "Weiterspielen"
 msgid "Move {n} of {total}"
 msgstr "Zug {n} von {total}"
 
-#: src/game/components/LocalGameHost.vue:13 src/views/VariantGameView.vue:52
+#: src/game/components/LocalGameHost.vue:13 src/views/VariantGameView.vue:56
 msgid "Game not found"
 msgstr "Partie nicht gefunden"
 
@@ -1730,11 +1730,11 @@ msgstr "Stark"
 msgid "Expert"
 msgstr "Experte"
 
-#: src/game/localPlayers.js:33 src/llm/components/AiChat.vue:21 src/online/components/GameChat.vue:174 src/views/VariantGameView.vue:939
+#: src/game/localPlayers.js:33 src/llm/components/AiChat.vue:21 src/online/components/GameChat.vue:174 src/views/VariantGameView.vue:961
 msgid "You"
 msgstr "Du"
 
-#: src/game/localPlayers.js:50 src/game/localPlayers.js:53 src/online/components/lobby/LobbyGameCard.vue:109 src/online/components/lobby/RecentGames.vue:24
+#: src/game/localPlayers.js:50 src/game/localPlayers.js:53 src/online/components/lobby/LobbyGameCard.vue:112 src/online/components/lobby/RecentGames.vue:24
 msgid "vs {name}"
 msgstr "gegen {name}"
 
@@ -1742,7 +1742,7 @@ msgstr "gegen {name}"
 msgid "{white} vs {black}"
 msgstr "{white} gegen {black}"
 
-#: src/game/resultText.js:43 lib/Notification/Notifier.php:78
+#: src/game/resultText.js:43 lib/Notification/Notifier.php:79
 msgid "King captured"
 msgstr "König geschlagen"
 
@@ -1810,7 +1810,15 @@ msgstr "Die Partie wurde aufgegeben und verlassen"
 msgid "A player’s account was deleted"
 msgstr "Das Konto einer Person wurde gelöscht"
 
-#: src/game/resultText.js:123
+#: src/game/resultText.js:83
+msgid "The players’ devices disagreed about a move"
+msgstr "Die Geräte der Spieler waren sich über einen Zug uneinig"
+
+#: src/game/resultText.js:121
+msgid "Game annulled"
+msgstr "Partie annulliert"
+
+#: src/game/resultText.js:127
 msgid "{name} won"
 msgstr "{name} hat gewonnen"
 
@@ -1858,7 +1866,7 @@ msgstr "Deine Stellung und deine Fragen werden an {provider} gesendet. Namen ode
 msgid "Continue"
 msgstr "Weiter"
 
-#: src/llm/components/PersonaPicker.vue:12 src/online/components/OpponentPicker.vue:17 src/views/StatsView.vue:97 src/views/VariantsView.vue:88
+#: src/llm/components/PersonaPicker.vue:12 src/online/components/OpponentPicker.vue:18 src/views/StatsView.vue:97 src/views/VariantsView.vue:93
 msgid "Opponent"
 msgstr "Gegner"
 
@@ -2162,27 +2170,27 @@ msgstr "Rauschen auf der Verbindung erkannt. Verwende interne Routine."
 msgid "Answer invalid. Fallback engaged."
 msgstr "Antwort ungültig. Ausweichplan aktiviert."
 
-#: src/online/chatText.js:25 lib/Notification/Notifier.php:99
+#: src/online/chatText.js:25 lib/Notification/Notifier.php:100
 msgid "Good luck!"
 msgstr "Viel Glück!"
 
-#: src/online/chatText.js:26 lib/Notification/Notifier.php:100
+#: src/online/chatText.js:26 lib/Notification/Notifier.php:101
 msgid "Nice split!"
 msgstr "Schöne Teilung!"
 
-#: src/online/chatText.js:27 lib/Notification/Notifier.php:101
+#: src/online/chatText.js:27 lib/Notification/Notifier.php:102
 msgid "Well played"
 msgstr "Gut gespielt"
 
-#: src/online/chatText.js:28 lib/Notification/Notifier.php:102
+#: src/online/chatText.js:28 lib/Notification/Notifier.php:103
 msgid "Oops"
 msgstr "Hoppla"
 
-#: src/online/chatText.js:29 lib/Notification/Notifier.php:103
+#: src/online/chatText.js:29 lib/Notification/Notifier.php:104
 msgid "Thanks for the game"
 msgstr "Danke für die Partie"
 
-#: src/online/chatText.js:30 lib/Notification/Notifier.php:104
+#: src/online/chatText.js:30 lib/Notification/Notifier.php:105
 msgid "Good game"
 msgstr "Gute Partie"
 
@@ -2194,11 +2202,11 @@ msgstr "{name} hat Remis angeboten"
 msgid "The draw offer was declined"
 msgstr "Das Remisangebot wurde abgelehnt"
 
-#: src/online/chatText.js:48 lib/Notification/Notifier.php:86
+#: src/online/chatText.js:48 lib/Notification/Notifier.php:87
 msgid "Draw agreed"
 msgstr "Remis vereinbart"
 
-#: src/online/chatText.js:49 src/online/components/InvitationPanel.vue:121 src/online/components/OnlineGameHost.vue:246 src/online/components/lobby/LobbyGameCard.vue:100
+#: src/online/chatText.js:49 src/online/components/InvitationPanel.vue:124 src/online/components/OnlineGameHost.vue:250 src/online/components/lobby/LobbyGameCard.vue:103
 msgid "{name} wants a rematch"
 msgstr "{name} möchte eine Revanche"
 
@@ -2210,9 +2218,13 @@ msgstr "{name} hat die Partie abgebrochen"
 msgid "{name} resigned"
 msgstr "{name} hat aufgegeben"
 
-#: src/online/chatText.js:52 lib/Notification/Notifier.php:87
+#: src/online/chatText.js:52 lib/Notification/Notifier.php:88
 msgid "Time ran out"
 msgstr "Die Zeit ist abgelaufen"
+
+#: src/online/chatText.js:53
+msgid "The players’ devices disagreed about a move: the game was annulled"
+msgstr "Die Geräte der Spieler waren sich über einen Zug uneinig: Die Partie wurde annulliert"
 
 #: src/online/components/GameChat.vue:13
 msgid "Chat with {name}"
@@ -2260,225 +2272,255 @@ msgstr "Der Chat dieser Partie ist geschlossen."
 msgid "your opponent"
 msgstr "dein Gegner"
 
-#: src/online/components/GameChat.vue:174 lib/Dashboard/GamesWidget.php:120 lib/Notification/Notifier.php:141 lib/Service/Game/GameSerializer.php:71 lib/Service/Game/GameSerializer.php:269
+#: src/online/components/GameChat.vue:174 lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:142 lib/Service/Game/GameSerializer.php:72 lib/Service/Game/GameSerializer.php:296
 msgid "Deleted user"
 msgstr "Gelöschter Benutzer"
 
-#: src/online/components/InvitationPanel.vue:31 src/online/components/OpponentPicker.vue:43 src/online/components/lobby/LobbyGameCard.vue:49 lib/Dashboard/GamesWidget.php:130 lib/Notification/Notifier.php:156
+#: src/online/components/InvitationPanel.vue:34 src/online/components/OpponentPicker.vue:44 src/online/components/lobby/LobbyGameCard.vue:52 lib/Dashboard/GamesWidget.php:131 lib/Notification/Notifier.php:163
 msgid "Rated"
 msgstr "Gewertet"
 
-#: src/online/components/InvitationPanel.vue:31
+#: src/online/components/InvitationPanel.vue:34
 msgid "Casual (unrated)"
 msgstr "Freundschaftlich (ungewertet)"
 
-#: src/online/components/InvitationPanel.vue:34
+#: src/online/components/InvitationPanel.vue:37
 msgid "Expires: {when}"
 msgstr "Läuft ab: {when}"
 
-#: src/online/components/InvitationPanel.vue:40 src/online/components/OnlineGameHost.vue:55 src/online/components/OnlineGameHost.vue:74 src/online/components/lobby/LobbyOnlineSections.vue:45 lib/Notification/Notifier.php:167 lib/Notification/Notifier.php:191
+#: src/online/components/InvitationPanel.vue:43 src/online/components/OnlineGameHost.vue:59 src/online/components/OnlineGameHost.vue:78 src/online/components/OnlineVariantPanel.vue:43 src/online/components/lobby/LobbyOnlineSections.vue:45 lib/Notification/Notifier.php:174 lib/Notification/Notifier.php:200
 msgid "Decline"
 msgstr "Ablehnen"
 
-#: src/online/components/InvitationPanel.vue:47 src/online/components/lobby/LobbyOnlineSections.vue:53 lib/Notification/Notifier.php:166 lib/Notification/Notifier.php:190
+#: src/online/components/InvitationPanel.vue:50 src/online/components/lobby/LobbyOnlineSections.vue:53 lib/Notification/Notifier.php:173 lib/Notification/Notifier.php:199
 msgid "Accept"
 msgstr "Annehmen"
 
-#: src/online/components/InvitationPanel.vue:56
+#: src/online/components/InvitationPanel.vue:59
 msgid "Join the game"
 msgstr "Der Partie beitreten"
 
-#: src/online/components/InvitationPanel.vue:61 src/online/components/lobby/LobbyOnlineSections.vue:72
+#: src/online/components/InvitationPanel.vue:64 src/online/components/lobby/LobbyOnlineSections.vue:72
 msgid "Copy link"
 msgstr "Link kopieren"
 
-#: src/online/components/InvitationPanel.vue:65
+#: src/online/components/InvitationPanel.vue:68
 msgid "Cancel the challenge"
 msgstr "Die Herausforderung zurückziehen"
 
-#: src/online/components/InvitationPanel.vue:66
+#: src/online/components/InvitationPanel.vue:69
 msgid "Cancel the invitation"
 msgstr "Die Einladung zurückziehen"
 
-#: src/online/components/InvitationPanel.vue:122
+#: src/online/components/InvitationPanel.vue:125
 msgid "{name} invites you to a game"
 msgstr "{name} lädt dich zu einer Partie ein"
 
-#: src/online/components/InvitationPanel.vue:124
+#: src/online/components/InvitationPanel.vue:127
 msgid "Waiting for {name} to accept"
 msgstr "Warte, bis {name} annimmt"
 
-#: src/online/components/InvitationPanel.vue:126
+#: src/online/components/InvitationPanel.vue:129
 msgid "{name} is looking for an opponent"
 msgstr "{name} sucht einen Gegner"
 
-#: src/online/components/InvitationPanel.vue:128
+#: src/online/components/InvitationPanel.vue:131
 msgid "Your open challenge is waiting for an opponent"
 msgstr "Deine offene Herausforderung wartet auf einen Gegner"
 
-#: src/online/components/InvitationPanel.vue:131
+#: src/online/components/InvitationPanel.vue:134
 msgid "{name} declined the invitation"
 msgstr "{name} hat die Einladung abgelehnt"
 
-#: src/online/components/InvitationPanel.vue:132
+#: src/online/components/InvitationPanel.vue:135
 msgid "You declined this invitation"
 msgstr "Du hast diese Einladung abgelehnt"
 
-#: src/online/components/InvitationPanel.vue:134
+#: src/online/components/InvitationPanel.vue:137
 msgid "This invitation was cancelled"
 msgstr "Diese Einladung wurde zurückgezogen"
 
-#: src/online/components/InvitationPanel.vue:136
+#: src/online/components/InvitationPanel.vue:139
 msgid "This invitation expired"
 msgstr "Diese Einladung ist abgelaufen"
 
-#: src/online/components/InvitationPanel.vue:138 src/online/components/OnlineGameHost.vue:15
+#: src/online/components/InvitationPanel.vue:141 src/online/components/OnlineGameHost.vue:18
 msgid "This challenge is not available"
 msgstr "Diese Herausforderung ist nicht verfügbar"
 
-#: src/online/components/InvitationPanel.vue:158 src/online/components/lobby/LobbyOnlineSections.vue:166
+#: src/online/components/InvitationPanel.vue:161 src/online/components/lobby/LobbyOnlineSections.vue:166
 msgid "Link copied"
 msgstr "Link kopiert"
 
-#: src/online/components/InvitationPanel.vue:160 src/online/components/lobby/LobbyOnlineSections.vue:168
+#: src/online/components/InvitationPanel.vue:163 src/online/components/lobby/LobbyOnlineSections.vue:168
 msgid "Could not copy the link: {url}"
 msgstr "Der Link konnte nicht kopiert werden: {url}"
 
-#: src/online/components/OnlineGameHost.vue:16
+#: src/online/components/OnlineGameHost.vue:19
 msgid "The game does not exist, or you are not allowed to see it."
 msgstr "Die Partie existiert nicht, oder du darfst sie nicht sehen."
 
-#: src/online/components/OnlineGameHost.vue:26
+#: src/online/components/OnlineGameHost.vue:29
 msgid "The game could not be loaded"
 msgstr "Die Partie konnte nicht geladen werden"
 
-#: src/online/components/OnlineGameHost.vue:30 src/views/LessonView.vue:175 src/views/PuzzleView.vue:91 src/views/StatsView.vue:25
+#: src/online/components/OnlineGameHost.vue:33 src/views/LessonView.vue:175 src/views/PuzzleView.vue:91 src/views/StatsView.vue:25
 msgid "Try again"
 msgstr "Erneut versuchen"
 
-#: src/online/components/OnlineGameHost.vue:35 src/views/ReviewView.vue:22
+#: src/online/components/OnlineGameHost.vue:38 src/views/ReviewView.vue:22
 msgid "Loading the game…"
 msgstr "Partie wird geladen…"
 
-#: src/online/components/OnlineGameHost.vue:63
+#: src/online/components/OnlineGameHost.vue:67 src/online/components/OnlineVariantPanel.vue:50
 msgid "Accept draw"
 msgstr "Remis annehmen"
 
-#: src/online/components/OnlineGameHost.vue:82
+#: src/online/components/OnlineGameHost.vue:86
 msgid "Accept rematch"
 msgstr "Revanche annehmen"
 
-#: src/online/components/OnlineGameHost.vue:88
+#: src/online/components/OnlineGameHost.vue:92
 msgid "You asked {name} for a rematch. Waiting for an answer."
 msgstr "Du hast {name} um eine Revanche gebeten. Warte auf Antwort."
 
-#: src/online/components/OnlineGameHost.vue:98
+#: src/online/components/OnlineGameHost.vue:102
 msgid "The rematch is on."
 msgstr "Die Revanche steht."
 
-#: src/online/components/OnlineGameHost.vue:100
+#: src/online/components/OnlineGameHost.vue:104
 msgid "Go to the rematch"
 msgstr "Zur Revanche"
 
-#: src/online/components/OnlineGameHost.vue:116 src/review/composables/useGameReview.js:185
+#: src/online/components/OnlineGameHost.vue:120 src/review/composables/useGameReview.js:185
 msgid "Available after the game."
 msgstr "Nach der Partie verfügbar."
 
-#: src/online/components/OnlineGameHost.vue:119
+#: src/online/components/OnlineGameHost.vue:123
 msgid "The game is over: the coach can go through it with you."
 msgstr "Die Partie ist vorbei: Der Coach kann sie mit dir durchgehen."
 
-#: src/online/components/OnlineGameHost.vue:138
+#: src/online/components/OnlineGameHost.vue:142 src/online/components/OnlineVariantPanel.vue:60
 msgid "Offer draw"
 msgstr "Remis anbieten"
 
-#: src/online/components/OnlineGameHost.vue:149 src/online/components/OnlineGameHost.vue:180
+#: src/online/components/OnlineGameHost.vue:153 src/online/components/OnlineGameHost.vue:184 src/online/components/OnlineVariantPanel.vue:67
 msgid "Abort"
 msgstr "Abbrechen"
 
-#: src/online/components/OnlineGameHost.vue:167
+#: src/online/components/OnlineGameHost.vue:171
 msgid "Abort this game?"
 msgstr "Diese Partie abbrechen?"
 
-#: src/online/components/OnlineGameHost.vue:172
+#: src/online/components/OnlineGameHost.vue:176
 msgid "Nobody wins and the game is not rated."
 msgstr "Niemand gewinnt, und die Partie wird nicht gewertet."
 
-#: src/online/components/OnlineGameHost.vue:173
+#: src/online/components/OnlineGameHost.vue:177
 msgid "This counts as a loss."
 msgstr "Das zählt als Niederlage."
 
-#: src/online/components/OnlineGameHost.vue:234
+#: src/online/components/OnlineGameHost.vue:238
 msgid "You offered a draw. Waiting for {name}."
 msgstr "Du hast Remis angeboten. Warte auf {name}."
 
-#: src/online/components/OnlineGameHost.vue:235
+#: src/online/components/OnlineGameHost.vue:239
 msgid "{name} offers a draw"
 msgstr "{name} bietet Remis an"
 
-#: src/online/components/OnlineGameHost.vue:240
+#: src/online/components/OnlineGameHost.vue:244
 msgid "Offer a draw"
 msgstr "Remis anbieten"
 
-#: src/online/components/OnlineGameHost.vue:243
+#: src/online/components/OnlineGameHost.vue:247
 msgid "You can offer a draw again in %n move"
 msgid_plural "You can offer a draw again in %n moves"
 msgstr[0] "Du kannst in %n Zug wieder Remis anbieten"
 msgstr[1] "Du kannst in %n Zügen wieder Remis anbieten"
 
-#: src/online/components/OpponentPicker.vue:12
+#. TRANSLATORS: an online variant game's player: {side} is White, Black, Sente…; {name} the user
+#: src/online/components/OnlineVariantPanel.vue:17
+msgid "{side}: {name}"
+msgstr "{side}: {name}"
+
+#. TRANSLATORS: an online variant game's player: {side} is White, Black, Sente…; {name} the user
+#: src/online/components/OnlineVariantPanel.vue:18
+msgid "(you)"
+msgstr "(du)"
+
+#: src/online/components/OnlineVariantPanel.vue:30
+msgid "Waiting for {name}"
+msgstr "Warten auf {name}"
+
+#: src/online/components/OnlineVariantPanel.vue:34
+msgid "A move did not agree with the rules on this device. The game was annulled."
+msgstr "Ein Zug stimmte auf diesem Gerät nicht mit den Regeln überein. Die Partie wurde annulliert."
+
+#: src/online/components/OnlineVariantPanel.vue:37
+msgid "The stored history of this game was changed after it was played."
+msgstr "Der gespeicherte Verlauf dieser Partie wurde nach dem Spielen verändert."
+
+#: src/online/components/OnlineVariantPanel.vue:154
+msgid "You offered a draw."
+msgstr "Du hast Remis angeboten."
+
+#: src/online/components/OnlineVariantPanel.vue:155
+msgid "{name} offers a draw."
+msgstr "{name} bietet Remis an."
+
+#: src/online/components/OpponentPicker.vue:13
 msgid "Open challenge: anyone who can find me may join"
 msgstr "Offene Herausforderung: Alle, die mich finden können, dürfen mitspielen"
 
-#: src/online/components/OpponentPicker.vue:18
+#: src/online/components/OpponentPicker.vue:19
 msgid "Search for a colleague"
 msgstr "Nach Kolleginnen und Kollegen suchen"
 
-#: src/online/components/OpponentPicker.vue:23
+#: src/online/components/OpponentPicker.vue:24
 msgid "Time per move"
 msgstr "Zeit pro Zug"
 
-#: src/online/components/OpponentPicker.vue:73
+#: src/online/components/OpponentPicker.vue:76
 msgid "1 day"
 msgstr "1 Tag"
 
-#: src/online/components/OpponentPicker.vue:74
+#: src/online/components/OpponentPicker.vue:77
 msgid "3 days"
 msgstr "3 Tage"
 
-#: src/online/components/OpponentPicker.vue:75
+#: src/online/components/OpponentPicker.vue:78
 msgid "7 days"
 msgstr "7 Tage"
 
-#: src/online/components/OpponentPicker.vue:76 src/online/summaryText.js:26
+#: src/online/components/OpponentPicker.vue:79 src/online/summaryText.js:27
 msgid "No deadline"
 msgstr "Keine Frist"
 
-#: src/online/components/lobby/LobbyGameCard.vue:101
+#: src/online/components/lobby/LobbyGameCard.vue:104
 msgid "{name} invites you"
 msgstr "{name} lädt dich ein"
 
-#: src/online/components/lobby/LobbyGameCard.vue:103
+#: src/online/components/lobby/LobbyGameCard.vue:106
 msgid "Open challenge by {name}"
 msgstr "Offene Herausforderung von {name}"
 
-#: src/online/components/lobby/LobbyGameCard.vue:106
+#: src/online/components/lobby/LobbyGameCard.vue:109
 msgid "Your open challenge"
 msgstr "Deine offene Herausforderung"
 
-#: src/online/components/lobby/LobbyGameCard.vue:107
+#: src/online/components/lobby/LobbyGameCard.vue:110
 msgid "Invitation to {name}"
 msgstr "Einladung an {name}"
 
-#: src/online/components/lobby/LobbyGameCard.vue:120
+#: src/online/components/lobby/LobbyGameCard.vue:123
 msgid "Waiting for an answer · expires {when}"
 msgstr "Warte auf Antwort · läuft ab {when}"
 
-#: src/online/components/lobby/LobbyGameCard.vue:131
+#: src/online/components/lobby/LobbyGameCard.vue:134
 msgid "Waiting for an answer"
 msgstr "Warte auf Antwort"
 
-#: src/online/components/lobby/LobbyGameCard.vue:136
+#: src/online/components/lobby/LobbyGameCard.vue:139
 msgid "you moved {when}"
 msgstr "du hast {when} gezogen"
 
@@ -2494,7 +2536,7 @@ msgstr "Beitreten"
 msgid "Recent games"
 msgstr "Letzte Partien"
 
-#: src/online/composables/useLobby.js:98 src/online/composables/useOnlineChat.js:107 src/online/composables/useOnlineGame.js:400 src/online/composables/useOnlineGame.js:426
+#: src/online/composables/useLobby.js:98 src/online/composables/useOnlineChat.js:107 src/online/composables/useOnlineGame.js:449 src/online/composables/useOnlineGame.js:475
 msgid "That did not work. Please try again."
 msgstr "Das hat nicht geklappt. Bitte versuche es erneut."
 
@@ -2566,37 +2608,37 @@ msgstr "Freier Platz"
 msgid "Not started yet"
 msgstr "Noch nicht begonnen"
 
-#: src/online/summaryText.js:28
+#: src/online/summaryText.js:29
 msgid "%n day per move"
 msgid_plural "%n days per move"
 msgstr[0] "%n Tag pro Zug"
 msgstr[1] "%n Tage pro Zug"
 
-#: src/online/summaryText.js:61 lib/Notification/Notifier.php:158
+#: src/online/summaryText.js:62 lib/Notification/Notifier.php:165
 msgid "You play White"
 msgstr "Du spielst Weiß"
 
-#: src/online/summaryText.js:64 lib/Notification/Notifier.php:159
+#: src/online/summaryText.js:65 lib/Notification/Notifier.php:166
 msgid "You play Black"
 msgstr "Du spielst Schwarz"
 
-#: src/online/summaryText.js:66
+#: src/online/summaryText.js:67
 msgid "Colours are drawn at the start"
 msgstr "Die Farben werden beim Start ausgelost"
 
-#: src/online/summaryText.js:77 src/views/HomeView.vue:132 src/views/VariantsView.vue:34
+#: src/online/summaryText.js:79 src/views/HomeView.vue:132 src/views/VariantsView.vue:39
 msgid "Move {n}"
 msgstr "Zug {n}"
 
-#: src/online/summaryText.js:90 lib/Notification/Notifier.php:92
+#: src/online/summaryText.js:92 lib/Notification/Notifier.php:93
 msgid "Aborted"
 msgstr "Abgebrochen"
 
-#: src/online/summaryText.js:98 src/views/StatsView.vue:100
+#: src/online/summaryText.js:100 src/views/StatsView.vue:100
 msgid "Won"
 msgstr "Gewonnen"
 
-#: src/online/summaryText.js:99 src/views/StatsView.vue:103
+#: src/online/summaryText.js:101 src/views/StatsView.vue:103
 msgid "Lost"
 msgstr "Verloren"
 
@@ -3236,7 +3278,7 @@ msgid_plural "%n h left"
 msgstr[0] "noch %n Std."
 msgstr[1] "noch %n Std."
 
-#: src/services/format.js:37 lib/Dashboard/GamesWidget.php:139
+#: src/services/format.js:37 lib/Dashboard/GamesWidget.php:146
 msgid "%n day left"
 msgid_plural "%n days left"
 msgstr[0] "noch %n Tag"
@@ -3768,7 +3810,7 @@ msgid_plural "Nobody is listed yet. Players appear after %n rated games."
 msgstr[0] "Noch niemand ist gelistet. Spieler erscheinen nach %n gewerteten Partie."
 msgstr[1] "Noch niemand ist gelistet. Spieler erscheinen nach %n gewerteten Partien."
 
-#: src/stats/components/LeaderboardTable.vue:36 src/views/VariantGameView.vue:939
+#: src/stats/components/LeaderboardTable.vue:36 src/views/VariantGameView.vue:961
 msgid "Player"
 msgstr "Spieler"
 
@@ -4951,124 +4993,124 @@ msgstr "Die Partie ist remis, wenn nur die beiden Könige übrig sind."
 msgid "a king was blown up"
 msgstr "ein König wurde gesprengt"
 
-#: src/variants/bughouse.js:190 src/variants/crazyhouse.js:29
+#: src/variants/bughouse.js:189 src/variants/crazyhouse.js:29
 msgid "Promoted queen"
 msgstr "Umgewandelte Dame"
 
-#: src/variants/bughouse.js:191 src/variants/crazyhouse.js:30
+#: src/variants/bughouse.js:190 src/variants/crazyhouse.js:30
 msgid "Promoted rook"
 msgstr "Umgewandelter Turm"
 
-#: src/variants/bughouse.js:192 src/variants/crazyhouse.js:31
+#: src/variants/bughouse.js:191 src/variants/crazyhouse.js:31
 msgid "Promoted bishop"
 msgstr "Umgewandelter Läufer"
 
-#: src/variants/bughouse.js:193 src/variants/crazyhouse.js:32 src/variants/shogi.js:266
+#: src/variants/bughouse.js:192 src/variants/crazyhouse.js:32 src/variants/shogi.js:266
 msgid "Promoted knight"
 msgstr "Umgewandelter Springer"
 
-#: src/variants/bughouse.js:274
+#: src/variants/bughouse.js:273
 msgid "White A"
 msgstr "Weiß A"
 
-#: src/variants/bughouse.js:275
+#: src/variants/bughouse.js:274
 msgid "White B"
 msgstr "Weiß B"
 
-#: src/variants/bughouse.js:276
+#: src/variants/bughouse.js:275
 msgid "Black B"
 msgstr "Schwarz B"
 
-#: src/variants/bughouse.js:277
+#: src/variants/bughouse.js:276
 msgid "Black A"
 msgstr "Schwarz A"
 
-#: src/variants/bughouse.js:300
+#: src/variants/bughouse.js:299
 msgid "Two teams play on two boards: White A and Black B against White B and Black A."
 msgstr "Zwei Teams spielen auf zwei Brettern: Weiß A und Schwarz B gegen Weiß B und Schwarz A."
 
-#: src/variants/bughouse.js:301
+#: src/variants/bughouse.js:300
 msgid "The seats take turns in this order: White A, White B, Black B, Black A. A player who cannot move sits out."
 msgstr "Die Plätze sind in dieser Reihenfolge am Zug: Weiß A, Weiß B, Schwarz B, Schwarz A. Wer nicht ziehen kann, setzt aus."
 
-#: src/variants/bughouse.js:305
+#: src/variants/bughouse.js:304
 msgid "What you capture goes to your partner, who may drop it on an empty square of their own board instead of moving. Pawns are never dropped on the first or last rank."
 msgstr "Was du schlägst, geht an deinen Partner, der es statt eines Zugs auf ein leeres Feld seines eigenen Bretts einsetzen darf. Bauern werden nie auf der ersten oder letzten Reihe eingesetzt."
 
-#: src/variants/bughouse.js:309
+#: src/variants/bughouse.js:308
 msgid "A captured promoted piece (marked +) is passed on as a pawn."
 msgstr "Eine geschlagene umgewandelte Figur (mit + markiert) wird als Bauer weitergegeben."
 
-#: src/variants/bughouse.js:310
+#: src/variants/bughouse.js:309
 msgid "Capturing a king on either board ends the whole game: that king's team loses. A king that cannot escape does not lose at once: it must be captured."
 msgstr "Wird auf einem der beiden Bretter ein König geschlagen, endet die ganze Partie: Das Team dieses Königs verliert. Ein König, der nicht entkommen kann, verliert nicht sofort: Er muss geschlagen werden."
 
-#: src/variants/bughouse.js:314
+#: src/variants/bughouse.js:313
 msgid "Your team shares one budget of 8, not 8 per player: your partner's ghosts count too."
 msgstr "Dein Team teilt sich ein Budget von 8, nicht 8 pro Spieler: Die Geister deines Partners zählen mit."
 
-#: src/variants/bughouse.js:318
+#: src/variants/bughouse.js:317
 msgid "A drop onto a square where a ghost might stand is a roll. If the square is taken, the piece stays in your hand."
 msgstr "Das Einsetzen auf ein Feld, auf dem ein Geist stehen könnte, ist ein Wurf. Ist das Feld besetzt, bleibt die Figur in deiner Hand."
 
-#: src/variants/bughouse.js:322
+#: src/variants/bughouse.js:321
 msgid "A pawn dropped on your second rank may move two squares. A dropped rook never castles. En passant is only possible on the next turn of that board."
 msgstr "Ein auf deiner zweiten Reihe eingesetzter Bauer darf zwei Felder ziehen. Ein eingesetzter Turm rochiert nie. En passant ist nur im nächsten Zug auf diesem Brett möglich."
 
-#: src/variants/bughouse.js:542
+#: src/variants/bughouse.js:541
 msgid "50 moves by each player without a capture, a pawn move or a drop"
 msgstr "50 Züge jedes Spielers ohne Schlag, Bauernzug oder Einsetzen"
 
-#: src/variants/bughouse.js:554
+#: src/variants/bughouse.js:553
 msgid "Team 1"
 msgstr "Team 1"
 
-#: src/variants/bughouse.js:554
+#: src/variants/bughouse.js:553
 msgid "Team 2"
 msgstr "Team 2"
 
 #. TRANSLATORS: Bughouse, a player's partner: White A, White B, Black B or Black A
-#: src/variants/bughouse.js:556
+#: src/variants/bughouse.js:555
 msgid "Partner: {side}"
 msgstr "Partner: {side}"
 
-#: src/variants/capablanca.js:74
+#: src/variants/capablanca.js:73
 msgid "Archbishop"
 msgstr "Erzbischof"
 
-#: src/variants/capablanca.js:80
+#: src/variants/capablanca.js:79
 msgid "Chancellor"
 msgstr "Kanzler"
 
-#: src/variants/capablanca.js:143
+#: src/variants/capablanca.js:142
 msgid "The board is 10 squares wide (files a to j), and each side has two extra pawns and two new pieces."
 msgstr "Das Brett ist 10 Felder breit (Linien a bis j), und jede Seite hat zwei zusätzliche Bauern und zwei neue Figuren."
 
-#: src/variants/capablanca.js:147
+#: src/variants/capablanca.js:146
 msgid "The archbishop (A) moves like a bishop or like a knight; the chancellor (C) moves like a rook or like a knight."
 msgstr "Der Erzbischof (A) zieht wie ein Läufer oder wie ein Springer; der Kanzler (C) zieht wie ein Turm oder wie ein Springer."
 
-#: src/variants/capablanca.js:151
+#: src/variants/capablanca.js:150
 msgid "From a to j the back rank is rook, knight, archbishop, bishop, queen, king, bishop, chancellor, knight, rook, so the king starts on f1 (f8 for Black)."
 msgstr "Von a bis j stehen auf der Grundreihe Turm, Springer, Erzbischof, Läufer, Dame, König, Läufer, Kanzler, Springer, Turm; der König beginnt also auf f1 (Schwarz: f8)."
 
-#: src/variants/capablanca.js:155
+#: src/variants/capablanca.js:154
 msgid "To castle, the king moves three squares towards its rook, to i1 or c1 (i8 or c8 for Black), and the rook lands on the square next to it on the other side (h1 or d1, h8 or d8). As in chess, neither the king nor that rook may have moved before, and every square between them must be empty."
 msgstr "Bei der Rochade zieht der König drei Felder in Richtung seines Turms, nach i1 oder c1 (Schwarz: i8 oder c8), und der Turm landet auf dem Feld neben ihm auf der anderen Seite (h1 oder d1, h8 oder d8). Wie im Schach dürfen weder der König noch dieser Turm vorher gezogen haben, und jedes Feld zwischen ihnen muss leer sein."
 
-#: src/variants/capablanca.js:159
+#: src/variants/capablanca.js:158
 msgid "Pawns move as in chess, with the double step and en passant, and promote to a queen, chancellor, archbishop, rook, bishop or knight."
 msgstr "Bauern ziehen wie im Schach, mit Doppelschritt und en passant, und werden in eine Dame, einen Kanzler, Erzbischof, Turm, Läufer oder Springer umgewandelt."
 
-#: src/variants/capablanca.js:163
+#: src/variants/capablanca.js:162
 msgid "The archbishop and the chancellor can split and merge like a queen: their knight jump flies over ghosts, but their slides can be blocked."
 msgstr "Erzbischof und Kanzler können sich wie eine Dame teilen und vereinen: Ihr Springersprung fliegt über Geister hinweg, ihre Läufer- und Turmzüge können aber blockiert werden."
 
-#: src/variants/capablanca.js:167
+#: src/variants/capablanca.js:166
 msgid "Castling never rolls: a ghost on any square between the king and the rook blocks it, and the right is lost for good as soon as the king or that rook is not 100 % on its starting square. There is no check, so you may castle out of, through or into attack."
 msgstr "Die Rochade wird nie ausgewürfelt: Ein Geist auf einem der Felder zwischen König und Turm verhindert sie, und das Recht ist endgültig verloren, sobald der König oder dieser Turm nicht zu 100 % auf seinem Ausgangsfeld steht. Es gibt kein Schach, also darfst du aus, durch oder in einen Angriff rochieren."
 
-#: src/variants/catalog.js:28
+#: src/variants/catalog.js:28 lib/Service/Game/VariantCatalog.php:64
 msgid "3D chess (Raumschach)"
 msgstr "3D-Schach (Raumschach)"
 
@@ -5076,7 +5118,7 @@ msgstr "3D-Schach (Raumschach)"
 msgid "Five boards stacked into a 5 × 5 × 5 cube, with the unicorn flying through space."
 msgstr "Fünf gestapelte Bretter bilden einen Würfel aus 5 × 5 × 5 Feldern, und das Einhorn fliegt durch den Raum."
 
-#: src/variants/catalog.js:38
+#: src/variants/catalog.js:38 lib/Service/Game/VariantCatalog.php:65
 msgid "Tri-Dimensional chess"
 msgstr "Dreidimensionales Schach"
 
@@ -5084,7 +5126,7 @@ msgstr "Dreidimensionales Schach"
 msgid "Three main levels and four attack boards, as seen on the starship Enterprise."
 msgstr "Drei Hauptebenen und vier Angriffsbretter, wie auf dem Raumschiff Enterprise."
 
-#: src/variants/catalog.js:48
+#: src/variants/catalog.js:48 lib/Service/Game/VariantCatalog.php:66
 msgid "4D chess"
 msgstr "4D-Schach"
 
@@ -5092,7 +5134,7 @@ msgstr "4D-Schach"
 msgid "A 4 × 4 grid of 4 × 4 boards: every piece gains two extra directions."
 msgstr "4 × 4 Bretter mit je 4 × 4 Feldern: Jede Figur bekommt zwei zusätzliche Richtungen."
 
-#: src/variants/catalog.js:55
+#: src/variants/catalog.js:55 lib/Service/Game/VariantCatalog.php:67
 msgid "Multiverse chess (5D)"
 msgstr "Multiversum-Schach (5D)"
 
@@ -5100,7 +5142,7 @@ msgstr "Multiversum-Schach (5D)"
 msgid "Travel back in time and create new timelines; capture a king on any of them."
 msgstr "Reise in die Vergangenheit und öffne neue Zeitlinien; schlage einen König auf einer beliebigen davon."
 
-#: src/variants/catalog.js:65
+#: src/variants/catalog.js:65 lib/Service/Game/VariantCatalog.php:68
 msgid "Kriegspiel"
 msgstr "Kriegspiel"
 
@@ -5108,7 +5150,7 @@ msgstr "Kriegspiel"
 msgid "You never see the enemy pieces; the umpire only says what happened."
 msgstr "Du siehst die gegnerischen Figuren nie; der Schiedsrichter sagt nur, was passiert ist."
 
-#: src/variants/catalog.js:72
+#: src/variants/catalog.js:72 lib/Service/Game/VariantCatalog.php:69
 msgid "Fog of war"
 msgstr "Nebel des Krieges"
 
@@ -5116,7 +5158,7 @@ msgstr "Nebel des Krieges"
 msgid "You only see the squares your pieces can reach."
 msgstr "Du siehst nur die Felder, die deine Figuren erreichen können."
 
-#: src/variants/catalog.js:79
+#: src/variants/catalog.js:79 lib/Service/Game/VariantCatalog.php:70
 msgid "Chess960"
 msgstr "Chess960"
 
@@ -5124,7 +5166,7 @@ msgstr "Chess960"
 msgid "Fischer Random: the back rank is shuffled into one of 960 start positions."
 msgstr "Fischer Random: Die Grundreihe wird zu einer von 960 Startstellungen gemischt."
 
-#: src/variants/catalog.js:86
+#: src/variants/catalog.js:86 lib/Service/Game/VariantCatalog.php:71
 msgid "Atomic"
 msgstr "Atomschach"
 
@@ -5132,7 +5174,7 @@ msgstr "Atomschach"
 msgid "Every capture explodes and removes the pieces around it."
 msgstr "Jeder Schlag explodiert und entfernt die Figuren ringsum."
 
-#: src/variants/catalog.js:93
+#: src/variants/catalog.js:93 lib/Service/Game/VariantCatalog.php:72
 msgid "Crazyhouse"
 msgstr "Crazyhouse"
 
@@ -5140,7 +5182,7 @@ msgstr "Crazyhouse"
 msgid "Captured pieces change sides and can be dropped back onto the board."
 msgstr "Geschlagene Figuren wechseln die Seite und können wieder auf dem Brett eingesetzt werden."
 
-#: src/variants/catalog.js:100
+#: src/variants/catalog.js:100 lib/Service/Game/VariantCatalog.php:73
 msgid "Bughouse"
 msgstr "Tandemschach"
 
@@ -5148,7 +5190,7 @@ msgstr "Tandemschach"
 msgid "Two boards, two teams: what you capture, your partner may drop."
 msgstr "Zwei Bretter, zwei Teams: Was du schlägst, darf dein Partner einsetzen."
 
-#: src/variants/catalog.js:107
+#: src/variants/catalog.js:107 lib/Service/Game/VariantCatalog.php:74
 msgid "Antichess"
 msgstr "Räuberschach"
 
@@ -5156,7 +5198,7 @@ msgstr "Räuberschach"
 msgid "Capturing is compulsory and whoever loses all their pieces wins."
 msgstr "Es herrscht Schlagzwang, und wer alle seine Figuren verliert, gewinnt."
 
-#: src/variants/catalog.js:114
+#: src/variants/catalog.js:114 lib/Service/Game/VariantCatalog.php:75
 msgid "King of the Hill"
 msgstr "King of the Hill"
 
@@ -5164,7 +5206,7 @@ msgstr "King of the Hill"
 msgid "Bring your king to one of the four centre squares to win."
 msgstr "Bring deinen König auf eines der vier Zentrumsfelder, um zu gewinnen."
 
-#: src/variants/catalog.js:121
+#: src/variants/catalog.js:121 lib/Service/Game/VariantCatalog.php:76
 msgid "Three-check"
 msgstr "Dreimal Schach"
 
@@ -5172,7 +5214,7 @@ msgstr "Dreimal Schach"
 msgid "Put the enemy king in check three times to win."
 msgstr "Biete dem gegnerischen König dreimal Schach, um zu gewinnen."
 
-#: src/variants/catalog.js:128
+#: src/variants/catalog.js:128 lib/Service/Game/VariantCatalog.php:77
 msgid "Horde"
 msgstr "Horde"
 
@@ -5180,7 +5222,7 @@ msgstr "Horde"
 msgid "White has 36 pawns against the complete black army."
 msgstr "Weiß hat 36 Bauern gegen die komplette schwarze Armee."
 
-#: src/variants/catalog.js:135
+#: src/variants/catalog.js:135 lib/Service/Game/VariantCatalog.php:78
 msgid "Hexagonal chess"
 msgstr "Hexagonalschach"
 
@@ -5188,7 +5230,7 @@ msgstr "Hexagonalschach"
 msgid "Gliński's chess on 91 hexagons, with three bishops each."
 msgstr "Glińskis Schach auf 91 Sechsecken, mit je drei Läufern."
 
-#: src/variants/catalog.js:142
+#: src/variants/catalog.js:142 lib/Service/Game/VariantCatalog.php:79
 msgid "Four-player chess"
 msgstr "Vierschach"
 
@@ -5196,7 +5238,7 @@ msgstr "Vierschach"
 msgid "Four armies on a cross-shaped board; the last king standing wins."
 msgstr "Vier Armeen auf einem kreuzförmigen Brett; der letzte verbliebene König gewinnt."
 
-#: src/variants/catalog.js:149
+#: src/variants/catalog.js:149 lib/Service/Game/VariantCatalog.php:80
 msgid "Capablanca chess"
 msgstr "Capablanca-Schach"
 
@@ -5204,7 +5246,7 @@ msgstr "Capablanca-Schach"
 msgid "A 10 × 8 board with the archbishop and the chancellor."
 msgstr "Ein Brett mit 10 × 8 Feldern, dazu Erzbischof und Kanzler."
 
-#: src/variants/catalog.js:156
+#: src/variants/catalog.js:156 lib/Service/Game/VariantCatalog.php:81
 msgid "Shogi"
 msgstr "Shogi"
 
@@ -5212,7 +5254,7 @@ msgstr "Shogi"
 msgid "Japanese chess: captured pieces join your army and promote in the enemy camp."
 msgstr "Japanisches Schach: Geschlagene Figuren verstärken deine Armee, und im gegnerischen Lager werden Figuren umgewandelt."
 
-#: src/variants/catalog.js:166
+#: src/variants/catalog.js:166 lib/Service/Game/VariantCatalog.php:82
 msgid "Xiangqi"
 msgstr "Xiangqi"
 
@@ -5220,7 +5262,7 @@ msgstr "Xiangqi"
 msgid "Chinese chess with a river, two palaces and the cannon."
 msgstr "Chinesisches Schach mit Fluss, zwei Palästen und der Kanone."
 
-#: src/variants/catalog.js:173
+#: src/variants/catalog.js:173 lib/Service/Game/VariantCatalog.php:83
 msgid "Makruk"
 msgstr "Makruk"
 
@@ -5376,7 +5418,7 @@ msgstr "Zwei blanke Könige sind kein Remis: Ein König, der neben den unsichtba
 msgid "In pass & play each player sees only their own view: hand the device over when asked. Undo is off until the game ends, and then the whole board is revealed."
 msgstr "Beim Spiel zu zweit an einem Gerät sieht jeder Spieler nur seine eigene Ansicht: Gib das Gerät weiter, wenn du dazu aufgefordert wirst. Rückgängig ist bis zum Ende der Partie ausgeschaltet, dann wird das ganze Brett aufgedeckt."
 
-#: src/variants/darkchess.js:491 src/views/VariantGameView.vue:833
+#: src/variants/darkchess.js:491 src/views/VariantGameView.vue:855
 msgid "Capture on {squares}"
 msgstr "Schlag auf {squares}"
 
@@ -5462,81 +5504,81 @@ msgstr "Das Quantenbudget ist hier nicht 8, sondern wird fair aufgeteilt: Das Bu
 msgid "A player who cannot move sits out in free for all; in Teams, the game is drawn. 200 moves in a row (all players together) without a capture or a pawn move is a draw, and so are two lone kings that are not next to each other."
 msgstr "Wer nicht ziehen kann, setzt bei „Jeder gegen jeden“ aus; bei „Teams“ endet die Partie remis. 200 Züge in Folge (alle Spieler zusammen) ohne Schlag oder Bauernzug sind remis, ebenso zwei blanke Könige, die nicht nebeneinander stehen."
 
-#: src/variants/hexagonal.js:226
+#: src/variants/hexagonal.js:225
 msgid "The board has 91 hexagons in three shades. The files a to l (there is no j) run straight up, and the ranks bend in a V around the middle file f."
 msgstr "Das Brett hat 91 Sechsecke in drei Farbtönen. Die Linien a bis l (ohne j) verlaufen gerade nach oben, und die Reihen knicken V-förmig um die mittlere Linie f ab."
 
-#: src/variants/hexagonal.js:227
+#: src/variants/hexagonal.js:226
 msgid "Rooks move in straight lines through the six sides of a cell. Bishops move along the six diagonals through its corners, so each of the three bishops stays on its own shade."
 msgstr "Türme ziehen in geraden Linien durch die sechs Seiten eines Felds. Läufer ziehen entlang der sechs Diagonalen durch seine Ecken, daher bleibt jeder der drei Läufer auf seinem eigenen Farbton."
 
-#: src/variants/hexagonal.js:228
+#: src/variants/hexagonal.js:227
 msgid "A diagonal step passes between two cells, and pieces on those two cells never block it. The queen moves like a rook or a bishop, and the king steps one cell in any of these 12 directions."
 msgstr "Ein diagonaler Schritt führt zwischen zwei Feldern hindurch, und Figuren auf diesen beiden Feldern blockieren ihn nie. Die Dame zieht wie ein Turm oder ein Läufer, und der König geht ein Feld in jede dieser 12 Richtungen."
 
-#: src/variants/hexagonal.js:229
+#: src/variants/hexagonal.js:228
 msgid "The knight jumps two cells in a straight line and then one cell turned 60°. It has up to 12 targets and cannot be blocked."
 msgstr "Der Springer springt zwei Felder geradeaus und dann ein Feld um 60° gedreht. Er hat bis zu 12 Ziele und kann nicht blockiert werden."
 
-#: src/variants/hexagonal.js:230
+#: src/variants/hexagonal.js:229
 msgid "Pawns move one cell straight forward and capture one cell forward-left or forward-right, onto the neighbouring cells. A pawn on any starting cell of its side's pawns may move two cells straight forward if both are empty, even if it got there by capturing."
 msgstr "Bauern ziehen ein Feld geradeaus nach vorn und schlagen ein Feld nach links vorn oder rechts vorn, auf die Nachbarfelder. Ein Bauer auf einem beliebigen Ausgangsfeld der Bauern seiner Seite darf zwei Felder geradeaus nach vorn ziehen, wenn beide leer sind, auch wenn er durch einen Schlag dorthin gekommen ist."
 
-#: src/variants/hexagonal.js:231
+#: src/variants/hexagonal.js:230
 msgid "Right after such a double step, an enemy pawn that could capture on the skipped cell may do so on its next move only, removing the pawn (en passant)."
 msgstr "Direkt nach einem solchen Doppelschritt darf ein gegnerischer Bauer, der auf dem übersprungenen Feld schlagen könnte, das nur in seinem nächsten Zug tun und den Bauern entfernen (en passant)."
 
-#: src/variants/hexagonal.js:232
+#: src/variants/hexagonal.js:231
 msgid "A pawn promotes at the far end of its file, to a queen, rook, bishop or knight. There is no castling."
 msgstr "Ein Bauer wird am anderen Ende seiner Linie umgewandelt, in eine Dame, einen Turm, Läufer oder Springer. Es gibt keine Rochade."
 
-#: src/variants/hexagonal.js:238
+#: src/variants/hexagonal.js:237
 msgid "Stalemate is not a draw: a king that cannot escape loses even when it is not attacked, so the player who stalemates wins (Gliński's own rules give that player ¾ of a point). A player with no move at all loses too. Only the two kings left is a draw, unless the player to move can capture the other king."
 msgstr "Patt ist kein Remis: Ein König, der nicht entkommen kann, verliert auch dann, wenn er nicht angegriffen ist; wer den Gegner patt setzt, gewinnt also (nach Glińskis eigenen Regeln bekommt er dafür ¾ Punkt). Wer gar keinen Zug hat, verliert ebenfalls. Sind nur die beiden Könige übrig, ist es remis, es sei denn, wer am Zug ist, kann den anderen König schlagen."
 
-#: src/variants/horde.js:107
+#: src/variants/horde.js:106
 msgid "White has 36 pawns and no king. Black has the ordinary army and moves second."
 msgstr "Weiß hat 36 Bauern und keinen König. Schwarz hat die normale Armee und zieht als Zweites."
 
-#: src/variants/horde.js:108
+#: src/variants/horde.js:107
 msgid "White has no king to lose. It wins as usual against the black king: by capturing it, or when it cannot escape."
 msgstr "Weiß hat keinen König, den es verlieren kann. Es gewinnt wie üblich gegen den schwarzen König: indem es ihn schlägt oder wenn er nicht entkommen kann."
 
-#: src/variants/horde.js:112
+#: src/variants/horde.js:111
 msgid "Black wins by capturing every white piece, including pieces White got by promotion."
 msgstr "Schwarz gewinnt, indem es jede weiße Figur schlägt, auch Figuren, die Weiß durch Umwandlung bekommen hat."
 
-#: src/variants/horde.js:113
+#: src/variants/horde.js:112
 msgid "White pawns on the first or the second rank may move two squares if both squares are free, even if they have moved before. A pawn that moves two squares from the first rank cannot be captured en passant."
 msgstr "Weiße Bauern auf der ersten oder zweiten Reihe dürfen zwei Felder ziehen, wenn beide Felder frei sind, auch wenn sie schon gezogen haben. Ein Bauer, der von der ersten Reihe zwei Felder zieht, kann nicht en passant geschlagen werden."
 
-#: src/variants/horde.js:117
+#: src/variants/horde.js:116
 msgid "Only Black can castle. Pawns promote as usual."
 msgstr "Nur Schwarz kann rochieren. Bauern werden wie üblich umgewandelt."
 
-#: src/variants/horde.js:118
+#: src/variants/horde.js:117
 msgid "Pawns are always solid, so White can only split pieces it gets by promotion."
 msgstr "Bauern stehen immer fest, daher kann Weiß nur Figuren teilen, die es durch Umwandlung bekommt."
 
-#: src/variants/horde.js:119
+#: src/variants/horde.js:118
 msgid "Stalemate is a draw: if the player to move cannot move any piece, the game is drawn. If that is so in only some possibilities, a roll decides at once."
 msgstr "Patt ist remis: Kann die Seite am Zug keine Figur ziehen, endet die Partie remis. Ist das nur in manchen Möglichkeiten so, entscheidet sofort ein Wurf."
 
-#: src/variants/horde.js:177
+#: src/variants/horde.js:176
 msgid "the horde was destroyed"
 msgstr "die Horde wurde vernichtet"
 
 #. TRANSLATORS: Horde, why the game was drawn: the player to move could not move any piece (stalemate)
 #. TRANSLATORS: Makruk, why the game was drawn: the Khun was not attacked, but each move would expose it
-#: src/variants/horde.js:180 src/variants/makruk.js:442
+#: src/variants/horde.js:179 src/variants/makruk.js:440
 msgid "stalemate"
 msgstr "Patt"
 
-#: src/variants/horde.js:192
+#: src/variants/horde.js:191
 msgid "Horde: {count}"
 msgstr "Horde: {count}"
 
-#: src/variants/horde.js:193
+#: src/variants/horde.js:192
 msgid "White pieces left. Black wins by capturing all of them."
 msgstr "Verbleibende weiße Figuren. Schwarz gewinnt, wenn es alle schlägt."
 
@@ -5685,91 +5727,91 @@ msgstr[1] "%n Bauernschlagversuche."
 msgid "No pawn tries."
 msgstr "Keine Bauernschlagversuche."
 
-#: src/variants/makruk.js:321
+#: src/variants/makruk.js:319
 msgid "Khun"
 msgstr "Khun"
 
-#: src/variants/makruk.js:328
+#: src/variants/makruk.js:326
 msgid "Met"
 msgstr "Met"
 
-#: src/variants/makruk.js:335
+#: src/variants/makruk.js:333
 msgid "Khon"
 msgstr "Khon"
 
-#: src/variants/makruk.js:342
+#: src/variants/makruk.js:340
 msgid "Ma"
 msgstr "Ma"
 
-#: src/variants/makruk.js:348
+#: src/variants/makruk.js:346
 msgid "Rua"
 msgstr "Rua"
 
-#: src/variants/makruk.js:354
+#: src/variants/makruk.js:352
 msgid "Bia"
 msgstr "Bia"
 
-#: src/variants/makruk.js:369
+#: src/variants/makruk.js:367
 msgid "The Khun (king) starts on d1 for White and on e8 for Black, with the Met beside it, and never castles; the Bia (pawns) start on each side's third rank."
 msgstr "Der Khun (König) beginnt für Weiß auf d1 und für Schwarz auf e8, mit dem Met daneben, und rochiert nie; die Bia (Bauern) beginnen auf der dritten Reihe ihrer Seite."
 
-#: src/variants/makruk.js:370
+#: src/variants/makruk.js:368
 msgid "The Met steps one square diagonally, the Khon one square diagonally or straight forward, and the Ma, Rua and Khun move like the knight, rook and king."
 msgstr "Der Met zieht ein Feld diagonal, der Khon ein Feld diagonal oder geradeaus nach vorn, und Ma, Rua und Khun ziehen wie Springer, Turm und König."
 
-#: src/variants/makruk.js:371
+#: src/variants/makruk.js:369
 msgid "A Bia moves one square forward and captures one square diagonally forward; it never moves two squares (so there is no en passant), and on its sixth rank it always becomes a Met."
 msgstr "Ein Bia zieht ein Feld nach vorn und schlägt ein Feld schräg nach vorn; er zieht nie zwei Felder (es gibt also kein en passant) und wird auf seiner sechsten Reihe immer zum Met."
 
-#: src/variants/makruk.js:372
+#: src/variants/makruk.js:370
 msgid "Stalemate (not attacked, but every move would expose the Khun) is a draw, and if it is a stalemate in only some possibilities, a roll decides."
 msgstr "Patt (nicht angegriffen, aber jeder Zug würde den Khun preisgeben) ist remis, und ist es nur in manchen Möglichkeiten ein Patt, entscheidet ein Wurf."
 
-#: src/variants/makruk.js:373
+#: src/variants/makruk.js:371
 msgid "When no Bia is left and one side has only its Khun, the other side must capture that Khun within a set number of its moves, counted from the lone Khun's first move after the last capture or promotion, or the game is drawn."
 msgstr "Wenn kein Bia mehr übrig ist und eine Seite nur noch ihren Khun hat, muss die andere Seite diesen Khun innerhalb einer festgelegten Anzahl ihrer Züge schlagen, gezählt ab dem ersten Zug des blanken Khun nach dem letzten Schlag oder der letzten Umwandlung; sonst endet die Partie remis."
 
-#: src/variants/makruk.js:374
+#: src/variants/makruk.js:372
 msgid "That number is the first that applies of 8 (two Rua), 16 (one Rua), 22 (two Khon), 32 (two Ma), 44 (one Khon) and 64, minus the number of pieces on the board (both Khuns included), plus one, and at least one."
 msgstr "Diese Anzahl ist der erste zutreffende Wert von 8 (zwei Rua), 16 (ein Rua), 22 (zwei Khon), 32 (zwei Ma), 44 (ein Khon) und 64, minus der Anzahl der Figuren auf dem Brett (beide Khuns eingeschlossen), plus eins, mindestens aber eins."
 
-#: src/variants/makruk.js:375
+#: src/variants/makruk.js:373
 msgid "When no Bia is left, the game is also drawn after 65 moves by each side without a capture or promotion, and it is drawn when only the two Khuns are left."
 msgstr "Wenn kein Bia mehr übrig ist, endet die Partie auch nach 65 Zügen jeder Seite ohne Schlag oder Umwandlung remis, und sie ist remis, wenn nur die beiden Khuns übrig sind."
 
-#: src/variants/makruk.js:376
+#: src/variants/makruk.js:374
 msgid "These draws are put off while the player to move can capture the enemy Khun for certain."
 msgstr "Diese Remisfälle werden aufgeschoben, solange die Seite am Zug den gegnerischen Khun sicher schlagen kann."
 
-#: src/variants/makruk.js:436
+#: src/variants/makruk.js:434
 msgid "a Khun was captured"
 msgstr "ein Khun wurde geschlagen"
 
 #. TRANSLATORS: Makruk: every move of the loser would have let its Khun (king) be captured for certain
-#: src/variants/makruk.js:439
+#: src/variants/makruk.js:437
 msgid "the Khun could not escape"
 msgstr "der Khun konnte nicht entkommen"
 
 #. TRANSLATORS: Makruk, why the game was drawn; a Khun is the king
-#: src/variants/makruk.js:445
+#: src/variants/makruk.js:443
 msgid "only the two Khuns are left"
 msgstr "nur die beiden Khuns sind übrig"
 
 #. TRANSLATORS: Makruk, why the game was drawn: the lone Khun (king) survived the counted moves
-#: src/variants/makruk.js:448
+#: src/variants/makruk.js:446
 msgid "the counting rule: the lone Khun was not captured in time"
 msgstr "die Zählregel: Der blanke Khun wurde nicht rechtzeitig geschlagen"
 
 #. TRANSLATORS: Makruk, why the game was drawn; a Bia is a pawn
-#: src/variants/makruk.js:451
+#: src/variants/makruk.js:449
 msgid "65 moves by each side since the last capture or promotion, with no Bia left"
 msgstr "65 Züge jeder Seite seit dem letzten Schlag oder der letzten Umwandlung, ohne Bia auf dem Brett"
 
-#: src/variants/makruk.js:466
+#: src/variants/makruk.js:464
 msgid "Counting: {done} of {allow} moves to capture the lone Khun"
 msgstr "Zählung: {done} von {allow} Zügen, um den blanken Khun zu schlagen"
 
-#: src/variants/makruk.js:475
+#: src/variants/makruk.js:473
 msgid "Moves without a capture: {n} of 65"
 msgstr "Züge ohne Schlag: {n} von 65"
 
@@ -6636,7 +6678,7 @@ msgstr "keine Figur mehr, die den Fluss überqueren kann"
 msgid "50 moves by each side without a capture"
 msgstr "50 Züge jeder Seite ohne Schlag"
 
-#: src/views/HomeView.vue:24 src/views/VariantsView.vue:24
+#: src/views/HomeView.vue:24 src/views/VariantsView.vue:29
 msgid "Continue on this device"
 msgstr "Auf diesem Gerät fortsetzen"
 
@@ -6727,6 +6769,14 @@ msgstr "Weiter"
 #: src/views/LessonView.vue:184
 msgid "Finish"
 msgstr "Abschließen"
+
+#: src/views/OnlineVariantGame.vue:14
+msgid "Update Quantum Chess to play this game"
+msgstr "Aktualisiere Quantum Chess, um diese Partie zu spielen"
+
+#: src/views/OnlineVariantGame.vue:15
+msgid "This game was started with another version of the chess variants. Ask your administrator to update the app."
+msgstr "Diese Partie wurde mit einer anderen Version der Schachvarianten begonnen. Bitte deine Administration, die App zu aktualisieren."
 
 #: src/views/PuzzleView.vue:13
 msgid "Puzzle not found"
@@ -6918,219 +6968,231 @@ msgstr "Abschluss"
 msgid "one full game"
 msgstr "eine ganze Partie"
 
-#: src/views/VariantGameView.vue:53
+#: src/views/VariantGameView.vue:58
+msgid "This game could not be loaded."
+msgstr "Diese Partie konnte nicht geladen werden."
+
+#: src/views/VariantGameView.vue:59
 msgid "This game is not stored on this device."
 msgstr "Diese Partie ist nicht auf diesem Gerät gespeichert."
 
-#: src/views/VariantGameView.vue:70
+#: src/views/VariantGameView.vue:76
 msgid "Hide rules"
 msgstr "Regeln ausblenden"
 
-#: src/views/VariantGameView.vue:81
+#: src/views/VariantGameView.vue:87
 msgid "The quantum rules of every variant"
 msgstr "Die Quantenregeln aller Varianten"
 
 #. TRANSLATORS: pieces held in hand; {side} is White, Black, Sente, Gote or White A
-#: src/views/VariantGameView.vue:118
+#: src/views/VariantGameView.vue:124
 msgid "In hand: {side}"
 msgstr "In der Hand von {side}"
 
-#: src/views/VariantGameView.vue:129
+#: src/views/VariantGameView.vue:135
 msgid "Drop {piece}"
 msgstr "{piece} einsetzen"
 
 #. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
-#: src/views/VariantGameView.vue:145
+#: src/views/VariantGameView.vue:151
 msgid "Pass the device to {side}."
 msgstr "Gib das Gerät an {side} weiter."
 
 #. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
-#: src/views/VariantGameView.vue:147
+#: src/views/VariantGameView.vue:153
 msgid "I am {side}: show my board"
 msgstr "Ich bin {side}: mein Brett zeigen"
 
-#: src/views/VariantGameView.vue:153
+#: src/views/VariantGameView.vue:159
 msgid "Fog: squares you cannot see."
 msgstr "Nebel: Felder, die du nicht sehen kannst."
 
-#: src/views/VariantGameView.vue:169
+#: src/views/VariantGameView.vue:175
 msgid "Game options"
 msgstr "Partieoptionen"
 
-#: src/views/VariantGameView.vue:195
+#: src/views/VariantGameView.vue:201
 msgid "Quantum budget: {used} of {max}"
 msgstr "Quantenbudget: {used} von {max}"
 
-#: src/views/VariantGameView.vue:206
+#: src/views/VariantGameView.vue:212
 msgid "Budget {used}/{max}"
 msgstr "Budget {used}/{max}"
 
-#: src/views/VariantGameView.vue:214
+#: src/views/VariantGameView.vue:220
 msgid "Quantum budget: unknown"
 msgstr "Quantenbudget: unbekannt"
 
-#: src/views/VariantGameView.vue:216
+#: src/views/VariantGameView.vue:222
 msgid "Budget hidden"
 msgstr "Budget verdeckt"
 
+#: src/views/VariantGameView.vue:235
+msgid "Sending…"
+msgstr "Wird gesendet…"
+
 #. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
-#: src/views/VariantGameView.vue:231
+#: src/views/VariantGameView.vue:240
 msgid "{side} is thinking…"
 msgstr "{side} denkt nach…"
 
 #. TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A
-#: src/views/VariantGameView.vue:236
+#: src/views/VariantGameView.vue:245
 msgid "{side} to move"
 msgstr "{side} ist am Zug"
 
-#: src/views/VariantGameView.vue:239
+#: src/views/VariantGameView.vue:248
 msgid "You must capture: only moves that might capture are allowed."
 msgstr "Du musst schlagen: Nur Züge, die schlagen könnten, sind erlaubt."
 
-#: src/views/VariantGameView.vue:248
+#: src/views/VariantGameView.vue:257
 msgid "Your move: {result}"
 msgstr "Dein Zug: {result}"
 
-#: src/views/VariantGameView.vue:251
+#: src/views/VariantGameView.vue:260
 msgid "Pass the device"
 msgstr "Gerät weitergeben"
 
-#: src/views/VariantGameView.vue:299
+#: src/views/VariantGameView.vue:308
 msgid "Do not promote"
 msgstr "Nicht umwandeln"
 
-#: src/views/VariantGameView.vue:328
+#: src/views/VariantGameView.vue:337
 msgid "This move is settled by a roll:"
 msgstr "Dieser Zug wird ausgewürfelt:"
 
-#: src/views/VariantGameView.vue:348 src/views/VariantGameView.vue:355
+#: src/views/VariantGameView.vue:357 src/views/VariantGameView.vue:364
 msgid "Play and roll"
 msgstr "Ziehen und würfeln"
 
-#: src/views/VariantGameView.vue:368 src/views/VariantsView.vue:173
+#: src/views/VariantGameView.vue:377 src/views/VariantsView.vue:213
 msgid "This game could not be saved on this device."
 msgstr "Diese Partie konnte auf diesem Gerät nicht gespeichert werden."
 
-#: src/views/VariantGameView.vue:379
+#: src/views/VariantGameView.vue:389
 msgid "Result: {result}"
 msgstr "Ergebnis: {result}"
 
-#: src/views/VariantGameView.vue:385
+#: src/views/VariantGameView.vue:395
 msgid "Roll: {result} ({percent})"
 msgstr "Wurf: {result} ({percent})"
 
-#: src/views/VariantGameView.vue:401
+#: src/views/VariantGameView.vue:411
 msgid "Umpire"
 msgstr "Schiedsrichter"
 
-#: src/views/VariantGameView.vue:469
+#: src/views/VariantGameView.vue:479
 msgid "Flip board"
 msgstr "Brett drehen"
 
-#: src/views/VariantGameView.vue:596
+#: src/views/VariantGameView.vue:616
 msgid "Not now: a capture is compulsory."
 msgstr "Jetzt nicht: Es herrscht Schlagzwang."
 
-#: src/views/VariantGameView.vue:655
+#: src/views/VariantGameView.vue:675
 msgid "Confirm or cancel the move."
 msgstr "Bestätige den Zug oder brich ihn ab."
 
-#: src/views/VariantGameView.vue:659
+#: src/views/VariantGameView.vue:679
 msgid "Choose a piece, then two empty squares."
 msgstr "Wähle eine Figur, dann zwei leere Felder."
 
-#: src/views/VariantGameView.vue:661
+#: src/views/VariantGameView.vue:681
 msgid "Choose two parts of one ghost, then the square where they meet."
 msgstr "Wähle zwei Teile eines Geists, dann das Feld, auf dem sie zusammenkommen."
 
-#: src/views/VariantGameView.vue:663
+#: src/views/VariantGameView.vue:683
 msgid "Choose one of your ghosts to find out where it really is."
 msgstr "Wähle einen deiner Geister, um herauszufinden, wo er wirklich steht."
 
-#: src/views/VariantGameView.vue:667
+#: src/views/VariantGameView.vue:687
 msgid "Choose a piece, then its target square."
 msgstr "Wähle eine Figur, dann ihr Zielfeld."
 
-#: src/views/VariantGameView.vue:708
+#: src/views/VariantGameView.vue:728
 msgid "Board of {variant}"
 msgstr "Brett: {variant}"
 
-#: src/views/VariantGameView.vue:740
+#: src/views/VariantGameView.vue:760
 msgid "The umpire says: that move is not possible. Try another one."
 msgstr "Der Schiedsrichter sagt: Dieser Zug ist nicht möglich. Versuche einen anderen."
 
-#: src/views/VariantGameView.vue:744
+#: src/views/VariantGameView.vue:764
 msgid "This piece cannot split: it needs two empty squares it could move to, within the budget."
 msgstr "Diese Figur kann sich nicht teilen: Sie braucht zwei leere Felder, auf die sie ziehen könnte, und das Budget muss reichen."
 
-#: src/views/VariantGameView.vue:749
+#: src/views/VariantGameView.vue:769
 msgid "Choose a part of one of your ghosts."
 msgstr "Wähle einen Teil eines deiner Geister."
 
-#: src/views/VariantGameView.vue:751
+#: src/views/VariantGameView.vue:771
 msgid "Choose one of your ghosts."
 msgstr "Wähle einen deiner Geister."
 
-#: src/views/VariantGameView.vue:753
+#: src/views/VariantGameView.vue:773
 msgid "This ghost cannot be measured from this square."
 msgstr "Dieser Geist kann nicht von diesem Feld aus gemessen werden."
 
-#: src/views/VariantGameView.vue:755
+#: src/views/VariantGameView.vue:775
 msgid "These parts cannot merge from here."
 msgstr "Diese Teile können sich von hier aus nicht vereinen."
 
-#: src/views/VariantGameView.vue:757
+#: src/views/VariantGameView.vue:777
 msgid "Choose one of your pieces."
 msgstr "Wähle eine deiner Figuren."
 
-#: src/views/VariantGameView.vue:765
+#: src/views/VariantGameView.vue:779
+msgid "The move could not be sent. Try again."
+msgstr "Der Zug konnte nicht gesendet werden. Versuche es noch einmal."
+
+#: src/views/VariantGameView.vue:787
 msgid "Refused this turn: {moves}"
 msgstr "In diesem Zug abgelehnt: {moves}"
 
 #. TRANSLATORS: above the moves of a player's last turn in 5D chess; {side} is White or Black
-#: src/views/VariantGameView.vue:794
+#: src/views/VariantGameView.vue:816
 msgid "Last turn of {side}"
 msgstr "Letzter Zug von {side}"
 
-#: src/views/VariantGameView.vue:838
+#: src/views/VariantGameView.vue:860
 msgid "A move"
 msgstr "Ein Zug"
 
-#: src/views/VariantGameView.vue:933 src/views/VariantsView.vue:219
+#: src/views/VariantGameView.vue:955 src/views/VariantsView.vue:267
 msgid "Easy"
 msgstr "Leicht"
 
-#: src/views/VariantGameView.vue:935 src/views/VariantsView.vue:221
+#: src/views/VariantGameView.vue:957 src/views/VariantsView.vue:269
 msgid "Hard"
 msgstr "Schwer"
 
-#: src/views/VariantGameView.vue:937
+#: src/views/VariantGameView.vue:959
 msgid "Computer ({level})"
 msgstr "Computer ({level})"
 
-#: src/views/VariantsView.vue:19
+#: src/views/VariantsView.vue:24
 msgid "Twenty ways to play, from 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link."
 msgstr "Zwanzig Arten zu spielen, von 3D-, 4D- und 5D-Schach mit Zeitreisen bis Shogi und Xiangqi. Jede Variante behält die Quantenregeln: teilen, vereinen, messen und landen = würfeln, vorbeiziehen = verknüpfen."
 
-#: src/views/VariantsView.vue:55
+#: src/views/VariantsView.vue:60
 msgid "The classic: chess with superposition. Also online against other players."
 msgstr "Der Klassiker: Schach mit Superposition. Auch online gegen andere Spieler."
 
-#: src/views/VariantsView.vue:70
+#: src/views/VariantsView.vue:75
 msgid "%n player"
 msgid_plural "%n players"
 msgstr[0] "%n Spieler"
 msgstr[1] "%n Spieler"
 
-#: src/views/VariantsView.vue:117
+#: src/views/VariantsView.vue:125 src/views/VariantsView.vue:157
 msgid "You play"
 msgstr "Du spielst"
 
-#: src/views/VariantsView.vue:170
+#: src/views/VariantsView.vue:210
 msgid "Turn the board to the player to move"
 msgstr "Brett zum Spieler am Zug drehen"
 
-#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:72 lib/Service/Player/StatsService.php:201 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
+#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:79 lib/Service/Game/InvitationService.php:353 lib/Service/Game/InvitationService.php:358 lib/Service/Game/InvitationService.php:361 lib/Service/Game/VariantGameplayService.php:149 lib/Service/Game/VariantGameplayService.php:154 lib/Service/Game/VariantGameplayService.php:157 lib/Service/Game/VariantGameplayService.php:235 lib/Service/Player/StatsService.php:201 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
 msgid "Invalid value"
 msgstr "Ungültiger Wert"
 
@@ -7138,35 +7200,35 @@ msgstr "Ungültiger Wert"
 msgid "The request is too large."
 msgstr "Die Anfrage ist zu groß."
 
-#: lib/Dashboard/GamesWidget.php:115
+#: lib/Dashboard/GamesWidget.php:116
 msgid "No games waiting for your move"
 msgstr "Keine Partien, in denen du am Zug bist"
 
-#: lib/Dashboard/GamesWidget.php:127
+#: lib/Dashboard/GamesWidget.php:128
 #, php-format
 msgid "%s wants a rematch"
 msgstr "%s möchte eine Revanche"
 
-#: lib/Dashboard/GamesWidget.php:128
+#: lib/Dashboard/GamesWidget.php:129
 #, php-format
 msgid "%s invited you"
 msgstr "%s hat dich eingeladen"
 
-#: lib/Dashboard/GamesWidget.php:130 lib/Notification/Notifier.php:156
+#: lib/Dashboard/GamesWidget.php:131 lib/Notification/Notifier.php:163
 msgid "Unrated"
 msgstr "Ungewertet"
 
-#: lib/Dashboard/GamesWidget.php:133 lib/Notification/Notifier.php:189
+#: lib/Dashboard/GamesWidget.php:140 lib/Notification/Notifier.php:198
 msgid "Move %d"
 msgstr "Zug %d"
 
-#: lib/Dashboard/GamesWidget.php:140
+#: lib/Dashboard/GamesWidget.php:147
 msgid "%n hour left"
 msgid_plural "%n hours left"
 msgstr[0] "noch %n Stunde"
 msgstr[1] "noch %n Stunden"
 
-#: lib/Dashboard/GamesWidget.php:147
+#: lib/Dashboard/GamesWidget.php:154
 #, php-format
 msgid "Your move against %s"
 msgstr "Du bist am Zug gegen %s"
@@ -7230,120 +7292,130 @@ msgstr "Seine Figur (%1$s) ist auf %2$s gelandet (%3$d %%)"
 msgid "They moved their %1$s to %2$s"
 msgstr "Dein Gegner hat seine Figur (%1$s) nach %2$s gezogen"
 
-#: lib/Notification/Notifier.php:79
+#: lib/Notification/Notifier.php:80
 msgid "King trapped"
 msgstr "König eingesperrt"
 
-#: lib/Notification/Notifier.php:80
+#: lib/Notification/Notifier.php:81
 msgid "Only kings left"
 msgstr "Nur Könige übrig"
 
-#: lib/Notification/Notifier.php:81
+#: lib/Notification/Notifier.php:82
 msgid "Repetition"
 msgstr "Stellungswiederholung"
 
-#: lib/Notification/Notifier.php:82
+#: lib/Notification/Notifier.php:83
 msgid "Fifty-move rule"
 msgstr "50-Züge-Regel"
 
-#: lib/Notification/Notifier.php:83
+#: lib/Notification/Notifier.php:84
 msgid "Move limit reached"
 msgstr "Zuglimit erreicht"
 
-#: lib/Notification/Notifier.php:84
+#: lib/Notification/Notifier.php:85
 msgid "No moves left"
 msgstr "Keine Züge mehr"
 
-#: lib/Notification/Notifier.php:85
+#: lib/Notification/Notifier.php:86
 msgid "Resignation"
 msgstr "Aufgabe"
 
-#: lib/Notification/Notifier.php:88
+#: lib/Notification/Notifier.php:89
 msgid "Time ran out, only a king left"
 msgstr "Zeit abgelaufen, nur ein König übrig"
 
-#: lib/Notification/Notifier.php:89
+#: lib/Notification/Notifier.php:90
 msgid "Abandoned"
 msgstr "Verlassen"
 
-#: lib/Notification/Notifier.php:90
+#: lib/Notification/Notifier.php:91
 msgid "Account deleted"
 msgstr "Konto gelöscht"
 
-#: lib/Notification/Notifier.php:91
+#: lib/Notification/Notifier.php:92
 msgid "Aborted: no first move in time"
 msgstr "Abgebrochen: kein erster Zug rechtzeitig"
 
-#: lib/Notification/Notifier.php:151
-msgid "{user} invited you to a game of Quantum Chess"
-msgstr "{user} hat dich zu einer Partie Quantum Chess eingeladen"
-
-#: lib/Notification/Notifier.php:152
+#: lib/Notification/Notifier.php:153
 msgid "{user} wants a rematch"
 msgstr "{user} möchte eine Revanche"
 
-#: lib/Notification/Notifier.php:160
+#: lib/Notification/Notifier.php:154
+#, php-format
+msgid "{user} invited you to a game of %s"
+msgstr "{user} hat dich zu einer Partie %s eingeladen"
+
+#: lib/Notification/Notifier.php:158
+msgid "{user} invited you to a game of Quantum Chess"
+msgstr "{user} hat dich zu einer Partie Quantum Chess eingeladen"
+
+#: lib/Notification/Notifier.php:167
 msgid "Random colours"
 msgstr "Zufällige Farben"
 
-#: lib/Notification/Notifier.php:172
+#: lib/Notification/Notifier.php:179
 msgid "{user} accepted your invitation"
 msgstr "{user} hat deine Einladung angenommen"
 
-#: lib/Notification/Notifier.php:173
+#: lib/Notification/Notifier.php:180
 msgid "{user} joined your open challenge"
 msgstr "{user} ist deiner offenen Herausforderung beigetreten"
 
-#: lib/Notification/Notifier.php:175
+#: lib/Notification/Notifier.php:182
 msgid "It's your move."
 msgstr "Du bist am Zug."
 
-#: lib/Notification/Notifier.php:176
+#: lib/Notification/Notifier.php:183
 msgid "Waiting for their first move."
 msgstr "Warte auf den ersten Zug."
 
-#: lib/Notification/Notifier.php:179
+#: lib/Notification/Notifier.php:186
 msgid "{user} declined your invitation"
 msgstr "{user} hat deine Einladung abgelehnt"
 
-#: lib/Notification/Notifier.php:182
+#: lib/Notification/Notifier.php:190
+#, php-format
+msgid "Your move in %s against {user}"
+msgstr "Du bist am Zug in %s gegen {user}"
+
+#: lib/Notification/Notifier.php:191
 msgid "Your move against {user}"
 msgstr "Du bist am Zug gegen {user}"
 
-#: lib/Notification/Notifier.php:188
+#: lib/Notification/Notifier.php:197
 msgid "{user} offers a draw"
 msgstr "{user} bietet Remis an"
 
-#: lib/Notification/Notifier.php:195
+#: lib/Notification/Notifier.php:204
 msgid "You won against {user}"
 msgstr "Du hast gegen {user} gewonnen"
 
-#: lib/Notification/Notifier.php:196
+#: lib/Notification/Notifier.php:205
 msgid "You lost against {user}"
 msgstr "Du hast gegen {user} verloren"
 
-#: lib/Notification/Notifier.php:197
+#: lib/Notification/Notifier.php:206
 msgid "Your game against {user} was aborted"
 msgstr "Deine Partie gegen {user} wurde abgebrochen"
 
-#: lib/Notification/Notifier.php:198
+#: lib/Notification/Notifier.php:207
 msgid "Your game against {user} ended in a draw"
 msgstr "Deine Partie gegen {user} endete remis"
 
-#: lib/Notification/Notifier.php:203
+#: lib/Notification/Notifier.php:212
 #, php-format
 msgid "Rating %1$d (%2$s)"
 msgstr "Wertung %1$d (%2$s)"
 
-#: lib/Notification/Notifier.php:214
+#: lib/Notification/Notifier.php:223
 msgid "{user} sent a message"
 msgstr "{user} hat eine Nachricht gesendet"
 
-#: lib/Notification/Notifier.php:220
+#: lib/Notification/Notifier.php:229
 msgid "New message"
 msgstr "Neue Nachricht"
 
-#: lib/Notification/Notifier.php:224
+#: lib/Notification/Notifier.php:233
 msgid "Your game ended because your opponent's account was deleted"
 msgstr "Deine Partie wurde beendet, weil das Konto deines Gegners gelöscht wurde"
 
@@ -7447,85 +7519,89 @@ msgstr "Diese Partie ist vorbei."
 msgid "The game has changed in the meantime."
 msgstr "Die Partie hat sich inzwischen geändert."
 
-#: lib/Service/Game/GameQueryService.php:166
+#: lib/Service/Game/GameQueryService.php:169
 msgid "Invalid cursor"
 msgstr "Ungültiger Cursor"
 
-#: lib/Service/Game/GameplayService.php:65
+#: lib/Service/Game/GameplayService.php:69 lib/Service/Game/VariantGameplayService.php:74
 msgid "Invalid client id"
 msgstr "Ungültige Client-ID"
 
-#: lib/Service/Game/GameplayService.php:87
+#: lib/Service/Game/GameplayService.php:91 lib/Service/Game/VariantGameplayService.php:85
 msgid "It is not your move."
 msgstr "Du bist nicht am Zug."
 
-#: lib/Service/Game/GameplayService.php:95
+#: lib/Service/Game/GameplayService.php:99 lib/Service/Game/VariantGameplayService.php:92
 msgid "This move is not possible."
 msgstr "Dieser Zug ist nicht möglich."
 
-#: lib/Service/Game/GameplayService.php:224
+#: lib/Service/Game/GameplayService.php:228
 msgid "The game can only be aborted before both sides have moved."
 msgstr "Die Partie kann nur abgebrochen werden, bevor beide Seiten gezogen haben."
 
-#: lib/Service/Game/GameplayService.php:248
+#: lib/Service/Game/GameplayService.php:252
 msgid "Invalid action"
 msgstr "Ungültige Aktion"
 
-#: lib/Service/Game/GameplayService.php:260
+#: lib/Service/Game/GameplayService.php:264
 msgid "You cannot offer a draw right now."
 msgstr "Du kannst gerade kein Remis anbieten."
 
-#: lib/Service/Game/GameplayService.php:273
+#: lib/Service/Game/GameplayService.php:277
 msgid "There is no draw offer to answer."
 msgstr "Es gibt kein Remisangebot, auf das du antworten könntest."
 
-#: lib/Service/Game/InvitationService.php:57
+#: lib/Service/Game/InvitationService.php:64
 msgid "Online games are not available for you."
 msgstr "Online-Partien sind für dich nicht verfügbar."
 
-#: lib/Service/Game/InvitationService.php:62
+#: lib/Service/Game/InvitationService.php:69
 msgid "Invalid opponent"
 msgstr "Ungültiger Gegner"
 
-#: lib/Service/Game/InvitationService.php:68
+#: lib/Service/Game/InvitationService.php:75
 msgid "Invalid colour"
 msgstr "Ungültige Farbe"
 
-#: lib/Service/Game/InvitationService.php:76
+#: lib/Service/Game/InvitationService.php:87
 msgid "Invalid time control"
 msgstr "Ungültiges Zeitlimit"
 
-#: lib/Service/Game/InvitationService.php:80
+#: lib/Service/Game/InvitationService.php:91
 msgid "Invalid message"
 msgstr "Ungültige Nachricht"
 
-#: lib/Service/Game/InvitationService.php:87 lib/Service/Game/InvitationService.php:106
+#: lib/Service/Game/InvitationService.php:98 lib/Service/Game/InvitationService.php:117
 msgid "Invalid group"
 msgstr "Ungültige Gruppe"
 
-#: lib/Service/Game/InvitationService.php:90
+#: lib/Service/Game/InvitationService.php:101
 msgid "Rated games need a time limit."
 msgstr "Gewertete Partien brauchen ein Zeitlimit."
 
-#: lib/Service/Game/InvitationService.php:95
+#: lib/Service/Game/InvitationService.php:106
 msgid "Rated games are turned off on this server."
 msgstr "Gewertete Partien sind auf diesem Server ausgeschaltet."
 
-#: lib/Service/Game/InvitationService.php:102
+#: lib/Service/Game/InvitationService.php:113
 msgid "Open challenges are turned off on this server."
 msgstr "Offene Herausforderungen sind auf diesem Server ausgeschaltet."
 
-#: lib/Service/Game/InvitationService.php:214
+#: lib/Service/Game/InvitationService.php:225
 msgid "This is your own challenge."
 msgstr "Das ist deine eigene Herausforderung."
 
-#: lib/Service/Game/InvitationService.php:240
+#: lib/Service/Game/InvitationService.php:251
 msgid "Someone was faster. The challenge is gone."
 msgstr "Jemand war schneller. Die Herausforderung ist weg."
 
-#: lib/Service/Game/InvitationService.php:292 lib/Service/Game/InvitePolicy.php:117
+#: lib/Service/Game/InvitationService.php:303 lib/Service/Game/InvitePolicy.php:117
 msgid "You can't invite this user"
 msgstr "Du kannst diesen Benutzer nicht einladen"
+
+#: lib/Service/Game/InvitationService.php:349
+msgid "This chess variant cannot be played online."
+msgstr "Diese Schachvariante kann nicht online gespielt werden."
 
 #: lib/Service/Game/InvitePolicy.php:132
 msgid "You already have %d open challenges."

@@ -44,6 +44,9 @@
 			</router-link>
 			<span class="qc-lobby-card__line">{{ line }}</span>
 			<span class="qc-lobby-card__badges">
+				<span v-if="game.variant" class="qc-lobby-card__badge" data-test="lobby-variant">
+					{{ variantText(game) }}
+				</span>
 				<span
 					v-if="game.rated || game.ratedRequested"
 					class="qc-lobby-card__badge">{{ t('quantumchess', 'Rated') }}</span>
@@ -75,7 +78,7 @@ import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import MiniBoard from '../../../board/components/MiniBoard.vue'
 import { formatRelative } from '../../../services/format.js'
 import { currentUser } from '../../../services/initialState.js'
-import { colorText, otherPlayer, progressText, timeControlText } from '../../summaryText.js'
+import { colorText, otherPlayer, progressText, timeControlText, variantText } from '../../summaryText.js'
 
 const props = defineProps({
 	/** GameSummary */

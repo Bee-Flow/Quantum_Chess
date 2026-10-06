@@ -43,6 +43,13 @@
  * square selected, the targets as targets) and carries the type of the piece that moves and whether it captures (not
  * in a hidden game), so the view can name it. Every move played keeps the type of its piece in the saved move list
  * (`t`), for the move list's notation.
+ *
+ * Online games (src/online/composables/useOnlineVariantGame.js) pass a **host**, which replaces this device's storage
+ * and dice: `load()` gives the record (built from the server's moves), `send(state, code)` sends a move and resolves
+ * to the roll `u` the server drew for it, `played(state, code, next)` settles it, and `resign()` resigns on the server.
+ * The other seat's moves arrive through `playRemote(code, u)`; its players have the kind `remote`, whose turns this
+ * composable only waits for. An online game has no undo, and a move that the server refused leaves the position as it
+ * was, with the notice `sendFailed`.
  */
 
 import { computed, markRaw, ref, shallowRef } from 'vue'
@@ -61,6 +68,7 @@ import {
 	royalDanger,
 	splitCode,
 	splitTargets,
+	T,
 } from '../../variants/index.js'
 import {
 	blindTargetAllowed,
@@ -88,10 +96,19 @@ function candidateMoves(V, state) {
 }
 
 /**
+ * @typedef {object} VariantGameHost where an online game comes from and where its moves go (see the header)
+ * @property {() => Promise<object|null>} load the record, or null when the game cannot be shown
+ * @property {(state: object, code: string) => Promise<number>} send send a move; resolves to its roll u in [0, T)
+ * @property {(state: object, code: string, next: object) => void} played the move was played: settle it
+ * @property {() => void} resign resign the game
+ */
+
+/**
  * @param {string} id game id
+ * @param {VariantGameHost|null} [host] the online host; null for a game on this device
  * @return {object} the game API
  */
-export function useVariantGame(id) {
+export function useVariantGame(id, host = null) {
 	const V = shallowRef(null)
 	const record = shallowRef(null)
 	const state = shallowRef(null)
@@ -112,11 +129,15 @@ export function useVariantGame(id) {
 	const flipped = ref(false)
 	/** Whether the last save of the record failed (the browser storage is full or blocked). */
 	const saveFailed = ref(false)
+	/** Whether an online move is on its way to the server. */
+	const sending = ref(false)
+	/** Whether an online game ended on the server (resigned, timed out, agreed drawn, annulled): no more moves. */
+	const frozen = ref(false)
 	let controller = null
 
 	const players = computed(() => record.value?.players ?? [])
 	const humanSides = computed(() => players.value.map((p, i) => (p.kind === 'human' ? i : -1)).filter((i) => i >= 0))
-	const isHumanTurn = computed(() => Boolean(state.value && !state.value.result
+	const isHumanTurn = computed(() => Boolean(state.value && !state.value.result && !sending.value && !frozen.value
 		&& players.value[state.value.turn]?.kind === 'human'))
 
 	/**
@@ -255,7 +276,8 @@ export function useVariantGame(id) {
 		return k < list.length ? k + 1 : 0
 	})
 
-	const canUndo = computed(() => Boolean(undoCount.value && !thinking.value && !secret.value && !handover.value))
+	const canUndo = computed(() => Boolean(!host && undoCount.value && !thinking.value && !secret.value
+		&& !handover.value))
 
 	/** Clear the selection and every half-made move. */
 	function clearSelection() {
@@ -284,26 +306,73 @@ export function useVariantGame(id) {
 	 */
 	function commit(next, movesList) {
 		const rec = { ...record.value, moves: movesList, current: next }
-		saveFailed.value = saveVariantGame(rec) === false
+		saveFailed.value = host ? false : saveVariantGame(rec) === false
 		record.value = rec
 		state.value = next
 	}
 
 	/**
-	 * Play a move (legal) and continue with the next turn.
+	 * Play a move (legal) and continue with the next turn. Online, the move goes to the server first, and is played
+	 * with the roll the server drew for it.
 	 *
 	 * @param {string} code move code
 	 */
-	function play(code) {
+	async function play(code) {
+		if (host) {
+			const before = state.value
+			sending.value = true
+			let u
+			try {
+				u = await host.send(before, code)
+			} catch {
+				notice.value = { kind: 'sendFailed', code }
+				pending.value = null
+				clearSelection()
+				return
+			} finally {
+				sending.value = false
+			}
+			if (state.value !== before) {
+				// the position changed meanwhile (the game was reloaded): the move is replayed from the server
+				return
+			}
+			const res = playWith(code, u / T)
+			if (res) {
+				host.played(before, code, res.state)
+			}
+			return
+		}
 		// the roll memo: the same move in the same position gets the same roll (whatever it promotes to), so undo never
 		// rerolls a result already seen
 		const memoKey = rollMemoKey(state.value, code)
 		const rolls = { ...(record.value.rolls ?? {}) }
 		rolls[memoKey] ??= Math.random()
 		record.value = { ...record.value, rolls }
-		const res = applyMove(V.value, state.value, code, rolls[memoKey])
+		playWith(code, rolls[memoKey])
+	}
+
+	/**
+	 * Play a move of another player of an online game with the roll the server drew for it.
+	 *
+	 * @param {string} code move code
+	 * @param {number} u the roll, an integer in [0, T)
+	 * @return {boolean} whether the move was legal
+	 */
+	function playRemote(code, u) {
+		return Boolean(playWith(code, u / T))
+	}
+
+	/**
+	 * Play a move with the random number `r` in [0, 1) and continue with the next turn.
+	 *
+	 * @param {string} code move code
+	 * @param {number} r random number
+	 * @return {object|null} the result of `applyMove`, or null for an illegal move
+	 */
+	function playWith(code, r) {
+		const res = applyMove(V.value, state.value, code, r)
 		if (!res) {
-			return
+			return null
 		}
 		const index = res.outcomes.indexOf(res.branch)
 		const mover = state.value.turn
@@ -332,6 +401,7 @@ export function useVariantGame(id) {
 		}
 		commit(res.state, [...record.value.moves, type ? { code, i: index, t: type } : { code, i: index }])
 		afterChange({ side: mover, code, key: res.branch.key })
+		return res
 	}
 
 	/**
@@ -367,6 +437,7 @@ export function useVariantGame(id) {
 	 * committing to the move.
 	 *
 	 * @param {string} code move code
+	 * @return {Promise<void>|undefined} the move being played, when it was played at once (online: sent and settled)
 	 */
 	function attempt(code) {
 		const outs = outcomes(V.value, state.value, code)
@@ -388,13 +459,17 @@ export function useVariantGame(id) {
 			pending.value = { code, outcomes: rolls ? shown : [], warning, type: movedType(code), capture }
 			return
 		}
-		play(code)
+		return play(code)
 	}
 
-	/** Play the pending move. */
+	/**
+	 * Play the pending move.
+	 *
+	 * @return {Promise<void>|undefined} the move being played
+	 */
 	function confirm() {
 		if (pending.value) {
-			play(pending.value.code)
+			return play(pending.value.code)
 		}
 	}
 
@@ -410,7 +485,7 @@ export function useVariantGame(id) {
 	 * @param {number} sq square
 	 */
 	function click(sq) {
-		if (!interactive.value || pending.value || thinking.value) {
+		if (!interactive.value || pending.value || thinking.value || sending.value) {
 			return
 		}
 		notice.value = null
@@ -828,10 +903,14 @@ export function useVariantGame(id) {
 		return s
 	}
 
-	/** Resign for the side to move (or the only human). */
+	/** Resign for the side to move (or the only human); online, on the server. */
 	function resign() {
 		const s = state.value
 		if (!s || s.result || handover.value || curtain.value) {
+			return
+		}
+		if (host) {
+			host.resign()
 			return
 		}
 		const loser = humanSides.value.length === 1 ? humanSides.value[0] : s.turn
@@ -843,7 +922,7 @@ export function useVariantGame(id) {
 
 	/** Load the game. */
 	async function load() {
-		const rec = loadVariantGame(id)
+		const rec = host ? await host.load() : loadVariantGame(id)
 		if (!rec) {
 			missing.value = true
 			return
@@ -852,6 +931,13 @@ export function useVariantGame(id) {
 		record.value = rec
 		state.value = rec.current
 		afterChange()
+	}
+
+	/** No more moves: the online game ended on the server. */
+	function freeze() {
+		frozen.value = true
+		pending.value = null
+		clearSelection()
 	}
 
 	/** Stop the computer (when leaving the page). */
@@ -877,6 +963,8 @@ export function useVariantGame(id) {
 		refused,
 		flipped,
 		saveFailed,
+		sending,
+		frozen,
 		players,
 		humanSides,
 		isHumanTurn,
@@ -897,6 +985,8 @@ export function useVariantGame(id) {
 		stop,
 		click,
 		attempt,
+		playRemote,
+		freeze,
 		confirm,
 		cancel,
 		setMode,

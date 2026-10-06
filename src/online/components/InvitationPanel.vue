@@ -27,6 +27,9 @@
 				“{{ g.inviteMessage }}”
 			</p>
 			<ul v-if="live" class="qc-invite__facts">
+				<li v-if="g.variant" data-test="invite-variant">
+					{{ variantText(g) }}
+				</li>
 				<li>{{ timeControlText(g.timeControl) }}</li>
 				<li>{{ g.ratedRequested ? t('quantumchess', 'Rated') : t('quantumchess', 'Casual (unrated)') }}</li>
 				<li>{{ colorText(g, me) }}</li>
@@ -87,7 +90,7 @@ import NcAvatar from '@nextcloud/vue/components/NcAvatar'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import { useBusyAction } from '../../composables/useBusyAction.js'
 import { formatRelative } from '../../services/format.js'
-import { colorText, otherPlayer, timeControlText } from '../summaryText.js'
+import { colorText, otherPlayer, timeControlText, variantText } from '../summaryText.js'
 
 const props = defineProps({
 	/** The online game controller */

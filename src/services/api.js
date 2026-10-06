@@ -73,6 +73,13 @@ import { generateOcsUrl, generateUrl } from '@nextcloud/router'
  * @property {number|null} finishedAt Unix seconds
  * @property {Array<[number, string, number]>} preview every occupied square as `[square, letter, percent]`
  * @property {number} rev the revision of the game
+ * @property {string} [variant] a chess variant game: the variant's id (absent for classic Quantum Chess)
+ * @property {object} [variantOptions] a chess variant game: its option values
+ * @property {number|null} [variantRules] a chess variant game: the rules version it is played with
+ * @property {string|null} [variantResult] a chess variant game: the settled result code
+ * @property {number|null} [seatToMove] a chess variant game (GameLive): the seat to move
+ * @property {number|null} [pendingPly] a chess variant game (GameLive): the ply of the move that waits for its
+ *   settlement
  */
 
 /**
@@ -414,6 +421,46 @@ export const joinGame = async (id) => game(await request('post', `/games/${id}/j
  */
 export function sendMove(id, { code, ply, clientId, thinkMs }) {
 	return request('post', `/games/${id}/moves`, { data: { code, ply, clientId, thinkMs } })
+}
+
+/**
+ * Send a move of a chess variant game. The answer carries the roll the server drew for it (`move.u`); the move waits
+ * for its settlement before the turn passes. Sending the same `clientId` again returns the stored move.
+ *
+ * @param {number} id game id
+ * @param {object} body the move
+ * @param {string} body.code move code
+ * @param {number} body.ply plies played before the move
+ * @param {string} body.clientId client-generated id of this move
+ * @param {number} [body.thinkMs] time the player took
+ * @return {Promise<{game: GameLive, move: object, rev: number, now: number, replayed: boolean}>}
+ */
+export function sendVariantMove(id, { code, ply, clientId, thinkMs }) {
+	return request('post', `/games/${id}/v/moves`, { data: { code, ply, clientId, thinkMs } })
+}
+
+/**
+ * Settle a move of a chess variant game: what it led to when played with its roll.
+ *
+ * @param {number} id game id
+ * @param {number} ply plies played before the move
+ * @param {{nextSeat: number, result: string, stateHash: string}} settlement the seat to move next, the result code
+ *   and the position hash
+ * @return {Promise<GameLive>}
+ */
+export async function settleVariantMove(id, ply, settlement) {
+	return game(await request('post', `/games/${id}/v/moves/${ply}/settle`, { data: settlement }))
+}
+
+/**
+ * Report a move or settlement of a chess variant game that does not agree with the rules; the game is annulled.
+ *
+ * @param {number} id game id
+ * @param {number} ply the ply where the replay disagreed
+ * @return {Promise<GameLive>}
+ */
+export async function disputeVariantGame(id, ply) {
+	return game(await request('post', `/games/${id}/v/dispute`, { data: { ply } }))
 }
 
 /**

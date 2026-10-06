@@ -7,6 +7,10 @@
   A chess variant game on this device (route /variants/:variant/:id): the board, the players, the move modes, the roll
   preview and result, the hands of the drop variants, the move list and the rules of the variant.
 
+  Online (OnlineVariantHost): the host passes the game's `controller` (useVariantGame with an online host, already
+  loading) and fills the `online` slot at the top of the panel with the players, the game's state and its buttons.
+  There is no Undo then, "New game" leads to the home screen, and a move on its way to the server reads "Sending…".
+
   Optional variant hooks shown here: `sideInfo(state, side, viewer)` in the player rows, `infoText(record, viewer)`
   under the moves, `noteText(note)` for roll notes, `codeText(code, record)` for move codes (with the move's history
   record), `handOrder` for the hands, `options[i].describe(value)` for the game's options, `moveWarning` (through the
@@ -50,7 +54,9 @@
 		<NcEmptyContent
 			v-if="game.missing.value"
 			:name="t('quantumchess', 'Game not found')"
-			:description="t('quantumchess', 'This game is not stored on this device.')">
+			:description="controller
+				? t('quantumchess', 'This game could not be loaded.')
+				: t('quantumchess', 'This game is not stored on this device.')">
 			<template #action>
 				<NcButton :to="{ name: 'variants' }">
 					{{ t('quantumchess', 'Chess variants') }}
@@ -225,6 +231,9 @@
 						<strong>{{ resultText(V, state.result) }}</strong>
 						<span v-if="endNote" class="qc-vgame__end-note">{{ endNote }}</span>
 					</template>
+					<template v-else-if="game.sending.value">
+						<NcLoadingIcon :size="16" inline /> {{ t('quantumchess', 'Sending…') }}
+					</template>
 					<template v-else-if="game.thinking.value">
 						<!-- TRANSLATORS: {side} is a player, such as White, Black, Red, Sente or White A -->
 						<NcLoadingIcon :size="16" inline /> {{
@@ -285,7 +294,7 @@
 						{{ a.label }}
 					</NcButton>
 					<!-- a turn of several moves is often taken back move by move: Undo sits beside Submit turn -->
-					<NcButton :disabled="!game.canUndo.value" @click="game.undo">
+					<NcButton v-if="!controller" :disabled="!game.canUndo.value" @click="game.undo">
 						{{ t('quantumchess', 'Undo') }}
 					</NcButton>
 				</div>
@@ -374,6 +383,7 @@
 			</p>
 
 			<aside v-if="!game.curtain.value" class="qc-vgame__panel">
+				<slot name="online" />
 				<section v-if="showRoll" class="qc-vgame__box qc-vgame__box--roll">
 					<p v-if="V.umpire">
 						{{ t('quantumchess', 'Result: {result}', {
@@ -462,7 +472,7 @@
 				</section>
 
 				<div class="qc-vgame__actions">
-					<NcButton v-if="!actions.length" :disabled="!game.canUndo.value" @click="game.undo">
+					<NcButton v-if="!actions.length && !controller" :disabled="!game.canUndo.value" @click="game.undo">
 						{{ t('quantumchess', 'Undo') }}
 					</NcButton>
 					<NcButton v-if="V.flipBoard !== false" @click="game.flipped.value = !game.flipped.value">
@@ -471,7 +481,7 @@
 					<NcButton v-if="!state.result && !game.handover.value" @click="game.resign">
 						{{ t('quantumchess', 'Resign') }}
 					</NcButton>
-					<NcButton :to="{ name: 'variants' }">
+					<NcButton :to="{ name: controller ? 'home' : 'variants' }">
 						{{ t('quantumchess', 'New game') }}
 					</NcButton>
 				</div>
@@ -507,15 +517,25 @@ import {
 } from '../variantplay/texts.js'
 import { catalogEntry, handView, isLegal, sideName } from '../variants/index.js'
 
+const props = defineProps({
+	/** The game of an online host (useVariantGame with a host), which loads it; null for a game on this device. */
+	controller: {
+		type: Object,
+		default: null,
+	},
+})
+
 const route = useRoute()
-const game = useVariantGame(String(route.params.id))
-game.load()
+const game = props.controller ?? useVariantGame(String(route.params.id))
+if (!props.controller) {
+	game.load()
+}
 onBeforeUnmount(() => game.stop())
 
 const V = computed(() => game.V.value)
 const state = computed(() => game.state.value)
 const record = computed(() => game.record.value)
-const entry = computed(() => catalogEntry(String(route.params.variant)))
+const entry = computed(() => catalogEntry(V.value?.id ?? String(route.params.variant)))
 const showRules = ref(false)
 const rootEl = ref(null)
 const controlsEl = ref(null)
@@ -755,6 +775,8 @@ const noticeText = computed(() => {
 			return t('quantumchess', 'These parts cannot merge from here.')
 		case 'notYours':
 			return t('quantumchess', 'Choose one of your pieces.')
+		case 'sendFailed':
+			return t('quantumchess', 'The move could not be sent. Try again.')
 		default:
 			return ''
 	}
