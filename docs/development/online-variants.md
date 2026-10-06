@@ -5,8 +5,9 @@
 
 # Online play for the chess variants
 
-**Status:** proposed, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1 is in
-progress.
+**Status:** proposed, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1
+(foundations) is done: the schema, entities, seat helpers, catalogue, result codes, variant chain and replay exist
+with their tests, and nothing uses them yet.
 
 This document is the plan for playing the chess variants online, the four-player ones included, instead of only as
 pass & play or against the computer. It describes the trust model, the data model, the changes to the backend and
@@ -72,10 +73,11 @@ The migration adds tables and columns and renames nothing, so the stable contrac
 
 ### 3.1 `qchess_games`
 
-New columns: `variant` (string, 32; null for classic Quantum Chess), `variant_options` (text, JSON) and `seat_count`
-(small integer, default 2). Every classic code path refuses a game whose `variant` is not null. In a two-player
+New columns: `variant` (string, 32; null for classic Quantum Chess), `variant_options` (text, JSON),
+`variant_rules` (the rules version, `ONLINE_RULES_VERSION`), `variant_result` (the settled result code, see section
+3.4), `seat_count` (small integer, default 2) and `seat_to_move`. Every classic code path refuses a game whose `variant` is not null. In a two-player
 variant game, `white_uid` and `black_uid` also hold seats 0 and 1, so `havePlayed`, the lobby queries and `removeUser`
-keep working. The `state` column holds only what the server needs (the seat to move), never a board.
+keep working. The server never computes or stores a board of a variant game.
 
 ### 3.2 `qchess_seats`
 
@@ -100,6 +102,15 @@ chain_n = sha256(chain_(n-1) + "|" + ply + "|" + seat + "|" + code + "|" + u)
 `options` is the canonical JSON of the variant options (keys sorted). A seat without a player contributes an empty
 string.
 
+### 3.4 Result codes and claims
+
+A settled move claims the seat to move next, the result and the position hash (FNV-1a-64 over the side to move and
+every world with its weight, 16 hex digits). The result is a short code: `win:<seats>/<reason>` with the winning
+seats in ascending order (`win:0,2/king` for a team), `draw/<reason>`, or the empty string while the game goes on.
+`resultCode` and `replayOnline` (`src/variants/online.js`) compute them in the browser, and `VariantResult` parses
+them on the server. `tests/fixtures/online-variants.json` holds recorded games with every claim; it changes whenever
+a rule changes, which is when `ONLINE_RULES_VERSION` must go up.
+
 ## 4. Backend
 
 | Piece | Change |
@@ -119,7 +130,7 @@ string.
 
 | Piece | Change |
 |---|---|
-| `src/variants/replay.js` | `replayOnline(V, start, moves)`: plays every stored move with its `u` and reports the first claim that does not match. Snapshots every few plies keep long 5D games from replaying from the start. |
+| `src/variants/online.js` | `replayOnline(V, start, moves)`: plays every stored move with its `u` and reports the first claim that does not match. A snapshot (any replayed state) is a valid start, so long 5D games need not replay from the start. |
 | `src/online/vchain.js` | The variant chain in the browser, and its check (the counterpart of `chainCheck.js`, with its own storage key) |
 | `src/online/composables/useOnlineVariantGame.js` | Polling as in `useOnlineGame`, and a sender for move, `u` and settlement, with idempotent `clientId`, settling for a player who left, and disputes |
 | `useVariantGame`, `VariantGameView.vue` | A host seam, as `LocalGameHost` and `OnlineGameHost` have for classic games. The local host keeps `Math.random` and the roll memo. The online host sends the move and waits for `u`, and has no undo. The board turns to the player's seat. |

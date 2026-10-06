@@ -112,6 +112,11 @@ jobs:
             echo 'No fixtures script yet'
           fi
 
+      - name: Online variant fixture is up to date
+        run: |
+          npm run fixtures:online
+          git diff --stat --exit-code -- tests/fixtures/online-variants.json
+
   php:
     name: PHP ${{ matrix.php }}
     runs-on: ubuntu-latest

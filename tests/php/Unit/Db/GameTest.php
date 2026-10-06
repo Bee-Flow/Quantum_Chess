@@ -57,4 +57,16 @@ final class GameTest extends TestCase {
 		$game = GameBuilder::active(['lastDrawW' => 4]);
 		$this->assertSame([10, null], [$game->drawAvailableAtPly('w'), $game->drawAvailableAtPly('b')]);
 	}
+
+	public function testVariant(): void {
+		$describe = fn (Game $g) => [$g->isVariant(), $g->getVariantOptionValues(), $g->getSeatCount()];
+		$this->assertSame([false, [], 2], $describe(GameBuilder::active()));
+		$this->assertSame([true, ['mode' => 'teams'], 4], $describe(GameBuilder::active([
+			'variant' => 'fourplayer',
+			'variantOptions' => '{"mode":"teams"}',
+			'seatCount' => 4,
+		])));
+		$broken = GameBuilder::active(['variant' => 'atomic', 'variantOptions' => 'not json']);
+		$this->assertSame([], $broken->getVariantOptionValues());
+	}
 }

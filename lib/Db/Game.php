@@ -22,6 +22,11 @@ use OCP\DB\Types;
  * always null), `reminders` and `ext_days` (deadline reminders and extensions, always 0) and `visibility`
  * (always 0).
  *
+ * A chess variant game (docs/development/online-variants.md) has a `variant` id, its option values as JSON
+ * (`variantOptions`), the version of the variant rules it is played with (`variantRules`), the result code its
+ * players settled (`variantResult`), and seats instead of colours: `seatCount` seats in the `qchess_seats` table, of
+ * which `seatToMove` is to move. Classic games leave `variant` null.
+ *
  * @method string|null getCreatorUid()
  * @method void setCreatorUid(?string $v)
  * @method string|null getOpponentUid()
@@ -108,6 +113,18 @@ use OCP\DB\Types;
  * @method void setLastMoveAt(?int $v)
  * @method int|null getFinishedAt()
  * @method void setFinishedAt(?int $v)
+ * @method string|null getVariant()
+ * @method void setVariant(?string $v)
+ * @method string|null getVariantOptions()
+ * @method void setVariantOptions(?string $v)
+ * @method int|null getVariantRules()
+ * @method void setVariantRules(?int $v)
+ * @method string|null getVariantResult()
+ * @method void setVariantResult(?string $v)
+ * @method int getSeatCount()
+ * @method void setSeatCount(int $v)
+ * @method int|null getSeatToMove()
+ * @method void setSeatToMove(?int $v)
  */
 class Game extends Entity {
 	public const STATUS_PENDING = 'pending';
@@ -172,15 +189,35 @@ class Game extends Entity {
 	protected $startedAt;
 	protected $lastMoveAt;
 	protected $finishedAt;
+	protected $variant;
+	protected $variantOptions;
+	protected $variantRules;
+	protected $variantResult;
+	protected $seatCount = 2;
+	protected $seatToMove;
 
 	public function __construct() {
 		foreach (['ply', 'rev', 'ratedRequested', 'rated', 'deadlineAt', 'expiresAt', 'reminders', 'extDays',
 			'drawOfferPly', 'lastDrawW', 'lastDrawB', 'ratingWBefore', 'ratingBBefore', 'ratingWDelta', 'ratingBDelta',
 			'rematchOf', 'rematchId', 'chatCount', 'muteW', 'muteB', 'visibility', 'createdAt', 'updatedAt',
-			'startedAt', 'lastMoveAt', 'finishedAt'] as $field) {
+			'startedAt', 'lastMoveAt', 'finishedAt', 'variantRules', 'seatCount', 'seatToMove'] as $field) {
 			$this->addType($field, Types::INTEGER);
 		}
 		$this->addType('id', Types::INTEGER);
+	}
+
+	/** Whether this is a chess variant game, with seats, rather than a game of classic Quantum Chess. */
+	public function isVariant(): bool {
+		return $this->variant !== null && $this->variant !== '';
+	}
+
+	/** @return array<string, string|int|bool> the option values of a variant game ({} for a classic game) */
+	public function getVariantOptionValues(): array {
+		if ($this->variantOptions === null || $this->variantOptions === '') {
+			return [];
+		}
+		$options = json_decode($this->variantOptions, true);
+		return is_array($options) ? $options : [];
 	}
 
 	public function isParticipant(string $uid): bool {

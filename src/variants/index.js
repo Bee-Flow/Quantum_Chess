@@ -45,6 +45,16 @@ export {
 	T,
 } from './core/quantum.js'
 export { chooseMove, LEVELS } from './core/ai.js'
+export {
+	isOnlineVariant,
+	ONLINE_RULES_VERSION,
+	positionHash,
+	replayOnline,
+	resultCode,
+	seatCount,
+	settlementOf,
+	teamsOf,
+} from './online.js'
 
 /** Loaders of the rules modules, one chunk per variant. */
 const LOADERS = {
