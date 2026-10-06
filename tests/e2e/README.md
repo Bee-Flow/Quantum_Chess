@@ -46,7 +46,7 @@ npx playwright show-report playwright-report            # the HTML report of the
 Before the first test, `global-setup.mjs`
 
 1. waits until `status.php` reports an installed Nextcloud that is not in maintenance mode;
-2. when `occ` is reachable, creates the test users or resets their passwords (`admin`, `bob`, `carol`) and checks
+2. when `occ` is reachable, creates the test users or resets their passwords (`admin`, `bob`, `carol`, `dave`) and checks
    that the app is enabled;
 3. logs every test user in once and stores the browser state in `test-results/.auth/<uid>.json`, so tests start
    logged in without going through the login form.
@@ -67,6 +67,7 @@ runs at desktop size; tests tagged `@phone` also run at phone size. The API spec
 | `QC_ADMIN_USER`, `QC_ADMIN_PASSWORD` | `admin`, `QuantumAdmin!2026` | The administrator |
 | `QC_BOB_USER`, `QC_BOB_PASSWORD` | `bob`, `QuantumBob!2026` | First player |
 | `QC_CAROL_USER`, `QC_CAROL_PASSWORD` | `carol`, `QuantumCarol!2026` | Second player |
+| `QC_DAVE_USER`, `QC_DAVE_PASSWORD` | `dave`, `QuantumDave!2026` | Fourth player of the four-seat variants |
 | `CI` | – | Set by CI: GitHub annotations, one retry, `test.only` forbidden |
 
 Use a **test server**: the helpers create users, reset passwords and can delete all Quantum Chess data.

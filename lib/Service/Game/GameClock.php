@@ -74,24 +74,31 @@ class GameClock {
 	 * the game is drawn instead. In a variant game, whose board the server does not keep, the waiting side wins.
 	 *
 	 * @param array<string, mixed> $state the game's engine state (empty for a variant game)
-	 * @return array{status: string, result: ?string, reason: string}
+	 * @return array{status: string, result: ?string, reason: string, variantResult?: string}
 	 */
 	public function resolveTimeout(Game $game, array $state): array {
 		$abandoned = $game->getDeadlineAt() === null;
 		$late = $game->getTurn();
 		// With the standard start both sides have made a move once two plies were played.
-		$bothMoved = $game->isVariant() ? VariantTurn::of($game)->bothHavePlayed() : $game->getPly() >= 2;
+		$bothMoved = match (true) {
+			$game->isMultiSeat() => VariantTurn::of($game)->everyonePlayed($game->getSeatCount()),
+			$game->isVariant() => VariantTurn::of($game)->bothHavePlayed(),
+			default => $game->getPly() >= 2,
+		};
 		if (!$bothMoved) {
 			return ['status' => Game::STATUS_ABORTED, 'result' => null, 'reason' => 'aborted_timeout'];
 		}
-		$waiting = Game::otherColor($late);
 		if ($game->isVariant()) {
+			$reason = $abandoned ? 'abandoned' : 'timeout';
+			$loss = VariantGameplayService::lossOf($game, VariantGameplayService::seatOfColor($game, $late), $reason);
 			return [
 				'status' => Game::STATUS_FINISHED,
-				'result' => $waiting === 'w' ? '1-0' : '0-1',
-				'reason' => $abandoned ? 'abandoned' : 'timeout',
+				'result' => $game->isMultiSeat() ? '*' : VariantGameplayService::classicResult($loss),
+				'reason' => $reason,
+				'variantResult' => $loss->code(),
 			];
 		}
+		$waiting = Game::otherColor($late);
 		$first = $waiting === 'w' ? 1 : 17;
 		$captured = is_array($state['captured'] ?? null) ? $state['captured'] : [];
 		$bareKing = true;

@@ -80,8 +80,8 @@ npx playwright install chromium          # once, or point QC_CHROMIUM at an inst
 QC_BASE_URL=http://localhost:8080 QC_NC_ROOT=/path/to/nextcloud make e2e
 ```
 
-`QC_NC_ROOT` is the server directory that contains `occ`. The global setup creates the test users `admin`, `bob`
-and `carol` and logs them in once. [`tests/e2e/README.md`](tests/e2e/README.md) lists every variable and explains how
+`QC_NC_ROOT` is the server directory that contains `occ`. The global setup creates the test users `admin`, `bob`,
+`carol` and `dave` and logs them in once. [`tests/e2e/README.md`](tests/e2e/README.md) lists every variable and explains how
 to write a spec.
 
 ## The two rules engines

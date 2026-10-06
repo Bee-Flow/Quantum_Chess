@@ -99,6 +99,7 @@ class GameLifecycle {
 				if ($outcome['status'] === Game::STATUS_ABORTED) {
 					$this->abort($game, $outcome['reason'], $at);
 				} else {
+					$game->setVariantResult($outcome['variantResult'] ?? null);
 					$this->finish($game, (string)$outcome['result'], $outcome['reason'], $at);
 				}
 				$this->addSystemLine($game, 'timeout', ['color' => $game->getTurn()]);
@@ -113,9 +114,14 @@ class GameLifecycle {
 
 	/**
 	 * Starts an accepted invitation or a joined open challenge: colours, the rated decision, the first deadline and
-	 * the start of the hash chain. A variant game also gets its seats: seat 0 plays as White, seat 1 as Black.
+	 * the start of the hash chain. A variant game also gets its seats: seat 0 plays as White, seat 1 as Black. A game
+	 * with more than two seats starts with the seats its players took (`startSeated`).
 	 */
 	public function start(Game $game, int $now): void {
+		if ($game->isMultiSeat()) {
+			$this->startSeated($game, $now);
+			return;
+		}
 		$creator = (string)$game->getCreatorUid();
 		$opponent = (string)$game->getOpponentUid();
 		$choice = $game->getColorChoice();
@@ -154,6 +160,43 @@ class GameLifecycle {
 		} else {
 			$game->setChain($this->engine->chainStart((int)$game->getId(), $white, $black, $game->getCreatedAt()));
 		}
+		$game->setStatus(Game::STATUS_ACTIVE);
+		$game->setStartedAt($now);
+		$game->setExpiresAt(null);
+	}
+
+	/**
+	 * Starts a game with more than two seats once every seat is taken: with the colour choice `r` the players are
+	 * drawn onto the seats at random (each order equally likely, up to the roll's 2^24 steps), seat 0 moves first, and
+	 * the variant chain starts from the players in seat order. Variant games are never rated.
+	 */
+	private function startSeated(Game $game, int $now): void {
+		$turn = VariantTurn::of($game);
+		$players = $turn->seats;
+		if ($game->getColorChoice() === 'r') {
+			for ($i = count($players) - 1; $i > 0; $i--) {
+				$j = $this->random->drawU() % ($i + 1);
+				[$players[$i], $players[$j]] = [$players[$j], $players[$i]];
+			}
+		}
+		$all = array_fill(0, count($players), true);
+		$game->setState(VariantTurn::start($players, $all)->json());
+		foreach ($this->seats->findByGame((int)$game->getId()) as $seat) {
+			$seat->setUid($players[$seat->getSeat()] ?? null);
+			$seat->setAcceptedAt($now);
+			$this->seats->update($seat);
+		}
+		$game->setRated(0);
+		$game->setTurn('0');
+		$game->setSeatToMove(0);
+		$game->setDeadlineAt($this->clock->deadlineFrom($game->getTimeControl(), $now));
+		$game->setChain(VariantChain::start(
+			(int)$game->getId(),
+			(string)$game->getVariant(),
+			$game->getVariantOptionValues(),
+			$players,
+			$game->getCreatedAt(),
+		));
 		$game->setStatus(Game::STATUS_ACTIVE);
 		$game->setStartedAt($now);
 		$game->setExpiresAt(null);

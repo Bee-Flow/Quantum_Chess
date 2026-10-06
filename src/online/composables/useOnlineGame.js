@@ -118,7 +118,14 @@ export function useOnlineGame(id, deps = {}) {
 	const myColor = computed(() => game.value?.myColor ?? null)
 	const participant = computed(() => isParticipant(game.value, me))
 	const status = computed(() => game.value?.status ?? null)
-	const names = computed(() => ({ w: seatName(game.value, 'w', viewer), b: seatName(game.value, 'b', viewer) }))
+	/** The display names by colour, and in a game with more than two seats also by seat number (`'0'` to `'3'`). */
+	const names = computed(() => {
+		const out = { w: seatName(game.value, 'w', viewer), b: seatName(game.value, 'b', viewer) }
+		for (const s of game.value?.seats ?? []) {
+			out[String(s.seat)] = s.player?.displayName ?? t('quantumchess', 'Open seat')
+		}
+		return out
+	})
 
 	/**
 	 * Names for a move event.

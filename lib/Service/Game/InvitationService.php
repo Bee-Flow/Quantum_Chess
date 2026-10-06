@@ -22,8 +22,6 @@ use OCP\IL10N;
  * Creating games: invitations to a user, open challenges that anyone allowed may join, their answers, and rematches.
  */
 class InvitationService {
-	/** The most seats a variant game may have for now: two (the four-seat variants come later). */
-	private const MAX_VARIANT_SEATS = 2;
 	/** The longest canonical JSON of a variant game's options. */
 	private const MAX_OPTIONS_LENGTH = 1000;
 	/** Seconds until a rematch offer expires (one day). */
@@ -40,6 +38,7 @@ class InvitationService {
 		private readonly NotificationService $notifications,
 		private readonly IL10N $l,
 		private readonly GameErrors $errors,
+		private readonly SeatedInvitations $seated,
 	) {
 	}
 
@@ -93,6 +92,9 @@ class InvitationService {
 		$message = $message === null
 			? null
 			: mb_substr(trim(preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $message) ?? ''), 0, 200);
+		if ($variant !== null && VariantCatalog::seatCount($variant) > 2) {
+			return $this->createSeated($uid, $request, $variant, $options, $color, $timeControl, $message);
+		}
 		$scopeGroup = $request['scopeGroup'] ?? null;
 		if ($scopeGroup !== null && (!is_string($scopeGroup) || $opponent !== null || $scopeGroup === '')) {
 			throw ApiException::invalidArgument('scopeGroup', $this->l->t('Invalid group'));
@@ -154,6 +156,9 @@ class InvitationService {
 	 */
 	public function accept(int $id, string $uid): Game {
 		$game = $this->lifecycle->load($id, $uid);
+		if ($game->isMultiSeat()) {
+			return $this->seated->accept($game, $uid);
+		}
 		if ($game->getOpponentUid() !== $uid || $game->getStatus() !== Game::STATUS_PENDING) {
 			throw $this->errors->invalidStatus();
 		}
@@ -176,6 +181,9 @@ class InvitationService {
 	 */
 	public function decline(int $id, string $uid): Game {
 		$game = $this->lifecycle->load($id, $uid);
+		if ($game->isMultiSeat()) {
+			return $this->seated->decline($game, $uid);
+		}
 		if ($game->getOpponentUid() !== $uid || $game->getStatus() !== Game::STATUS_PENDING) {
 			throw $this->errors->invalidStatus();
 		}
@@ -238,6 +246,9 @@ class InvitationService {
 		if ($game->getStatus() !== Game::STATUS_OPEN) {
 			throw $this->errors->notFound();
 		}
+		if ($game->isMultiSeat()) {
+			return $this->seated->join($game, $uid);
+		}
 		$this->policy->assertActiveLimit($uid);
 		try {
 			return $this->transaction->run(function () use ($game, $uid): Game {
@@ -280,7 +291,8 @@ class InvitationService {
 	private function requestRematch(int $id, string $uid): Game {
 		$old = $this->lifecycle->load($id, $uid);
 		$color = $old->colorOf($uid);
-		if ($color === null || !$old->hasEnded()) {
+		// a rematch of a game with more than two seats comes with ratings and rematches (online-variants.md, phase 5)
+		if ($color === null || !$old->hasEnded() || $old->isMultiSeat()) {
 			throw $this->errors->invalidStatus();
 		}
 		$rematchId = $old->getRematchId();
@@ -344,8 +356,7 @@ class InvitationService {
 		if ($variant === null || $variant === '') {
 			return [null, []];
 		}
-		if (!is_string($variant) || !VariantCatalog::isOnline($variant)
-			|| VariantCatalog::seatCount($variant) > self::MAX_VARIANT_SEATS) {
+		if (!is_string($variant) || !VariantCatalog::isOnline($variant)) {
 			throw ApiException::invalidArgument('variant', $this->l->t('This chess variant cannot be played online.'));
 		}
 		$options = $request['options'] ?? [];
@@ -380,5 +391,43 @@ class InvitationService {
 		$game->setVariantRules(VariantCatalog::RULES_VERSION);
 		$game->setSeatCount(VariantCatalog::seatCount($variant));
 		$game->setState(VariantTurn::start()->json());
+	}
+
+	/**
+	 * Creates a variant game with more than two seats: the request's `players` name a player per seat
+	 * (SeatedInvitations).
+	 * The colour choice `r` draws the seats at random when the game starts; any other keeps them as named.
+	 *
+	 * @param array<string, mixed> $request
+	 * @param array<string, string|int|bool> $options
+	 * @throws ApiException
+	 */
+	private function createSeated(
+		string $uid,
+		array $request,
+		string $variant,
+		array $options,
+		string $color,
+		string $timeControl,
+		?string $message,
+	): Game {
+		$seats = $this->seated->seatsOf($uid, $request['players'] ?? null, VariantCatalog::seatCount($variant));
+		$now = $this->clock->now();
+		$game = new Game();
+		$game->setCreatorUid($uid);
+		$game->setColorChoice($color === 'r' ? 'r' : 'w');
+		$this->setStart($game, $variant, $options);
+		$game->setPly(0);
+		$game->setTurn('0');
+		$game->setRev(1);
+		$game->setRatedRequested(0);
+		$game->setRated(0);
+		$game->setTimeControl($timeControl);
+		$days = in_array(null, $seats, true) ? $this->settings->openExpiryDays() : $this->settings->inviteExpiryDays();
+		$game->setExpiresAt($now + $days * GameClock::DAY);
+		$game->setInviteMessage($message === '' ? null : $message);
+		$game->setCreatedAt($now);
+		$game->setUpdatedAt($now);
+		return $this->seated->create($game, $uid, $seats);
 	}
 }

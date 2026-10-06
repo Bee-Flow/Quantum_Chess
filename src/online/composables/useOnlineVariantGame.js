@@ -62,7 +62,11 @@ export function useOnlineVariantGame(c, {
 	now = () => Date.now(),
 } = {}) {
 	const id = c.game.value.id
-	const mySeat = computed(() => ({ w: 0, b: 1 })[c.game.value?.myColor] ?? null)
+	/** The viewer's seat: White and Black are seats 0 and 1; a game with more than two seats names the seat itself. */
+	const mySeat = computed(() => {
+		const color = c.game.value?.myColor
+		return color === 'w' ? 0 : color === 'b' ? 1 : /^\d$/.test(color ?? '') ? Number(color) : null
+	})
 	/** What keeps this browser from playing along: another rules version, a changed chain or a dispute. */
 	const problem = ref(null)
 	/** The settlement this browser computed for every move it played, by ply. */
@@ -133,7 +137,9 @@ export function useOnlineVariantGame(c, {
 	 */
 	function checkChain(moves) {
 		const g = c.game.value
-		const seats = [g.white?.userId ?? null, g.black?.userId ?? null]
+		const seats = Array.isArray(g.seats)
+			? g.seats.map((s) => s.player?.userId ?? null)
+			: [g.white?.userId ?? null, g.black?.userId ?? null]
 		if (seats.includes(null) || !g.chain) {
 			return
 		}

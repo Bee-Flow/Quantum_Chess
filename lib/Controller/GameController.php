@@ -129,6 +129,7 @@ final class GameController extends ApiController {
 		mixed $scopeGroup = null,
 		mixed $variant = null,
 		mixed $options = null,
+		mixed $players = null,
 	): JSONResponse {
 		return $this->respond(function (string $uid) use (
 			$opponent,
@@ -139,6 +140,7 @@ final class GameController extends ApiController {
 			$scopeGroup,
 			$variant,
 			$options,
+			$players,
 		): array {
 			$game = $this->invitations->create($uid, [
 				'opponent' => $opponent === '' ? null : $opponent,
@@ -149,6 +151,7 @@ final class GameController extends ApiController {
 				'scopeGroup' => $scopeGroup === '' ? null : $scopeGroup,
 				'variant' => $variant,
 				'options' => $options,
+				'players' => $players,
 			]);
 			return ['game' => $this->serializer->live($game, $uid)];
 		}, Http::STATUS_CREATED);

@@ -34,6 +34,7 @@ use OCA\QuantumChess\Service\Game\GameRepository;
 use OCA\QuantumChess\Service\Game\GameTransaction;
 use OCA\QuantumChess\Service\Game\InvitationService;
 use OCA\QuantumChess\Service\Game\InvitePolicy;
+use OCA\QuantumChess\Service\Game\SeatedInvitations;
 use OCA\QuantumChess\Service\Game\VariantGameplayService;
 use OCA\QuantumChess\Service\Player\RatingService;
 use OCA\QuantumChess\Service\Settings\AppSettings;
@@ -154,6 +155,14 @@ trait GameServiceFixture {
 		$this->seatMapper->method('insert')->willReturnCallback(function (Seat $seat): Seat {
 			$this->log[] = 'insert seat #' . $seat->getGameId() . ' ' . $seat->getSeat() . ' ' . $seat->getUid();
 			$this->seats[] = $seat;
+			return $seat;
+		});
+		$this->seatMapper->method('findByGame')->willReturnCallback(fn (int $id) => array_values(array_filter(
+			$this->seats,
+			fn (Seat $seat) => $seat->getGameId() === $id,
+		)));
+		$this->seatMapper->method('update')->willReturnCallback(function (Seat $seat): Seat {
+			$this->log[] = 'update seat #' . $seat->getGameId() . ' ' . $seat->getSeat() . ' ' . $seat->getUid();
 			return $seat;
 		});
 		$this->seatMapper->method('clearUser')->willReturnCallback(function (int $id, string $uid): void {
@@ -353,6 +362,18 @@ trait GameServiceFixture {
 			$this->notifications,
 			$this->l10n(),
 			$p['errors'],
+			new SeatedInvitations(
+				$p['repository'],
+				$p['lifecycle'],
+				$p['transaction'],
+				$p['policy'],
+				$p['settings'],
+				$p['clock'],
+				$this->seatMapper,
+				$this->notifications,
+				$this->l10n(),
+				$p['errors'],
+			),
 		);
 	}
 

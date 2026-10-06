@@ -36,12 +36,13 @@ export function phraseText(key) {
  * The words of a system line.
  *
  * @param {ChatDTO} message the message of kind system
- * @param {{w: string, b: string}} names display names by colour
+ * @param {Record<string, string>} names display names by colour (and by seat number in a game of four)
  * @return {string}
  */
 export function systemText(message, names) {
 	const color = message.params?.color
-	const name = color === 'w' || color === 'b' ? names[color] : ''
+	// a colour, or in a game with more than two seats a seat number
+	const name = typeof color === 'string' && names[color] ? names[color] : ''
 	switch (message.message) {
 		case 'draw_offered': return t('quantumchess', '{name} offered a draw', { name })
 		case 'draw_declined': return t('quantumchess', 'The draw offer was declined')

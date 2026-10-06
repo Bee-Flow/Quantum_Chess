@@ -76,7 +76,7 @@ class GameQueryService {
 			$status = $game->getStatus();
 			if ($status === Game::STATUS_ACTIVE) {
 				$groups[$game->colorOf($uid) === $game->getTurn() ? 'yourTurn' : 'waiting'][] = $game;
-			} elseif ($status === Game::STATUS_PENDING && $game->getOpponentUid() === $uid) {
+			} elseif ($game->isInviteeOf($uid)) {
 				$groups['invitations'][] = $game;
 			} elseif ($game->isAwaitingOpponent() && $game->getCreatorUid() === $uid) {
 				$groups['outgoing'][] = $game;
@@ -122,12 +122,12 @@ class GameQueryService {
 	public function countActionNeeded(string $uid): array {
 		$counts = ['yourTurn' => 0, 'invitations' => 0];
 		$now = $this->clock->now();
-		foreach ($this->games->findForUser($uid, [Game::STATUS_PENDING, Game::STATUS_ACTIVE]) as $game) {
+		$statuses = [Game::STATUS_PENDING, Game::STATUS_OPEN, Game::STATUS_ACTIVE];
+		foreach ($this->games->findForUser($uid, $statuses) as $game) {
 			if ($game->getStatus() === Game::STATUS_ACTIVE && $game->colorOf($uid) === $game->getTurn()
 				&& ($this->clock->dueAt($game) ?? PHP_INT_MAX) > $now) {
 				$counts['yourTurn']++;
-			} elseif ($game->getStatus() === Game::STATUS_PENDING && $game->getOpponentUid() === $uid
-				&& ($game->getExpiresAt() ?? PHP_INT_MAX) > $now) {
+			} elseif ($game->isInviteeOf($uid) && ($game->getExpiresAt() ?? PHP_INT_MAX) > $now) {
 				$counts['invitations']++;
 			}
 		}

@@ -206,6 +206,35 @@ describe('useOnlineVariantGame', () => {
 		expect(online.problem.value).toBe('altered')
 	})
 
+	it('plays a game of four from the seat of the viewer', async () => {
+		const game = FIXTURE.replays.find((r) => r.variant === 'fourplayer' && r.options.mode === 'ffa')
+		const uids = ['alice', 'bob', 'carol', 'dave']
+		let chain = vchainStart(9, 'fourplayer', { mode: 'ffa' }, uids, 1000)
+		const moves = game.moves.slice(0, 6).map((m) => {
+			chain = vchainNext(chain, m.ply, m.seat, m.code, m.u)
+			return { ...m, chain }
+		})
+		const c = controller(moves.slice(0, 5), {
+			id: 9,
+			variant: 'fourplayer',
+			variantOptions: { mode: 'ffa' },
+			myColor: '2',
+			turn: '1',
+			seats: uids.map((userId, seat) => ({ seat, player: { userId }, accepted: true, team: null })),
+		})
+		const api = fakeApi()
+		const online = useOnlineVariantGame(c, { api })
+		await online.start()
+		expect(online.mySeat.value).toBe(2)
+		expect(online.problem.value).toBeNull()
+		expect(online.game.record.value.players.map((p) => p.kind)).toEqual(['remote', 'remote', 'human', 'remote'])
+		expect(online.game.state.value.turn).toBe(moves[5].seat)
+		c.variantMoves.value = moves
+		await nextTick()
+		expect(online.game.state.value.ply).toBe(6)
+		expect(online.game.isHumanTurn.value).toBe(online.game.state.value.turn === 2)
+	})
+
 	it('stops the board when the game ends on the server', async () => {
 		const c = controller()
 		const online = useOnlineVariantGame(c, { api: fakeApi() })

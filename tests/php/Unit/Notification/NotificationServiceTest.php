@@ -13,6 +13,7 @@ use OCA\QuantumChess\Db\ChatMessage;
 use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\Move;
 use OCA\QuantumChess\Notification\NotificationService;
+use OCA\QuantumChess\Service\Game\VariantTurn;
 use OCA\QuantumChess\Service\Settings\MultiplayerSettingsService;
 use OCA\QuantumChess\Tests\Support\FakeNotification;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -144,5 +145,54 @@ final class NotificationServiceTest extends TestCase {
 		$this->assertCount(1, $notify);
 		$this->assertSame('bob:game_over', $notify[0][1]);
 		$this->assertSame('win', $notify[0][2]['outcome']);
+	}
+
+	private function seatedGame(): Game {
+		$game = new Game();
+		$game->setId(43);
+		$game->setCreatorUid('alice');
+		$game->setVariant('fourplayer');
+		$game->setVariantOptions('{"mode":"teams"}');
+		$game->setSeatCount(4);
+		$game->setStatus(Game::STATUS_ACTIVE);
+		$game->setStartedAt(1790000000);
+		$game->setState(VariantTurn::start(['alice', 'bob', 'carol', 'dave'], [true, true, true, true])
+			->withMuted(3, true)->json());
+		$game->setTurn('1');
+		return $game;
+	}
+
+	public function testSeatedGamesNotifyEveryOtherPlayer(): void {
+		[$service, $log] = $this->service();
+		$game = $this->seatedGame();
+		$message = new ChatMessage();
+		$message->setUid('alice');
+		$message->setKind(ChatMessage::KIND_TEXT);
+		$message->setMessage('Hi all');
+		$service->chat($game, $message);
+		$notified = fn () => array_values(array_map(
+			fn ($e) => $e[1],
+			array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify'),
+		));
+		$this->assertSame(['bob:chat', 'carol:chat'], $notified(), 'dave muted the chat');
+
+		$log->exchangeArray([]);
+		$game->setDrawOffer('0');
+		$service->drawOffered($game);
+		$this->assertSame(['bob:draw_offer', 'carol:draw_offer', 'dave:draw_offer'], $notified());
+
+		$log->exchangeArray([]);
+		$game->setStatus(Game::STATUS_FINISHED);
+		$game->setVariantResult('win:1,3/resign');
+		$service->gameOver($game, 'alice');
+		$outcomes = array_map(
+			fn ($e) => [$e[1], $e[2]['outcome']],
+			array_values(array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify')),
+		);
+		$this->assertSame([
+			['bob:game_over', 'win'],
+			['carol:game_over', 'loss'],
+			['dave:game_over', 'win'],
+		], $outcomes, 'alice resigned: no notification for her');
 	}
 }

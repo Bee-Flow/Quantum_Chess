@@ -133,6 +133,11 @@ const me = computed(() => {
 })
 const opponentName = computed(() => {
 	const color = c.myColor.value
+	const seats = c.game?.value?.seats
+	if (Array.isArray(seats)) {
+		// a game with more than two seats: every other player
+		return seats.filter((s) => String(s.seat) !== color && s.player).map((s) => s.player.displayName).join(', ')
+	}
 	return color ? c.names.value[otherColor(color)] : t('quantumchess', 'your opponent')
 })
 

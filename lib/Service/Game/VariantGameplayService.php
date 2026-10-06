@@ -28,7 +28,8 @@ use OCP\IL10N;
  * replays every move and checks every settlement; one that does not agree disputes the game, which annuls it.
  *
  * Two-seat games keep the colours of classic games: seat 0 plays as White, seat 1 as Black. Resigning, draw offers,
- * time-outs, notifications and the lobby therefore work as for classic games.
+ * time-outs, notifications and the lobby therefore work as for classic games. A game with more than two seats names
+ * its sides by seat number (`'0'` to `'3'`, see Game) and keeps its result as a variant result code only.
  */
 class VariantGameplayService {
 	/** The longest thinking time a client may report for a move (30 days, in milliseconds). */
@@ -49,14 +50,54 @@ class VariantGameplayService {
 	) {
 	}
 
-	/** The colour that seat `$seat` of a two-seat game plays as. */
-	public static function colorOfSeat(int $seat): string {
+	/** The colour that seat `$seat` plays as: White or Black, or with more than two seats the seat number. */
+	public static function colorOfSeat(Game $game, int $seat): string {
+		if ($game->isMultiSeat()) {
+			return (string)$seat;
+		}
 		return $seat === 0 ? 'w' : 'b';
 	}
 
-	/** The seat that plays colour `$color` in a two-seat game. */
-	public static function seatOfColor(string $color): int {
+	/** The seat that plays colour `$color`. */
+	public static function seatOfColor(Game $game, string $color): int {
+		if ($game->isMultiSeat()) {
+			return (int)$color;
+		}
 		return $color === 'w' ? 0 : 1;
+	}
+
+	/**
+	 * The result when seat `$seat` leaves the game (it resigns, its time runs out, its player's account is deleted):
+	 * in a team game the other team wins, otherwise every other seat.
+	 */
+	public static function lossOf(Game $game, int $seat, string $reason): VariantResult {
+		$teams = VariantCatalog::teams((string)$game->getVariant(), $game->getVariantOptionValues()) ?? [];
+		foreach ($teams as $team) {
+			if (!in_array($seat, $team, true)) {
+				continue;
+			}
+			$others = array_values(array_filter($teams, fn (array $t) => $t !== $team));
+			return VariantResult::of(array_merge(...$others), $reason);
+		}
+		$all = range(0, max(0, $game->getSeatCount() - 1));
+		return VariantResult::of(array_values(array_diff($all, [$seat])), $reason);
+	}
+
+	/**
+	 * Finishes a variant game with a result: a two-seat game also writes it as a classic result, a game with more
+	 * seats only as its variant result code (`result` is `*` there). The caller saves the game.
+	 *
+	 * @param string $reason the reason as classic games name it (`resignation`, `timeout`), else the variant's
+	 */
+	public static function finishWith(
+		Game $game,
+		VariantResult $result,
+		string $reason,
+		int $now,
+		GameLifecycle $lifecycle,
+	): void {
+		$game->setVariantResult($result->code());
+		$lifecycle->finish($game, $game->isMultiSeat() ? '*' : self::classicResult($result), $reason, $now);
 	}
 
 	/**
@@ -91,7 +132,7 @@ class VariantGameplayService {
 		if (!preg_match(self::CODE_PATTERN, $code)) {
 			throw ApiException::invalidArgument('code', $this->l->t('This move is not possible.'));
 		}
-		$seat = self::seatOfColor($color);
+		$seat = self::seatOfColor($game, $color);
 		$u = $this->random->drawU();
 		$chain = VariantChain::next((string)$game->getChain(), $ply, $seat, $code, $u);
 		$now = $this->clock->now();
@@ -189,25 +230,25 @@ class VariantGameplayService {
 			$move->setSettledAt($now);
 			$this->moves->update($move);
 
-			$mover = self::colorOfSeat($move->getSeat());
+			$mover = self::colorOfSeat($game, $move->getSeat());
 			$passed = $nextSeat !== $move->getSeat();
 			$turn = $turn->withPending(null);
 			if ($passed) {
 				$turn = $turn->withTurnPassed();
-				$game->setTurn(self::colorOfSeat($nextSeat));
+				$game->setTurn(self::colorOfSeat($game, $nextSeat));
 				$game->setDeadlineAt($this->clock->deadlineFrom($game->getTimeControl(), $now));
 			}
 			$game->setSeatToMove($nextSeat);
 			$game->setState($turn->json());
 			$declined = false;
 			$offer = $game->getDrawOffer();
-			if ($offer !== null && $offer !== $mover) {
+			// with more than two seats an offer stands until every seat answered it
+			if ($offer !== null && $offer !== $mover && !$game->isMultiSeat()) {
 				GameplayService::declineDrawOffer($game, $offer, $move->getPly(), $this->lifecycle);
 				$declined = true;
 			}
 			if ($parsed !== null) {
-				$game->setVariantResult($result);
-				$this->lifecycle->finish($game, self::classicResult($parsed), $parsed->reason, $now);
+				self::finishWith($game, $parsed, $parsed->reason, $now, $this->lifecycle);
 			}
 			$this->repository->save($game);
 			$this->transaction->afterCommit(function () use ($game, $move, $passed, $declined): void {

@@ -147,8 +147,11 @@ Used in lists: the lobby, the history, the answers to invitations.
 - A **chess variant game** ([`online-variants.md`](online-variants.md)) adds `variant` (the variant's id),
   `variantOptions` (its option values), `variantRules` (the version of the variant rules it is played with) and
   `variantResult` (the settled result code, such as `win:0/exploded`). Seat 0 plays as `white`, seat 1 as `black`, and
-  `result` is written as for a classic game. Its `preview` is always `[]`: the server keeps no board. Classic games
-  have none of these fields.
+  `result` is written as for a classic game. Its `preview` is always `[]`: the server keeps no board. It also carries
+  `seatCount` and `invited` (the viewer is invited and has not answered). Classic games have none of these fields.
+- A game with **more than two seats** (Four-player chess, Bughouse) adds `seats`: per seat `{seat, player: UserRef|null,
+  accepted, team}`. Its colours are seat numbers: `myColor` and `turn` are `"0"` to `"3"`; `white`, `black` and
+  `opponent` are `null`; `result` is `*` once it ended, and `variantResult` says who won.
 
 ### GameLive
 
@@ -175,8 +178,9 @@ The game screen's view of a game: a GameSummary plus
 - `ratings` is `null` per side for a player without a rating. `ratingBefore` holds the ratings before a rated game
   was scored.
 - `chatOpen` is false when chat is disabled, for viewers who do not play, and some days after the game ended.
-- A chess variant game has `state: null`, and adds `seatToMove` and `pendingPly` (the ply of the move that waits for
-  its settlement, or `null`). `canAbort` holds until both players have passed the turn once.
+- A chess variant game has `state: null`, and adds `seatToMove`, `pendingPly` (the ply of the move that waits for its
+  settlement, or `null`) and `drawVotes` (the seats that agree to the open draw offer, in a game with more than two
+  seats). `canAbort` holds until every player has passed the turn once.
 
 ### GameFull
 
@@ -293,7 +297,13 @@ Notes:
   when `rev` changes. `poll` returns only the moves after `ply` and the chat after `chat`.
 - **Chess variants** ([`online-variants.md`](online-variants.md)). `POST /api/games` takes `variant` and `options`
   (an object of strings, integers and booleans) for a two-player variant without hidden information; anything else is
-  `400 invalid_argument`, and a variant game is never rated. Its moves go to the `/v/` routes, and
+  `400 invalid_argument`, and a variant game is never rated. A variant with more than two seats takes `players`
+  instead of `opponent`: one entry per seat, a user id or `null` for an open seat, with the creator in exactly one
+  seat; `color: "r"` draws the seats at random when the game starts. Each invited player accepts or declines on
+  their own (one decline declines the game), `join` takes the first open seat, and the game starts once every seat is
+  taken. In such a game `resign` and a time-out end the game for everyone: the other team wins, or in a free-for-all
+  every other seat; a draw needs every seat (`draw` with `offer` or `accept` adds the seat's vote, `decline` closes the
+  offer, there is no cool-down); `rematch` answers `409 invalid_status`. Its moves go to the `/v/` routes, and
   `POST /api/games/{id}/moves` answers `409 invalid_status`. `v/moves` stores the move and draws its roll after the
   move arrived; the turn stays with the mover (`pendingPly`) until any player settles the move with `settle`, which
   passes the turn to `nextSeat` and, with a `result`, ends the game. The same settlement again changes nothing; a

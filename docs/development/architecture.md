@@ -558,8 +558,8 @@ variant and checks the invariants of the quantum layer after every move.
 
 #### 5.6.6 Online variant games
 
-The plan and its later phases are in [`online-variants.md`](online-variants.md). The two-player variants without
-hidden information can be played online. The server does not know their rules; it draws the dice and keeps the order
+The plan and its later phases are in [`online-variants.md`](online-variants.md). The variants without hidden
+information can be played online, Four-player chess and Bughouse with four seats. The server does not know their rules; it draws the dice and keeps the order
 of play, and the browsers rule:
 
 - **Server.** A variant game is a row of `qchess_games` with `variant`, its options and its rules version
@@ -569,6 +569,15 @@ of play, and the browsers rule:
   settlement a browser sends (the seat to move next, the result code, the position hash), passes the turn and ends
   the game on a result; a settlement that differs from an earlier one, or a dispute, annuls the game. Variant games
   are never rated. Moves are chained with `VariantChain`, not with the classic chain.
+- **Four seats.** A game with more than two seats (`Game::isMultiSeat`) names its sides by seat number: `colorOf` and
+  `turn` are `'0'` to `'3'`, so turns, deadlines and notifications work unchanged. Its players, who has accepted, draw
+  votes and chat mutes are in its record (`VariantTurn`, read by `Game::seatUids`), and in a `qchess_seats` row per
+  seat from the start, which the lobby queries (`GameMapper::userExpr`) also search. `SeatedInvitations` handles its
+  invitations: a player or an open seat per seat, an answer per invited player, the start once every seat is taken
+  (`GameLifecycle::startSeated`, the seats drawn at random with the colour choice `r`). Leaving the game (resigning,
+  a time-out, a deleted account) ends it for everyone (`VariantGameplayService::lossOf`), as resigning does in a
+  local game; a draw needs every seat. In the web app `SeatPicker` chooses the players, and the online panel, the
+  invitation screen and the chat name every seat.
 - **Web app.** `useOnlineGame` loads and polls the game as usual but keeps the moves of a variant game as they came
   (`variantMoves`). Once the game runs, `OnlineGameHost` shows its `variant` slot, filled by
   `views/OnlineVariantGame.vue`: `VariantGameView` with the board of `useOnlineVariantGame`, which drives

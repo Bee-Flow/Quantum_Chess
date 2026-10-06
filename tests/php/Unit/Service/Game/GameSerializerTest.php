@@ -269,6 +269,36 @@ final class GameSerializerTest extends TestCase {
 		$this->assertNull($this->serializer()->live(GameBuilder::active(['state' => 'not json']), 'alice')['state']);
 	}
 
+	public function testSeatedGames(): void {
+		$game = GameBuilder::active([
+			'variant' => 'bughouse',
+			'variantOptions' => '{}',
+			'variantRules' => 1,
+			'seatCount' => 4,
+			'whiteUid' => null,
+			'blackUid' => null,
+			'opponentUid' => null,
+			'turn' => '2',
+			'seatToMove' => 2,
+			'state' => '{"v":1,"turns":2,"pending":null,"seats":["alice","bob","carol",null],'
+				. '"accepted":[true,true,true,false],"drawVotes":[],"muted":[0]}',
+		]);
+		$live = $this->serializer()->live($game, 'alice');
+		$this->assertSame(
+			['0', false, true, 4],
+			[$live['myColor'], $live['yourTurn'], $live['muted'], $live['seatCount']],
+		);
+		$this->assertSame(
+			[[0, 'alice', true, 0], [1, 'bob', true, 1], [2, 'carol', true, 0], [3, null, false, 1]],
+			array_map(
+				fn ($s) => [$s['seat'], $s['player']['userId'] ?? null, $s['accepted'], $s['team']],
+				$live['seats'],
+			),
+		);
+		$this->assertFalse($live['canRematch']);
+		$this->assertTrue($this->serializer()->live($game, 'carol')['yourTurn']);
+	}
+
 	public function testVariantGames(): void {
 		$game = GameBuilder::active([
 			'variant' => 'chess960',

@@ -164,8 +164,11 @@ class Notifier implements INotifier, IPreloadableNotifier {
 				$parts[] = match ($params['color'] ?? 'r') {
 					'w' => $l->t('You play White'),
 					'b' => $l->t('You play Black'),
+					// a game with more than two seats whose seats the creator chose: the game shows them
+					'x' => null,
 					default => $l->t('Random colours'),
 				};
+				$parts = array_values(array_filter($parts, fn (?string $part) => $part !== null));
 				$message = implode(' · ', $parts);
 				if (is_string($params['message'] ?? null) && $params['message'] !== '') {
 					$message .= ' · “' . $params['message'] . '”';
