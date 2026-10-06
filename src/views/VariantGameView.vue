@@ -478,7 +478,7 @@
 					<NcButton v-if="V.flipBoard !== false" @click="game.flipped.value = !game.flipped.value">
 						{{ t('quantumchess', 'Flip board') }}
 					</NcButton>
-					<NcButton v-if="!state.result && !game.handover.value" @click="game.resign">
+					<NcButton v-if="!state.result && !game.handover.value && !game.frozen.value" @click="game.resign">
 						{{ t('quantumchess', 'Resign') }}
 					</NcButton>
 					<NcButton :to="{ name: controller ? 'home' : 'variants' }">

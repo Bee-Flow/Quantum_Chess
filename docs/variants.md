@@ -11,7 +11,13 @@ can be in two places at once until something finds out where they really are.
 
 You find them under **Chess variants** in the navigation or on the home page. Each one can be played against the
 computer (Easy, Normal or Hard) or as pass & play on one device; in the four-player games the computer plays every seat
-but yours. Games are stored on your device; online play and ratings stay with classic Quantum Chess.
+but yours. These games are stored on your device.
+
+**Online.** The two-player variants can also be played online against someone on your Nextcloud: choose *Online* as
+the opponent and invite a player or open a challenge, as in classic Quantum Chess. The server draws the dice of every
+move, and the devices of both players check every move against the rules; if they ever disagree, the game is
+annulled. Online variant games are not rated. Four-player chess, Bughouse, Kriegspiel and Fog of war cannot be played
+online yet.
 
 The large boards (3D, 4D and 5D chess, Bughouse and Four-player chess) can be zoomed with the buttons above the board,
 Ctrl + wheel or a two-finger pinch, and moved by dragging with the mouse or one finger. On a touch screen 4D chess and

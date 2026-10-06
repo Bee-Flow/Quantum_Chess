@@ -44,7 +44,8 @@ Some principles shape the whole design:
 - **Two engines, one set of rules.** Both engines implement [`docs/engine-rules.md`](../engine-rules.md). Shared
   fixtures prove that they produce the same bytes (section 5.2).
 - **Heavy computation stays in the browser.** Search, analysis and review run in a Web Worker. The server never
-  runs the computer player, and the chess variants never reach the server at all.
+  runs the computer player, and it never runs the rules of the chess variants: in an online variant game it only
+  draws the dice and stores the moves, which the browsers check (section 5.6.6).
 - **Nextcloud-native.** The app uses the Nextcloud app framework (OCP APIs only), `@nextcloud/vue` components,
   Nextcloud notifications, the dashboard, user and app configuration, and Nextcloud Assistant (TaskProcessing) for
   LLM features.
@@ -406,8 +407,8 @@ Version 2 adds twenty chess variants, from 3D, 4D and 5D chess to shogi and xian
 play for two or four players, or against a computer player that takes every seat but the human's. They do not use
 the rules engine of section 5.1: that engine is specified byte for byte for classic Quantum Chess and mirrored in PHP
 for online games. The variants share one generic quantum layer instead, which is JavaScript only and has no server
-side: no variant game, move or result is sent to the server. The player-facing rules are in
-[`docs/variants.md`](../variants.md).
+side. Online variant games (section 5.6.6) therefore work differently from classic ones: the server draws the dice
+and the browsers rule. The player-facing rules are in [`docs/variants.md`](../variants.md).
 
 #### 5.6.1 Modules
 
@@ -554,6 +555,31 @@ until it fits; a record that still does not fit is not saved, and the game scree
 The variant tests are in `tests/js/variants/`: one spec per variant with the cases of its rules, the core, the
 computer player on a work clock, the board and the phone layouts, and `fuzz.spec.js`, which plays random games in every
 variant and checks the invariants of the quantum layer after every move.
+
+#### 5.6.6 Online variant games
+
+The plan and its later phases are in [`online-variants.md`](online-variants.md). The two-player variants without
+hidden information can be played online. The server does not know their rules; it draws the dice and keeps the order
+of play, and the browsers rule:
+
+- **Server.** A variant game is a row of `qchess_games` with `variant`, its options and its rules version
+  (`VariantCatalog::RULES_VERSION`), seats in `qchess_seats` and moves in `qchess_vmoves`. Seat 0 plays as White and
+  seat 1 as Black, so invitations, resignation, draw offers, time-outs, notifications, the lobby and the dashboard
+  work as for classic games. `VariantGameplayService` stores a move and draws its roll after it arrived, records the
+  settlement a browser sends (the seat to move next, the result code, the position hash), passes the turn and ends
+  the game on a result; a settlement that differs from an earlier one, or a dispute, annuls the game. Variant games
+  are never rated. Moves are chained with `VariantChain`, not with the classic chain.
+- **Web app.** `useOnlineGame` loads and polls the game as usual but keeps the moves of a variant game as they came
+  (`variantMoves`). Once the game runs, `OnlineGameHost` shows its `variant` slot, filled by
+  `views/OnlineVariantGame.vue`: `VariantGameView` with the board of `useOnlineVariantGame`, which drives
+  `useVariantGame` through an online host
+  (moves sent first and played with the server's roll, no undo), replays and checks every move with `replayOnline`
+  (`src/variants/online.js`), settles the moves it plays, disputes one that does not agree, checks the variant chain,
+  and does not replay a game of another rules version. `OnlineVariantPanel` shows the players, the state of the game,
+  draw offers and the chat.
+- **Rules versions.** `ONLINE_RULES_VERSION` (`src/variants/online.js`) and `VariantCatalog::RULES_VERSION` go up
+  together with every change of a variant's rules; `tests/fixtures/online-variants.json` holds recorded games that
+  change when a rule does.
 
 ## 6. Data flow
 

@@ -6,8 +6,8 @@
 # Online play for the chess variants
 
 **Status:** in progress, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1
-(foundations) shipped in 2.0.1: the schema, entities, seat helpers, catalogue, result codes, variant chain and replay
-exist with their tests, and nothing uses them yet.
+(foundations) shipped in 2.0.1. Phase 2 is done: the two-player variants without hidden information can be played
+online, as section 5.6.6 of [`architecture.md`](architecture.md) describes. Phases 3 to 5 are open.
 
 **Goal: all twenty variants online, with nothing to install but the app.** An administrator installs Quantum Chess
 from the App Store and nothing else: no external app, no container, no Node.js on the server. Everything below is
