@@ -128,7 +128,8 @@ test('moves are rolled by the server and settled by the browser', async () => {
 
 	const poll = await api('bob', 'GET', `api/games/${game.id}/poll?rev=0&ply=2`)
 	expect(poll.moves.map((m) => m.code), 'a poll returns the moves from the asked ply').toEqual(['g1-f3'])
-	const full = (await api('bob', 'GET', `api/games/${game.id}`)).game
+	// read as carol: opening the game marks it seen, which would clear bob's turn notification (tested below)
+	const full = (await api('carol', 'GET', `api/games/${game.id}`)).game
 	expect(full.moves.map((m) => [m.ply, m.seat, m.code, m.nextSeat])).toEqual([
 		[0, 0, 'e2-e4', 1],
 		[1, 1, 'e7-e5', 0],
