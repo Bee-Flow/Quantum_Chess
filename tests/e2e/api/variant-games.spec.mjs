@@ -91,12 +91,11 @@ test('an invitation to a variant game starts it with seats and its own chain', a
 		variant: 'atomic',
 		options: {},
 		color: 'w',
-		rated: true,
 		timeControl: 'corr:3d',
 	})).game
 	expect(
 		[game.status, game.variant, game.variantRules, game.ratedRequested],
-		'a pending, unrated Atomic invitation',
+		'a pending Atomic invitation, unrated unless asked for',
 	).toEqual(['pending', 'atomic', ONLINE_RULES_VERSION, false])
 	const accepted = (await api('bob', 'POST', `api/games/${game.id}/accept`)).game
 	expect([accepted.status, accepted.white.userId, accepted.seatToMove]).toEqual(['active', uid('carol'), 0])

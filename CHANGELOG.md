@@ -22,7 +22,7 @@ The chess variants go online.
   Crazyhouse, Antichess, King of the Hill, Three-check, Horde, Hexagonal chess, Capablanca chess, Shogi, Xiangqi and
   Makruk. Choose *Online* as the opponent in a variant's New game dialog and invite someone or open a challenge. The
   server draws the dice of every move; both players' devices check every move against the rules, and if they ever
-  disagree, the game is annulled. Online variant games are not rated.
+  disagree, the game is annulled.
 - **Four-player chess and Bughouse online**: choose a player for every seat, or leave seats open for anyone to join,
   optionally with random seats. Each invited player answers on their own, and the game starts when every seat is taken.
   Resigning or running out of time ends the game for everyone (the other team wins, or the others share the win); a
@@ -31,6 +31,11 @@ The chess variants go online.
   sends each player only what they may see. In Kriegspiel a move the umpire refuses uses no turn and is not told to
   your opponent; in Fog of war you see the odds of a move before you confirm it. The whole board and every move are
   shown when the game ends. With this, all twenty chess variants can be played online.
+- **A rating for every two-player variant**: rated variant games count in a rating of that variant, shown on the
+  Statistics page with the leaderboard of each variant. Kriegspiel and Fog of war are rated by default; the other
+  variants when you ask for it and your opponent accepts. Games of four are not rated.
+- **Rematches of variant games**: the Rematch button after an online variant game; in a game of four every player
+  moves on by one seat.
 
 ## [2.0.1] - 2026-10-06
 

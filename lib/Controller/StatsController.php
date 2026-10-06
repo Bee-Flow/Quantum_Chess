@@ -57,8 +57,8 @@ final class StatsController extends ApiController {
 	}
 
 	#[NoAdminRequired]
-	public function leaderboard(?string $group = null): JSONResponse {
-		return $this->respond(fn (string $uid) => $this->stats->leaderboard($uid, $group));
+	public function leaderboard(?string $group = null, ?string $variant = null): JSONResponse {
+		return $this->respond(fn (string $uid) => $this->stats->leaderboard($uid, $group, $variant));
 	}
 
 	/**

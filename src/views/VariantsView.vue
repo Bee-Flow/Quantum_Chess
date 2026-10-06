@@ -14,8 +14,9 @@
   Online (a variant without hidden information, when online games are available to the user): an invited opponent or
   an open challenge and the side (or random), or with more than two seats a player or an open seat per seat
   (SeatPicker) and whether the seats are drawn at random; then the time per move and the variant's options. The game is
-  created on the server and opens in the online game screen (route /game/:id) once it starts. Online variant games are
-  never rated.
+  created on the server and opens in the online game screen (route /game/:id) once it starts. A two-player game may be
+  rated (in the variant's own rating), on by default for Kriegspiel and Fog of war, which the server rules; a rated
+  game draws the sides at random. Games with more than two seats are never rated.
 -->
 <template>
 	<div class="qc-variants">
@@ -130,8 +131,8 @@
 						v-model:open="setup.online.open"
 						v-model:opponent="setup.online.opponent"
 						v-model:timeControl="setup.online.timeControl"
-						unrated />
-					<fieldset>
+						v-model:rated="setup.online.rated" />
+					<fieldset :disabled="setup.online.rated">
 						<legend>{{ t('quantumchess', 'You play') }}</legend>
 						<NcCheckboxRadioSwitch
 							v-for="(s, i) in setup.variant.sides"
@@ -329,7 +330,15 @@ async function openSetup(entry) {
 		options: {},
 		autoFlip: false,
 		notSaved: false,
-		online: { open: false, opponent: null, timeControl: 'corr:3d', color: 'r', players: [], randomSeats: false },
+		online: {
+			open: false,
+			opponent: null,
+			timeControl: 'corr:3d',
+			color: 'r',
+			players: [],
+			randomSeats: false,
+			rated: Boolean(features.rated) && isRefereed(entry.id),
+		},
 		busy: false,
 		error: null,
 	}
@@ -420,8 +429,8 @@ async function startOnline(V, options) {
 				}
 			: {
 					opponent: s.online.open ? null : s.online.opponent.id,
-					color: s.online.color,
-					rated: false,
+					color: s.online.rated ? 'r' : s.online.color,
+					rated: s.online.rated,
 					timeControl: s.online.timeControl,
 					variant: V.id,
 					options,

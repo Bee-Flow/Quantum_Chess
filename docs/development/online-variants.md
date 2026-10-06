@@ -5,10 +5,10 @@
 
 # Online play for the chess variants
 
-**Status:** in progress, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1
-(foundations) shipped in 2.0.1. Phases 2 to 4 are done: every variant can be played online, Four-player chess and
-Bughouse with four seats, and Kriegspiel and Fog of war ruled by the server, as section 5.6.6 of
-[`architecture.md`](architecture.md) describes. Phase 5 is open.
+**Status:** done, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1
+(foundations) shipped in 2.0.1. Phases 2 to 5 are done: every variant can be played online, Four-player chess and
+Bughouse with four seats, Kriegspiel and Fog of war ruled by the server, with a rating per variant and rematches of
+every game, as section 5.6.6 of [`architecture.md`](architecture.md) describes.
 
 One decision of phase 3 differs from the first plan: a seat that resigns or runs out of time ends the game for
 everyone (the other team wins, or in a free-for-all every other seat), as resigning does in a local game, instead of
@@ -64,7 +64,8 @@ checks the rules.
    the result must match. On a mismatch it opens a dispute, which ends the game as **annulled**: unrated, with a
    system line in the chat and a mark that administrators can see.
 
-Cheating with the rules is therefore detected rather than prevented, so these games are unrated by default.
+Cheating with the rules is therefore detected rather than prevented, so these games are unrated by default: a game is
+rated only when its creator asks for it and the opponent accepts (phase 5).
 Cheating with the dice, the main way to cheat in quantum chess, is impossible as before. Kriegspiel and Fog of war
 cannot work this way, because replaying shows every hidden piece; the server rules them itself (section 6).
 
@@ -137,7 +138,7 @@ a rule changes, which is when `ONLINE_RULES_VERSION` must go up.
 | `GameClock`, `GameLifecycle`, `GameMaintenanceService` | The seat to move times out. With two seats the other one wins; in a free-for-all the seat is out and play goes on while two remain; in teams the team loses. A deleted user resigns their seat. |
 | `NotificationService`, `Notifier`, `GamesWidget` | Through `Seats`: the variant name and every other player ("Your move in Bughouse against A, B and C") |
 | `GameSerializer`, routes, controllers | `variant`, `options`, `seats`, `mySeat`, `seatToMove` and `vmoves`; new routes under `/api/games/{id}/v/` for `moves`, `moves/{ply}/settle`, `dispute` and `draw-vote`, while show, poll, chat, mute, accept, decline, cancel, join and resign are shared |
-| Ratings | Variant games are unrated: `RatingService` and `StatsService` skip them |
+| Ratings | Phase 5: a two-seat variant game counts in the players' rows of that variant (`qchess_vratings`), never in the classic rating; games of four count nowhere |
 
 ## 5. Web app
 
@@ -218,6 +219,12 @@ variants can be played online, and the issue gets an update after each one.
    phase all twenty variants can be played online.
 5. **Ratings and rematches**: an Elo rating per player and variant, for the server-ruled variants by default and for
    the others when both players agree; a variant filter on the leaderboard; and rematches that rotate the seats.
+   As built: `qchess_vratings` keeps a rating, the peak and the results per player and two-seat variant
+   (`RatingService::applyResult`), with the same Elo rules as classic games; the leaderboard choice stays on the classic
+   row. `POST /api/games` with a two-seat `variant` takes `rated` (default true for Kriegspiel and Fog of war, false
+   otherwise); the invited player's accepting is the agreement. `GET /api/leaderboard?variant=` and the `variants` of
+   `GET /api/stats` show the ratings. A rematch of a game of four moves every player on by one seat
+   (`SeatedInvitations::rotated`) and invites the others; it starts when every seat is taken.
 
 ## 8. Risks
 

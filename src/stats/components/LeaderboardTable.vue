@@ -5,10 +5,21 @@
 
 <!--
   The leaderboard: rank, player, rating (provisional as "1340?"), rated games and record; the viewer's row is
-  highlighted and pinned below the list when it is not in it. An optional group filter lists the viewer's own groups.
+  highlighted and pinned below the list when it is not in it. A board filter chooses classic Quantum Chess or a
+  two-player chess variant, each with its own ratings; an optional group filter lists the viewer's own groups.
 -->
 <template>
 	<div class="qc-board-table" data-test="leaderboard">
+		<div class="qc-board-table__filter">
+			<NcSelect
+				:modelValue="selectedVariant"
+				:options="variantOptions"
+				label="name"
+				:inputLabel="t('quantumchess', 'Game')"
+				:clearable="false"
+				data-test="leaderboard-variant"
+				@update:modelValue="(o) => emit('variant', o?.id ?? null)" />
+		</div>
 		<div v-if="groups.length" class="qc-board-table__filter">
 			<NcSelect
 				:modelValue="selectedGroup"
@@ -95,14 +106,17 @@ import NcAvatar from '@nextcloud/vue/components/NcAvatar'
 import NcSelect from '@nextcloud/vue/components/NcSelect'
 import { formatRating } from '../../services/format.js'
 import { currentUser } from '../../services/initialState.js'
+import { CATALOG } from '../../variants/index.js'
 
 const props = defineProps({
 	/** GET /api/leaderboard answer */
 	board: { type: Object, required: true },
 	/** Selected group id, null = everyone */
 	group: { type: String, default: null },
+	/** Selected chess variant, null = classic Quantum Chess */
+	variant: { type: String, default: null },
 })
-const emit = defineEmits(['group'])
+const emit = defineEmits(['group', 'variant'])
 
 const me = currentUser.uid
 const entries = computed(() => props.board.entries ?? [])
@@ -110,6 +124,13 @@ const minGames = computed(() => props.board.minGames ?? 5)
 const groups = computed(() => props.board.groups ?? [])
 const groupOptions = computed(() => [{ id: null, displayName: t('quantumchess', 'Everyone') }, ...groups.value])
 const selectedGroup = computed(() => groupOptions.value.find((o) => o.id === props.group) ?? groupOptions.value[0])
+/** Classic Quantum Chess and the two-player variants, which have ratings of their own. */
+const variantOptions = computed(() => [
+	{ id: null, name: t('quantumchess', 'Quantum Chess') },
+	...CATALOG.filter((e) => e.players === 2).map((e) => ({ id: e.id, name: e.name() })),
+])
+const selectedVariant = computed(() => variantOptions.value.find((o) => o.id === props.variant)
+	?? variantOptions.value[0])
 const pinned = computed(() => {
 	const mine = props.board.me
 	if (!mine || entries.value.some((e) => e.userId === mine.userId)) {
@@ -122,8 +143,12 @@ const rows = computed(() => (pinned.value ? [...entries.value, pinned.value] : e
 
 <style lang="scss" scoped>
 .qc-board-table__filter {
-	max-width: 280px;
-	margin-bottom: 8px;
+	display: inline-block;
+	width: 280px;
+	max-width: 100%;
+	margin-block-end: 8px;
+	margin-inline-end: 8px;
+	vertical-align: top;
 }
 
 .qc-board-table__empty {

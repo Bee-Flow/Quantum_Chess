@@ -18,7 +18,10 @@ and invite a player or open a challenge, as in classic Quantum Chess. In Four-pl
 player for every seat, or leave a seat open for anyone to join, and the game starts when every seat is taken; when one
 player resigns or runs out of time the game ends for everyone (the other team wins, or in a free-for-all the others
 share the win), and a draw needs every player. The server draws the dice of every move, and the players' devices check
-every move against the rules; if they ever disagree, the game is annulled. Online variant games are not rated. In
+every move against the rules; if they ever disagree, the game is annulled. A two-player game can be rated, in a rating
+of that variant (shown on the Statistics page and its leaderboard); Kriegspiel and Fog of war are rated unless you
+switch it off, the others only when you switch it on. Games of four are not rated, and their rematch moves every
+player on by one seat. In
 Kriegspiel and Fog of war the server is the umpire instead: it keeps the whole board, decides every move and sends each
 player only their own view, and the whole board is shown when the game ends.
 

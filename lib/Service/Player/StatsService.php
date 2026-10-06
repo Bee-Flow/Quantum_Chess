@@ -12,6 +12,7 @@ namespace OCA\QuantumChess\Service\Player;
 use OCA\QuantumChess\Exception\ApiException;
 use OCA\QuantumChess\Service\Game\GameClock;
 use OCA\QuantumChess\Service\Game\InvitePolicy;
+use OCA\QuantumChess\Service\Game\VariantCatalog;
 use OCA\QuantumChess\Service\Settings\AppSettings;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IGroupManager;
@@ -44,7 +45,8 @@ class StatsService {
 	}
 
 	/**
-	 * The user's statistics page: online results with the leaderboard rank, local results and the rating history.
+	 * The user's statistics page: online results with the leaderboard rank, the ratings in the chess variants, local
+	 * results and the rating history.
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -65,6 +67,10 @@ class StatsService {
 			&& $row['ratedGames'] >= self::ASK_LISTING_AFTER;
 		return [
 			'online' => $online,
+			'variants' => array_map(function (array $v): array {
+				unset($v['lastRatedAt']);
+				return $v;
+			}, $this->ratings->variantRatings($uid)),
 			'local' => $this->localStats($uid),
 			'ratingHistory' => $this->ratings->history($uid),
 		];
@@ -75,12 +81,19 @@ class StatsService {
 	}
 
 	/**
-	 * The leaderboard as `$viewer` sees it, optionally for one of the viewer's groups, with the viewer's own entry.
+	 * The leaderboard as `$viewer` sees it, optionally for one of the viewer's groups, with the viewer's own entry: of
+	 * classic Quantum Chess, or with `$variant` of a two-seat chess variant.
 	 *
 	 * @return array<string, mixed>
-	 * @throws ApiException invalid_argument for a group the viewer is not in
+	 * @throws ApiException invalid_argument for a group the viewer is not in, or a variant without ratings
 	 */
-	public function leaderboard(string $viewer, ?string $group): array {
+	public function leaderboard(string $viewer, ?string $group, ?string $variant = null): array {
+		if ($variant === '') {
+			$variant = null;
+		}
+		if ($variant !== null && (!VariantCatalog::exists($variant) || VariantCatalog::seatCount($variant) !== 2)) {
+			throw ApiException::invalidArgument('variant', $this->l->t('Invalid value'));
+		}
 		$mode = $this->settings->leaderboardMode();
 		$minGames = $this->settings->leaderboardMinGames();
 		$viewerUser = $this->userManager->get($viewer);
@@ -90,7 +103,14 @@ class StatsService {
 				$groups[] = ['id' => $g->getGID(), 'displayName' => $g->getDisplayName()];
 			}
 		}
-		$result = ['mode' => $mode, 'minGames' => $minGames, 'entries' => [], 'me' => null, 'groups' => $groups];
+		$result = [
+			'mode' => $mode,
+			'minGames' => $minGames,
+			'variant' => $variant,
+			'entries' => [],
+			'me' => null,
+			'groups' => $groups,
+		];
 		if ($mode === 'off' || $viewerUser === null) {
 			return $result;
 		}
@@ -100,7 +120,10 @@ class StatsService {
 		$restrict = $this->settings->leaderboardGroups();
 		$activeSince = $this->time->getTime() - $this->settings->leaderboardActiveDays() * GameClock::DAY;
 		$entries = [];
-		foreach ($this->ratings->leaderboardRows($minGames, $activeSince) as $row) {
+		$rows = $variant === null
+			? $this->ratings->leaderboardRows($minGames, $activeSince)
+			: $this->ratings->variantLeaderboardRows($variant, $minGames, $activeSince);
+		foreach ($rows as $row) {
 			if (!$this->isListed($row['listed'], $mode)) {
 				continue;
 			}
@@ -141,7 +164,8 @@ class StatsService {
 			}
 		}
 		$result['entries'] = $entries;
-		$mine = $this->ratings->get($viewer);
+		$classic = $this->ratings->get($viewer);
+		$mine = $variant === null ? $classic : $this->ratings->getVariant($viewer, $variant);
 		if ($mine !== null && $mine['ratedGames'] > 0) {
 			$result['me'] = [
 				'rank' => $myRank,
@@ -153,7 +177,7 @@ class StatsService {
 				'wins' => $mine['wins'],
 				'losses' => $mine['losses'],
 				'draws' => $mine['draws'],
-				'listed' => $this->isListed($mine['listed'], $mode),
+				'listed' => $this->isListed($classic['listed'] ?? null, $mode),
 			];
 		}
 		return $result;

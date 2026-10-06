@@ -190,14 +190,20 @@ class GameMapper extends QBMapper {
 		return $this->findEntities($qb);
 	}
 
-	/** @return list<Game> the user's finished rated games, newest first */
-	public function findRatedFinished(string $uid, int $limit): array {
+	/**
+	 * @param ?string $variant a chess variant, or null for classic Quantum Chess
+	 * @return list<Game> the user's finished rated games of classic Quantum Chess or of one variant, newest first
+	 */
+	public function findRatedFinished(string $uid, int $limit, ?string $variant = null): array {
 		$qb = $this->db->getQueryBuilder();
 		$param = $qb->createNamedParameter($uid);
 		$qb->select('*')->from(self::TABLE)
 			->where($qb->expr()->orX($qb->expr()->eq('white_uid', $param), $qb->expr()->eq('black_uid', $param)))
 			->andWhere($qb->expr()->eq('status', $qb->createNamedParameter(Game::STATUS_FINISHED)))
 			->andWhere($qb->expr()->eq('rated', $qb->createNamedParameter(1, IQueryBuilder::PARAM_INT)))
+			->andWhere($variant === null
+				? $qb->expr()->isNull('variant')
+				: $qb->expr()->eq('variant', $qb->createNamedParameter($variant)))
 			->orderBy('finished_at', 'DESC')->addOrderBy('id', 'DESC')
 			->setMaxResults($limit);
 		return $this->findEntities($qb);

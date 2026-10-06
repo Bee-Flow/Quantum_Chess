@@ -209,18 +209,25 @@ class GameSerializer {
 		return $cells;
 	}
 
-	/** @return array{rating: int, provisional: bool}|null */
-	private function rating(?string $uid): ?array {
+	/**
+	 * A player's rating in classic Quantum Chess, or in a chess variant.
+	 *
+	 * @return array{rating: int, provisional: bool}|null
+	 */
+	private function rating(?string $uid, ?string $variant = null): ?array {
 		if ($uid === null) {
 			return null;
 		}
-		if (!array_key_exists($uid, $this->ratings)) {
-			$row = $this->ratingService->get($uid);
-			$this->ratings[$uid] = $row === null
+		$key = $uid . '|' . ($variant ?? '');
+		if (!array_key_exists($key, $this->ratings)) {
+			$row = $variant === null
+				? $this->ratingService->get($uid)
+				: $this->ratingService->getVariant($uid, $variant);
+			$this->ratings[$key] = $row === null
 				? null
 				: ['rating' => $row['rating'], 'provisional' => $row['provisional']];
 		}
-		return $this->ratings[$uid];
+		return $this->ratings[$key];
 	}
 
 	/**
@@ -238,7 +245,9 @@ class GameSerializer {
 		$offer = $game->getDrawOffer();
 		$now = $this->clock->now();
 		$state = json_decode($game->getState(), true);
-		$rematch = $game->hasEnded() && $color !== null && $game->opponentOf($viewer) !== null && !$game->isMultiSeat();
+		$rematch = $game->hasEnded() && $color !== null && ($game->isMultiSeat()
+			? !in_array(null, $game->seatUids(), true)
+			: $game->opponentOf($viewer) !== null);
 		$chatOpen = $this->settings->chatEnabled() && ChatService::isOpen($game, $now);
 		return $dto + [
 			'state' => !$game->isVariant() && is_array($state) ? $state : null,
@@ -249,7 +258,10 @@ class GameSerializer {
 			'canAbort' => $active && GameplayService::canAbort($game),
 			'canResign' => $active,
 			'canRematch' => $rematch,
-			'ratings' => ['w' => $this->rating($game->getWhiteUid()), 'b' => $this->rating($game->getBlackUid())],
+			'ratings' => [
+				'w' => $this->rating($game->getWhiteUid(), $game->getVariant()),
+				'b' => $this->rating($game->getBlackUid(), $game->getVariant()),
+			],
 			'ratingBefore' => $game->getRatingWBefore() === null
 				? null
 				: ['w' => $game->getRatingWBefore(), 'b' => $game->getRatingBBefore()],

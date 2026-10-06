@@ -646,6 +646,7 @@ OC.L10N.register(
     ],
     "A player resigned": "Ein Spieler hat aufgegeben",
     "A player ran out of time": "Die Zeit eines Spielers ist abgelaufen",
+    "Rematch: waiting for the other players.": "Revanche: Warten auf die anderen Spielerinnen und Spieler.",
     "You offered a draw.": "Du hast Remis angeboten.",
     "{name} offers a draw.": "{name} bietet Remis an.",
     "{agreed} of {all} agree.": "{agreed} von {all} sind einverstanden.",
@@ -1786,6 +1787,7 @@ OC.L10N.register(
     "Peak": "Höchstwert",
     "Won / lost / drawn": "Gewonnen / verloren / remis",
     "Rank": "Rang",
+    "Variant": "Variante",
     "Against the computer and AI opponents": "Gegen den Computer und KI-Gegner",
     "Drawn": "Remis",
     "_Pass & play: %n game_::_Pass & play: %n games_": [

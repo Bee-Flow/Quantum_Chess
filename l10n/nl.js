@@ -646,6 +646,7 @@ OC.L10N.register(
     ],
     "A player resigned": "Een speler heeft opgegeven",
     "A player ran out of time": "De tijd van een speler is op",
+    "Rematch: waiting for the other players.": "Revanche: wachten op de andere spelers.",
     "You offered a draw.": "Je hebt remise aangeboden.",
     "{name} offers a draw.": "{name} biedt remise aan.",
     "{agreed} of {all} agree.": "{agreed} van {all} gaan akkoord.",
@@ -1786,6 +1787,7 @@ OC.L10N.register(
     "Peak": "Hoogste",
     "Won / lost / drawn": "Gewonnen / verloren / remise",
     "Rank": "Positie",
+    "Variant": "Variant",
     "Against the computer and AI opponents": "Tegen de computer en AI-tegenstanders",
     "Drawn": "Remise",
     "_Pass & play: %n game_::_Pass & play: %n games_": [

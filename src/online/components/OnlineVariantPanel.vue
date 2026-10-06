@@ -6,8 +6,8 @@
 <!--
   The online panel of a running chess variant game (in the `online` slot of VariantGameView, put together by
   views/OnlineVariantGame.vue): the players, whose move it is or how the game ended, what keeps this device from
-  playing along (a changed history, a dispute), the draw offer, Offer draw and Abort, and the chat. Resign is the
-  board's own button.
+  playing along (a changed history, a dispute), the draw offer, Offer draw and Abort, after the end the rematch (ask
+  for one, accept or decline one, wait for the others, go to it), and the chat. Resign is the board's own button.
 -->
 <template>
 	<section class="qc-vonline" data-test="variant-online">
@@ -67,6 +67,41 @@
 				{{ t('quantumchess', 'Abort') }}
 			</NcButton>
 		</div>
+		<div v-if="ended && rematch" class="qc-vonline__offer" data-test="variant-rematch">
+			<span v-if="rematch.text">{{ rematch.text }}</span>
+			<span class="qc-vonline__buttons">
+				<template v-if="rematch.kind === 'offered'">
+					<NcButton size="small" :disabled="busy" @click="run(() => c.declineRematch())">
+						{{ t('quantumchess', 'Decline') }}
+					</NcButton>
+					<NcButton
+						size="small"
+						variant="primary"
+						:disabled="busy"
+						@click="run(() => c.rematch())">
+						{{ t('quantumchess', 'Accept rematch') }}
+					</NcButton>
+				</template>
+				<NcButton
+					v-else-if="rematch.kind === 'pending' && rematch.mine"
+					size="small"
+					:disabled="busy"
+					@click="run(() => c.cancelRematch())">
+					{{ t('quantumchess', 'Cancel') }}
+				</NcButton>
+				<NcButton v-else-if="rematch.kind === 'on'" size="small" :to="`/game/${rematch.id}`">
+					{{ t('quantumchess', 'Go to the rematch') }}
+				</NcButton>
+				<NcButton
+					v-else-if="rematch.kind === 'ask'"
+					size="small"
+					:disabled="busy"
+					data-test="variant-rematch-ask"
+					@click="run(() => c.rematch())">
+					{{ t('quantumchess', 'Rematch') }}
+				</NcButton>
+			</span>
+		</div>
 		<GameChat v-if="c.participant.value" :controller="c" class="qc-vonline__chat" />
 	</section>
 </template>
@@ -77,6 +112,7 @@ import { computed, ref } from 'vue'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import GameChat from './GameChat.vue'
 import { resultText } from '../../game/resultText.js'
+import { currentUser } from '../../services/initialState.js'
 import { reasonText } from '../../variantplay/texts.js'
 import { sideName } from '../../variants/index.js'
 
@@ -180,6 +216,31 @@ function seatedEnd(game) {
 	}
 	return { title, reason: words[reason] ?? (V.value ? reasonText(V.value, reason) : reason) }
 }
+
+/**
+ * The rematch after the end: `offered` (another player asks; for a game of four, while the viewer has not taken their
+ * seat), `pending` (the viewer's own offer, or their seat taken, waits for the others), `on` (it started), or `ask`.
+ */
+const rematch = computed(() => {
+	const r = c.rematchGame.value
+	const state = c.rematchState.value
+	if (r?.status === 'active' && r.myColor) {
+		return { kind: 'on', id: r.id, text: t('quantumchess', 'The rematch is on.') }
+	}
+	if (state === 'offered') {
+		const name = r.creator?.displayName ?? r.creator?.userId ?? ''
+		return { kind: 'offered', text: t('quantumchess', '{name} wants a rematch', { name }) }
+	}
+	if (state === 'pending') {
+		const mine = r.creator?.userId === currentUser.uid
+		const other = r.opponent?.displayName ?? r.opponent?.userId ?? ''
+		const text = Array.isArray(r.seats)
+			? t('quantumchess', 'Rematch: waiting for the other players.')
+			: t('quantumchess', 'You asked {name} for a rematch. Waiting for an answer.', { name: other })
+		return { kind: 'pending', mine, text }
+	}
+	return c.can.value.rematch ? { kind: 'ask', text: '' } : null
+})
 
 /** The open draw offer in words. */
 const drawOffer = computed(() => {

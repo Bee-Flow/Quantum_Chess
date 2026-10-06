@@ -296,20 +296,22 @@ Notes:
   invitation; when the other player asks, the rematch starts.
 - **Polling.** `summary` is cheap and answers with an `ETag`, so the lobby can poll it and load `GET /api/games` only
   when `rev` changes. `poll` returns only the moves after `ply` and the chat after `chat`.
-- **Chess variants** ([`online-variants.md`](online-variants.md)). `POST /api/games` takes `variant` and `options`
-  (an object of strings, integers and booleans) for a two-player variant without hidden information; anything else is
-  `400 invalid_argument`, and a variant game is never rated. A variant with more than two seats takes `players`
-  instead of `opponent`: one entry per seat, a user id or `null` for an open seat, with the creator in exactly one
-  seat; `color: "r"` draws the seats at random when the game starts. Each invited player accepts or declines on
-  their own (one decline declines the game), `join` takes the first open seat, and the game starts once every seat is
-  taken. In such a game `resign` and a time-out end the game for everyone: the other team wins, or in a free-for-all
-  every other seat; a draw needs every seat (`draw` with `offer` or `accept` adds the seat's vote, `decline` closes the
-  offer, there is no cool-down); `rematch` answers `409 invalid_status`. Its moves go to the `/v/` routes, and
-  `POST /api/games/{id}/moves` answers `409 invalid_status`. `v/moves` stores the move and draws its roll after the
-  move arrived; the turn stays with the mover (`pendingPly`) until any player settles the move with `settle`, which
-  passes the turn to `nextSeat` and, with a `result`, ends the game. The same settlement again changes nothing; a
-  different one annuls the game (`aborted`, reason `disputed`), as `dispute` does. Show, poll, accept, decline,
-  cancel, join, resign, abort, draw, chat, mute and rematch work as for classic games.
+- **Chess variants** ([`online-variants.md`](online-variants.md)). `POST /api/games` takes `variant` and `options` (an
+  object of strings, integers and booleans) for a variant of the catalogue; anything else is `400 invalid_argument`. A
+  two-player variant game is rated when `rated` is true (default true for Kriegspiel and Fog of war, false for the
+  others) and the invited player accepts; it counts in that variant's rating only. A game with more than two seats is
+  never rated. A variant with more than two seats takes `players` instead of `opponent`: one entry per seat, a user id
+  or `null` for an open seat, with the creator in exactly one seat; `color: "r"` draws the seats at random when the game
+  starts. Each invited player accepts or declines on their own (one decline declines the game), `join` takes the first
+  open seat, and the game starts once every seat is taken. In such a game `resign` and a time-out end the game for
+  everyone: the other team wins, or in a free-for-all every other seat; a draw needs every seat (`draw` with `offer` or
+  `accept` adds the seat's vote, `decline` closes the offer, there is no cool-down); `rematch` creates a game with every
+  player one seat on and invites the others. Its moves go to the `/v/` routes, and `POST /api/games/{id}/moves` answers
+  `409 invalid_status`. `v/moves` stores the move and draws its roll after the move arrived; the turn stays with the
+  mover (`pendingPly`) until any player settles the move with `settle`, which passes the turn to `nextSeat` and, with a
+  `result`, ends the game. The same settlement again changes nothing; a different one annuls the game (`aborted`, reason
+  `disputed`), as `dispute` does. Show, poll, accept, decline, cancel, join, resign, abort, draw, chat, mute and rematch
+  work as for classic games.
 - **Kriegspiel and Fog of war** are ruled by the server ([`online-variants.md`](online-variants.md), section 6).
   `v/moves` answers `refused: true` (and `move: null`) for a move the referee does not allow: nothing is stored and
   the turn is not used. An accepted move is rolled, played and settled by the server at once; the answer's `move` is
@@ -324,18 +326,20 @@ Notes:
 
 | Verb | Path | Name | Rate limit | Request | Response |
 |---|---|---|---|---|---|
-| GET | `/api/stats` | `stats#mine` | | | `{online, local, ratingHistory}` |
-| GET | `/api/leaderboard` | `stats#leaderboard` | | `group` | `{mode, minGames, entries, me, groups}` |
+| GET | `/api/stats` | `stats#mine` | | | `{online, variants, local, ratingHistory}` |
+| GET | `/api/leaderboard` | `stats#leaderboard` | | `group`, `variant` | `{mode, minGames, variant, entries, me, groups}` |
 | POST | `/api/stats/local` | `stats#recordLocal` | 60 / h | `opponent` (`engine`, `llm` or `hotseat`), `level`, `persona`, `result` (`win`, `loss`, `draw`), `color` | `{local}` |
 | GET | `/api/trainer/progress` | `stats#getProgress` | | | `{progress}` |
 | PUT | `/api/trainer/progress` | `stats#setProgress` | 120 / 10 min | `progress` | `{progress}`: the stored progress merged with the client's |
 | PUT | `/api/settings/preferences` | `preferences#update` | 120 / 10 min | `preferences` (a JSON object, stored as it is) | `{preferences}` |
 
-- `online` holds `rating`, `provisional`, `ratedGames`, `peak`, `games`, `wins`, `losses`, `draws`, `listed`, `rank`
-  and `askListing`. `local` holds `engine` (results per level, `{w, l, d}`), `llm` (results per persona) and
-  `hotseat` (`{games}`).
-- The leaderboard `mode` is `off`, `opt-in` or `opt-out`. Each entry has `rank`, `userId`, `displayName`, `rating`,
-  `provisional`, `ratedGames`, `wins`, `losses` and `draws`.
+- `online` holds `rating`, `provisional`, `ratedGames`, `peak`, `games`, `wins`, `losses`, `draws`, `listed`, `rank` and
+  `askListing`, for classic Quantum Chess. `variants` lists the player's ratings in the chess variants they played
+  online: `variant`, `rating`, `provisional`, `ratedGames`, `peak`, `games`, `wins`, `losses` and `draws`. `local` holds
+  `engine` (results per level, `{w, l, d}`), `llm` (results per persona) and `hotseat` (`{games}`).
+- The leaderboard `mode` is `off`, `opt-in` or `opt-out`. With `variant` (a two-player variant; anything else is
+  `400 invalid_argument`) it ranks the ratings of that variant; the player's leaderboard choice holds for every board.
+  Each entry has `rank`, `userId`, `displayName`, `rating`, `provisional`, `ratedGames`, `wins`, `losses` and `draws`.
 - Trainer progress merges per lesson and puzzle: `done` is kept once set, the best `stars` and the earliest `at` win,
   `xp` takes the maximum and the later streak wins. The stored preferences are limited to 16 KiB and the trainer
   progress to 64 KiB (`413 too_large`).
@@ -423,6 +427,7 @@ the tables and columns of the chess variants. Table and column names are part of
 | `qchess_vmoves` | The moves of a chess variant game: `game_id`, `ply`, `seat`, `uid`, `code`, the roll `u` the server drew, the settled claims `next_seat`, `result` and `state_hash`, `settled_by`, `settled_at`, `chain`, `client_id`, `think_ms`, `created_at` | unique `(game_id, ply)` and `(game_id, client_id)`; index on `uid` |
 | `qchess_chat` | Chat lines: `game_id`, `uid`, `kind` (text, system, phrase), `message`, `params` (JSON), `created_at` | index on `(game_id, id)` and on `uid` |
 | `qchess_ratings` | One row per rated player: `rating`, `peak`, `rated_games`, `games`, `wins`, `losses`, `draws`, `listed` (leaderboard choice), `last_rated_at` | unique `uid`; index on `rating` |
+| `qchess_vratings` | One row per player and two-player chess variant: `variant`, `rating`, `peak`, `rated_games`, `games`, `wins`, `losses`, `draws`, `last_rated_at` | unique `(uid, variant)`; index on `(variant, rating)` |
 
 - **Concurrency.** Every change to a game row increments `rev`, and a save succeeds only if `rev` still has the value
   that was read (`409 conflict` otherwise). The unique index on `(game_id, ply)` makes two concurrent moves for the

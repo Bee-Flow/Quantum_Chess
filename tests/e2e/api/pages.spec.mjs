@@ -89,6 +89,15 @@ test('statistics, local results and the leaderboard', async () => {
 		`leaderboard (${board.mode}, ${board.entries.length} entries)`,
 	).toBe(true)
 	await expectApiError(api('bob', 'GET', 'api/leaderboard?group=not-my-group'), 400, 'invalid_argument')
+	const atomic = await api('bob', 'GET', 'api/leaderboard?variant=atomic')
+	expect([atomic.variant, Array.isArray(atomic.entries)], 'the leaderboard of a variant').toEqual(['atomic', true])
+	await expectApiError(
+		api('bob', 'GET', 'api/leaderboard?variant=fourplayer'),
+		400,
+		'invalid_argument',
+		'games of four have no ratings',
+	)
+	expect(Array.isArray((await api('bob', 'GET', 'api/stats')).variants), 'the ratings per variant').toBe(true)
 })
 
 test('preferences are stored as they are, and trainer progress merges', async () => {
