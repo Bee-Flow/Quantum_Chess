@@ -33,7 +33,7 @@ Quantum Chess is a Nextcloud app. It has four main parts:
 | Backend | `lib/` | Nextcloud server | HTTP API, online games, ratings, notifications, dashboard widget, settings, LLM integration |
 | Rules engine | `src/engine/`, `lib/Engine/` | Browser and server | The game rules, implemented twice (JavaScript and PHP) with byte-identical results |
 | Computer player | `src/ai/` | Browser (Web Worker) | The built-in opponent, the coach's analysis, the post-game review and the puzzle solver |
-| Chess variants | `src/variants/`, `src/variantplay/` | Browser | Twenty variants played on this device: their rules on a shared quantum layer, their computer player and their game screen |
+| Chess variants | `src/variants/`, `src/variantplay/` | Browser | Twenty-one variants played on this device: their rules on a shared quantum layer, their computer player and their game screen |
 
 Some principles shape the whole design:
 
@@ -534,7 +534,8 @@ side by side), or a text token (round, a shogi pentagon or a xiangqi disc).
   The board leaves room for it, and the page scrolls so that the squares of a move waiting for confirmation are not
   under the bar. The pieces in hand sit at their board.
 
-**Hidden information.** In Kriegspiel and Fog of war the board shows only what the viewer may see (`visibility`): fog
+**Hidden information.** In Kriegspiel and Fog of war the board shows only what the viewer may see (`visibility`), and in
+Bee Flow Chess the viewer's view of the state (`viewOf`: enemy pieces that have not moved are honeycomb cells): fog
 over the other squares, or with `hiddenStyle: 'plain'` ordinary empty squares. A hidden square never names what stands
 there, and takes keyboard focus only as the target of a try built from what the viewer knows. The Split, Merge and
 Measure modes choose their squares on `ownView` (the board as the player knows it), and every attempt is decided on the
@@ -588,7 +589,7 @@ their rules; it draws the dice and keeps the order of play, and the browsers rul
   (`src/variants/online.js`), settles the moves it plays, disputes one that does not agree, checks the variant chain,
   and does not replay a game of another rules version. `OnlineVariantPanel` shows the players, the state of the game,
   draw offers and the chat.
-- **Server-ruled variants.** Kriegspiel and Fog of war (`VariantCatalog::isRefereed`) hide pieces, so the server
+- **Server-ruled variants.** Bee Flow Chess, Kriegspiel and Fog of war (`VariantCatalog::isRefereed`) hide pieces, so the server
   rules them with `lib/Variants/`, the PHP twin of the part of the variant layer they use (the 8 × 8 orthodox board,
   the quantum layer, the umpire and the fog), kept identical with `tests/fixtures/referee/`. The real state lives in
   `VariantTurn` (`board`); `VariantGameplayService` refuses or plays and settles each move, and `viewOf` gives each

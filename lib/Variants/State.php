@@ -59,12 +59,18 @@ final class State {
 	 * A state from its JSON form (`json_decode(..., true)` or the arrays this layer returns).
 	 *
 	 * @param array<array-key, mixed> $s
+	 * @throws \InvalidArgumentException for a state of a variant the server does not rule, or without worlds
 	 */
 	public static function fromArray(array $s): self {
+		$variant = (string)($s['variant'] ?? '');
+		$rules = VariantRules::of($variant);
+		if ($rules === null) {
+			throw new \InvalidArgumentException('not a server-ruled variant: ' . $variant);
+		}
 		$worlds = [];
 		foreach ((array)($s['worlds'] ?? []) as $e) {
 			$e = (array)$e;
-			$worlds[] = ['b' => World::fromArray((array)$e['b']), 'w' => (int)$e['w']];
+			$worlds[] = ['b' => World::fromArray((array)$e['b'], $rules), 'w' => (int)$e['w']];
 		}
 		if ($worlds === []) {
 			throw new \InvalidArgumentException('a state needs at least one world');
@@ -84,7 +90,7 @@ final class State {
 		$options = self::plain($s['options'] ?? []);
 		return new self(
 			(int)($s['v'] ?? 1),
-			(string)($s['variant'] ?? ''),
+			$variant,
 			is_array($options) ? $options : [],
 			$worlds,
 			(int)($s['turn'] ?? 0),

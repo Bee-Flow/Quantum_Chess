@@ -18,11 +18,12 @@
  *   then annuls. A changed chain only warns: the game's history was changed after this browser saw it.
  * - **Another rules version.** A game created with other variant rules (`variantRules`) is not replayed: the player is
  *   asked to update the app.
- * - **Server-ruled variants** (Kriegspiel and Fog of war, src/variants/referee.js): the server holds the real position
- *   and decides every move, so nothing is replayed while the game runs. The board shows the player's view from the
- *   game (`game.view`); a move goes to the server, which refuses it or answers with the new view, and Fog of war asks
- *   the server for the odds of a move first. Once the game has ended, the server reveals the real position and every
- *   move: this browser replays them with the rules it knows and checks the chain, and warns when they do not agree.
+ * - **Server-ruled variants** (Bee Flow Chess, Kriegspiel and Fog of war, src/variants/referee.js): the server holds
+ *   the real position and decides every move, so nothing is replayed while the game runs. The board shows the player's
+ *   view from the game (`game.view`); a move goes to the server, which refuses it or answers with the new view, and Fog
+ *   of war asks the server for the odds of a move first. Once the game has ended, the server reveals the real position
+ *   and every move: this browser replays them with the rules it knows and checks the chain, and warns when they do not
+ *   agree.
  */
 
 import { computed, ref, shallowRef, watch } from 'vue'
@@ -259,7 +260,9 @@ export function useOnlineVariantGame(c, {
 			return
 		}
 		checkChain(moves)
-		const r = replayOnline(V, newGame(V, optionValues(V, g.variantOptions ?? {})), moves)
+		// a hidden start (Bee Flow Chess's shuffled back ranks) is in the revealed state's options
+		const options = { ...optionValues(V, g.variantOptions ?? {}), ...(g.view?.options ?? {}) }
+		const r = replayOnline(V, newGame(V, options), moves)
 		if (r.mismatch) {
 			problem.value = 'altered'
 		}

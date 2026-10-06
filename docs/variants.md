@@ -5,7 +5,7 @@
 
 # Chess variants
 
-Quantum Chess 2 comes with twenty chess variants: other dimensions, hidden information, different rules, different
+Quantum Chess 2 comes with twenty-one chess variants: Bee Flow Chess, other dimensions, hidden information, different rules, different
 boards with more players, and the regional relatives of chess. **Every variant keeps the quantum element**: pieces
 can be in two places at once until something finds out where they really are.
 
@@ -22,7 +22,7 @@ every move against the rules; if they ever disagree, the game is annulled. A two
 of that variant (shown on the Statistics page and its leaderboard); Kriegspiel and Fog of war are rated unless you
 switch it off, the others only when you switch it on. Games of four are not rated, and their rematch moves every
 player on by one seat. In
-Kriegspiel and Fog of war the server is the umpire instead: it keeps the whole board, decides every move and sends each
+Bee Flow Chess, Kriegspiel and Fog of war the server is the umpire instead: it keeps the whole board, decides every move and sends each
 player only their own view, and the whole board is shown when the game ends.
 
 The large boards (3D, 4D and 5D chess, Bughouse and Four-player chess) can be zoomed with the buttons above the board,
@@ -92,6 +92,7 @@ promote to, so undo cannot re-roll the dice.
 Each entry says only what is special in that variant. Everything else, from splits and rolls to the escape rule and
 the draws, follows [the quantum rules of every variant](#the-quantum-rules-of-every-variant) above.
 
+- **[Bee-Flow](#bee-flow):** [Bee Flow Chess](#bee-flow-chess)
 - **[Other dimensions](#other-dimensions):** [3D chess (Raumschach)](#3d-chess-raumschach),
   [Tri-Dimensional chess](#tri-dimensional-chess), [4D chess](#4d-chess),
   [Multiverse chess (5D)](#multiverse-chess-5d)
@@ -102,6 +103,31 @@ the draws, follows [the quantum rules of every variant](#the-quantum-rules-of-ev
 - **[Different boards and more players](#different-boards-and-more-players):** [Hexagonal chess](#hexagonal-chess),
   [Four-player chess](#four-player-chess), [Capablanca chess](#capablanca-chess)
 - **[Regional relatives](#regional-relatives):** [Shogi](#shogi), [Xiangqi](#xiangqi), [Makruk](#makruk)
+
+---
+
+### Bee-Flow
+
+#### Bee Flow Chess
+
+Named after [Bee-Flow](https://github.com/Bee-Flow/Bee-Flow), the private AI workspace whose Privacy Shield swaps
+personal data for placeholders before it reaches an AI model.
+
+- **Board and pieces.** Ordinary chess on an 8 × 8 board, but your king is the **Queen Bee** (a king with a bee on its
+  crown). Capture the other Queen Bee to win; the classic end rules apply (she cannot escape, the 50-move rule, two
+  lone Queen Bees, the move limit).
+- **Shuffled back ranks.** Each player's back rank is shuffled on its own, in one of 5040 orders of R N B Q K B N R,
+  so nobody knows where the other Queen Bee starts. The pawns start as usual. There is no castling; double steps,
+  en passant and promotion are as usual.
+- **Hidden pieces.** You see where every enemy piece stands, with its odds, but a piece that has not moved yet only as
+  a honeycomb cell. Once it has moved, in any possibility, its type is known to both players for the rest of the game.
+  Pawns are always known, and a capture tells what was taken.
+- **Privacy shield.** A piece next to its own Queen Bee cannot be captured, decided in each possibility on its own: in
+  a possibility where she stands beside it the capture misses. The Queen Bee herself is not shielded, so separate her
+  from her swarm first. A capture that is refused in every possibility tells you that the Queen Bee is close.
+- **Pass & play.** Each player sees only their own pieces' types: a hand-over screen covers the board between turns,
+  and the whole board is revealed when the game ends. Online, the server is the umpire and sends each player only
+  their own view.
 
 ---
 

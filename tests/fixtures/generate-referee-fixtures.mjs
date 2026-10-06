@@ -87,6 +87,24 @@ function viewDigest(V, state, seat) {
  */
 function refusedTries(V, state, rng) {
 	const out = []
+	if (V.id === 'beeflow') {
+		// Bee Flow Chess: captures of an enemy piece under the privacy shield (next to its Queen Bee) in every world
+		const b = state.worlds[0].b
+		for (let victim = 0; victim < b.sq.length; victim++) {
+			const enemy = b.sq[victim] >= 0 && b.sd[victim] !== state.turn
+			if (!enemy || !state.worlds.every(({ b: w }) => V.shielded(w, victim))) {
+				continue
+			}
+			for (let own = 0; own < b.sq.length; own++) {
+				const code = b.sq[own] >= 0 && b.sd[own] === state.turn
+					? V.topology.names[b.sq[own]] + '-' + V.topology.names[b.sq[victim]]
+					: null
+				if (code && !isLegal(V, state, code) && !out.includes(code) && out.length < 3) {
+					out.push(code)
+				}
+			}
+		}
+	}
 	if (V.candidateMoves) {
 		for (const m of V.candidateMoves(state)) {
 			if (!isLegal(V, state, m.code)) {
@@ -151,7 +169,12 @@ function specialPool(state, list) {
 function game(V, seed, plies, special = false) {
 	const rng = seededRng(seed * 31 + 1)
 	const tries = seededRng(seed * 31 + 2)
-	let state = newGame(V, {}, rng)
+	// Bee Flow Chess: the two shuffled back ranks, as the server draws them
+	const shuffle = seededRng(seed * 31 + 3)
+	const options = V.id === 'beeflow'
+		? { white: Math.floor(shuffle() * V.arrangements), black: Math.floor(shuffle() * V.arrangements) }
+		: {}
+	let state = newGame(V, options, rng)
 	const steps = []
 	const fullViews = []
 	while (steps.length < plies && !state.result) {
@@ -183,14 +206,15 @@ function game(V, seed, plies, special = false) {
 			fullViews.push({ ply: state.ply, views: [0, 1].map((seat) => viewFor(V, state, seat)) })
 		}
 	}
-	return { seed, special, steps, fullViews, result: state.result, history: state.history }
+	return { seed, special, options, steps, fullViews, result: state.result, history: state.history }
 }
 
 mkdirSync(DIR, { recursive: true })
-for (const id of ['kriegspiel', 'darkchess']) {
+for (const id of ['beeflow', 'kriegspiel', 'darkchess']) {
 	const V = await loadVariant(id)
 	const games = [
-		...GAMES.map(([seed, plies]) => game(V, seed, plies)),
+		// Bee Flow Chess's games are capped at 160 plies, which keeps its file under 2 MB
+		...GAMES.map(([seed, plies]) => game(V, seed, id === 'beeflow' ? Math.min(plies, 160) : plies)),
 		...SPECIAL_GAMES.map(([seed, plies]) => game(V, seed, plies, true)),
 	]
 	const file = join(DIR, id + '.json')

@@ -23,7 +23,7 @@
 		<header class="qc-variants__head">
 			<h2>{{ t('quantumchess', 'Chess variants') }}</h2>
 			<p>
-				{{ t('quantumchess', 'Twenty ways to play, from 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link.') }}
+				{{ t('quantumchess', 'Twenty-one ways to play, from Bee Flow Chess and 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link.') }}
 			</p>
 		</header>
 

@@ -2,6 +2,12 @@
 	"rulesVersion": 1,
 	"catalog": [
 		{
+			"id": "beeflow",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
 			"id": "raumschach",
 			"seats": 2,
 			"online": true,

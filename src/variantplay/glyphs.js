@@ -89,6 +89,9 @@ export function glyphOf(V, type, side) {
 		if (g.bar) {
 			out.bar = color === 'b' ? 'black' : 'white'
 		}
+		if (g.bee) {
+			out.bee = true
+		}
 		if (g.body === 'b' || g.body === 'r') {
 			out.body = { type: g.body, color: color === 'b' ? 'black' : 'white' }
 		}
@@ -106,6 +109,12 @@ export function glyphOf(V, type, side) {
 			fill: '#f6e7c8',
 			ink: sd.color === 'red' ? '#b71c1c' : '#1b1b1b',
 		}
+	}
+	if (g.shape === 'hex') {
+		// a honeycomb cell in the side's shade of honey (Bee Flow Chess: a piece whose type is hidden)
+		const dark = sd.color === 'black'
+		const honey = dark ? '#6b4a08' : '#fbe3a0'
+		return { kind: 'text', shape: 'hex', text, fill: honey, ink: dark ? '#fbe3a0' : '#4a3300' }
 	}
 	const fill = sideFill(sd)
 	return { kind: 'text', shape: g.shape ?? 'circle', text, fill, ink: darkTextOn(fill) ? '#1b1b1b' : '#ffffff' }

@@ -5080,6 +5080,38 @@ msgstr "La partie est nulle quand il ne reste que les deux rois."
 msgid "a king was blown up"
 msgstr "un roi a explosé"
 
+#: src/variants/beeflow.js:347 src/variants/darkchess.js:491 src/views/VariantGameView.vue:855
+msgid "Capture on {squares}"
+msgstr "Prise sur {squares}"
+
+#: src/variants/beeflow.js:351
+msgid "Bee Flow Chess is named after Bee-Flow, the private AI workspace. Your king is the Queen Bee: capture the other Queen Bee to win."
+msgstr "Bee Flow Chess doit son nom à Bee-Flow, l’espace de travail IA privé. Votre roi est la reine des abeilles : prenez l’autre reine des abeilles pour gagner."
+
+#: src/variants/beeflow.js:355
+msgid "Each player's back rank is shuffled on its own, so nobody knows where the other Queen Bee starts. There is no castling."
+msgstr "La rangée arrière de chaque joueur est mélangée séparément : personne ne sait où commence l’autre reine des abeilles. Il n’y a pas de roque."
+
+#: src/variants/beeflow.js:359
+msgid "Privacy first: you see where every enemy piece stands, but only as a honeycomb cell until it has moved. Pawns are always known, and a captured piece shows what it was."
+msgstr "La vie privée d’abord : vous voyez où se trouve chaque pièce adverse, mais seulement comme une alvéole tant qu’elle n’a pas bougé. Les pions sont toujours connus, et une pièce prise montre ce qu’elle était."
+
+#: src/variants/beeflow.js:363
+msgid "Privacy shield: a piece next to its own Queen Bee cannot be captured. The Queen Bee herself is not shielded, so separate her from her swarm first."
+msgstr "Bouclier de confidentialité : une pièce voisine de sa propre reine des abeilles ne peut pas être prise. La reine elle-même n’est pas protégée : séparez-la d’abord de son essaim."
+
+#: src/variants/beeflow.js:367
+msgid "In pass & play each player sees only their own pieces' types: hand the device over when asked. The whole board is revealed when the game ends."
+msgstr "En jeu à tour de rôle, chaque joueur ne voit que les types de ses propres pièces : passez l’appareil quand on vous le demande. Tout l’échiquier est révélé à la fin de la partie."
+
+#: src/variants/beeflow.js:376
+msgid "Queen Bee"
+msgstr "Reine des abeilles"
+
+#: src/variants/beeflow.js:380
+msgid "Hidden piece"
+msgstr "Pièce cachée"
+
 #: src/variants/bughouse.js:189 src/variants/crazyhouse.js:29
 msgid "Promoted queen"
 msgstr "Dame promue"
@@ -5197,183 +5229,197 @@ msgstr "L'archevêque et le chancelier peuvent se diviser et fusionner comme une
 msgid "Castling never rolls: a ghost on any square between the king and the rook blocks it, and the right is lost for good as soon as the king or that rook is not 100 % on its starting square. There is no check, so you may castle out of, through or into attack."
 msgstr "Le roque ne donne jamais lieu à un lancer : un fantôme sur n'importe quelle case entre le roi et la tour le bloque, et le droit de roquer est perdu définitivement dès que le roi ou cette tour n'est plus à 100 % sur sa case de départ. Il n'y a pas d'échec : vous pouvez donc roquer alors que votre roi est attaqué, en passant par une case attaquée ou en arrivant sur une case attaquée."
 
-#: src/variants/catalog.js:28 lib/Service/Game/VariantCatalog.php:67
+#: src/variants/catalog.js:28 lib/Service/Game/VariantCatalog.php:68
+msgid "Bee Flow Chess"
+msgstr "Bee Flow Chess"
+
+#: src/variants/catalog.js:29
+msgid "Protect your Queen Bee: hidden pieces, a shuffled back rank and a privacy shield around the queen."
+msgstr "Protégez votre reine des abeilles : pièces cachées, rangée arrière mélangée et bouclier de confidentialité autour de la reine."
+
+#: src/variants/catalog.js:38 lib/Service/Game/VariantCatalog.php:69
 msgid "3D chess (Raumschach)"
 msgstr "Échecs en 3D (Raumschach)"
 
-#: src/variants/catalog.js:29
+#: src/variants/catalog.js:39
 msgid "Five boards stacked into a 5 × 5 × 5 cube, with the unicorn flying through space."
 msgstr "Cinq échiquiers empilés en un cube de 5 × 5 × 5, avec la licorne qui vole à travers l'espace."
 
-#: src/variants/catalog.js:38 lib/Service/Game/VariantCatalog.php:68
+#: src/variants/catalog.js:48 lib/Service/Game/VariantCatalog.php:70
 msgid "Tri-Dimensional chess"
 msgstr "Échecs tridimensionnels"
 
-#: src/variants/catalog.js:39
+#: src/variants/catalog.js:49
 msgid "Three main levels and four attack boards, as seen on the starship Enterprise."
 msgstr "Trois niveaux principaux et quatre échiquiers d'attaque, comme à bord du vaisseau Enterprise."
 
-#: src/variants/catalog.js:48 lib/Service/Game/VariantCatalog.php:69
+#: src/variants/catalog.js:58 lib/Service/Game/VariantCatalog.php:71
 msgid "4D chess"
 msgstr "Échecs en 4D"
 
-#: src/variants/catalog.js:49
+#: src/variants/catalog.js:59
 msgid "A 4 × 4 grid of 4 × 4 boards: every piece gains two extra directions."
 msgstr "Une grille de 4 × 4 échiquiers de 4 × 4 : chaque pièce gagne deux directions supplémentaires."
 
-#: src/variants/catalog.js:55 lib/Service/Game/VariantCatalog.php:70
+#: src/variants/catalog.js:65 lib/Service/Game/VariantCatalog.php:72
 msgid "Multiverse chess (5D)"
 msgstr "Échecs du multivers (5D)"
 
-#: src/variants/catalog.js:56
+#: src/variants/catalog.js:66
 msgid "Travel back in time and create new timelines; capture a king on any of them."
 msgstr "Voyagez dans le passé et créez de nouvelles lignes temporelles ; prenez un roi sur n'importe laquelle d'entre elles."
 
-#: src/variants/catalog.js:65 lib/Service/Game/VariantCatalog.php:71
+#: src/variants/catalog.js:75 lib/Service/Game/VariantCatalog.php:73
 msgid "Kriegspiel"
 msgstr "Kriegspiel"
 
-#: src/variants/catalog.js:66
+#: src/variants/catalog.js:76
 msgid "You never see the enemy pieces; the umpire only says what happened."
 msgstr "Vous ne voyez jamais les pièces adverses ; l'arbitre dit seulement ce qui s'est passé."
 
-#: src/variants/catalog.js:72 lib/Service/Game/VariantCatalog.php:72
+#: src/variants/catalog.js:82 lib/Service/Game/VariantCatalog.php:74
 msgid "Fog of war"
 msgstr "Brouillard de guerre"
 
-#: src/variants/catalog.js:73
+#: src/variants/catalog.js:83
 msgid "You only see the squares your pieces can reach."
 msgstr "Vous ne voyez que les cases que vos pièces peuvent atteindre."
 
-#: src/variants/catalog.js:79 lib/Service/Game/VariantCatalog.php:73
+#: src/variants/catalog.js:89 lib/Service/Game/VariantCatalog.php:75
 msgid "Chess960"
 msgstr "Chess960"
 
-#: src/variants/catalog.js:80
+#: src/variants/catalog.js:90
 msgid "Fischer Random: the back rank is shuffled into one of 960 start positions."
 msgstr "Fischer Random : la première rangée est mélangée pour former l'une des 960 positions de départ."
 
-#: src/variants/catalog.js:86 lib/Service/Game/VariantCatalog.php:74
+#: src/variants/catalog.js:96 lib/Service/Game/VariantCatalog.php:76
 msgid "Atomic"
 msgstr "Échecs atomiques"
 
-#: src/variants/catalog.js:87
+#: src/variants/catalog.js:97
 msgid "Every capture explodes and removes the pieces around it."
 msgstr "Chaque prise explose et retire les pièces alentour."
 
-#: src/variants/catalog.js:93 lib/Service/Game/VariantCatalog.php:75
+#: src/variants/catalog.js:103 lib/Service/Game/VariantCatalog.php:77
 msgid "Crazyhouse"
 msgstr "Crazyhouse"
 
-#: src/variants/catalog.js:94
+#: src/variants/catalog.js:104
 msgid "Captured pieces change sides and can be dropped back onto the board."
 msgstr "Les pièces prises changent de camp et peuvent être parachutées sur l'échiquier."
 
-#: src/variants/catalog.js:100 lib/Service/Game/VariantCatalog.php:76
+#: src/variants/catalog.js:110 lib/Service/Game/VariantCatalog.php:78
 msgid "Bughouse"
 msgstr "Bughouse"
 
-#: src/variants/catalog.js:101
+#: src/variants/catalog.js:111
 msgid "Two boards, two teams: what you capture, your partner may drop."
 msgstr "Deux échiquiers, deux équipes : ce que vous prenez, votre partenaire peut le parachuter."
 
-#: src/variants/catalog.js:107 lib/Service/Game/VariantCatalog.php:77
+#: src/variants/catalog.js:117 lib/Service/Game/VariantCatalog.php:79
 msgid "Antichess"
 msgstr "Qui perd gagne"
 
-#: src/variants/catalog.js:108
+#: src/variants/catalog.js:118
 msgid "Capturing is compulsory and whoever loses all their pieces wins."
 msgstr "La prise est obligatoire, et celui qui perd toutes ses pièces gagne."
 
-#: src/variants/catalog.js:114 lib/Service/Game/VariantCatalog.php:78
+#: src/variants/catalog.js:124 lib/Service/Game/VariantCatalog.php:80
 msgid "King of the Hill"
 msgstr "Roi de la colline"
 
-#: src/variants/catalog.js:115
+#: src/variants/catalog.js:125
 msgid "Bring your king to one of the four centre squares to win."
 msgstr "Amenez votre roi sur l'une des quatre cases centrales pour gagner."
 
-#: src/variants/catalog.js:121 lib/Service/Game/VariantCatalog.php:79
+#: src/variants/catalog.js:131 lib/Service/Game/VariantCatalog.php:81
 msgid "Three-check"
 msgstr "Trois échecs"
 
-#: src/variants/catalog.js:122
+#: src/variants/catalog.js:132
 msgid "Put the enemy king in check three times to win."
 msgstr "Mettez le roi adverse en échec trois fois pour gagner."
 
-#: src/variants/catalog.js:128 lib/Service/Game/VariantCatalog.php:80
+#: src/variants/catalog.js:138 lib/Service/Game/VariantCatalog.php:82
 msgid "Horde"
 msgstr "Horde"
 
-#: src/variants/catalog.js:129
+#: src/variants/catalog.js:139
 msgid "White has 36 pawns against the complete black army."
 msgstr "Les Blancs ont 36 pions contre l'armée noire au complet."
 
-#: src/variants/catalog.js:135 lib/Service/Game/VariantCatalog.php:81
+#: src/variants/catalog.js:145 lib/Service/Game/VariantCatalog.php:83
 msgid "Hexagonal chess"
 msgstr "Échecs hexagonaux"
 
-#: src/variants/catalog.js:136
+#: src/variants/catalog.js:146
 msgid "Gliński's chess on 91 hexagons, with three bishops each."
 msgstr "Les échecs de Gliński sur 91 hexagones, avec trois fous par camp."
 
-#: src/variants/catalog.js:142 lib/Service/Game/VariantCatalog.php:82
+#: src/variants/catalog.js:152 lib/Service/Game/VariantCatalog.php:84
 msgid "Four-player chess"
 msgstr "Échecs à quatre"
 
-#: src/variants/catalog.js:143
+#: src/variants/catalog.js:153
 msgid "Four armies on a cross-shaped board; the last king standing wins."
 msgstr "Quatre armées sur un échiquier en forme de croix ; le dernier roi en jeu gagne."
 
-#: src/variants/catalog.js:149 lib/Service/Game/VariantCatalog.php:83
+#: src/variants/catalog.js:159 lib/Service/Game/VariantCatalog.php:85
 msgid "Capablanca chess"
 msgstr "Échecs Capablanca"
 
-#: src/variants/catalog.js:150
+#: src/variants/catalog.js:160
 msgid "A 10 × 8 board with the archbishop and the chancellor."
 msgstr "Un échiquier de 10 × 8 avec l'archevêque et le chancelier."
 
-#: src/variants/catalog.js:156 lib/Service/Game/VariantCatalog.php:84
+#: src/variants/catalog.js:166 lib/Service/Game/VariantCatalog.php:86
 msgid "Shogi"
 msgstr "Shogi"
 
-#: src/variants/catalog.js:157
+#: src/variants/catalog.js:167
 msgid "Japanese chess: captured pieces join your army and promote in the enemy camp."
 msgstr "Les échecs japonais : les pièces prises rejoignent votre armée, et la promotion se fait dans le camp adverse."
 
-#: src/variants/catalog.js:166 lib/Service/Game/VariantCatalog.php:85
+#: src/variants/catalog.js:176 lib/Service/Game/VariantCatalog.php:87
 msgid "Xiangqi"
 msgstr "Xiangqi"
 
-#: src/variants/catalog.js:167
+#: src/variants/catalog.js:177
 msgid "Chinese chess with a river, two palaces and the cannon."
 msgstr "Les échecs chinois, avec une rivière, deux palais et le canon."
 
-#: src/variants/catalog.js:173 lib/Service/Game/VariantCatalog.php:86
+#: src/variants/catalog.js:183 lib/Service/Game/VariantCatalog.php:88
 msgid "Makruk"
 msgstr "Makruk"
 
-#: src/variants/catalog.js:174
+#: src/variants/catalog.js:184
 msgid "Thai chess, close to the ancient form of the game."
 msgstr "Les échecs thaïlandais, proches de la forme ancienne du jeu."
 
-#: src/variants/catalog.js:187
+#. TRANSLATORS: the heading of the variant named after Bee-Flow, the private AI workspace (a product name)
+#: src/variants/catalog.js:198
+msgid "Bee-Flow"
+msgstr "Bee-Flow"
+
+#. TRANSLATORS: the heading of the variant named after Bee-Flow, the private AI workspace (a product name)
+#: src/variants/catalog.js:200
 msgid "Other dimensions"
 msgstr "Autres dimensions"
 
-#: src/variants/catalog.js:189
+#: src/variants/catalog.js:202
 msgid "Hidden information"
 msgstr "Information cachée"
 
-#: src/variants/catalog.js:191
+#: src/variants/catalog.js:204
 msgid "Different rules"
 msgstr "Règles différentes"
 
-#: src/variants/catalog.js:193
+#: src/variants/catalog.js:206
 msgid "Different boards and more players"
 msgstr "Autres échiquiers et plus de joueurs"
 
-#: src/variants/catalog.js:195
+#: src/variants/catalog.js:208
 msgid "Regional relatives"
 msgstr "Cousins régionaux"
 
@@ -5504,10 +5550,6 @@ msgstr "Deux rois seuls ne donnent pas la nulle : un roi qui se place à côté
 #: src/variants/darkchess.js:61
 msgid "In pass & play each player sees only their own view: hand the device over when asked. Undo is off until the game ends, and then the whole board is revealed."
 msgstr "En jeu à deux, chaque joueur n'a accès qu'à sa propre vue : passez l'appareil quand on vous le demande. L'annulation des coups est désactivée jusqu'à la fin de la partie, puis tout l'échiquier est révélé."
-
-#: src/variants/darkchess.js:491 src/views/VariantGameView.vue:855
-msgid "Capture on {squares}"
-msgstr "Prise sur {squares}"
 
 #. TRANSLATORS: a player of four-player chess, named after its colour (Xiangqi's first player is Red too)
 #: src/variants/fourplayer.js:499 src/variants/xiangqi.js:357
@@ -7269,8 +7311,8 @@ msgid "Computer ({level})"
 msgstr "Ordinateur ({level})"
 
 #: src/views/VariantsView.vue:26
-msgid "Twenty ways to play, from 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link."
-msgstr "Vingt façons de jouer, des échecs en 3D, en 4D et en 5D avec voyage dans le temps au shogi et au xiangqi. Chaque variante garde les règles quantiques : diviser, fusionner, mesurer, et atterrir = lancer, passer = lier."
+msgid "Twenty-one ways to play, from Bee Flow Chess and 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link."
+msgstr "Vingt et une façons de jouer, de Bee Flow Chess et des échecs en 3D, 4D et 5D avec voyage dans le temps au shogi et au xiangqi. Chaque variante garde les règles quantiques : diviser, fusionner, mesurer, et atterrir = lancer, passer = lier."
 
 #: src/views/VariantsView.vue:62
 msgid "The classic: chess with superposition. Also online against other players."
@@ -7299,7 +7341,7 @@ msgstr "En ligne, le serveur est l’arbitre : il voit tout l’échiquier et n�
 msgid "Turn the board to the player to move"
 msgstr "Tourner l'échiquier vers le joueur au trait"
 
-#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:81 lib/Service/Game/InvitationService.php:415 lib/Service/Game/InvitationService.php:420 lib/Service/Game/InvitationService.php:423 lib/Service/Game/VariantGameplayService.php:290 lib/Service/Game/VariantGameplayService.php:295 lib/Service/Game/VariantGameplayService.php:298 lib/Service/Game/VariantGameplayService.php:394 lib/Service/Player/StatsService.php:95 lib/Service/Player/StatsService.php:225 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
+#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:81 lib/Service/Game/InvitationService.php:415 lib/Service/Game/InvitationService.php:420 lib/Service/Game/InvitationService.php:423 lib/Service/Game/VariantGameplayService.php:303 lib/Service/Game/VariantGameplayService.php:308 lib/Service/Game/VariantGameplayService.php:311 lib/Service/Game/VariantGameplayService.php:407 lib/Service/Player/StatsService.php:95 lib/Service/Player/StatsService.php:225 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
 msgid "Invalid value"
 msgstr "Valeur invalide"
 
@@ -7631,15 +7673,15 @@ msgstr "La partie a changé entre-temps."
 msgid "Invalid cursor"
 msgstr "Curseur invalide"
 
-#: lib/Service/Game/GameplayService.php:69 lib/Service/Game/VariantGameplayService.php:187
+#: lib/Service/Game/GameplayService.php:69 lib/Service/Game/VariantGameplayService.php:200
 msgid "Invalid client id"
 msgstr "Identifiant client invalide"
 
-#: lib/Service/Game/GameplayService.php:91 lib/Service/Game/VariantGameplayService.php:165 lib/Service/Game/VariantGameplayService.php:198
+#: lib/Service/Game/GameplayService.php:91 lib/Service/Game/VariantGameplayService.php:178 lib/Service/Game/VariantGameplayService.php:211
 msgid "It is not your move."
 msgstr "Ce n'est pas à vous de jouer."
 
-#: lib/Service/Game/GameplayService.php:99 lib/Service/Game/VariantGameplayService.php:205
+#: lib/Service/Game/GameplayService.php:99 lib/Service/Game/VariantGameplayService.php:218
 msgid "This move is not possible."
 msgstr "Ce coup n'est pas possible."
 
@@ -7766,6 +7808,9 @@ msgstr "Le document de progression est trop volumineux."
 #: lib/Service/Player/TrainerProgressService.php:63
 msgid "The progress must be an object."
 msgstr "La progression doit être un objet."
+
+#~ msgid "Twenty ways to play, from 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link."
+#~ msgstr "Vingt façons de jouer, des échecs en 3D, en 4D et en 5D avec voyage dans le temps au shogi et au xiangqi. Chaque variante garde les règles quantiques : diviser, fusionner, mesurer, et atterrir = lancer, passer = lier."
 
 #~ msgid "Each player may open at most the number of new timelines set for the game (1 to 3). Your n-th new timeline is active (it counts for the present) while your opponent has opened at least n − 1; inactive timelines (hatched) can still be played. Pieces can travel back only as far as the game allows (2 or 4 turns); older boards are sealed: they are no longer shown, and nothing can travel there."
 #~ msgstr "Chaque joueur peut ouvrir au plus le nombre de nouvelles lignes temporelles fixé pour la partie (1 à 3). Votre n-ième nouvelle ligne temporelle est active (elle compte pour le présent) tant que votre adversaire en a ouvert au moins n − 1 ; on peut toujours jouer sur les lignes temporelles inactives (hachurées). Les pièces ne peuvent remonter dans le temps qu'aussi loin que la partie le permet (2 ou 4 tours) ; les échiquiers plus anciens sont scellés : ils ne sont plus affichés, et rien ne peut y voyager."
