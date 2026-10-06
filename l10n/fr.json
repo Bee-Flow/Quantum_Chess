@@ -1903,6 +1903,7 @@
     ],
     "Random seats: draw the seats when every player has joined": "Places au hasard : tirer les places au sort quand tous les joueurs ont rejoint",
     "You play": "Votre camp",
+    "Online, the server is the umpire: it sees the whole board and sends each player only their own view. The whole board is shown when the game ends.": "En ligne, le serveur est l’arbitre : il voit tout l’échiquier et n’envoie à chaque joueur que sa propre vue. Tout l’échiquier est montré à la fin de la partie.",
     "Turn the board to the player to move": "Tourner l'échiquier vers le joueur au trait",
     "Invalid value": "Valeur invalide",
     "The request is too large.": "La requête est trop volumineuse.",

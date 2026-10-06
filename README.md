@@ -52,7 +52,7 @@ other boards.
 - Made for phones too: large boards zoom with a pinch and pan with a finger; 4D chess, 5D chess and Bughouse open on
   the boards you play
 - Played on your own device, or online against people on your Nextcloud, four players in Four-player chess and
-  Bughouse (unrated; Kriegspiel and Fog of war on one device only, for now). Every variant's rules: [`docs/variants.md`](docs/variants.md)
+  Bughouse (unrated; in Kriegspiel and Fog of war the server is the umpire and shows each player only their own view). Every variant's rules: [`docs/variants.md`](docs/variants.md)
 
 **Learn**
 

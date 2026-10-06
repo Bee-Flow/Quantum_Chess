@@ -277,7 +277,8 @@ Paths are relative to `/index.php/apps/quantumchess`. `{id}` and `{taskId}` are 
 | POST | `/api/games/{id}/chat` | `game#chat` | 30 / min | `message` (text) or `phrase` (a phrase key) | `{message: ChatDTO, rev}` |
 | PUT | `/api/games/{id}/mute` | `game#mute` | 60 / min | `muted` | `{muted: bool}` |
 | POST | `/api/games/{id}/rematch` | `game#rematch` | 30 / h | | `{game: GameLive}` |
-| POST | `/api/games/{id}/v/moves` | `game#variantMove` | 240 / min | `code`, `ply`, `clientId`, `thinkMs` | `{game: GameLive, move, rev, now, replayed}` |
+| POST | `/api/games/{id}/v/moves` | `game#variantMove` | 240 / min | `code`, `ply`, `clientId`, `thinkMs` | `{game: GameLive, move, refused, rev, now, replayed}` |
+| POST | `/api/games/{id}/v/preview` | `game#variantPreview` | 240 / min | `code` | `{refused, outcomes}` |
 | POST | `/api/games/{id}/v/moves/{ply}/settle` | `game#settle` | 240 / min | `nextSeat`, `result`, `stateHash` | `{game: GameLive}` |
 | POST | `/api/games/{id}/v/dispute` | `game#dispute` | 30 / 10 min | `ply` | `{game: GameLive}` |
 
@@ -309,6 +310,15 @@ Notes:
   passes the turn to `nextSeat` and, with a `result`, ends the game. The same settlement again changes nothing; a
   different one annuls the game (`aborted`, reason `disputed`), as `dispute` does. Show, poll, accept, decline,
   cancel, join, resign, abort, draw, chat, mute and rematch work as for classic games.
+- **Kriegspiel and Fog of war** are ruled by the server ([`online-variants.md`](online-variants.md), section 6).
+  `v/moves` answers `refused: true` (and `move: null`) for a move the referee does not allow: nothing is stored and
+  the turn is not used. An accepted move is rolled, played and settled by the server at once; the answer's `move` is
+  only `{ply, seat}`. Every GameLive of a player carries `view`, the state as that player may know it (with `visible`,
+  the squares they see, and `legal`, the legal ordinary moves of the player to move in Fog of war); the `moves` of
+  show and poll stay empty while the game runs. Once the game has ended, `view` is the real state (`visible: null`)
+  and the moves come with their codes and rolls. `v/preview` gives the player to move the outcomes of a move
+  (`key`, `notes`, `p`, `captures`, `rolled`), without their results, or `refused: true`. `settle` and `dispute`
+  answer `409 invalid_status`.
 
 ### Statistics, trainer progress and preferences
 

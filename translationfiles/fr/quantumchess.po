@@ -313,7 +313,7 @@ msgstr "Coups avec lancer"
 msgid "Slow"
 msgstr "Lent"
 
-#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:956 src/views/VariantsView.vue:279
+#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:956 src/views/VariantsView.vue:283
 msgid "Normal"
 msgstr "Normal"
 
@@ -333,7 +333,7 @@ msgstr "Standard"
 msgid "Your colour"
 msgstr "Votre couleur"
 
-#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:150 src/views/VariantsView.vue:205
+#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:150 src/views/VariantsView.vue:208
 msgid "Random"
 msgstr "Au hasard"
 
@@ -349,7 +349,7 @@ msgstr "Noirs"
 msgid "Mode"
 msgstr "Mode"
 
-#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:155
+#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:158
 msgid "Level"
 msgstr "Niveau"
 
@@ -393,11 +393,11 @@ msgstr "Créer le défi"
 msgid "Send invitation"
 msgstr "Envoyer l'invitation"
 
-#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:230
+#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:233
 msgid "Start game"
 msgstr "Commencer la partie"
 
-#: src/app/components/NewGameDialog.vue:331 src/views/VariantsView.vue:428
+#: src/app/components/NewGameDialog.vue:331 src/views/VariantsView.vue:432
 msgid "The game could not be created. Please try again."
 msgstr "La partie n'a pas pu être créée. Veuillez réessayer."
 
@@ -2284,7 +2284,7 @@ msgstr "La discussion de cette partie est fermée."
 msgid "your opponent"
 msgstr "votre adversaire"
 
-#: src/online/components/GameChat.vue:179 lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:142 lib/Service/Game/GameSerializer.php:72 lib/Service/Game/GameSerializer.php:330
+#: src/online/components/GameChat.vue:179 lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:142 lib/Service/Game/GameSerializer.php:72 lib/Service/Game/GameSerializer.php:333
 msgid "Deleted user"
 msgstr "Utilisateur supprimé"
 
@@ -5193,7 +5193,7 @@ msgstr "L'archevêque et le chancelier peuvent se diviser et fusionner comme une
 msgid "Castling never rolls: a ghost on any square between the king and the rook blocks it, and the right is lost for good as soon as the king or that rook is not 100 % on its starting square. There is no check, so you may castle out of, through or into attack."
 msgstr "Le roque ne donne jamais lieu à un lancer : un fantôme sur n'importe quelle case entre le roi et la tour le bloque, et le droit de roquer est perdu définitivement dès que le roi ou cette tour n'est plus à 100 % sur sa case de départ. Il n'y a pas d'échec : vous pouvez donc roquer alors que votre roi est attaqué, en passant par une case attaquée ou en arrivant sur une case attaquée."
 
-#: src/variants/catalog.js:28 lib/Service/Game/VariantCatalog.php:64
+#: src/variants/catalog.js:28 lib/Service/Game/VariantCatalog.php:67
 msgid "3D chess (Raumschach)"
 msgstr "Échecs en 3D (Raumschach)"
 
@@ -5201,7 +5201,7 @@ msgstr "Échecs en 3D (Raumschach)"
 msgid "Five boards stacked into a 5 × 5 × 5 cube, with the unicorn flying through space."
 msgstr "Cinq échiquiers empilés en un cube de 5 × 5 × 5, avec la licorne qui vole à travers l'espace."
 
-#: src/variants/catalog.js:38 lib/Service/Game/VariantCatalog.php:65
+#: src/variants/catalog.js:38 lib/Service/Game/VariantCatalog.php:68
 msgid "Tri-Dimensional chess"
 msgstr "Échecs tridimensionnels"
 
@@ -5209,7 +5209,7 @@ msgstr "Échecs tridimensionnels"
 msgid "Three main levels and four attack boards, as seen on the starship Enterprise."
 msgstr "Trois niveaux principaux et quatre échiquiers d'attaque, comme à bord du vaisseau Enterprise."
 
-#: src/variants/catalog.js:48 lib/Service/Game/VariantCatalog.php:66
+#: src/variants/catalog.js:48 lib/Service/Game/VariantCatalog.php:69
 msgid "4D chess"
 msgstr "Échecs en 4D"
 
@@ -5217,7 +5217,7 @@ msgstr "Échecs en 4D"
 msgid "A 4 × 4 grid of 4 × 4 boards: every piece gains two extra directions."
 msgstr "Une grille de 4 × 4 échiquiers de 4 × 4 : chaque pièce gagne deux directions supplémentaires."
 
-#: src/variants/catalog.js:55 lib/Service/Game/VariantCatalog.php:67
+#: src/variants/catalog.js:55 lib/Service/Game/VariantCatalog.php:70
 msgid "Multiverse chess (5D)"
 msgstr "Échecs du multivers (5D)"
 
@@ -5225,7 +5225,7 @@ msgstr "Échecs du multivers (5D)"
 msgid "Travel back in time and create new timelines; capture a king on any of them."
 msgstr "Voyagez dans le passé et créez de nouvelles lignes temporelles ; prenez un roi sur n'importe laquelle d'entre elles."
 
-#: src/variants/catalog.js:65 lib/Service/Game/VariantCatalog.php:68
+#: src/variants/catalog.js:65 lib/Service/Game/VariantCatalog.php:71
 msgid "Kriegspiel"
 msgstr "Kriegspiel"
 
@@ -5233,7 +5233,7 @@ msgstr "Kriegspiel"
 msgid "You never see the enemy pieces; the umpire only says what happened."
 msgstr "Vous ne voyez jamais les pièces adverses ; l'arbitre dit seulement ce qui s'est passé."
 
-#: src/variants/catalog.js:72 lib/Service/Game/VariantCatalog.php:69
+#: src/variants/catalog.js:72 lib/Service/Game/VariantCatalog.php:72
 msgid "Fog of war"
 msgstr "Brouillard de guerre"
 
@@ -5241,7 +5241,7 @@ msgstr "Brouillard de guerre"
 msgid "You only see the squares your pieces can reach."
 msgstr "Vous ne voyez que les cases que vos pièces peuvent atteindre."
 
-#: src/variants/catalog.js:79 lib/Service/Game/VariantCatalog.php:70
+#: src/variants/catalog.js:79 lib/Service/Game/VariantCatalog.php:73
 msgid "Chess960"
 msgstr "Chess960"
 
@@ -5249,7 +5249,7 @@ msgstr "Chess960"
 msgid "Fischer Random: the back rank is shuffled into one of 960 start positions."
 msgstr "Fischer Random : la première rangée est mélangée pour former l'une des 960 positions de départ."
 
-#: src/variants/catalog.js:86 lib/Service/Game/VariantCatalog.php:71
+#: src/variants/catalog.js:86 lib/Service/Game/VariantCatalog.php:74
 msgid "Atomic"
 msgstr "Échecs atomiques"
 
@@ -5257,7 +5257,7 @@ msgstr "Échecs atomiques"
 msgid "Every capture explodes and removes the pieces around it."
 msgstr "Chaque prise explose et retire les pièces alentour."
 
-#: src/variants/catalog.js:93 lib/Service/Game/VariantCatalog.php:72
+#: src/variants/catalog.js:93 lib/Service/Game/VariantCatalog.php:75
 msgid "Crazyhouse"
 msgstr "Crazyhouse"
 
@@ -5265,7 +5265,7 @@ msgstr "Crazyhouse"
 msgid "Captured pieces change sides and can be dropped back onto the board."
 msgstr "Les pièces prises changent de camp et peuvent être parachutées sur l'échiquier."
 
-#: src/variants/catalog.js:100 lib/Service/Game/VariantCatalog.php:73
+#: src/variants/catalog.js:100 lib/Service/Game/VariantCatalog.php:76
 msgid "Bughouse"
 msgstr "Bughouse"
 
@@ -5273,7 +5273,7 @@ msgstr "Bughouse"
 msgid "Two boards, two teams: what you capture, your partner may drop."
 msgstr "Deux échiquiers, deux équipes : ce que vous prenez, votre partenaire peut le parachuter."
 
-#: src/variants/catalog.js:107 lib/Service/Game/VariantCatalog.php:74
+#: src/variants/catalog.js:107 lib/Service/Game/VariantCatalog.php:77
 msgid "Antichess"
 msgstr "Qui perd gagne"
 
@@ -5281,7 +5281,7 @@ msgstr "Qui perd gagne"
 msgid "Capturing is compulsory and whoever loses all their pieces wins."
 msgstr "La prise est obligatoire, et celui qui perd toutes ses pièces gagne."
 
-#: src/variants/catalog.js:114 lib/Service/Game/VariantCatalog.php:75
+#: src/variants/catalog.js:114 lib/Service/Game/VariantCatalog.php:78
 msgid "King of the Hill"
 msgstr "Roi de la colline"
 
@@ -5289,7 +5289,7 @@ msgstr "Roi de la colline"
 msgid "Bring your king to one of the four centre squares to win."
 msgstr "Amenez votre roi sur l'une des quatre cases centrales pour gagner."
 
-#: src/variants/catalog.js:121 lib/Service/Game/VariantCatalog.php:76
+#: src/variants/catalog.js:121 lib/Service/Game/VariantCatalog.php:79
 msgid "Three-check"
 msgstr "Trois échecs"
 
@@ -5297,7 +5297,7 @@ msgstr "Trois échecs"
 msgid "Put the enemy king in check three times to win."
 msgstr "Mettez le roi adverse en échec trois fois pour gagner."
 
-#: src/variants/catalog.js:128 lib/Service/Game/VariantCatalog.php:77
+#: src/variants/catalog.js:128 lib/Service/Game/VariantCatalog.php:80
 msgid "Horde"
 msgstr "Horde"
 
@@ -5305,7 +5305,7 @@ msgstr "Horde"
 msgid "White has 36 pawns against the complete black army."
 msgstr "Les Blancs ont 36 pions contre l'armée noire au complet."
 
-#: src/variants/catalog.js:135 lib/Service/Game/VariantCatalog.php:78
+#: src/variants/catalog.js:135 lib/Service/Game/VariantCatalog.php:81
 msgid "Hexagonal chess"
 msgstr "Échecs hexagonaux"
 
@@ -5313,7 +5313,7 @@ msgstr "Échecs hexagonaux"
 msgid "Gliński's chess on 91 hexagons, with three bishops each."
 msgstr "Les échecs de Gliński sur 91 hexagones, avec trois fous par camp."
 
-#: src/variants/catalog.js:142 lib/Service/Game/VariantCatalog.php:79
+#: src/variants/catalog.js:142 lib/Service/Game/VariantCatalog.php:82
 msgid "Four-player chess"
 msgstr "Échecs à quatre"
 
@@ -5321,7 +5321,7 @@ msgstr "Échecs à quatre"
 msgid "Four armies on a cross-shaped board; the last king standing wins."
 msgstr "Quatre armées sur un échiquier en forme de croix ; le dernier roi en jeu gagne."
 
-#: src/variants/catalog.js:149 lib/Service/Game/VariantCatalog.php:80
+#: src/variants/catalog.js:149 lib/Service/Game/VariantCatalog.php:83
 msgid "Capablanca chess"
 msgstr "Échecs Capablanca"
 
@@ -5329,7 +5329,7 @@ msgstr "Échecs Capablanca"
 msgid "A 10 × 8 board with the archbishop and the chancellor."
 msgstr "Un échiquier de 10 × 8 avec l'archevêque et le chancelier."
 
-#: src/variants/catalog.js:156 lib/Service/Game/VariantCatalog.php:81
+#: src/variants/catalog.js:156 lib/Service/Game/VariantCatalog.php:84
 msgid "Shogi"
 msgstr "Shogi"
 
@@ -5337,7 +5337,7 @@ msgstr "Shogi"
 msgid "Japanese chess: captured pieces join your army and promote in the enemy camp."
 msgstr "Les échecs japonais : les pièces prises rejoignent votre armée, et la promotion se fait dans le camp adverse."
 
-#: src/variants/catalog.js:166 lib/Service/Game/VariantCatalog.php:82
+#: src/variants/catalog.js:166 lib/Service/Game/VariantCatalog.php:85
 msgid "Xiangqi"
 msgstr "Xiangqi"
 
@@ -5345,7 +5345,7 @@ msgstr "Xiangqi"
 msgid "Chinese chess with a river, two palaces and the cannon."
 msgstr "Les échecs chinois, avec une rivière, deux palais et le canon."
 
-#: src/variants/catalog.js:173 lib/Service/Game/VariantCatalog.php:83
+#: src/variants/catalog.js:173 lib/Service/Game/VariantCatalog.php:86
 msgid "Makruk"
 msgstr "Makruk"
 
@@ -7155,7 +7155,7 @@ msgstr "Ce coup est décidé par un lancer :"
 msgid "Play and roll"
 msgstr "Jouer et lancer les dés"
 
-#: src/views/VariantGameView.vue:377 src/views/VariantsView.vue:223
+#: src/views/VariantGameView.vue:377 src/views/VariantsView.vue:226
 msgid "This game could not be saved on this device."
 msgstr "Cette partie n'a pas pu être enregistrée sur cet appareil."
 
@@ -7248,11 +7248,11 @@ msgstr "Dernier tour des {side}"
 msgid "A move"
 msgstr "Un coup"
 
-#: src/views/VariantGameView.vue:955 src/views/VariantsView.vue:278
+#: src/views/VariantGameView.vue:955 src/views/VariantsView.vue:282
 msgid "Easy"
 msgstr "Facile"
 
-#: src/views/VariantGameView.vue:957 src/views/VariantsView.vue:280
+#: src/views/VariantGameView.vue:957 src/views/VariantsView.vue:284
 msgid "Hard"
 msgstr "Difficile"
 
@@ -7279,15 +7279,19 @@ msgstr[2] "%n joueurs"
 msgid "Random seats: draw the seats when every player has joined"
 msgstr "Places au hasard : tirer les places au sort quand tous les joueurs ont rejoint"
 
-#: src/views/VariantsView.vue:135 src/views/VariantsView.vue:167
+#: src/views/VariantsView.vue:135 src/views/VariantsView.vue:170
 msgid "You play"
 msgstr "Votre camp"
 
-#: src/views/VariantsView.vue:220
+#: src/views/VariantsView.vue:154
+msgid "Online, the server is the umpire: it sees the whole board and sends each player only their own view. The whole board is shown when the game ends."
+msgstr "En ligne, le serveur est l’arbitre : il voit tout l’échiquier et n’envoie à chaque joueur que sa propre vue. Tout l’échiquier est montré à la fin de la partie."
+
+#: src/views/VariantsView.vue:223
 msgid "Turn the board to the player to move"
 msgstr "Tourner l'échiquier vers le joueur au trait"
 
-#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:78 lib/Service/Game/InvitationService.php:364 lib/Service/Game/InvitationService.php:369 lib/Service/Game/InvitationService.php:372 lib/Service/Game/VariantGameplayService.php:190 lib/Service/Game/VariantGameplayService.php:195 lib/Service/Game/VariantGameplayService.php:198 lib/Service/Game/VariantGameplayService.php:276 lib/Service/Player/StatsService.php:201 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
+#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:78 lib/Service/Game/InvitationService.php:364 lib/Service/Game/InvitationService.php:369 lib/Service/Game/InvitationService.php:372 lib/Service/Game/VariantGameplayService.php:290 lib/Service/Game/VariantGameplayService.php:295 lib/Service/Game/VariantGameplayService.php:298 lib/Service/Game/VariantGameplayService.php:394 lib/Service/Player/StatsService.php:201 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
 msgid "Invalid value"
 msgstr "Valeur invalide"
 
@@ -7619,15 +7623,15 @@ msgstr "La partie a changé entre-temps."
 msgid "Invalid cursor"
 msgstr "Curseur invalide"
 
-#: lib/Service/Game/GameplayService.php:69 lib/Service/Game/VariantGameplayService.php:115
+#: lib/Service/Game/GameplayService.php:69 lib/Service/Game/VariantGameplayService.php:187
 msgid "Invalid client id"
 msgstr "Identifiant client invalide"
 
-#: lib/Service/Game/GameplayService.php:91 lib/Service/Game/VariantGameplayService.php:126
+#: lib/Service/Game/GameplayService.php:91 lib/Service/Game/VariantGameplayService.php:165 lib/Service/Game/VariantGameplayService.php:198
 msgid "It is not your move."
 msgstr "Ce n'est pas à vous de jouer."
 
-#: lib/Service/Game/GameplayService.php:99 lib/Service/Game/VariantGameplayService.php:133
+#: lib/Service/Game/GameplayService.php:99 lib/Service/Game/VariantGameplayService.php:205
 msgid "This move is not possible."
 msgstr "Ce coup n'est pas possible."
 

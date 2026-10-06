@@ -423,6 +423,7 @@ and the browsers rule. The player-facing rules are in [`docs/variants.md`](../va
 | `core/quantum.js` | The quantum layer (section 5.6.2) |
 | `core/ai.js` | The computer player of the variants (section 5.6.4) |
 | `online.js` | What online play needs (prepared, see [`online-variants.md`](online-variants.md)): which variants can be played online, their seats and teams, result codes, the position hash, and `replayOnline`, the replay of stored moves with the server's rolls that finds the first claim that does not agree |
+| `referee.js` | The views of the server-ruled variants (Kriegspiel, Fog of war) that the server sends each player, and the odds of a move before it is confirmed; twin of `lib/Variants/VariantEngine.php` (section 5.6.6) |
 | `<id>.js` | One module per variant: its board, pieces, setup, options, special moves, win conditions and rules card, declared through the hooks of section 5.6.3 |
 | `chess960/`, `kriegspiel/`, `trid/`, `multiverse/` | The parts of the larger variants: the Chess960 start-position numbers; the Kriegspiel umpire and the computer's view; the Tri-Dimensional board; and the multiverse (5D) in `skeleton.js` (geometry, timelines, the present), `pieces.js`, `setup.js` (the 21 official setups), `moves.js`, `engine.js` (applying moves, idle worlds, the unfinishable turn), `texts.js` (records and texts), `layout.js` (the drawing) and `ai.js` (the computer's hooks) |
 
@@ -558,9 +559,9 @@ variant and checks the invariants of the quantum layer after every move.
 
 #### 5.6.6 Online variant games
 
-The plan and its later phases are in [`online-variants.md`](online-variants.md). The variants without hidden
-information can be played online, Four-player chess and Bughouse with four seats. The server does not know their rules; it draws the dice and keeps the order
-of play, and the browsers rule:
+The plan and its later phases are in [`online-variants.md`](online-variants.md). Every variant can be played online,
+Four-player chess and Bughouse with four seats. For the variants without hidden information the server does not know
+their rules; it draws the dice and keeps the order of play, and the browsers rule:
 
 - **Server.** A variant game is a row of `qchess_games` with `variant`, its options and its rules version
   (`VariantCatalog::RULES_VERSION`), seats in `qchess_seats` and moves in `qchess_vmoves`. Seat 0 plays as White and
@@ -586,6 +587,14 @@ of play, and the browsers rule:
   (`src/variants/online.js`), settles the moves it plays, disputes one that does not agree, checks the variant chain,
   and does not replay a game of another rules version. `OnlineVariantPanel` shows the players, the state of the game,
   draw offers and the chat.
+- **Server-ruled variants.** Kriegspiel and Fog of war (`VariantCatalog::isRefereed`) hide pieces, so the server
+  rules them with `lib/Variants/`, the PHP twin of the part of the variant layer they use (the 8 × 8 orthodox board,
+  the quantum layer, the umpire and the fog), kept identical with `tests/fixtures/referee/`. The real state lives in
+  `VariantTurn` (`board`); `VariantGameplayService` refuses or plays and settles each move, and `viewOf` gives each
+  player their view (`viewFor` of `src/variants/referee.js`), the real state once the game has ended. In the web app
+  `useOnlineVariantGame` drives `useVariantGame` through a host with `ruled: true`: the board shows the view as its
+  state (`visible` and `legal` from the server), attempts go to the server (Fog of war asks `v/preview` for the odds
+  first), and after the end the revealed moves are replayed and the chain checked.
 - **Rules versions.** `ONLINE_RULES_VERSION` (`src/variants/online.js`) and `VariantCatalog::RULES_VERSION` go up
   together with every change of a variant's rules; `tests/fixtures/online-variants.json` holds recorded games that
   change when a rule does.

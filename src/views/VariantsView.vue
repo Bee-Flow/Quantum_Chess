@@ -150,6 +150,9 @@
 							{{ t('quantumchess', 'Random') }}
 						</NcCheckboxRadioSwitch>
 					</fieldset>
+					<p v-if="isRefereed(setup.entry.id)" class="qc-variants__describe">
+						{{ t('quantumchess', 'Online, the server is the umpire: it sees the whole board and sends each player only their own view. The whole board is shown when the game ends.') }}
+					</p>
 				</template>
 				<fieldset v-if="setup.opponent === 'computer'">
 					<legend>{{ t('quantumchess', 'Level') }}</legend>
@@ -257,6 +260,7 @@ import {
 	CATEGORIES,
 	categoryName,
 	isOnlineVariant,
+	isRefereed,
 	loadVariant,
 	newGame,
 	optionValues,

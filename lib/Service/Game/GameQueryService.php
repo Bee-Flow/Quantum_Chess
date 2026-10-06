@@ -236,12 +236,16 @@ class GameQueryService {
 	}
 
 	/**
-	 * The moves of a game from `$fromPly`: classic moves, or the moves of a chess variant game.
+	 * The moves of a game from `$fromPly`: classic moves, or the moves of a chess variant game. The moves of a
+	 * server-ruled game stay hidden until it has ended: the players follow it through their views.
 	 *
 	 * @return list<Move>|list<VariantMove>
 	 */
 	private function movesOf(Game $game, int $fromPly): array {
 		$id = (int)$game->getId();
+		if (VariantCatalog::isRefereed((string)$game->getVariant()) && !$game->hasEnded()) {
+			return [];
+		}
 		return $game->isVariant()
 			? $this->variantMoves->findByGame($id, $fromPly)
 			: $this->moves->findByGame($id, $fromPly);

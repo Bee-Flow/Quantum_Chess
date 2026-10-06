@@ -390,7 +390,8 @@ class InvitationService {
 		$game->setVariantOptions(VariantChain::canonicalOptions($options));
 		$game->setVariantRules(VariantCatalog::RULES_VERSION);
 		$game->setSeatCount(VariantCatalog::seatCount($variant));
-		$game->setState(VariantTurn::start()->json());
+		// a server-ruled variant keeps its real position from the start (VariantTurn `board`)
+		$game->setState(VariantGameplayService::startTurn($variant)->json());
 	}
 
 	/**

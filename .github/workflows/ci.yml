@@ -117,6 +117,13 @@ jobs:
           npm run fixtures:online
           git diff --stat --exit-code -- tests/fixtures/online-variants.json
 
+      - name: Referee fixtures are up to date
+        run: |
+          node tests/fixtures/generate-referee-fixtures.mjs
+          git diff --stat --exit-code -- tests/fixtures/referee
+          test -z "$(git status --porcelain -- tests/fixtures/referee)" \
+            || { git status --short -- tests/fixtures/referee; exit 1; }
+
   php:
     name: PHP ${{ matrix.php }}
     runs-on: ubuntu-latest

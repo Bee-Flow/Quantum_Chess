@@ -55,9 +55,9 @@ describe('online variants: catalogue', () => {
 		}
 	})
 
-	it('keeps the hidden-information variants offline and knows no unknown variant', () => {
-		expect(isOnlineVariant('kriegspiel')).toBe(false)
-		expect(isOnlineVariant('darkchess')).toBe(false)
+	it('plays every variant online, the hidden-information ones too, and knows no unknown variant', () => {
+		expect(isOnlineVariant('kriegspiel')).toBe(true)
+		expect(isOnlineVariant('darkchess')).toBe(true)
 		expect(isOnlineVariant('bughouse')).toBe(true)
 		expect(isOnlineVariant('classic')).toBe(false)
 		expect(seatCount('classic')).toBe(0)

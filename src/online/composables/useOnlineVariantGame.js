@@ -18,6 +18,11 @@
  *   then annuls. A changed chain only warns: the game's history was changed after this browser saw it.
  * - **Another rules version.** A game created with other variant rules (`variantRules`) is not replayed: the player is
  *   asked to update the app.
+ * - **Server-ruled variants** (Kriegspiel and Fog of war, src/variants/referee.js): the server holds the real position
+ *   and decides every move, so nothing is replayed while the game runs. The board shows the player's view from the
+ *   game (`game.view`); a move goes to the server, which refuses it or answers with the new view, and Fog of war asks
+ *   the server for the odds of a move first. Once the game has ended, the server reveals the real position and every
+ *   move: this browser replays them with the rules it knows and checks the chain, and warns when they do not agree.
  */
 
 import { computed, ref, shallowRef, watch } from 'vue'
@@ -26,6 +31,7 @@ import { uuid as realUuid } from '../../services/ids.js'
 import { useVariantGame } from '../../variantplay/composables/useVariantGame.js'
 import { moveSquares, sidePieceType } from '../../variantplay/marks.js'
 import {
+	isRefereed,
 	loadVariant,
 	newGame,
 	ONLINE_RULES_VERSION,
@@ -153,7 +159,52 @@ export function useOnlineVariantGame(c, {
 		}
 	}
 
-	const host = {
+	const ruled = isRefereed(c.game.value.variant)
+
+	/**
+	 * A view of a server-ruled game as the board shows it: the real position of an ended game that has no result on
+	 * the board (a resignation, a time-out, an agreed draw) gets the game's result.
+	 *
+	 * @param {object|null} view the view from the server
+	 * @return {object|null}
+	 */
+	function shown(view) {
+		const g = c.game.value
+		if (!view || view.visible !== null || view.result || !g.result || g.result === '*') {
+			return view
+		}
+		const winner = g.result === '1-0' ? 0 : g.result === '0-1' ? 1 : null
+		const reason = g.resultReason === 'resignation' ? 'resign' : String(g.resultReason ?? '')
+		return { ...view, result: { winner, reason } }
+	}
+
+	/**
+	 * Send a move, again after a network error, with the same client id.
+	 *
+	 * @param {object} state the state before the move
+	 * @param {string} code move code
+	 * @return {Promise<object>} the server's answer
+	 */
+	async function sendMove(state, code) {
+		const clientId = uuid()
+		const thinkMs = Math.max(0, now() - turnSince)
+		for (let attempt = 0; ; attempt++) {
+			try {
+				return await api.sendVariantMove(id, { code, ply: state.ply, clientId, thinkMs })
+			} catch (e) {
+				const retry = attempt < RETRY_DELAYS_MS.length && (!e?.status || e.status >= 500)
+				if (!retry) {
+					c.noteActivity()
+					throw e
+				}
+				await sleep(RETRY_DELAYS_MS[attempt])
+			}
+		}
+	}
+
+	/** The host of a server-ruled game (see the header). */
+	const ruledHost = {
+		ruled: true,
 		async load() {
 			const g = c.game.value
 			if (g.variantRules !== ONLINE_RULES_VERSION) {
@@ -161,66 +212,116 @@ export function useOnlineVariantGame(c, {
 				return null
 			}
 			V = await loadVariant(g.variant)
-			const options = optionValues(V, g.variantOptions ?? {})
-			const initial = newGame(V, options)
-			const stored = c.variantMoves.value.filter(Boolean)
-			checkChain(stored)
-			const list = []
-			const r = replayOnline(V, initial, stored, (m, played, before) => {
-				const { from } = moveSquares(V, m.code, [])
-				const type = from.length ? sidePieceType(before, from[0], before.turn) : null
-				const i = played.outcomes.indexOf(played.branch)
-				list.push(type ? { code: m.code, i, t: type } : { code: m.code, i })
-				remember(m, played.state)
-			})
-			if (r.mismatch) {
-				dispute(r.mismatch.ply)
+			const view = shown(g.view ?? null)
+			if (!view) {
+				return null
 			}
-			const last = stored[r.state.ply - 1]
-			if (last && !settled(last) && r.settlement) {
-				settle(last.ply, r.settlement)
-			}
-			const seats = V.sides.map((_, i) => ({ kind: i === mySeat.value ? 'human' : 'remote' }))
 			return {
 				v: 2,
 				id: 'online-' + id,
 				variant: g.variant,
-				options,
-				players: seats,
+				options: optionValues(V, g.variantOptions ?? {}),
+				players: V.sides.map((_, i) => ({ kind: i === mySeat.value ? 'human' : 'remote' })),
 				autoFlip: false,
-				initial,
-				moves: list,
+				initial: view,
+				moves: (view.history ?? []).map((h) => ({ code: h.code, i: 0 })),
 				rolls: {},
-				current: r.state,
+				current: view,
 			}
 		},
 		async send(state, code) {
-			const clientId = uuid()
-			const thinkMs = Math.max(0, now() - turnSince)
-			for (let attempt = 0; ; attempt++) {
-				try {
-					const res = await api.sendVariantMove(id, { code, ply: state.ply, clientId, thinkMs })
-					return res.move.u
-				} catch (e) {
-					const retry = attempt < RETRY_DELAYS_MS.length && (!e?.status || e.status >= 500)
-					if (!retry) {
-						c.noteActivity()
-						throw e
-					}
-					await sleep(RETRY_DELAYS_MS[attempt])
-				}
+			const res = await sendMove(state, code)
+			c.noteActivity()
+			if (res.refused) {
+				return { refused: true }
 			}
-		},
-		played(before, code, next) {
-			const m = { ply: before.ply, nextSeat: null }
-			remember(m, next)
 			turnSince = now()
-			settle(before.ply, settlementOf(next))
+			return { view: shown(res.game?.view ?? null) }
 		},
+		async preview(state, code) {
+			const res = await api.previewVariantMove(id, code)
+			return res.refused ? null : res.outcomes
+		},
+		played() {},
 		resign() {
 			c.resign()
 		},
 	}
+
+	/**
+	 * Replay the moves of an ended server-ruled game, which the server revealed, and check them and the chain: a
+	 * difference means the server's rules or history differ from this app's.
+	 */
+	function checkRevealed() {
+		const moves = c.variantMoves.value.filter(Boolean)
+		const g = c.game.value
+		if (!V || !moves.length || moves.length !== g.ply || problem.value) {
+			return
+		}
+		checkChain(moves)
+		const r = replayOnline(V, newGame(V, optionValues(V, g.variantOptions ?? {})), moves)
+		if (r.mismatch) {
+			problem.value = 'altered'
+		}
+	}
+
+	const host = ruled
+		? ruledHost
+		: {
+				async load() {
+					const g = c.game.value
+					if (g.variantRules !== ONLINE_RULES_VERSION) {
+						problem.value = 'rules'
+						return null
+					}
+					V = await loadVariant(g.variant)
+					const options = optionValues(V, g.variantOptions ?? {})
+					const initial = newGame(V, options)
+					const stored = c.variantMoves.value.filter(Boolean)
+					checkChain(stored)
+					const list = []
+					const r = replayOnline(V, initial, stored, (m, played, before) => {
+						const { from } = moveSquares(V, m.code, [])
+						const type = from.length ? sidePieceType(before, from[0], before.turn) : null
+						const i = played.outcomes.indexOf(played.branch)
+						list.push(type ? { code: m.code, i, t: type } : { code: m.code, i })
+						remember(m, played.state)
+					})
+					if (r.mismatch) {
+						dispute(r.mismatch.ply)
+					}
+					const last = stored[r.state.ply - 1]
+					if (last && !settled(last) && r.settlement) {
+						settle(last.ply, r.settlement)
+					}
+					const seats = V.sides.map((_, i) => ({ kind: i === mySeat.value ? 'human' : 'remote' }))
+					return {
+						v: 2,
+						id: 'online-' + id,
+						variant: g.variant,
+						options,
+						players: seats,
+						autoFlip: false,
+						initial,
+						moves: list,
+						rolls: {},
+						current: r.state,
+					}
+				},
+				async send(state, code) {
+					const res = await sendMove(state, code)
+					return res.move.u
+				},
+				played(before, code, next) {
+					const m = { ply: before.ply, nextSeat: null }
+					remember(m, next)
+					turnSince = now()
+					settle(before.ply, settlementOf(next))
+				},
+				resign() {
+					c.resign()
+				},
+			}
 
 	const game = useVariantGame('online-' + id, host)
 
@@ -263,7 +364,16 @@ export function useOnlineVariantGame(c, {
 		}
 	}
 
-	watch(() => c.variantMoves.value, sync)
+	if (ruled) {
+		watch(() => c.game.value?.view, (view) => {
+			if (!stopped && V) {
+				game.setView(shown(view ?? null))
+			}
+		})
+		watch(() => c.variantMoves.value, checkRevealed)
+	} else {
+		watch(() => c.variantMoves.value, sync)
+	}
 	watch(() => c.game.value?.status, (status) => {
 		if (status && status !== 'active') {
 			game.freeze()
@@ -273,7 +383,11 @@ export function useOnlineVariantGame(c, {
 	/** Load the board. */
 	async function start() {
 		await game.load()
-		sync()
+		if (ruled) {
+			checkRevealed()
+		} else {
+			sync()
+		}
 	}
 
 	/** Stop playing along (when leaving the page). */

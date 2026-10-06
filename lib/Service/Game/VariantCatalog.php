@@ -49,8 +49,11 @@ final class VariantCatalog {
 		'makruk' => 2,
 	];
 
-	/** Variants whose hidden information every player would see, since every browser replays the full state. */
-	private const OFFLINE_ONLY = ['kriegspiel', 'darkchess'];
+	/**
+	 * Variants with hidden information, which the server rules (lib/Variants/): every browser replaying the full state
+	 * would show every player the hidden pieces.
+	 */
+	private const REFEREED = ['kriegspiel', 'darkchess'];
 
 	/** The teams of a four-seat team game: the seats with the same parity play together. */
 	private const PAIRS = [[0, 2], [1, 3]];
@@ -95,7 +98,12 @@ final class VariantCatalog {
 	}
 
 	public static function isOnline(string $id): bool {
-		return self::exists($id) && !in_array($id, self::OFFLINE_ONLY, true);
+		return self::exists($id);
+	}
+
+	/** Whether the server rules the online games of a variant (docs/development/online-variants.md, section 6). */
+	public static function isRefereed(string $id): bool {
+		return in_array($id, self::REFEREED, true);
 	}
 
 	/** The number of seats of a variant, or 0 for an unknown variant. */

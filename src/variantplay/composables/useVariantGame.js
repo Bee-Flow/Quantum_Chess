@@ -50,6 +50,13 @@
  * The other seat's moves arrive through `playRemote(code, u)`; its players have the kind `remote`, whose turns this
  * composable only waits for. An online game has no undo, and a move that the server refused leaves the position as it
  * was, with the notice `sendFailed`.
+ *
+ * A host with `ruled: true` (Kriegspiel and Fog of war online, src/variants/referee.js) rules nothing here: the board
+ * shows the player's view that the server sent, a state with the squares the player sees (`visible`) and, in Fog of
+ * war, the legal moves (`legal`). `send(state, code)` then resolves to `{ refused: true }` or `{ view }`,
+ * `preview(state, code)` to the outcomes of a move or null, and a new view from the server comes in through
+ * `setView(view)`. Once the game has ended, the server sends the real state with `visible: null`, and nothing is
+ * secret any more.
  */
 
 import { computed, markRaw, ref, shallowRef } from 'vue'
@@ -79,7 +86,7 @@ import {
 	sidePieceType,
 	turnMoveMarks,
 } from '../marks.js'
-import { needsConfirmation, refusalKind, resignResult } from '../panel.js'
+import { isSecret, needsConfirmation, refusalKind, resignResult } from '../panel.js'
 import { rollMemoKey } from '../rolls.js'
 import { loadVariantGame, saveVariantGame } from '../variantGames.js'
 
@@ -92,7 +99,12 @@ import { loadVariantGame, saveVariantGame } from '../variantGames.js'
  * @return {object[]}
  */
 function candidateMoves(V, state) {
-	return V.candidateMoves ? V.candidateMoves(state) : legalMoves(V, state).filter((m) => m.type === 'move')
+	if (V.candidateMoves) {
+		return V.candidateMoves(state)
+	}
+	const list = legalMoves(V, state).filter((m) => m.type === 'move')
+	// a view from the server knows the legal moves of the real state (Fog of war)
+	return Array.isArray(state.legal) ? list.filter((m) => state.legal.includes(m.code)) : list
 }
 
 /**
@@ -101,6 +113,8 @@ function candidateMoves(V, state) {
  * @property {(state: object, code: string) => Promise<number>} send send a move; resolves to its roll u in [0, T)
  * @property {(state: object, code: string, next: object) => void} played the move was played: settle it
  * @property {() => void} resign resign the game
+ * @property {boolean} [ruled] the server rules the game and sends views (see the header)
+ * @property {(state: object, code: string) => Promise<object[]|null>} [preview] the outcomes of a move (ruled)
  */
 
 /**
@@ -186,10 +200,12 @@ export function useVariantGame(id, host = null) {
 	})
 
 	const hidden = computed(() => {
-		if (!V.value?.visibility || !state.value || state.value.result) {
+		if (!V.value?.visibility || !isSecret(V.value, state.value)) {
 			return null
 		}
-		const visible = V.value.visibility(state.value, viewer.value)
+		const visible = Array.isArray(state.value.visible)
+			? new Set(state.value.visible)
+			: V.value.visibility(state.value, viewer.value)
 		const out = new Set()
 		for (let sq = 0; sq < V.value.topology.size; sq++) {
 			if (!visible.has(sq)) {
@@ -214,7 +230,7 @@ export function useVariantGame(id, host = null) {
 	}))
 
 	/** Whether a hidden-information game is running (no undo, no danger line, the other budgets unknown). */
-	const secret = computed(() => Boolean(V.value?.hidden && state.value && !state.value.result))
+	const secret = computed(() => isSecret(V.value, state.value))
 
 	/**
 	 * The state as the viewer knows it (`V.ownView`), computed once per state and viewer: it rebuilds every world, and
@@ -224,7 +240,7 @@ export function useVariantGame(id, host = null) {
 		if (!V.value || !state.value) {
 			return null
 		}
-		return V.value.ownView && !state.value.result ? V.value.ownView(state.value, viewer.value) : state.value
+		return V.value.ownView && secret.value ? V.value.ownView(state.value, viewer.value) : state.value
 	})
 
 	/** Whether the side to move must capture (compulsory capture): Split and Measure are not allowed then. */
@@ -318,6 +334,9 @@ export function useVariantGame(id, host = null) {
 	 * @param {string} code move code
 	 */
 	async function play(code) {
+		if (host?.ruled) {
+			return playRuled(code)
+		}
 		if (host) {
 			const before = state.value
 			sending.value = true
@@ -349,6 +368,93 @@ export function useVariantGame(id, host = null) {
 		rolls[memoKey] ??= Math.random()
 		record.value = { ...record.value, rolls }
 		playWith(code, rolls[memoKey])
+	}
+
+	/**
+	 * Send a move of a game that the server rules, and show the view it answers with; a move it refuses gets the
+	 * notice of a refused attempt (the umpire's "no" in Kriegspiel), and the turn is not used.
+	 *
+	 * @param {string} code move code
+	 */
+	async function playRuled(code) {
+		const before = state.value
+		const mover = before.turn
+		sending.value = true
+		let res
+		try {
+			res = await host.send(before, code)
+		} catch {
+			notice.value = { kind: 'sendFailed', code }
+			pending.value = null
+			clearSelection()
+			return
+		} finally {
+			sending.value = false
+		}
+		pending.value = null
+		clearSelection()
+		if (res.refused) {
+			notice.value = { kind: refusalKind(V.value, own.value, code), code }
+			if (V.value.umpire && !refused.value.includes(code)) {
+				refused.value = [...refused.value, code]
+			}
+			return
+		}
+		if (state.value !== before || !res.view) {
+			return
+		}
+		const view = res.view
+		const record = view.history?.at(-1)
+		lastRoll.value = record && record.side === mover && (record.options > 1 || record.rolled || V.value.umpire)
+			? {
+					code,
+					side: mover,
+					key: record.key,
+					notes: record.notes,
+					p: record.p,
+					rolled: record.rolled,
+					result: view.result,
+				}
+			: null
+		notice.value = null
+		refused.value = []
+		if ((code.includes('|') || code.startsWith('?')) && view.turn === mover && !view.result) {
+			mode.value = 'move'
+		}
+		showView(view)
+	}
+
+	/**
+	 * Show a view of a game that the server rules (see the header).
+	 *
+	 * @param {object} view state
+	 */
+	function showView(view) {
+		commit(view, (view.history ?? []).map((h) => ({ code: h.code, i: 0 })))
+		afterChange()
+	}
+
+	/**
+	 * Take in a view of a game that the server rules from a poll: shown when it is another position than the board's
+	 * (another ply, a result, or the real state revealed).
+	 *
+	 * @param {object|null} view state
+	 */
+	function setView(view) {
+		const s = state.value
+		if (!view || !s || sending.value) {
+			return
+		}
+		const revealed = (view.visible === null) !== (s.visible === null)
+		if (view.ply === s.ply && Boolean(view.result) === Boolean(s.result) && !revealed) {
+			return
+		}
+		if (view.ply !== s.ply) {
+			refused.value = []
+			pending.value = null
+			clearSelection()
+		}
+		showView(view)
 	}
 
 	/**
@@ -440,6 +546,9 @@ export function useVariantGame(id, host = null) {
 	 * @return {Promise<void>|undefined} the move being played, when it was played at once (online: sent and settled)
 	 */
 	function attempt(code) {
+		if (host?.ruled) {
+			return attemptRuled(code)
+		}
 		const outs = outcomes(V.value, state.value, code)
 		clearSelection()
 		if (!outs) {
@@ -457,6 +566,41 @@ export function useVariantGame(id, host = null) {
 			// whether the move might capture is hidden information while a hidden game runs
 			const capture = !secret.value && outs.some((o) => o.key === 'capture')
 			pending.value = { code, outcomes: rolls ? shown : [], warning, type: movedType(code), capture }
+			return
+		}
+		return play(code)
+	}
+
+	/**
+	 * Try a move of a game that the server rules: with an umpire (Kriegspiel) the attempt is binding and goes to the
+	 * server at once; otherwise the server's odds of the move come first, and a move that rolls waits for
+	 * confirmation, its outcomes without their results (they depend on the hidden pieces).
+	 *
+	 * @param {string} code move code
+	 * @return {Promise<void>}
+	 */
+	async function attemptRuled(code) {
+		clearSelection()
+		if (V.value.umpire) {
+			return play(code)
+		}
+		const before = state.value
+		let outs
+		try {
+			outs = await host.preview(before, code)
+		} catch {
+			notice.value = { kind: 'sendFailed', code }
+			return
+		}
+		if (state.value !== before) {
+			return
+		}
+		if (!outs) {
+			notice.value = { kind: refusalKind(V.value, own.value, code), code }
+			return
+		}
+		if (needsConfirmation(V.value, outs)) {
+			pending.value = { code, outcomes: outs, warning: null, type: movedType(code), capture: false }
 			return
 		}
 		return play(code)
@@ -986,6 +1130,7 @@ export function useVariantGame(id, host = null) {
 		click,
 		attempt,
 		playRemote,
+		setView,
 		freeze,
 		confirm,
 		cancel,

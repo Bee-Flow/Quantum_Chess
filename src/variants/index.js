@@ -55,6 +55,7 @@ export {
 	settlementOf,
 	teamsOf,
 } from './online.js'
+export { isRefereed, preview as refereePreview, viewFor } from './referee.js'
 
 /** Loaders of the rules modules, one chunk per variant. */
 const LOADERS = {

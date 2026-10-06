@@ -842,7 +842,7 @@ const historyRows = computed(() => {
 		return []
 	}
 	const viewer = game.viewer.value
-	const running = !state.value.result
+	const running = game.secret.value
 	return state.value.history.map((h, index) => {
 		const secret = V.value.hidden && h.side !== viewer && running
 		// the move list keeps the lines that carry information (the umpire box says the rest)

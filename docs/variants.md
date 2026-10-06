@@ -18,8 +18,9 @@ and invite a player or open a challenge, as in classic Quantum Chess. In Four-pl
 player for every seat, or leave a seat open for anyone to join, and the game starts when every seat is taken; when one
 player resigns or runs out of time the game ends for everyone (the other team wins, or in a free-for-all the others
 share the win), and a draw needs every player. The server draws the dice of every move, and the players' devices check
-every move against the rules; if they ever disagree, the game is annulled. Online variant games are not rated.
-Kriegspiel and Fog of war cannot be played online yet.
+every move against the rules; if they ever disagree, the game is annulled. Online variant games are not rated. In
+Kriegspiel and Fog of war the server is the umpire instead: it keeps the whole board, decides every move and sends each
+player only their own view, and the whole board is shown when the game ends.
 
 The large boards (3D, 4D and 5D chess, Bughouse and Four-player chess) can be zoomed with the buttons above the board,
 Ctrl + wheel or a two-finger pinch, and moved by dragging with the mouse or one finger. On a touch screen 4D chess and

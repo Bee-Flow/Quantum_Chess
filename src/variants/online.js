@@ -26,9 +26,6 @@ import { applyMove, T } from './core/quantum.js'
  */
 export const ONLINE_RULES_VERSION = 1
 
-/** Variants whose hidden information would be visible to every player, since every browser replays the full state. */
-const OFFLINE_ONLY = new Set(['kriegspiel', 'darkchess'])
-
 /** The teams of a four-seat team game: the sides with the same parity play together. */
 const PAIRS = [[0, 2], [1, 3]]
 
@@ -42,7 +39,7 @@ const HAND = -2
  * @return {boolean}
  */
 export function isOnlineVariant(id) {
-	return CATALOG.some((e) => e.id === id) && !OFFLINE_ONLY.has(id)
+	return CATALOG.some((e) => e.id === id)
 }
 
 /**
