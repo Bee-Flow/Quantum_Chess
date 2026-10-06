@@ -17,7 +17,15 @@ import { describe, expect, it, vi } from 'vitest'
 import { nextTick, ref, shallowRef } from 'vue'
 import { useOnlineVariantGame } from '../../../src/online/composables/useOnlineVariantGame.js'
 import { vchainNext, vchainStart } from '../../../src/online/vchain.js'
-import { ONLINE_RULES_VERSION } from '../../../src/variants/index.js'
+import {
+	applyMove,
+	loadVariant,
+	newGame,
+	ONLINE_RULES_VERSION,
+	settlementOf,
+	T,
+	viewFor,
+} from '../../../src/variants/index.js'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const FIXTURE = JSON.parse(readFileSync(join(HERE, '../../fixtures/online-variants.json'), 'utf8'))
@@ -245,5 +253,134 @@ describe('useOnlineVariantGame', () => {
 		expect(online.game.isHumanTurn.value).toBe(false)
 		online.game.resign()
 		expect(c.resign).toHaveBeenCalled()
+	})
+})
+
+describe('useOnlineVariantGame, a game the server rules', () => {
+	/**
+	 * A Kriegspiel or Fog of war game of alice (White) against bob, the server's real state and alice's view of it.
+	 *
+	 * @param {string} variant kriegspiel or darkchess
+	 * @param {Array<[string, number]>} [moves] moves already played, with their rolls
+	 * @return {Promise<object>}
+	 */
+	async function ruledGame(variant, moves = []) {
+		const V = await loadVariant(variant)
+		let state = newGame(V, {})
+		const stored = []
+		let chain = vchainStart(5, variant, {}, ['alice', 'bob'], 1000)
+		for (const [code, u] of moves) {
+			const ply = state.ply
+			const seat = state.turn
+			state = applyMove(V, state, code, u / T).state
+			chain = vchainNext(chain, ply, seat, code, u)
+			stored.push({ ply, seat, code, u, ...settlementOf(state), chain })
+		}
+		const c = controller([], {
+			id: 5,
+			variant,
+			turn: state.turn === 0 ? 'w' : 'b',
+			ply: state.ply,
+			view: viewFor(V, state, 0),
+		})
+		return { V, state, stored, c }
+	}
+
+	it('shows the view and keeps the hidden pieces off the board', async () => {
+		const { c } = await ruledGame('kriegspiel')
+		const online = useOnlineVariantGame(c, { api: fakeApi() })
+		await online.start()
+		const s = online.game.state.value
+		expect(s.worlds.every(({ b }) => b.sq.every((sq, id) => b.sd[id] === 0 || sq === -1))).toBe(true)
+		expect(online.game.hidden.value.has(60)).toBe(true)
+		expect(online.game.moves.value.some((m) => m.code === 'e2-e4')).toBe(true)
+		expect(online.game.secret.value).toBe(true)
+	})
+
+	it('sends an attempt at once: the umpire\'s "no" uses no turn, a move shows the new view', async () => {
+		const { V, state, c } = await ruledGame('kriegspiel')
+		const api = fakeApi()
+		api.sendVariantMove.mockResolvedValueOnce({ refused: true, move: null })
+		const after = applyMove(V, state, 'e2-e4', 0).state
+		const accepted = { refused: false, move: { ply: 0, seat: 0 }, game: { view: viewFor(V, after, 0) } }
+		api.sendVariantMove.mockResolvedValueOnce(accepted)
+		const online = useOnlineVariantGame(c, { api, uuid: () => 'client-1', now: () => 0 })
+		await online.start()
+		await online.game.attempt('e2-e5')
+		expect(online.game.notice.value).toEqual({ kind: 'umpire', code: 'e2-e5' })
+		expect(online.game.refused.value).toEqual(['e2-e5'])
+		expect(online.game.state.value.ply).toBe(0)
+		await online.game.attempt('e2-e4')
+		const body = { code: 'e2-e4', ply: 0, clientId: 'client-1', thinkMs: 0 }
+		expect(api.sendVariantMove).toHaveBeenLastCalledWith(5, body)
+		expect(online.game.state.value.ply).toBe(1)
+		expect(online.game.refused.value).toEqual([])
+		expect(online.game.isHumanTurn.value).toBe(false)
+		expect(api.settleVariantMove).not.toHaveBeenCalled()
+	})
+
+	it('takes in the view after the other player\'s move', async () => {
+		const { V, state, c } = await ruledGame('kriegspiel', [['e2-e4', 0]])
+		const online = useOnlineVariantGame(c, { api: fakeApi() })
+		await online.start()
+		expect(online.game.isHumanTurn.value).toBe(false)
+		const after = applyMove(V, state, 'e7-e5', 0).state
+		c.game.value = { ...c.game.value, turn: 'w', ply: 2, view: viewFor(V, after, 0) }
+		await nextTick()
+		expect(online.game.state.value.ply).toBe(2)
+		expect(online.game.isHumanTurn.value).toBe(true)
+		const last = online.game.state.value.history.at(-1)
+		expect(last.code).toBe('')
+		expect(last.info.announce.tries).toBe(0)
+	})
+
+	it('asks the server for the odds of a move in Fog of war and confirms a roll', async () => {
+		const { c } = await ruledGame('darkchess')
+		const api = fakeApi()
+		api.previewVariantMove = vi.fn(async () => ({ refused: true, outcomes: [] }))
+		const online = useOnlineVariantGame(c, { api })
+		await online.start()
+		await online.game.attempt('g1-f3|h3')
+		expect(api.previewVariantMove).toHaveBeenCalledWith(5, 'g1-f3|h3')
+		expect(online.game.notice.value.code).toBe('g1-f3|h3')
+		const outs = [
+			{ key: 'f3', notes: [], p: 0.5, captures: [], rolled: true },
+			{ key: 'h3', notes: [], p: 0.5, captures: [], rolled: true },
+		]
+		api.previewVariantMove.mockResolvedValueOnce({ refused: false, outcomes: outs })
+		await online.game.attempt('g1-f3|h3')
+		expect(online.game.pending.value.outcomes).toEqual(outs)
+		expect(api.sendVariantMove).not.toHaveBeenCalled()
+	})
+
+	it('offers only the legal moves of the real state in Fog of war', async () => {
+		const { c } = await ruledGame('darkchess')
+		c.game.value = { ...c.game.value, view: { ...c.game.value.view, legal: ['e2-e4'] } }
+		const online = useOnlineVariantGame(c, { api: fakeApi() })
+		await online.start()
+		expect(online.game.moves.value.map((m) => m.code)).toEqual(['e2-e4'])
+	})
+
+	it('reveals the real position at the end and checks the moves', async () => {
+		const { V, state, stored, c } = await ruledGame('darkchess', [['e2-e4', 0], ['e7-e5', 0]])
+		const online = useOnlineVariantGame(c, { api: fakeApi() })
+		await online.start()
+		expect(online.game.secret.value).toBe(true)
+		c.game.value = {
+			...c.game.value,
+			status: 'finished',
+			result: '1-0',
+			resultReason: 'resignation',
+			view: viewFor(V, state, 0).result ? null : { ...state, visible: null, legal: null },
+		}
+		c.variantMoves.value = stored
+		await nextTick()
+		expect(online.game.secret.value).toBe(false)
+		expect(online.game.state.value.result).toEqual({ winner: 0, reason: 'resign' })
+		expect(online.game.state.value.worlds[0].b.sq.filter((sq) => sq >= 0).length).toBe(32)
+		expect(online.problem.value).toBeNull()
+		c.variantMoves.value = [stored[0], { ...stored[1], code: 'd7-d5' }]
+		await nextTick()
+		expect(online.problem.value).toBe('altered')
 	})
 })

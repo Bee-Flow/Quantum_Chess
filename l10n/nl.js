@@ -1871,6 +1871,7 @@ OC.L10N.register(
     ],
     "Random seats: draw the seats when every player has joined": "Willekeurige plaatsen: loot de plaatsen als iedereen meedoet",
     "You play": "Je speelt met",
+    "Online, the server is the umpire: it sees the whole board and sends each player only their own view. The whole board is shown when the game ends.": "Online is de server de scheidsrechter: die ziet het hele bord en stuurt elke speler alleen diens eigen beeld. Het hele bord wordt getoond als de partij voorbij is.",
     "Turn the board to the player to move": "Draai het bord naar de speler die aan zet is",
     "Invalid value": "Ongeldige waarde",
     "The request is too large.": "Het verzoek is te groot.",

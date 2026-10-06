@@ -44,8 +44,15 @@ return [
 		['name' => 'game#mute', 'url' => '/api/games/{id}/mute', 'verb' => 'PUT', 'requirements' => $id],
 		['name' => 'game#rematch', 'url' => '/api/games/{id}/rematch', 'verb' => 'POST', 'requirements' => $id],
 
-		// Online games of the chess variants: the server rolls, the browsers rule
+		// Online games of the chess variants: the server rolls, the browsers rule (the server rules Kriegspiel and Fog
+		// of war, and previews their moves)
 		['name' => 'game#variantMove', 'url' => '/api/games/{id}/v/moves', 'verb' => 'POST', 'requirements' => $id],
+		[
+			'name' => 'game#variantPreview',
+			'url' => '/api/games/{id}/v/preview',
+			'verb' => 'POST',
+			'requirements' => $id,
+		],
 		[
 			'name' => 'game#settle',
 			'url' => '/api/games/{id}/v/moves/{ply}/settle',

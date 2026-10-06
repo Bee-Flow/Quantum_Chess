@@ -425,7 +425,9 @@ export function sendMove(id, { code, ply, clientId, thinkMs }) {
 
 /**
  * Send a move of a chess variant game. The answer carries the roll the server drew for it (`move.u`); the move waits
- * for its settlement before the turn passes. Sending the same `clientId` again returns the stored move.
+ * for its settlement before the turn passes. Sending the same `clientId` again returns the stored move. In a
+ * server-ruled game (Kriegspiel, Fog of war) the answer is `refused`, or the game with the mover's new view
+ * (`game.view`), and the move's code and roll stay hidden until the game has ended.
  *
  * @param {number} id game id
  * @param {object} body the move
@@ -433,10 +435,21 @@ export function sendMove(id, { code, ply, clientId, thinkMs }) {
  * @param {number} body.ply plies played before the move
  * @param {string} body.clientId client-generated id of this move
  * @param {number} [body.thinkMs] time the player took
- * @return {Promise<{game: GameLive, move: object, rev: number, now: number, replayed: boolean}>}
+ * @return {Promise<{game: GameLive, move: object|null, refused: boolean, rev: number, now: number, replayed: boolean}>}
  */
 export function sendVariantMove(id, { code, ply, clientId, thinkMs }) {
 	return request('post', `/games/${id}/v/moves`, { data: { code, ply, clientId, thinkMs } })
+}
+
+/**
+ * The odds of a move of a server-ruled chess variant game (Fog of war) before it is confirmed.
+ *
+ * @param {number} id game id
+ * @param {string} code move code
+ * @return {Promise<{refused: boolean, outcomes: object[]}>} the outcomes without their results, or `refused`
+ */
+export function previewVariantMove(id, code) {
+	return request('post', `/games/${id}/v/preview`, { data: { code } })
 }
 
 /**

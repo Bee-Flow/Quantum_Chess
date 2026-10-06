@@ -15,6 +15,7 @@ use OCA\QuantumChess\Db\VariantMoveMapper;
 use OCA\QuantumChess\Exception\ApiError;
 use OCA\QuantumChess\Exception\ApiException;
 use OCA\QuantumChess\Notification\NotificationService;
+use OCA\QuantumChess\Variants\VariantEngine;
 use OCP\DB\Exception as DbException;
 use OCP\IL10N;
 
@@ -30,6 +31,12 @@ use OCP\IL10N;
  * Two-seat games keep the colours of classic games: seat 0 plays as White, seat 1 as Black. Resigning, draw offers,
  * time-outs, notifications and the lobby therefore work as for classic games. A game with more than two seats names
  * its sides by seat number (`'0'` to `'3'`, see Game) and keeps its result as a variant result code only.
+ *
+ * Kriegspiel and Fog of war are ruled by the server instead (VariantCatalog::isRefereed, docs/development/
+ * online-variants.md section 6): the server keeps the real position (VariantTurn `board`) and plays every move with
+ * the PHP twin of the variant layer (lib/Variants/). A move it refuses changes nothing and uses no turn; a move it
+ * accepts is rolled, played and settled at once. Every player receives only their own view (`viewOf`), and the
+ * moves stay hidden until the game has ended.
  */
 class VariantGameplayService {
 	/** The longest thinking time a client may report for a move (30 days, in milliseconds). */
@@ -101,12 +108,77 @@ class VariantGameplayService {
 	}
 
 	/**
-	 * Sends a move and draws its roll. The turn stays with the mover until the move is settled.
+	 * The view of a server-ruled game for `$uid`: while the game runs, the state of the variant layer as that player
+	 * may know it (VariantEngine::viewFor); once it has ended, the real state (with `visible` and `legal` null). Null
+	 * for a game that the server does not rule, that has no position (not started), or for someone who does not play.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	public static function viewOf(Game $game, string $uid): ?array {
+		$board = self::boardOf($game);
+		$color = $game->colorOf($uid);
+		if ($board === null || $color === null) {
+			return null;
+		}
+		if ($game->hasEnded()) {
+			return ['visible' => null, 'legal' => null] + $board;
+		}
+		return VariantEngine::viewFor($board, self::seatOfColor($game, $color));
+	}
+
+	/**
+	 * The real position of a server-ruled game, or null.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function boardOf(Game $game): ?array {
+		if (!VariantCatalog::isRefereed((string)$game->getVariant())) {
+			return null;
+		}
+		$board = VariantTurn::of($game)->board;
+		return $board === null ? null : VariantEngine::decode($board);
+	}
+
+	/** The start record of a variant game: for a server-ruled variant with its start position. */
+	public static function startTurn(string $variant): VariantTurn {
+		$turn = VariantTurn::start();
+		return VariantCatalog::isRefereed($variant)
+			? $turn->withBoard(VariantEngine::encode(VariantEngine::newGame($variant)))
+			: $turn;
+	}
+
+	/**
+	 * The odds of a move of a server-ruled game before the player confirms it (Fog of war): its outcomes without the
+	 * game result, or null for a move the server refuses. Only for the player to move.
+	 *
+	 * @return list<array<string, mixed>>|null
+	 * @throws ApiException
+	 */
+	public function preview(int $id, string $uid, string $code): ?array {
+		$game = $this->activeGame($this->participantGame($id, $uid));
+		$board = self::boardOf($game);
+		if ($board === null) {
+			throw $this->errors->invalidStatus();
+		}
+		$color = $game->colorOf($uid);
+		if ($color === null || $color !== $game->getTurn()) {
+			throw new ApiException(ApiError::NotYourTurn, $this->l->t('It is not your move.'));
+		}
+		if (!preg_match(self::CODE_PATTERN, $code)) {
+			return null;
+		}
+		return VariantEngine::preview($board, $code);
+	}
+
+	/**
+	 * Sends a move and draws its roll. The turn stays with the mover until the move is settled. In a server-ruled
+	 * game the server decides the move instead: a move it refuses comes back as `refused` (nothing is stored, the turn
+	 * is not used); a move it accepts is played and settled at once.
 	 *
 	 * The checks run in this order: participant, idempotent retry, lazy deadline, status, turn, a move that still
 	 * waits for its settlement, ply, the form of the code.
 	 *
-	 * @return array{game: Game, move: VariantMove, replayed: bool}
+	 * @return array{game: Game, move: ?VariantMove, replayed: bool, refused: bool}
 	 * @throws ApiException
 	 */
 	public function move(int $id, string $uid, string $code, int $ply, ?string $clientId, ?int $thinkMs): array {
@@ -118,7 +190,7 @@ class VariantGameplayService {
 			$thinkMs = null;
 		}
 		if ($clientId !== null && ($stored = $this->moves->findByClientId($id, $clientId)) !== null) {
-			return ['game' => $game, 'move' => $stored, 'replayed' => true];
+			return ['game' => $game, 'move' => $stored, 'replayed' => true, 'refused' => false];
 		}
 		$game = $this->activeGame($game);
 		$color = $game->colorOf($uid);
@@ -133,6 +205,10 @@ class VariantGameplayService {
 			throw ApiException::invalidArgument('code', $this->l->t('This move is not possible.'));
 		}
 		$seat = self::seatOfColor($game, $color);
+		$board = self::boardOf($game);
+		if ($board !== null && !VariantEngine::isLegal($board, $code)) {
+			return ['game' => $game, 'move' => null, 'replayed' => false, 'refused' => true];
+		}
 		$u = $this->random->drawU();
 		$chain = VariantChain::next((string)$game->getChain(), $ply, $seat, $code, $u);
 		$now = $this->clock->now();
@@ -154,15 +230,34 @@ class VariantGameplayService {
 		$move->setThinkMs($thinkMs);
 		$move->setCreatedAt($now);
 
+		$next = null;
+		if ($board !== null) {
+			$next = VariantEngine::apply($board, $code, $u);
+			if ($next === null) {
+				throw $this->errors->conflict();
+			}
+			$settlement = VariantEngine::settlement($next);
+			$move->setNextSeat($settlement['nextSeat']);
+			$move->setResult($settlement['result']);
+			$move->setStateHash($settlement['stateHash']);
+			$move->setSettledBy($uid);
+			$move->setSettledAt($now);
+		}
+
 		try {
-			return $this->transaction->run(function () use ($game, $move, $turn, $chain, $ply, $now): array {
+			return $this->transaction->run(function () use ($game, $move, $turn, $chain, $ply, $now, $next): array {
 				$move = $this->moves->insert($move);
-				$game->setState($turn->withPending($ply)->json());
 				$game->setPly($ply + 1);
 				$game->setChain($chain);
 				$game->setLastMoveAt($now);
-				$this->repository->save($game);
-				return ['game' => $game, 'move' => $move, 'replayed' => false];
+				if ($next === null) {
+					$game->setState($turn->withPending($ply)->json());
+					$this->repository->save($game);
+				} else {
+					$result = VariantResult::parse((string)$move->getResult(), $game->getSeatCount());
+					$this->conclude($game, $move, $turn->withBoard(VariantEngine::encode($next)), $result, $now);
+				}
+				return ['game' => $game, 'move' => $move, 'replayed' => false, 'refused' => false];
 			});
 		} catch (DbException $e) {
 			// The unique indexes on (game, ply) and (game, clientId) make a concurrent move for the same ply fail here.
@@ -170,7 +265,8 @@ class VariantGameplayService {
 				throw $e;
 			}
 			if ($clientId !== null && ($stored = $this->moves->findByClientId($id, $clientId)) !== null) {
-				return ['game' => $this->repository->find($id) ?? $game, 'move' => $stored, 'replayed' => true];
+				$game = $this->repository->find($id) ?? $game;
+				return ['game' => $game, 'move' => $stored, 'replayed' => true, 'refused' => false];
 			}
 			throw $this->errors->conflict();
 		}
@@ -186,6 +282,10 @@ class VariantGameplayService {
 	 */
 	public function settle(int $id, string $uid, int $ply, int $nextSeat, string $result, string $stateHash): Game {
 		$game = $this->participantGame($id, $uid);
+		if (VariantCatalog::isRefereed((string)$game->getVariant())) {
+			// the server settles the moves of the games it rules
+			throw $this->errors->invalidStatus();
+		}
 		if ($nextSeat < 0 || $nextSeat >= $game->getSeatCount()) {
 			throw ApiException::invalidArgument('nextSeat', $this->l->t('Invalid value'));
 		}
@@ -229,39 +329,54 @@ class VariantGameplayService {
 			$move->setSettledBy($uid);
 			$move->setSettledAt($now);
 			$this->moves->update($move);
-
-			$mover = self::colorOfSeat($game, $move->getSeat());
-			$passed = $nextSeat !== $move->getSeat();
-			$turn = $turn->withPending(null);
-			if ($passed) {
-				$turn = $turn->withTurnPassed();
-				$game->setTurn(self::colorOfSeat($game, $nextSeat));
-				$game->setDeadlineAt($this->clock->deadlineFrom($game->getTimeControl(), $now));
-			}
-			$game->setSeatToMove($nextSeat);
-			$game->setState($turn->json());
-			$declined = false;
-			$offer = $game->getDrawOffer();
-			// with more than two seats an offer stands until every seat answered it
-			if ($offer !== null && $offer !== $mover && !$game->isMultiSeat()) {
-				GameplayService::declineDrawOffer($game, $offer, $move->getPly(), $this->lifecycle);
-				$declined = true;
-			}
-			if ($parsed !== null) {
-				self::finishWith($game, $parsed, $parsed->reason, $now, $this->lifecycle);
-			}
-			$this->repository->save($game);
-			$this->transaction->afterCommit(function () use ($game, $move, $passed, $declined): void {
-				if ($declined) {
-					$this->notifications->drawClosed($game);
-				}
-				if ($game->getStatus() !== Game::STATUS_ACTIVE) {
-					$this->notifications->gameOver($game);
-				} elseif ($passed) {
-					$this->notifications->variantTurn($game, (string)$move->getUid());
-				}
-			});
+			$this->conclude($game, $move, $turn, $parsed, $now);
 			return $game;
+		});
+	}
+
+	/**
+	 * After a move was settled (by a browser, or by the server in a server-ruled game): the turn passes when the move
+	 * hands it to another seat, an open draw offer of the other side is declined, a result finishes the game, and the
+	 * players are told. Runs inside the transaction; saves the game.
+	 */
+	private function conclude(
+		Game $game,
+		VariantMove $move,
+		VariantTurn $turn,
+		?VariantResult $parsed,
+		int $now,
+	): void {
+		$nextSeat = (int)$move->getNextSeat();
+		$mover = self::colorOfSeat($game, $move->getSeat());
+		$passed = $nextSeat !== $move->getSeat();
+		$turn = $turn->withPending(null);
+		if ($passed) {
+			$turn = $turn->withTurnPassed();
+			$game->setTurn(self::colorOfSeat($game, $nextSeat));
+			$game->setDeadlineAt($this->clock->deadlineFrom($game->getTimeControl(), $now));
+		}
+		$game->setSeatToMove($nextSeat);
+		$game->setState($turn->json());
+		$declined = false;
+		$offer = $game->getDrawOffer();
+		// with more than two seats an offer stands until every seat answered it
+		if ($offer !== null && $offer !== $mover && !$game->isMultiSeat()) {
+			GameplayService::declineDrawOffer($game, $offer, $move->getPly(), $this->lifecycle);
+			$declined = true;
+		}
+		if ($parsed !== null) {
+			self::finishWith($game, $parsed, $parsed->reason, $now, $this->lifecycle);
+		}
+		$this->repository->save($game);
+		$this->transaction->afterCommit(function () use ($game, $move, $passed, $declined): void {
+			if ($declined) {
+				$this->notifications->drawClosed($game);
+			}
+			if ($game->getStatus() !== Game::STATUS_ACTIVE) {
+				$this->notifications->gameOver($game);
+			} elseif ($passed) {
+				$this->notifications->variantTurn($game, (string)$move->getUid());
+			}
 		});
 	}
 
@@ -272,6 +387,9 @@ class VariantGameplayService {
 	 */
 	public function dispute(int $id, string $uid, int $ply): Game {
 		$game = $this->participantGame($id, $uid);
+		if (VariantCatalog::isRefereed((string)$game->getVariant())) {
+			throw $this->errors->invalidStatus();
+		}
 		if ($this->moves->findByPly($id, $ply) === null) {
 			throw ApiException::invalidArgument('ply', $this->l->t('Invalid value'));
 		}

@@ -108,7 +108,7 @@ final class VariantGameplayServiceTest extends TestCase {
 	}
 
 	public function testOnlyTheOnlineVariantsCanBeInvited(): void {
-		foreach (['kriegspiel', 'darkchess', 'classic', 7] as $variant) {
+		foreach (['classic', 'chess', 7] as $variant) {
 			$e = $this->assertApiError(
 				'invalid_argument',
 				fn () => $this->invitations()->create('alice', ['opponent' => 'bob', 'variant' => $variant]),

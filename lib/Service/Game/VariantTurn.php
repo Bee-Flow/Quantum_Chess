@@ -19,6 +19,8 @@ use OCA\QuantumChess\Db\Game;
  * A game with more than two seats also keeps its players here (Game::seatUids reads them): `seats` (the user id per
  * seat, null for an open seat), `accepted` (whether each seat's player has taken it), and while it runs `drawVotes`
  * (the seats that agree to the open draw offer) and `muted` (the seats that muted the chat).
+ * A game of a server-ruled variant (Kriegspiel, Fog of war: VariantCatalog::isRefereed) keeps its real position here
+ * as well (`board`, the state of lib/Variants/ as JSON text), which no player ever receives while the game runs.
  *
  * A move is not a turn: in 5D chess a player makes several moves before *Submit turn* passes the turn.
  */
@@ -36,6 +38,7 @@ final class VariantTurn {
 		public readonly array $accepted = [],
 		public readonly array $drawVotes = [],
 		public readonly array $muted = [],
+		public readonly ?string $board = null,
 	) {
 	}
 
@@ -65,7 +68,8 @@ final class VariantTurn {
 			$accepted[] = $taken === true;
 		}
 		$ints = static fn (string $key): array => array_values(array_filter(self::listOf($data, $key), 'is_int'));
-		return new self($turns, $pending, $seats, $accepted, $ints('drawVotes'), $ints('muted'));
+		$board = is_string($data['board'] ?? null) ? $data['board'] : null;
+		return new self($turns, $pending, $seats, $accepted, $ints('drawVotes'), $ints('muted'), $board);
 	}
 
 	/**
@@ -77,12 +81,28 @@ final class VariantTurn {
 	}
 
 	public function withPending(?int $ply): self {
-		return new self($this->turns, $ply, $this->seats, $this->accepted, $this->drawVotes, $this->muted);
+		return new self(
+			$this->turns,
+			$ply,
+			$this->seats,
+			$this->accepted,
+			$this->drawVotes,
+			$this->muted,
+			$this->board,
+		);
 	}
 
 	public function withTurnPassed(): self {
 		$turns = $this->turns + 1;
-		return new self($turns, $this->pending, $this->seats, $this->accepted, $this->drawVotes, $this->muted);
+		return new self(
+			$turns,
+			$this->pending,
+			$this->seats,
+			$this->accepted,
+			$this->drawVotes,
+			$this->muted,
+			$this->board,
+		);
 	}
 
 	/**
@@ -90,14 +110,22 @@ final class VariantTurn {
 	 * @param list<bool> $accepted
 	 */
 	public function withSeats(array $seats, array $accepted): self {
-		return new self($this->turns, $this->pending, $seats, $accepted, $this->drawVotes, $this->muted);
+		return new self($this->turns, $this->pending, $seats, $accepted, $this->drawVotes, $this->muted, $this->board);
 	}
 
 	/** @param list<int> $votes */
 	public function withDrawVotes(array $votes): self {
 		$votes = array_values(array_unique($votes));
 		sort($votes);
-		return new self($this->turns, $this->pending, $this->seats, $this->accepted, $votes, $this->muted);
+		return new self(
+			$this->turns,
+			$this->pending,
+			$this->seats,
+			$this->accepted,
+			$votes,
+			$this->muted,
+			$this->board,
+		);
 	}
 
 	public function withMuted(int $seat, bool $muted): self {
@@ -106,7 +134,28 @@ final class VariantTurn {
 			$list[] = $seat;
 			sort($list);
 		}
-		return new self($this->turns, $this->pending, $this->seats, $this->accepted, $this->drawVotes, $list);
+		return new self(
+			$this->turns,
+			$this->pending,
+			$this->seats,
+			$this->accepted,
+			$this->drawVotes,
+			$list,
+			$this->board,
+		);
+	}
+
+	/** The record with the real position of a server-ruled game, as JSON text. */
+	public function withBoard(string $board): self {
+		return new self(
+			$this->turns,
+			$this->pending,
+			$this->seats,
+			$this->accepted,
+			$this->drawVotes,
+			$this->muted,
+			$board,
+		);
 	}
 
 	/** Whether every seat of a two-seat game has played a turn: the turn has passed twice. */
@@ -126,6 +175,9 @@ final class VariantTurn {
 			$data['accepted'] = $this->accepted;
 			$data['drawVotes'] = $this->drawVotes;
 			$data['muted'] = $this->muted;
+		}
+		if ($this->board !== null) {
+			$data['board'] = $this->board;
 		}
 		return json_encode($data, JSON_THROW_ON_ERROR);
 	}

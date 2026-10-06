@@ -75,10 +75,10 @@ test.beforeAll(async () => {
 
 test('an invitation to a variant game starts it with seats and its own chain', async () => {
 	await expectApiError(
-		api('carol', 'POST', 'api/games', { opponent: uid('bob'), variant: 'kriegspiel' }),
+		api('carol', 'POST', 'api/games', { opponent: uid('bob'), variant: 'classic' }),
 		400,
 		'invalid_argument',
-		'Kriegspiel cannot be played online (hidden information)',
+		'an unknown variant cannot be played online',
 	)
 	await expectApiError(
 		api('carol', 'POST', 'api/games', { opponent: uid('bob'), variant: 'atomic', options: [1, 2] }),

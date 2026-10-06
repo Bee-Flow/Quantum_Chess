@@ -261,6 +261,9 @@ class GameSerializer {
 			'seatToMove' => $game->getSeatToMove(),
 			'pendingPly' => VariantTurn::of($game)->pending,
 			'drawVotes' => VariantTurn::of($game)->drawVotes,
+		] : []) + (VariantCatalog::isRefereed((string)$game->getVariant()) ? [
+			// a server-ruled game: the viewer's own view of the position, the real one once the game has ended
+			'view' => VariantGameplayService::viewOf($game, $viewer),
 		] : []);
 	}
 

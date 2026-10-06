@@ -1869,6 +1869,7 @@
     ],
     "Random seats: draw the seats when every player has joined": "Zufällige Plätze: die Plätze auslosen, wenn alle beigetreten sind",
     "You play": "Du spielst",
+    "Online, the server is the umpire: it sees the whole board and sends each player only their own view. The whole board is shown when the game ends.": "Online ist der Server der Schiedsrichter: Er sieht das ganze Brett und schickt jeder Spielerin und jedem Spieler nur die eigene Sicht. Das ganze Brett wird gezeigt, wenn die Partie endet.",
     "Turn the board to the player to move": "Brett zum Spieler am Zug drehen",
     "Invalid value": "Ungültiger Wert",
     "The request is too large.": "Die Anfrage ist zu groß.",

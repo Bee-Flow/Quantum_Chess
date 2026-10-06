@@ -19,6 +19,7 @@ use OCA\QuantumChess\Service\Game\GameplayService;
 use OCA\QuantumChess\Service\Game\GameQueryService;
 use OCA\QuantumChess\Service\Game\GameSerializer;
 use OCA\QuantumChess\Service\Game\InvitationService;
+use OCA\QuantumChess\Service\Game\VariantCatalog;
 use OCA\QuantumChess\Service\Game\VariantGameplayService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -282,7 +283,9 @@ final class GameController extends ApiController {
 
 	/**
 	 * Sends a move of a chess variant game. The answer carries the roll the server drew for it; the move waits for its
-	 * settlement (`settle`) before the turn passes.
+	 * settlement (`settle`) before the turn passes. In a server-ruled game (Kriegspiel, Fog of war) the answer is
+	 * `refused` for a move the server does not allow, or the game with the mover's new view; the move's code and roll
+	 * stay hidden until the game has ended.
 	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 240, period: 60)]
@@ -316,13 +319,34 @@ final class GameController extends ApiController {
 				]);
 			}
 			$game = $result['game'];
+			$move = $result['move'];
+			$hidden = VariantCatalog::isRefereed((string)$game->getVariant()) && !$game->hasEnded();
 			return [
 				'game' => $this->serializer->live($game, $uid),
-				'move' => $this->serializer->move($result['move']),
+				'move' => $move === null ? null : ($hidden
+					? ['ply' => $move->getPly(), 'seat' => $move->getSeat()]
+					: $this->serializer->move($move)),
+				'refused' => $result['refused'],
 				'rev' => $game->getRev(),
 				'now' => $this->clock->now(),
 				'replayed' => $result['replayed'],
 			];
+		});
+	}
+
+	/**
+	 * The odds of a move of a server-ruled game (Fog of war) before the player confirms it: its outcomes without the
+	 * game result, or `refused` for a move the server does not allow.
+	 */
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 240, period: 60)]
+	public function variantPreview(int $id, mixed $code = null): JSONResponse {
+		return $this->respond(function (string $uid) use ($id, $code): array {
+			if (!is_string($code) || $code === '' || strlen($code) > 255) {
+				throw ApiException::invalidArgument('code', 'Invalid move');
+			}
+			$outcomes = $this->variantGameplay->preview($id, $uid, $code);
+			return ['refused' => $outcomes === null, 'outcomes' => $outcomes ?? []];
 		});
 	}
 

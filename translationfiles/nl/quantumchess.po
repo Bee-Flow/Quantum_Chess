@@ -313,7 +313,7 @@ msgstr "Zetten met een worp"
 msgid "Slow"
 msgstr "Langzaam"
 
-#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:956 src/views/VariantsView.vue:279
+#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:956 src/views/VariantsView.vue:283
 msgid "Normal"
 msgstr "Normaal"
 
@@ -333,7 +333,7 @@ msgstr "Standaard"
 msgid "Your colour"
 msgstr "Jouw kleur"
 
-#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:150 src/views/VariantsView.vue:205
+#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:150 src/views/VariantsView.vue:208
 msgid "Random"
 msgstr "Willekeurig"
 
@@ -349,7 +349,7 @@ msgstr "Zwart"
 msgid "Mode"
 msgstr "Modus"
 
-#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:155
+#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:158
 msgid "Level"
 msgstr "Niveau"
 
@@ -393,11 +393,11 @@ msgstr "Uitdaging maken"
 msgid "Send invitation"
 msgstr "Uitnodiging versturen"
 
-#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:230
+#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:233
 msgid "Start game"
 msgstr "Partij starten"
 
-#: src/app/components/NewGameDialog.vue:331 src/views/VariantsView.vue:428
+#: src/app/components/NewGameDialog.vue:331 src/views/VariantsView.vue:432
 msgid "The game could not be created. Please try again."
 msgstr "De partij kon niet worden gemaakt. Probeer het opnieuw."
 
@@ -2273,7 +2273,7 @@ msgstr "De chat van deze partij is gesloten."
 msgid "your opponent"
 msgstr "je tegenstander"
 
-#: src/online/components/GameChat.vue:179 lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:142 lib/Service/Game/GameSerializer.php:72 lib/Service/Game/GameSerializer.php:330
+#: src/online/components/GameChat.vue:179 lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:142 lib/Service/Game/GameSerializer.php:72 lib/Service/Game/GameSerializer.php:333
 msgid "Deleted user"
 msgstr "Verwijderde gebruiker"
 
@@ -5167,7 +5167,7 @@ msgstr "De aartsbisschop en de kanselier kunnen splitsen en samenvoegen als een 
 msgid "Castling never rolls: a ghost on any square between the king and the rook blocks it, and the right is lost for good as soon as the king or that rook is not 100 % on its starting square. There is no check, so you may castle out of, through or into attack."
 msgstr "Voor een rokade wordt nooit gegooid: een spookstuk op een veld tussen de koning en de toren blokkeert de rokade, en het rokaderecht vervalt voorgoed zodra de koning of die toren niet meer voor 100 % op zijn beginveld staat. Er is geen schaak, dus je mag ook rokeren als de koning aangevallen wordt, of als hij een aangevallen veld passeert of bereikt."
 
-#: src/variants/catalog.js:28 lib/Service/Game/VariantCatalog.php:64
+#: src/variants/catalog.js:28 lib/Service/Game/VariantCatalog.php:67
 msgid "3D chess (Raumschach)"
 msgstr "3D-schaak (Raumschach)"
 
@@ -5175,7 +5175,7 @@ msgstr "3D-schaak (Raumschach)"
 msgid "Five boards stacked into a 5 × 5 × 5 cube, with the unicorn flying through space."
 msgstr "Vijf borden gestapeld tot een kubus van 5 × 5 × 5, met de eenhoorn die door de ruimte vliegt."
 
-#: src/variants/catalog.js:38 lib/Service/Game/VariantCatalog.php:65
+#: src/variants/catalog.js:38 lib/Service/Game/VariantCatalog.php:68
 msgid "Tri-Dimensional chess"
 msgstr "Driedimensionaal schaak"
 
@@ -5183,7 +5183,7 @@ msgstr "Driedimensionaal schaak"
 msgid "Three main levels and four attack boards, as seen on the starship Enterprise."
 msgstr "Drie hoofdniveaus en vier aanvalsborden, zoals op het ruimteschip Enterprise."
 
-#: src/variants/catalog.js:48 lib/Service/Game/VariantCatalog.php:66
+#: src/variants/catalog.js:48 lib/Service/Game/VariantCatalog.php:69
 msgid "4D chess"
 msgstr "4D-schaak"
 
@@ -5191,7 +5191,7 @@ msgstr "4D-schaak"
 msgid "A 4 × 4 grid of 4 × 4 boards: every piece gains two extra directions."
 msgstr "Een raster van 4 × 4 borden van 4 × 4: elk stuk krijgt er twee richtingen bij."
 
-#: src/variants/catalog.js:55 lib/Service/Game/VariantCatalog.php:67
+#: src/variants/catalog.js:55 lib/Service/Game/VariantCatalog.php:70
 msgid "Multiverse chess (5D)"
 msgstr "Multiversumschaak (5D)"
 
@@ -5199,7 +5199,7 @@ msgstr "Multiversumschaak (5D)"
 msgid "Travel back in time and create new timelines; capture a king on any of them."
 msgstr "Reis terug in de tijd en open nieuwe tijdlijnen; sla een koning op welke tijdlijn dan ook."
 
-#: src/variants/catalog.js:65 lib/Service/Game/VariantCatalog.php:68
+#: src/variants/catalog.js:65 lib/Service/Game/VariantCatalog.php:71
 msgid "Kriegspiel"
 msgstr "Kriegspiel"
 
@@ -5207,7 +5207,7 @@ msgstr "Kriegspiel"
 msgid "You never see the enemy pieces; the umpire only says what happened."
 msgstr "Je ziet de vijandelijke stukken nooit; de scheidsrechter zegt alleen wat er gebeurde."
 
-#: src/variants/catalog.js:72 lib/Service/Game/VariantCatalog.php:69
+#: src/variants/catalog.js:72 lib/Service/Game/VariantCatalog.php:72
 msgid "Fog of war"
 msgstr "Oorlogsmist"
 
@@ -5215,7 +5215,7 @@ msgstr "Oorlogsmist"
 msgid "You only see the squares your pieces can reach."
 msgstr "Je ziet alleen de velden die je stukken kunnen bereiken."
 
-#: src/variants/catalog.js:79 lib/Service/Game/VariantCatalog.php:70
+#: src/variants/catalog.js:79 lib/Service/Game/VariantCatalog.php:73
 msgid "Chess960"
 msgstr "Chess960"
 
@@ -5223,7 +5223,7 @@ msgstr "Chess960"
 msgid "Fischer Random: the back rank is shuffled into one of 960 start positions."
 msgstr "Fischer Random: de achterste rij wordt door elkaar gehusseld tot een van 960 beginstellingen."
 
-#: src/variants/catalog.js:86 lib/Service/Game/VariantCatalog.php:71
+#: src/variants/catalog.js:86 lib/Service/Game/VariantCatalog.php:74
 msgid "Atomic"
 msgstr "Atoomschaak"
 
@@ -5231,7 +5231,7 @@ msgstr "Atoomschaak"
 msgid "Every capture explodes and removes the pieces around it."
 msgstr "Elke slag ontploft en haalt de stukken eromheen van het bord."
 
-#: src/variants/catalog.js:93 lib/Service/Game/VariantCatalog.php:72
+#: src/variants/catalog.js:93 lib/Service/Game/VariantCatalog.php:75
 msgid "Crazyhouse"
 msgstr "Crazyhouse"
 
@@ -5239,7 +5239,7 @@ msgstr "Crazyhouse"
 msgid "Captured pieces change sides and can be dropped back onto the board."
 msgstr "Geslagen stukken wisselen van kant en kunnen weer op het bord worden ingezet."
 
-#: src/variants/catalog.js:100 lib/Service/Game/VariantCatalog.php:73
+#: src/variants/catalog.js:100 lib/Service/Game/VariantCatalog.php:76
 msgid "Bughouse"
 msgstr "Tandemschaak"
 
@@ -5247,7 +5247,7 @@ msgstr "Tandemschaak"
 msgid "Two boards, two teams: what you capture, your partner may drop."
 msgstr "Twee borden, twee teams: wat jij slaat, mag je partner inzetten."
 
-#: src/variants/catalog.js:107 lib/Service/Game/VariantCatalog.php:74
+#: src/variants/catalog.js:107 lib/Service/Game/VariantCatalog.php:77
 msgid "Antichess"
 msgstr "Slagschaak"
 
@@ -5255,7 +5255,7 @@ msgstr "Slagschaak"
 msgid "Capturing is compulsory and whoever loses all their pieces wins."
 msgstr "Er geldt slagplicht en wie al zijn stukken kwijtraakt, wint."
 
-#: src/variants/catalog.js:114 lib/Service/Game/VariantCatalog.php:75
+#: src/variants/catalog.js:114 lib/Service/Game/VariantCatalog.php:78
 msgid "King of the Hill"
 msgstr "King of the Hill"
 
@@ -5263,7 +5263,7 @@ msgstr "King of the Hill"
 msgid "Bring your king to one of the four centre squares to win."
 msgstr "Breng je koning naar een van de vier centrumvelden om te winnen."
 
-#: src/variants/catalog.js:121 lib/Service/Game/VariantCatalog.php:76
+#: src/variants/catalog.js:121 lib/Service/Game/VariantCatalog.php:79
 msgid "Three-check"
 msgstr "Driemaal schaak"
 
@@ -5271,7 +5271,7 @@ msgstr "Driemaal schaak"
 msgid "Put the enemy king in check three times to win."
 msgstr "Geef de vijandelijke koning drie keer schaak om te winnen."
 
-#: src/variants/catalog.js:128 lib/Service/Game/VariantCatalog.php:77
+#: src/variants/catalog.js:128 lib/Service/Game/VariantCatalog.php:80
 msgid "Horde"
 msgstr "Horde"
 
@@ -5279,7 +5279,7 @@ msgstr "Horde"
 msgid "White has 36 pawns against the complete black army."
 msgstr "Wit heeft 36 pionnen tegen het complete zwarte leger."
 
-#: src/variants/catalog.js:135 lib/Service/Game/VariantCatalog.php:78
+#: src/variants/catalog.js:135 lib/Service/Game/VariantCatalog.php:81
 msgid "Hexagonal chess"
 msgstr "Hexagonaal schaak"
 
@@ -5287,7 +5287,7 @@ msgstr "Hexagonaal schaak"
 msgid "Gliński's chess on 91 hexagons, with three bishops each."
 msgstr "Het schaakspel van Gliński op 91 zeshoeken, met drie lopers per kant."
 
-#: src/variants/catalog.js:142 lib/Service/Game/VariantCatalog.php:79
+#: src/variants/catalog.js:142 lib/Service/Game/VariantCatalog.php:82
 msgid "Four-player chess"
 msgstr "Schaak voor vier"
 
@@ -5295,7 +5295,7 @@ msgstr "Schaak voor vier"
 msgid "Four armies on a cross-shaped board; the last king standing wins."
 msgstr "Vier legers op een kruisvormig bord; de laatste koning die overeind blijft, wint."
 
-#: src/variants/catalog.js:149 lib/Service/Game/VariantCatalog.php:80
+#: src/variants/catalog.js:149 lib/Service/Game/VariantCatalog.php:83
 msgid "Capablanca chess"
 msgstr "Capablancaschaak"
 
@@ -5303,7 +5303,7 @@ msgstr "Capablancaschaak"
 msgid "A 10 × 8 board with the archbishop and the chancellor."
 msgstr "Een bord van 10 × 8 met de aartsbisschop en de kanselier."
 
-#: src/variants/catalog.js:156 lib/Service/Game/VariantCatalog.php:81
+#: src/variants/catalog.js:156 lib/Service/Game/VariantCatalog.php:84
 msgid "Shogi"
 msgstr "Shogi"
 
@@ -5311,7 +5311,7 @@ msgstr "Shogi"
 msgid "Japanese chess: captured pieces join your army and promote in the enemy camp."
 msgstr "Japans schaak: geslagen stukken komen bij je leger en promoveren in het vijandelijk kamp."
 
-#: src/variants/catalog.js:166 lib/Service/Game/VariantCatalog.php:82
+#: src/variants/catalog.js:166 lib/Service/Game/VariantCatalog.php:85
 msgid "Xiangqi"
 msgstr "Xiangqi"
 
@@ -5319,7 +5319,7 @@ msgstr "Xiangqi"
 msgid "Chinese chess with a river, two palaces and the cannon."
 msgstr "Chinees schaak met een rivier, twee paleizen en het kanon."
 
-#: src/variants/catalog.js:173 lib/Service/Game/VariantCatalog.php:83
+#: src/variants/catalog.js:173 lib/Service/Game/VariantCatalog.php:86
 msgid "Makruk"
 msgstr "Makruk"
 
@@ -7122,7 +7122,7 @@ msgstr "Deze zet wordt met een worp beslist:"
 msgid "Play and roll"
 msgstr "Zetten en gooien"
 
-#: src/views/VariantGameView.vue:377 src/views/VariantsView.vue:223
+#: src/views/VariantGameView.vue:377 src/views/VariantsView.vue:226
 msgid "This game could not be saved on this device."
 msgstr "Deze partij kon niet op dit apparaat worden opgeslagen."
 
@@ -7215,11 +7215,11 @@ msgstr "Laatste beurt van {side}"
 msgid "A move"
 msgstr "Een zet"
 
-#: src/views/VariantGameView.vue:955 src/views/VariantsView.vue:278
+#: src/views/VariantGameView.vue:955 src/views/VariantsView.vue:282
 msgid "Easy"
 msgstr "Makkelijk"
 
-#: src/views/VariantGameView.vue:957 src/views/VariantsView.vue:280
+#: src/views/VariantGameView.vue:957 src/views/VariantsView.vue:284
 msgid "Hard"
 msgstr "Moeilijk"
 
@@ -7245,15 +7245,19 @@ msgstr[1] "%n spelers"
 msgid "Random seats: draw the seats when every player has joined"
 msgstr "Willekeurige plaatsen: loot de plaatsen als iedereen meedoet"
 
-#: src/views/VariantsView.vue:135 src/views/VariantsView.vue:167
+#: src/views/VariantsView.vue:135 src/views/VariantsView.vue:170
 msgid "You play"
 msgstr "Je speelt met"
 
-#: src/views/VariantsView.vue:220
+#: src/views/VariantsView.vue:154
+msgid "Online, the server is the umpire: it sees the whole board and sends each player only their own view. The whole board is shown when the game ends."
+msgstr "Online is de server de scheidsrechter: die ziet het hele bord en stuurt elke speler alleen diens eigen beeld. Het hele bord wordt getoond als de partij voorbij is."
+
+#: src/views/VariantsView.vue:223
 msgid "Turn the board to the player to move"
 msgstr "Draai het bord naar de speler die aan zet is"
 
-#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:78 lib/Service/Game/InvitationService.php:364 lib/Service/Game/InvitationService.php:369 lib/Service/Game/InvitationService.php:372 lib/Service/Game/VariantGameplayService.php:190 lib/Service/Game/VariantGameplayService.php:195 lib/Service/Game/VariantGameplayService.php:198 lib/Service/Game/VariantGameplayService.php:276 lib/Service/Player/StatsService.php:201 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
+#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:78 lib/Service/Game/InvitationService.php:364 lib/Service/Game/InvitationService.php:369 lib/Service/Game/InvitationService.php:372 lib/Service/Game/VariantGameplayService.php:290 lib/Service/Game/VariantGameplayService.php:295 lib/Service/Game/VariantGameplayService.php:298 lib/Service/Game/VariantGameplayService.php:394 lib/Service/Player/StatsService.php:201 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
 msgid "Invalid value"
 msgstr "Ongeldige waarde"
 
@@ -7584,15 +7588,15 @@ msgstr "De partij is intussen veranderd."
 msgid "Invalid cursor"
 msgstr "Ongeldige cursor"
 
-#: lib/Service/Game/GameplayService.php:69 lib/Service/Game/VariantGameplayService.php:115
+#: lib/Service/Game/GameplayService.php:69 lib/Service/Game/VariantGameplayService.php:187
 msgid "Invalid client id"
 msgstr "Ongeldige client-ID"
 
-#: lib/Service/Game/GameplayService.php:91 lib/Service/Game/VariantGameplayService.php:126
+#: lib/Service/Game/GameplayService.php:91 lib/Service/Game/VariantGameplayService.php:165 lib/Service/Game/VariantGameplayService.php:198
 msgid "It is not your move."
 msgstr "Je bent niet aan zet."
 
-#: lib/Service/Game/GameplayService.php:99 lib/Service/Game/VariantGameplayService.php:133
+#: lib/Service/Game/GameplayService.php:99 lib/Service/Game/VariantGameplayService.php:205
 msgid "This move is not possible."
 msgstr "Deze zet is niet mogelijk."
 

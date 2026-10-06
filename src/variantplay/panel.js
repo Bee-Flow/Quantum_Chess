@@ -14,6 +14,19 @@
 import { branches, budgetInfo, parseCode } from '../variants/index.js'
 
 /**
+ * Whether a game with hidden information still keeps its secrets: it runs, and, online, the server has not revealed
+ * the real state yet. A state the server revealed has `visible: null` (src/variants/referee.js), also when the game
+ * ended without a result on the board (a resignation, a time-out, an agreed draw).
+ *
+ * @param {object} V variant
+ * @param {object|null} state state
+ * @return {boolean}
+ */
+export function isSecret(V, state) {
+	return Boolean(V?.hidden && state && !state.result && state.visible !== null)
+}
+
+/**
  * The budget pips of a side: `{ known, used, limit }`. The partners of a team budget show the same numbers. While a
  * game with hidden information runs, only the viewer's own budget is known (`known: false` for every other side).
  *
@@ -24,7 +37,7 @@ import { branches, budgetInfo, parseCode } from '../variants/index.js'
  * @return {{known: boolean, used: number, limit: number}}
  */
 export function budgetPips(V, state, side, viewer) {
-	if (V.hidden && !state.result && side !== viewer) {
+	if (isSecret(V, state) && side !== viewer) {
 		return { known: false, used: 0, limit: 0 }
 	}
 	const info = budgetInfo(V, state, side)

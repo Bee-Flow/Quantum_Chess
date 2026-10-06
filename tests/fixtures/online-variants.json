@@ -28,13 +28,13 @@
 		{
 			"id": "kriegspiel",
 			"seats": 2,
-			"online": false,
+			"online": true,
 			"teams": null
 		},
 		{
 			"id": "darkchess",
 			"seats": 2,
-			"online": false,
+			"online": true,
 			"teams": null
 		},
 		{

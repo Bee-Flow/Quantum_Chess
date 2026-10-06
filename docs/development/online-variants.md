@@ -6,9 +6,9 @@
 # Online play for the chess variants
 
 **Status:** in progress, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1
-(foundations) shipped in 2.0.1. Phases 2 and 3 are done: every variant without hidden information can be played
-online, Four-player chess and Bughouse with four seats, as section 5.6.6 of [`architecture.md`](architecture.md)
-describes. Phases 4 and 5 are open.
+(foundations) shipped in 2.0.1. Phases 2 to 4 are done: every variant can be played online, Four-player chess and
+Bughouse with four seats, and Kriegspiel and Fog of war ruled by the server, as section 5.6.6 of
+[`architecture.md`](architecture.md) describes. Phase 5 is open.
 
 One decision of phase 3 differs from the first plan: a seat that resigns or runs out of time ends the game for
 everyone (the other team wins, or in a free-for-all every other seat), as resigning does in a local game, instead of
@@ -181,6 +181,25 @@ That is about 3,000 to 4,000 lines, without the computer player, the texts and t
   receives only `viewFor(state, seat)`. When the game ends, the full state and all moves are revealed, and browsers
   can replay them and check the chain.
 - **Ratings.** These games are cheat-proof, so they can be rated (phase 5).
+
+As built in phase 4:
+
+- The real state lives in the game's `state` column, inside the server's record of the turns (`VariantTurn`, key
+  `board`, the state as JSON text). The moves are stored in `qchess_vmoves` with their roll and a settlement the
+  server writes itself; `settle` and `dispute` are refused for these games.
+- `POST /api/games/{id}/v/moves` answers `refused: true` for a move the referee refuses (nothing is stored, and the
+  opponent is not told), else the game with the mover's new view and the move as `{ply, seat}` only.
+  `POST /api/games/{id}/v/preview` gives the player to move the outcomes of a move without their results (Fog of
+  war asks before a move that rolls is confirmed; Kriegspiel's attempts are binding).
+- Every game object of a player carries `view`: `viewFor` of `src/variants/referee.js` and its PHP twin, a state of
+  the variant layer that the board shows as it is, with the squares the player sees (`visible`) and in Fog of war the
+  legal moves of the real state (`legal`). The other player's history records keep only what the variant announces.
+  Move lists stay empty while the game runs. Once it has ended, for any reason, `view` is the real state with
+  `visible: null`, the moves come with their codes and rolls, and the browser replays them and checks the chain.
+- Parity: `tests/fixtures/generate-referee-fixtures.mjs` writes `tests/fixtures/referee/{kriegspiel,darkchess}.json`
+  (ten seeded games each, ending by the escape rule, a king capture and the 50-move rule, two of them with castling,
+  en passant and promotions), which
+  `tests/php/Unit/Variants/` replays; CI checks that the files are up to date.
 
 ## 7. Phases
 
