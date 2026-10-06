@@ -191,3 +191,40 @@ test('a rated Kriegspiel game counts in the Kriegspiel ratings only', async () =
 	const board = await api(black, 'GET', 'api/leaderboard?variant=kriegspiel')
 	expect(board.variant).toBe('kriegspiel')
 })
+
+test('Bee Flow Chess hides the shuffled back ranks until the end', async () => {
+	const bee = await loadVariant('beeflow')
+	let g = (await api('dave', 'POST', 'api/games', {
+		opponent: uid('carol'),
+		variant: 'beeflow',
+		color: 'w',
+		rated: false,
+		timeControl: 'corr:3d',
+	})).game
+	expect([g.ratedRequested, g.variantOptions]).toEqual([false, {}])
+	await api('carol', 'POST', `api/games/${g.id}/accept`)
+	g = (await api('dave', 'GET', `api/games/${g.id}`)).game
+	const view = g.view
+	const b = view.worlds[0].b
+	const enemy = b.ty.filter((ty, id) => b.sd[id] === 1)
+	expect(view.options, 'the shuffles stay on the server').toEqual({})
+	expect(enemy.filter((ty) => ty === 'x'), 'the enemy back rank is hidden').toHaveLength(8)
+	expect(enemy.filter((ty) => ty === 'p')).toHaveLength(8)
+	expect(b.ty.filter((ty, id) => b.sd[id] === 0 && ty === 'k'), 'the own Queen Bee is known').toHaveLength(1)
+	expect(view.legal.length, 'the legal moves of the real position').toBeGreaterThan(0)
+	expect(view.visible).toHaveLength(64)
+	expect(g.moves).toEqual([])
+
+	const moved = await api('dave', 'POST', `api/games/${g.id}/v/moves`, { code: 'a2-a4', ply: 0 })
+	expect([moved.refused, moved.game.turn]).toEqual([false, 'b'])
+	await api('carol', 'POST', `api/games/${g.id}/v/moves`, { code: 'a7-a5', ply: 1 })
+	const done = (await api('carol', 'POST', `api/games/${g.id}/resign`)).game
+	expect(done.status).toBe('finished')
+	const full = (await api('carol', 'GET', `api/games/${g.id}`)).game
+	expect(full.view.visible).toBeNull()
+	const { white, black } = full.view.options
+	expect([Number.isInteger(white), Number.isInteger(black)]).toEqual([true, true])
+	const start = newGame(bee, { white, black })
+	const replayed = applyMove(bee, applyMove(bee, start, 'a2-a4', 0).state, 'a7-a5', 0).state
+	expect(positionHash(replayed), 'the revealed shuffles replay to the real position').toBe(positionHash(full.view))
+})

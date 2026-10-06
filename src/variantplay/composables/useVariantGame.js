@@ -233,6 +233,14 @@ export function useVariantGame(id, host = null) {
 	const secret = computed(() => isSecret(V.value, state.value))
 
 	/**
+	 * The state the board shows: in a running game of a variant that hides piece types (`V.viewOf(state, viewer)`,
+	 * Bee Flow Chess) the viewer's view of it, otherwise the state itself.
+	 */
+	const shown = computed(() => (V.value?.viewOf && secret.value
+		? V.value.viewOf(state.value, viewer.value)
+		: state.value))
+
+	/**
 	 * The state as the viewer knows it (`V.ownView`), computed once per state and viewer: it rebuilds every world, and
 	 * the move tables are cached per state object. Without the hook, the real state.
 	 */
@@ -1117,6 +1125,7 @@ export function useVariantGame(id, host = null) {
 		dangerSide,
 		rotation,
 		hidden,
+		shown,
 		moves,
 		own,
 		secret,

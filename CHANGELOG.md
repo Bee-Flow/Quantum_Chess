@@ -12,6 +12,13 @@ release as its release notes.
 
 ## [Unreleased]
 
+### Added
+
+- **Bee Flow Chess**, a new chess variant named after Bee-Flow, the private AI workspace, at the top of the variants
+  list: protect your Queen Bee. Each back rank is shuffled on its own, enemy pieces show as honeycomb cells until they
+  move, and a privacy shield keeps the pieces next to the Queen Bee from being captured. Against the computer, as pass
+  & play, and online with the server as the umpire and a rating of its own.
+
 ## [2.1.1] - 2026-10-06
 
 Maintenance release.

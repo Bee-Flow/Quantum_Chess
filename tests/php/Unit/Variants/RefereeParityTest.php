@@ -20,6 +20,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class RefereeParityTest extends TestCase {
 	public const DIR = __DIR__ . '/../../../fixtures/referee';
+	/** The server-ruled variants, one fixture each. */
+	public const VARIANTS = ['beeflow', 'kriegspiel', 'darkchess'];
 
 	/** @var array<string, array<string, mixed>> */
 	private static array $cache = [];
@@ -53,7 +55,7 @@ final class RefereeParityTest extends TestCase {
 	 * @return iterable<string, array{0: string, 1: int}>
 	 */
 	public static function games(): iterable {
-		foreach (['kriegspiel', 'darkchess'] as $variant) {
+		foreach (self::VARIANTS as $variant) {
 			foreach (self::fixture($variant)['games'] as $i => $game) {
 				yield $variant . ' seed ' . $game['seed'] => [$variant, $i];
 			}
@@ -65,7 +67,8 @@ final class RefereeParityTest extends TestCase {
 		$fixture = self::fixture($variant);
 		$this->assertSame(VariantEngine::T, $fixture['T']);
 		$game = $fixture['games'][$index];
-		$state = VariantEngine::newGame($variant);
+		$state = VariantEngine::newGame($variant, $game['options']);
+		$this->assertEquals($game['options'], self::plain($state['options']));
 		$full = [];
 		foreach ($game['fullViews'] as $fv) {
 			$full[$fv['ply']] = $fv['views'];

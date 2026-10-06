@@ -27,6 +27,7 @@ final class VariantCatalog {
 
 	/** The variants and their number of seats, in the order of the catalogue. Seat `i` plays side `i`. */
 	private const SEATS = [
+		'beeflow' => 2,
 		'raumschach' => 2,
 		'trid' => 2,
 		'hyper4d' => 2,
@@ -53,7 +54,7 @@ final class VariantCatalog {
 	 * Variants with hidden information, which the server rules (lib/Variants/): every browser replaying the full state
 	 * would show every player the hidden pieces.
 	 */
-	private const REFEREED = ['kriegspiel', 'darkchess'];
+	private const REFEREED = ['beeflow', 'kriegspiel', 'darkchess'];
 
 	/** The teams of a four-seat team game: the seats with the same parity play together. */
 	private const PAIRS = [[0, 2], [1, 3]];
@@ -64,6 +65,7 @@ final class VariantCatalog {
 	 */
 	public static function name(IL10N $l, string $id): string {
 		return match ($id) {
+			'beeflow' => $l->t('Bee Flow Chess'),
 			'raumschach' => $l->t('3D chess (Raumschach)'),
 			'trid' => $l->t('Tri-Dimensional chess'),
 			'hyper4d' => $l->t('4D chess'),

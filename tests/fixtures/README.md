@@ -141,25 +141,28 @@ The recorded games change whenever a rule of a variant changes. Then raise `ONLI
 (`src/variants/online.js`) and `VariantCatalog::RULES_VERSION` together and regenerate: browsers with different rules
 must not judge each other's moves. CI fails when regenerating changes the file.
 
-# Referee fixtures (Kriegspiel and Fog of war)
+# Referee fixtures (Bee Flow Chess, Kriegspiel and Fog of war)
 
-The server rules the online games of Kriegspiel and Fog of war with a PHP twin of the variant layer
+The server rules the online games of Bee Flow Chess, Kriegspiel and Fog of war with a PHP twin of the variant layer
 (`lib/Variants/`, see [`docs/development/online-variants.md`](../../docs/development/online-variants.md) §6), which
-must decide every move as `src/variants/` does. `referee/kriegspiel.json` and `referee/darkchess.json` are written by
-the JavaScript layer and replayed by PHPUnit in `tests/php/Unit/Variants/RefereeParityTest.php`.
+must decide every move as `src/variants/` does. `referee/beeflow.json`, `referee/kriegspiel.json` and
+`referee/darkchess.json` are written by the JavaScript layer and replayed by PHPUnit in
+`tests/php/Unit/Variants/RefereeParityTest.php`.
 
 ```sh
 npm run fixtures:referee    # node tests/fixtures/generate-referee-fixtures.mjs
 ```
 
 Each file holds seeded random games from the start position (games that end by the escape rule, by a king capture, by
-the 50-move rule, and ones that go on; two games play castling, en passant and promotions whenever they can). Every step
+the 50-move rule, and ones that go on; two games play castling, en passant and promotions whenever they can). Bee Flow
+Chess games start from the two shuffled back ranks of the game's `options`, as the server draws them, and stop after
+160 plies; their refused moves include captures under the privacy shield. Every step
 records the position before the move (`ply`, `turn`), moves the referee refuses (`refused`), the move and the server's
 roll (`code`, `u`), its odds before the roll (`preview`), what it leads to (`nextSeat`, `result`, `stateHash`), its
 history record (`record`) and both players' views (`views[seat]`: the view's position hash, number of worlds, visible
 squares, legal moves and last history record). Full views after plies 6 and 25 (`fullViews`) and each game's final
 `history` and `result` are kept too.
 
-The generator is deterministic; regenerate after any change of the shared rules or of these two variants and change
+The generator is deterministic; regenerate after any change of the shared rules or of these three variants and change
 the PHP twin with it. `REFEREE_FIXTURES=<dir>` makes the PHPUnit replay read another set written by the same
 generator, for a wider check before a release.

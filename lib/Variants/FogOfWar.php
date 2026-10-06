@@ -22,7 +22,27 @@ namespace OCA\QuantumChess\Variants;
  *
  * @internal
  */
-final class FogOfWar {
+final class FogOfWar extends VariantRules {
+	public function id(): string {
+		return 'darkchess';
+	}
+
+	public function bareKingsDraw(): bool {
+		return false;
+	}
+
+	public function recordInfo(State $prev, string $code, array $branch, State $next): ?array {
+		return self::captureInfo($prev, $code, $branch);
+	}
+
+	public function visibleSquares(State $state, int $seat): array {
+		return self::visibility($state, $seat);
+	}
+
+	public function viewWorlds(State $state, int $seat, array $visible): array {
+		return self::fogWorlds($state, $seat, $visible);
+	}
+
 	/**
 	 * The squares a side can see (`visibility`).
 	 *
@@ -49,12 +69,13 @@ final class FogOfWar {
 	}
 
 	/**
-	 * What a capture tells (`recordInfo`): `{ taken, types }`, or null for a move without captures.
+	 * What a capture tells (`recordInfo`, also of Bee Flow Chess): `{ taken, types }`, or null for a move without
+	 * captures.
 	 *
 	 * @param Branch $branch
 	 * @return array{taken: array<int, int>, types: array<int, array<int, string>>}|null
 	 */
-	public static function recordInfo(State $prev, string $code, array $branch): ?array {
+	public static function captureInfo(State $prev, string $code, array $branch): ?array {
 		if ($branch['captures'] === []) {
 			return null;
 		}

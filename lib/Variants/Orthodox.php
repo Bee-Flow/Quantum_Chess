@@ -55,9 +55,9 @@ final class Orthodox {
 	}
 
 	/**
-	 * The start world (`standardSetup(V, 'rnbqkbnr')` with the castling rights of `castlingRights`).
+	 * The start world of a variant (`standardSetup(V, 'rnbqkbnr')` with the castling rights of `castlingRights`).
 	 */
-	public static function setup(): World {
+	public static function setup(VariantRules $rules): World {
 		$back = 'rnbqkbnr';
 		$sq = [];
 		$ty = [];
@@ -85,7 +85,7 @@ final class Orthodox {
 			$castle[] = ['flag' => $side === 0 ? 'Q' : 'q', 'side' => $side, 'king' => $king,
 				'rook' => Topology::at(0, $r), 'kingTo' => Topology::at(2, $r), 'rookTo' => Topology::at(3, $r)];
 		}
-		return new World($sq, $ty, $sd, $board, ['ep' => -1, 'epVictim' => -1, 'castle' => $castle]);
+		return new World($sq, $ty, $sd, $board, ['ep' => -1, 'epVictim' => -1, 'castle' => $castle], $rules);
 	}
 
 	/**
