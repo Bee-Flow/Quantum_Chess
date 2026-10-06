@@ -8,6 +8,10 @@
  * changes, sends the user's moves and actions, and shows what the server stored. Every move is replayed and checked
  * against the hash chain (`useOnlineReplay.js`); own moves are sent by `useMoveSender.js`; rematches are followed by
  * `useRematch.js`.
+ *
+ * A chess variant game (`game.variant`) is not replayed here: this controller still loads and polls it, and keeps its
+ * status, chat, draw offers, resignation and rematches, but its moves are kept as they came (`variantMoves`, by ply,
+ * a later settlement replacing the earlier copy) for the variant host (OnlineVariantHost), which plays them.
  */
 
 import { showError, showInfo } from '@nextcloud/dialogs'
@@ -147,6 +151,33 @@ export function useOnlineGame(id, deps = {}) {
 		eventNames,
 	})
 	const { state, moves } = replay
+	/** The moves of a variant game by ply, as the server sent them. */
+	const variantMoves = shallowRef([])
+
+	/**
+	 * Keep the moves of a variant game; a move sent again (now settled) replaces its earlier copy.
+	 *
+	 * @param {object[]|undefined} list moves of a variant game
+	 */
+	function mergeVariantMoves(list) {
+		if (!list?.length) {
+			return
+		}
+		const all = variantMoves.value.slice()
+		for (const m of list) {
+			all[m.ply] = m
+		}
+		variantMoves.value = all
+	}
+
+	/** The ply from which a poll asks for moves: a variant game's first move without its settlement, else the end. */
+	function pollFromPly() {
+		if (!game.value?.variant) {
+			return moves.value.length
+		}
+		const open = variantMoves.value.findIndex((m) => !m || m.nextSeat === null)
+		return open === -1 ? variantMoves.value.length : open
+	}
 
 	const players = computed(() => {
 		const context = { viewer, names: names.value, myColor: myColor.value, now: clock.value / 1000 + serverOffset }
@@ -218,6 +249,13 @@ export function useOnlineGame(id, deps = {}) {
 	 * @param {GameFull} full the game
 	 */
 	function rebuild(full) {
+		if (full.variant) {
+			variantMoves.value = []
+			mergeVariantMoves(full.moves)
+			adopt(full)
+			chat.replaceChat(full.chat)
+			return
+		}
 		const { complete } = replay.rebuild(full)
 		adopt(full)
 		if (full.state && complete) {
@@ -235,6 +273,12 @@ export function useOnlineGame(id, deps = {}) {
 	 * @param {object} res {game, moves, chat}
 	 */
 	async function ingest(res) {
+		if (res.game?.variant) {
+			mergeVariantMoves(res.moves)
+			mergeChat(res.chat)
+			adopt(res.game)
+			return
+		}
 		await replay.ingestMoves(res.moves)
 		mergeChat(res.chat)
 		adopt(res.game)
@@ -328,7 +372,7 @@ export function useOnlineGame(id, deps = {}) {
 		}
 		const res = await api.pollGame(
 			gameId,
-			{ rev: game.value.rev, ply: moves.value.length, chat: lastChatId(), watching: 1 },
+			{ rev: game.value.rev, ply: pollFromPly(), chat: lastChatId(), watching: 1 },
 			{ signal },
 		)
 		if (res?.changed && !pending.value) {
@@ -375,6 +419,11 @@ export function useOnlineGame(id, deps = {}) {
 		catchUp,
 		load,
 		pollNow: () => poller.pollNow(),
+		/** Something happened in the game (a variant move was sent): poll quickly for a while, then poll at once. */
+		noteActivity: () => {
+			timing.fastSince = d.now()
+			poller.pollNow()
+		},
 		disposed: () => disposed,
 	}, d)
 
@@ -532,6 +581,7 @@ export function useOnlineGame(id, deps = {}) {
 		dispose,
 		// online extras
 		game,
+		variantMoves,
 		chat: chat.chat,
 		unread: chat.unread,
 		markChatSeen: chat.markChatSeen,

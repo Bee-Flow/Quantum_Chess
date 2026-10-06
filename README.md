@@ -51,8 +51,8 @@ other boards.
   Kriegspiel and Fog of war a hand-over screen keeps each player's view private until the game ends
 - Made for phones too: large boards zoom with a pinch and pan with a finger; 4D chess, 5D chess and Bughouse open on
   the boards you play
-- Played on your own device: online play and ratings stay with classic Quantum Chess. Every variant's rules:
-  [`docs/variants.md`](docs/variants.md)
+- Played on your own device, or online against someone on your Nextcloud in the two-player variants (unrated; Kriegspiel
+  and Fog of war on one device only, for now). Every variant's rules: [`docs/variants.md`](docs/variants.md)
 
 **Learn**
 

@@ -15,7 +15,7 @@ namespace OCA\QuantumChess\Service\Game;
  * game goes on. Both are checked against tests/fixtures/online-variants.json.
  */
 final class VariantResult {
-	private const PATTERN = '/^(?:win:(\d(?:,\d)*)|draw)\/([A-Za-z0-9_-]{1,32})$/';
+	private const PATTERN = '/^(?:win:(\d(?:,\d)*)|draw)\/([A-Za-z0-9_-]{1,32})\z/';
 
 	/**
 	 * @param list<int> $winners the winning seats in ascending order; empty for a draw

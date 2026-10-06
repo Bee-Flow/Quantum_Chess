@@ -79,6 +79,8 @@ export function reasonCopy(reason, { winner = null, names = {}, captureProbabili
 			return t('quantumchess', 'The game was abandoned')
 		case 'player_deleted':
 			return t('quantumchess', 'A player’s account was deleted')
+		case 'disputed':
+			return t('quantumchess', 'The players’ devices disagreed about a move')
 		default:
 			return ''
 	}
@@ -115,7 +117,9 @@ export function resultText(result, reason, names = {}, extra = {}) {
 	const w = names.w ?? t('quantumchess', 'White')
 	const b = names.b ?? t('quantumchess', 'Black')
 	let title
-	if (reason === 'aborted' || reason === 'abandoned') {
+	if (reason === 'disputed') {
+		title = t('quantumchess', 'Game annulled')
+	} else if (reason === 'aborted' || reason === 'abandoned') {
 		title = t('quantumchess', 'Game aborted')
 	} else if (winner === null) {
 		title = t('quantumchess', 'Draw')

@@ -15,6 +15,10 @@ use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\GameMapper;
 use OCA\QuantumChess\Db\Move;
 use OCA\QuantumChess\Db\MoveMapper;
+use OCA\QuantumChess\Db\Seat;
+use OCA\QuantumChess\Db\SeatMapper;
+use OCA\QuantumChess\Db\VariantMove;
+use OCA\QuantumChess\Db\VariantMoveMapper;
 use OCA\QuantumChess\Engine\Engine;
 use OCA\QuantumChess\Exception\ApiError;
 use OCA\QuantumChess\Exception\ApiException;
@@ -30,6 +34,7 @@ use OCA\QuantumChess\Service\Game\GameRepository;
 use OCA\QuantumChess\Service\Game\GameTransaction;
 use OCA\QuantumChess\Service\Game\InvitationService;
 use OCA\QuantumChess\Service\Game\InvitePolicy;
+use OCA\QuantumChess\Service\Game\VariantGameplayService;
 use OCA\QuantumChess\Service\Player\RatingService;
 use OCA\QuantumChess\Service\Settings\AppSettings;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -82,6 +87,12 @@ trait GameServiceFixture {
 	protected GameMapper&MockObject $gameMapper;
 	protected MoveMapper&MockObject $moveMapper;
 	protected ChatMapper&MockObject $chatMapper;
+	protected SeatMapper&MockObject $seatMapper;
+	protected VariantMoveMapper&MockObject $variantMoveMapper;
+	/** @var list<Seat> the seats the services created */
+	protected array $seats = [];
+	/** @var array<int, array<int, VariantMove>> the stored variant moves by game and ply */
+	protected array $variantMoves = [];
 	protected NotificationService&MockObject $notifications;
 	protected RatingService&MockObject $ratings;
 	protected IUserManager&MockObject $userManager;
@@ -139,6 +150,42 @@ trait GameServiceFixture {
 		$this->moveMapper->method('clearUser')->willReturnCallback(function (int $id, string $uid): void {
 			$this->log[] = 'clear moves #' . $id . ' ' . $uid;
 		});
+		$this->seatMapper = $this->createMock(SeatMapper::class);
+		$this->seatMapper->method('insert')->willReturnCallback(function (Seat $seat): Seat {
+			$this->log[] = 'insert seat #' . $seat->getGameId() . ' ' . $seat->getSeat() . ' ' . $seat->getUid();
+			$this->seats[] = $seat;
+			return $seat;
+		});
+		$this->seatMapper->method('clearUser')->willReturnCallback(function (int $id, string $uid): void {
+			$this->log[] = 'clear seats #' . $id . ' ' . $uid;
+		});
+		$this->variantMoveMapper = $this->createMock(VariantMoveMapper::class);
+		$this->variantMoveMapper->method('insert')->willReturnCallback(function (VariantMove $move): VariantMove {
+			if (isset($this->variantMoves[$move->getGameId()][$move->getPly()])) {
+				throw new \RuntimeException('duplicate ply');
+			}
+			$this->log[] = 'insert vmove ' . $move->getPly() . ' ' . $move->getCode() . ' u ' . $move->getU();
+			$this->variantMoves[$move->getGameId()][$move->getPly()] = $move;
+			return $move;
+		});
+		$this->variantMoveMapper->method('update')->willReturnCallback(function (VariantMove $move): VariantMove {
+			$this->log[] = 'settle vmove ' . $move->getPly() . ' → ' . $move->getNextSeat() . ' ' . $move->getResult();
+			return $move;
+		});
+		$this->variantMoveMapper->method('findByPly')->willReturnCallback(
+			fn (int $id, int $ply) => $this->variantMoves[$id][$ply] ?? null,
+		);
+		$this->variantMoveMapper->method('findByClientId')->willReturnCallback(function (int $id, string $clientId) {
+			foreach ($this->variantMoves[$id] ?? [] as $move) {
+				if ($move->getClientId() === $clientId) {
+					return $move;
+				}
+			}
+			return null;
+		});
+		$this->variantMoveMapper->method('findByGame')->willReturnCallback(fn (int $id, int $from = 0) => array_values(
+			array_filter($this->variantMoves[$id] ?? [], fn (VariantMove $m) => $m->getPly() >= $from),
+		));
 		$this->chatMapper = $this->createMock(ChatMapper::class);
 		$this->chatMapper->method('insert')->willReturnCallback(function (ChatMessage $line): ChatMessage {
 			$this->log[] = 'chat #' . $line->getGameId() . ' ' . $line->getMessage()
@@ -159,6 +206,7 @@ trait GameServiceFixture {
 			'inviteDeclined',
 			'inviteClosed',
 			'yourTurn',
+			'variantTurn',
 			'drawOffered',
 			'drawClosed',
 			'gameOver',
@@ -285,6 +333,7 @@ trait GameServiceFixture {
 				$settings,
 				$this->engine,
 				$errors,
+				$this->seatMapper,
 			);
 			$this->parts = compact('repository', 'transaction', 'lifecycle', 'clock', 'policy', 'settings', 'errors');
 		}
@@ -323,6 +372,21 @@ trait GameServiceFixture {
 		);
 	}
 
+	protected function variantGameplay(): VariantGameplayService {
+		$p = $this->parts();
+		return new VariantGameplayService(
+			$p['repository'],
+			$p['lifecycle'],
+			$p['transaction'],
+			$this->variantMoveMapper,
+			$this->random,
+			$p['clock'],
+			$this->notifications,
+			$this->l10n(),
+			$p['errors'],
+		);
+	}
+
 	protected function chat(): ChatService {
 		$p = $this->parts();
 		return new ChatService(
@@ -343,6 +407,7 @@ trait GameServiceFixture {
 		return new GameQueryService(
 			$this->gameMapper,
 			$this->moveMapper,
+			$this->variantMoveMapper,
 			$this->chatMapper,
 			$p['lifecycle'],
 			$p['policy'],
@@ -359,6 +424,8 @@ trait GameServiceFixture {
 		return new GameMaintenanceService(
 			$this->gameMapper,
 			$this->moveMapper,
+			$this->variantMoveMapper,
+			$this->seatMapper,
 			$this->chatMapper,
 			$p['repository'],
 			$p['lifecycle'],

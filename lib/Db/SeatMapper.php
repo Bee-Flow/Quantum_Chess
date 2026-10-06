@@ -48,6 +48,15 @@ class SeatMapper extends QBMapper {
 		return $ids;
 	}
 
+	/** Empties the seat of `$uid` when the account is deleted; the seat itself stays. */
+	public function clearUser(int $gameId, string $uid): void {
+		$qb = $this->db->getQueryBuilder();
+		$qb->update(self::TABLE)->set('uid', $qb->createNamedParameter(null))
+			->where($qb->expr()->eq('game_id', $qb->createNamedParameter($gameId, IQueryBuilder::PARAM_INT)))
+			->andWhere($qb->expr()->eq('uid', $qb->createNamedParameter($uid)))
+			->executeStatement();
+	}
+
 	public function deleteByGame(int $gameId): void {
 		$qb = $this->db->getQueryBuilder();
 		$qb->delete(self::TABLE)

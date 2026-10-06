@@ -13,6 +13,8 @@ use OCA\QuantumChess\Db\ChatMapper;
 use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\GameMapper;
 use OCA\QuantumChess\Db\MoveMapper;
+use OCA\QuantumChess\Db\SeatMapper;
+use OCA\QuantumChess\Db\VariantMoveMapper;
 use OCA\QuantumChess\Exception\GameConflictException;
 use OCA\QuantumChess\Notification\NotificationService;
 use OCA\QuantumChess\Service\Settings\AppSettings;
@@ -26,6 +28,8 @@ class GameMaintenanceService {
 	public function __construct(
 		private readonly GameMapper $games,
 		private readonly MoveMapper $moves,
+		private readonly VariantMoveMapper $variantMoves,
+		private readonly SeatMapper $seats,
 		private readonly ChatMapper $chat,
 		private readonly GameRepository $repository,
 		private readonly GameLifecycle $lifecycle,
@@ -129,6 +133,10 @@ class GameMaintenanceService {
 				}
 				$this->games->clearUser((int)$game->getId(), $uid);
 				$this->moves->clearUser((int)$game->getId(), $uid);
+				if ($game->isVariant()) {
+					$this->variantMoves->clearUser((int)$game->getId(), $uid);
+					$this->seats->clearUser((int)$game->getId(), $uid);
+				}
 				$this->chat->deleteOwn((int)$game->getId(), $uid);
 				$fresh = $this->games->findById((int)$game->getId());
 				if ($fresh !== null && $fresh->getWhiteUid() === null && $fresh->getBlackUid() === null

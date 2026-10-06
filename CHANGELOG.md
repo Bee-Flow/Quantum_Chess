@@ -12,6 +12,17 @@ release as its release notes.
 
 ## [Unreleased]
 
+The chess variants go online.
+
+### Added
+
+- **Online play for the two-player chess variants**: 3D, 4D and 5D chess, Tri-Dimensional chess, Chess960, Atomic,
+  Crazyhouse, Antichess, King of the Hill, Three-check, Horde, Hexagonal chess, Capablanca chess, Shogi, Xiangqi and
+  Makruk. Choose *Online* as the opponent in a variant's New game dialog and invite someone or open a challenge. The
+  server draws the dice of every move; both players' devices check every move against the rules, and if they ever
+  disagree, the game is annulled. Online variant games are not rated. Four-player chess, Bughouse, Kriegspiel and Fog
+  of war follow later.
+
 ## [2.0.1] - 2026-10-06
 
 Maintenance release, and the first step towards playing the chess variants online, four-player games included.

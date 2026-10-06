@@ -50,6 +50,7 @@ export function systemText(message, names) {
 		case 'aborted': return t('quantumchess', '{name} aborted the game', { name })
 		case 'resigned': return t('quantumchess', '{name} resigned', { name })
 		case 'timeout': return t('quantumchess', 'Time ran out')
+		case 'disputed': return t('quantumchess', 'The players’ devices disagreed about a move: the game was annulled')
 		default: return message.message
 	}
 }

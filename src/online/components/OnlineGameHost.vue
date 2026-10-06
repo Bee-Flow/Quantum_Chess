@@ -8,6 +8,9 @@
   invitation panel over the board before the start, the draw-offer and rematch banners, the chat tab, the game actions
   (Offer draw, Abort or Resign) and the coach tab, which stays locked while the game runs (fair play). The game screen
   is keyed on the start of the game: the panel reads its tabs from the slots when it mounts.
+
+  A chess variant game shows the invitation like any other game; once it has started, the `variant` slot shows it
+  instead of the game screen, with this controller (`{ controller }`) for its status, chat and draw offers.
 -->
 <template>
 	<NcEmptyContent
@@ -34,6 +37,7 @@
 	<div v-else-if="!g" class="qc-online__loading">
 		<NcLoadingIcon :size="44" :name="t('quantumchess', 'Loading the game…')" />
 	</div>
+	<slot v-else-if="started && g.variant" name="variant" :controller="c" />
 	<GameScreen
 		v-else
 		:key="started ? 'live' : 'waiting'"

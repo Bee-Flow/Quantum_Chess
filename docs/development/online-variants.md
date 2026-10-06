@@ -5,9 +5,13 @@
 
 # Online play for the chess variants
 
-**Status:** proposed, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1
-(foundations) is done: the schema, entities, seat helpers, catalogue, result codes, variant chain and replay exist
-with their tests, and nothing uses them yet.
+**Status:** in progress, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1
+(foundations) shipped in 2.0.1. Phase 2 is done: the two-player variants without hidden information can be played
+online, as section 5.6.6 of [`architecture.md`](architecture.md) describes. Phases 3 to 5 are open.
+
+**Goal: all twenty variants online, with nothing to install but the app.** An administrator installs Quantum Chess
+from the App Store and nothing else: no external app, no container, no Node.js on the server. Everything below is
+PHP in `lib/` or JavaScript in the app's bundle.
 
 This document is the plan for playing the chess variants online, the four-player ones included, instead of only as
 pass & play or against the computer. It describes the trust model, the data model, the changes to the backend and
@@ -21,9 +25,9 @@ the web app, and the phases in which the work ships. Once a phase is done, its p
   extends a hash chain. Clients replay the moves with the JavaScript engine and check the chain
   (`src/online/chainCheck.js`).
 - **The variants are local only.** They run on a quantum layer that exists in JavaScript only
-  (`src/variants/core/quantum.js`, section 5.6 of [`architecture.md`](architecture.md)). Porting about 14,000 lines
-  of variant rules to PHP, and keeping two copies byte for byte identical as the classic engine does, is not
-  realistic.
+  (`src/variants/core/quantum.js`, section 5.6 of [`architecture.md`](architecture.md)). Porting all of the
+  variant rules, about 14,000 lines, to PHP and keeping two copies byte for byte identical is not realistic. Porting
+  the part that the two hidden-information variants need (the ordinary 8 × 8 board) is (section 6).
 - **Online play assumes two seats.** The `white_uid`/`black_uid` columns and the paired `_w`/`_b` columns, a one-letter
   `turn`, the `1-0`/`0-1` results, `Game::colorOf`, `opponentOf` and `otherColor`, the chain seed made from two user
   ids, pairwise Elo, the notifications, the dashboard widget, the serializer and `src/online/onlinePlayers.js`.
@@ -54,8 +58,9 @@ checks the rules.
    the result must match. On a mismatch it opens a dispute, which ends the game as **annulled**: unrated, with a
    system line in the chat and a mark that administrators can see.
 
-Cheating with the rules is therefore detected rather than prevented. Variant games stay unrated until a server-side
-referee exists (phase 5). Cheating with the dice, the main way to cheat in quantum chess, is impossible as before.
+Cheating with the rules is therefore detected rather than prevented, so these games are unrated by default.
+Cheating with the dice, the main way to cheat in quantum chess, is impossible as before. Kriegspiel and Fog of war
+cannot work this way, because replaying shows every hidden piece; the server rules them itself (section 6).
 
 ### Which variants
 
@@ -64,7 +69,7 @@ referee exists (phase 5). Cheating with the dice, the main way to cheat in quant
 | Two players, open information | Chess960, Atomic, Crazyhouse, Antichess, King of the Hill, Three-check, Horde, Hexagonal, Capablanca, Shogi, Xiangqi, Makruk, Raumschach, Tri-Dimensional, 4D | Phase 2 |
 | Several moves per turn | 5D chess with multiverse time travel | Phase 2: every move is its own ply, and only *Submit turn* passes the turn |
 | Four players | Four-player chess (free for all and teams), Bughouse | Phase 3 |
-| Hidden information | Kriegspiel, Dark chess | Not before phase 5. Replaying needs the full state, which would show every hidden piece. They stay pass & play and against the computer, and the New game dialog says why. |
+| Hidden information | Kriegspiel, Fog of war (Dark chess) | Phase 4, ruled by the server in PHP (section 6): the browsers only ever see their own view |
 
 ## 3. Data model
 
@@ -75,9 +80,11 @@ The migration adds tables and columns and renames nothing, so the stable contrac
 
 New columns: `variant` (string, 32; null for classic Quantum Chess), `variant_options` (text, JSON),
 `variant_rules` (the rules version, `ONLINE_RULES_VERSION`), `variant_result` (the settled result code, see section
-3.4), `seat_count` (small integer, default 2) and `seat_to_move`. Every classic code path refuses a game whose `variant` is not null. In a two-player
+3.4), `seat_count` (small integer, default 2) and `seat_to_move`. Every classic code path refuses a game whose
+`variant` is not null. In a two-player
 variant game, `white_uid` and `black_uid` also hold seats 0 and 1, so `havePlayed`, the lobby queries and `removeUser`
-keep working. The server never computes or stores a board of a variant game.
+keep working. The server stores no board of a browser-ruled variant game; for the server-ruled ones (section 6)
+`state` holds the real state, which is never sent to the players.
 
 ### 3.2 `qchess_seats`
 
@@ -137,9 +144,42 @@ a rule changes, which is when `ONLINE_RULES_VERSION` must go up.
 | `VariantsView.vue` | *Online* as an opponent, an opponent picker per extra seat (or an open seat), and the teams |
 | Lobby | Variant games with the variant's name and every player, linking to `/variants/:variant/online/:id` |
 
-## 6. Phases
+## 6. Kriegspiel and Fog of war: the server rules
 
-Each phase is its own pull request and can ship on its own.
+Replaying in the browser would show the hidden pieces, so for these two variants the server holds the real state,
+decides every move and sends each player only their own view. The classic PHP engine (`lib/Engine/`) cannot be the
+referee: its rules differ from the shared rules of the variants (it draws on a threefold repetition, and its move
+limit differs), so an online game would play differently from a local one. Instead the app gets a PHP twin of the
+part of the variant layer that these two variants use, the ordinary 8 × 8 board, kept byte for byte identical with
+parity fixtures, as `lib/Engine/` is with `src/engine/`.
+
+| PHP (`lib/Variants/`) | JavaScript source |
+|---|---|
+| `World.php` | `core/world.js`: piece lists, board, move generation and application for the orthodox pieces |
+| `Orthodox.php` | `core/orthodox.js`, `orthodoxVariant.js`: castling, double steps, en passant, promotion, `applyMiss`, `unifyWorlds` |
+| `Quantum.php` | `core/quantum.js`: weighted worlds (`T = 2^24`, at most 64), `branches`, picking an outcome with `u`, splits, merges, measurements, links, the solid and game-end rolls, the budget, certain moves, the escape rule and the draws |
+| `Kriegspiel.php` | `kriegspiel/umpire.js`: the moves a player may try, refusals, announcements, `ownView` |
+| `FogOfWar.php` | `darkchess.js`: what each player sees, and the view built from it |
+| `VariantEngine.php` | `newGame`, `isLegal`, `apply(state, code, u)`, `result`, `viewFor(state, seat)` |
+
+That is about 3,000 to 4,000 lines, without the computer player, the texts and the other boards.
+
+- **Parity.** `tests/fixtures/generate-variant-referee-fixtures.mjs` plays seeded games of both variants with the
+  JavaScript layer (splits, merges, measurements, rolled captures, refused tries, castling, en passant, promotions,
+  escape-rule wins) and records every step: the move, `u`, accepted or refused, the position hash, the result, the
+  announcements and both players' views. PHPUnit replays them byte for byte, and CI checks that the file is up to
+  date. A rule change of the shared layer or of these two variants needs both twins from then on.
+- **Game flow.** A player sends a move. If it is refused, the answer is "no" and the turn is not used; in Kriegspiel
+  the opponent is not told. If it is accepted, the server draws `u`, applies the move, stores the full state in
+  `qchess_games.state` and the move in `qchess_vmoves` (no settlement needed), and extends the chain. Every player
+  receives only `viewFor(state, seat)`. When the game ends, the full state and all moves are revealed, and browsers
+  can replay them and check the chain.
+- **Ratings.** These games are cheat-proof, so they can be rated (phase 5).
+
+## 7. Phases
+
+Each phase is its own pull request and release, so the App Store always has a version in which a growing set of
+variants can be played online, and the issue gets an update after each one.
 
 1. **Foundations.** The migration, entities and mappers, `Seats`, `VariantCatalog` and `VariantChain` with their
    parity tests, and `replayOnline` with its tests. No routes and no screens yet.
@@ -148,14 +188,13 @@ Each phase is its own pull request and can ship on its own.
 3. **Four seats**, for Four-player chess and Bughouse: several invitees and open seats, choosing seats and teams,
    results per team, players out in a free-for-all, draws by vote of every seat, and who is to move in the lobby, the
    notifications and the widget.
-4. **Ratings and rematches**: an Elo rating per player and variant for the two-player variants, a variant filter on
-   the leaderboard, and rematches that rotate the seats.
-5. **A referee on the server** (optional): the JavaScript quantum layer running on the server, for example as a
-   Nextcloud AppAPI external app. It would hold the real state, check every move and send each player only their own
-   view. That opens online play to Kriegspiel and Dark chess and makes rated multiplayer games fair. It is the first
-   runtime dependency beyond PHP, so it needs its own issue first ([`CONTRIBUTING.md`](../../CONTRIBUTING.md)).
+4. **Kriegspiel and Fog of war**, ruled by the server (section 6): the PHP twin with its parity fixtures, the game
+   flow with refusals and views, and an online host in the browser that draws from the server's view. With this
+   phase all twenty variants can be played online.
+5. **Ratings and rematches**: an Elo rating per player and variant, for the server-ruled variants by default and for
+   the others when both players agree; a variant filter on the leaderboard; and rematches that rotate the seats.
 
-## 7. Risks
+## 8. Risks
 
 - **Replay time.** A 5D state with 64 worlds is about 3.4 MB of JSON, and a move can take tens of milliseconds. The
   snapshots make catching up incremental, and `npm run bench` gets a 200-ply 5D replay.
@@ -165,12 +204,19 @@ Each phase is its own pull request and can ship on its own.
 - **Different app versions.** Two browsers with different rules would disagree. The game stores the rules version of
   the app that created it, and a browser with another version asks the player to update instead of settling or
   disputing.
+- **Two copies of the hidden variants' rules.** Phase 4 doubles the maintenance of the shared layer for the 8 × 8
+  board, as the classic engine already does. The parity fixtures make a difference fail in CI instead of in a game.
+- **The server's time.** A move of a server-ruled game with 64 worlds and the escape rule runs in PHP. A
+  performance test like `tests/php/Unit/Engine/PerformanceTest.php` keeps it within the classic engine's budget.
 
-## 8. Verification
+## 9. Verification
 
 - `make lint` and `make test` for every phase, with PHP tests of seats, the catalog, the chain and the gameplay service
   (turn order through settlement, `u` drawn after the move, conflicts on `rev`, time-outs for two seats, a free-for-all
   and teams, disputes), and JavaScript tests of the replay (fixtures, snapshots, a mismatch found at the right ply),
   the chain and the catalog parity.
 - `make e2e`: two players finish an Atomic game; four players play a free-for-all in which one resigns and the game
-  goes on; a forged settlement annuls the game; and the API tests cover the new routes.
+  goes on; a forged settlement annuls the game; a Kriegspiel game with a refused try; and the API tests cover the
+  new routes.
+- For the server-ruled variants: the PHP parity replay, and tests that a view never holds an enemy piece outside what
+  that player may see (none at all in Kriegspiel).

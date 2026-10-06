@@ -12,6 +12,7 @@ namespace OCA\QuantumChess\Tests\Unit\Service\Game;
 use OCA\QuantumChess\Db\ChatMessage;
 use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\Move;
+use OCA\QuantumChess\Db\VariantMove;
 use OCA\QuantumChess\Engine\Engine;
 use OCA\QuantumChess\Service\Game\GameClock;
 use OCA\QuantumChess\Service\Game\GameSerializer;
@@ -266,6 +267,49 @@ final class GameSerializerTest extends TestCase {
 		$game = self::active();
 		$this->assertSame(json_decode($game->getState(), true), $this->serializer()->live($game, 'alice')['state']);
 		$this->assertNull($this->serializer()->live(GameBuilder::active(['state' => 'not json']), 'alice')['state']);
+	}
+
+	public function testVariantGames(): void {
+		$game = GameBuilder::active([
+			'variant' => 'chess960',
+			'variantOptions' => '{"position":518}',
+			'variantRules' => 1,
+			'seatToMove' => 1,
+			'turn' => 'b',
+			'state' => '{"v":1,"turns":1,"pending":4}',
+		]);
+		$live = $this->serializer()->live($game, 'alice');
+		$this->assertEquals(
+			['chess960', (object)['position' => 518], 1, null, [], null, 1, 4, true],
+			[
+				$live['variant'],
+				$live['variantOptions'],
+				$live['variantRules'],
+				$live['variantResult'],
+				$live['preview'],
+				$live['state'],
+				$live['seatToMove'],
+				$live['pendingPly'],
+				$live['canAbort'],
+			],
+		);
+		$classic = $this->serializer()->live(self::active(), 'alice');
+		$this->assertArrayNotHasKey('variant', $classic, 'classic games keep their shape');
+		$move = new VariantMove();
+		$move->setPly(4);
+		$move->setSeat(1);
+		$move->setUid('bob');
+		$move->setCode('e7-e5');
+		$move->setU(77);
+		$move->setNextSeat(null);
+		$move->setResult(null);
+		$move->setStateHash(null);
+		$move->setChain(str_repeat('c', 64));
+		$move->setCreatedAt(5);
+		$this->assertSame([
+			'ply' => 4, 'seat' => 1, 'userId' => 'bob', 'code' => 'e7-e5', 'u' => 77, 'nextSeat' => null,
+			'result' => null, 'stateHash' => null, 'chain' => str_repeat('c', 64), 'createdAt' => 5,
+		], $this->serializer()->move($move));
 	}
 
 	/**

@@ -12,6 +12,7 @@ namespace OCA\QuantumChess\Service\Game;
 use OCA\QuantumChess\Db\ChatMessage;
 use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\Move;
+use OCA\QuantumChess\Db\VariantMove;
 use OCA\QuantumChess\Engine\Engine;
 use OCA\QuantumChess\Service\Player\RatingService;
 use OCA\QuantumChess\Service\Settings\AppSettings;
@@ -136,7 +137,12 @@ class GameSerializer {
 			'finishedAt' => $game->getFinishedAt(),
 			'preview' => $started ? $this->preview($game) : [],
 			'rev' => $game->getRev(),
-		];
+		] + ($game->isVariant() ? [
+			'variant' => $game->getVariant(),
+			'variantOptions' => (object)$game->getVariantOptionValues(),
+			'variantRules' => $game->getVariantRules(),
+			'variantResult' => $game->getVariantResult(),
+		] : []);
 	}
 
 	/**
@@ -146,6 +152,10 @@ class GameSerializer {
 	 * @return list<array{0: int, 1: string, 2: int}>
 	 */
 	public function preview(Game $game): array {
+		if ($game->isVariant()) {
+			// The server keeps no board of a variant game.
+			return [];
+		}
 		try {
 			$state = $this->engine->parseState($game->getState());
 		} catch (\Throwable) {
@@ -198,12 +208,12 @@ class GameSerializer {
 		$rematch = $game->hasEnded() && $color !== null && $game->opponentOf($viewer) !== null;
 		$chatOpen = $this->settings->chatEnabled() && ChatService::isOpen($game, $now);
 		return $dto + [
-			'state' => is_array($state) ? $state : null,
+			'state' => !$game->isVariant() && is_array($state) ? $state : null,
 			'chain' => $game->getChain(),
 			'drawOffer' => $offer === null ? null : ['by' => $offer, 'ply' => $game->getDrawOfferPly()],
 			'canOfferDraw' => $active && $offer !== $color && ($drawAt === null || $game->getPly() >= $drawAt),
 			'drawAvailableAtPly' => $drawAt !== null && $game->getPly() < $drawAt ? $drawAt : null,
-			'canAbort' => $active && $game->getPly() < 2,
+			'canAbort' => $active && GameplayService::canAbort($game),
 			'canResign' => $active,
 			'canRematch' => $rematch,
 			'ratings' => ['w' => $this->rating($game->getWhiteUid()), 'b' => $this->rating($game->getBlackUid())],
@@ -214,13 +224,16 @@ class GameSerializer {
 			'chatCount' => $game->getChatCount(),
 			'chatOpen' => $chatOpen && $color !== null,
 			'now' => $now,
-		];
+		] + ($game->isVariant() ? [
+			'seatToMove' => $game->getSeatToMove(),
+			'pendingPly' => VariantTurn::of($game)->pending,
+		] : []);
 	}
 
 	/**
 	 * The live object plus the whole move list and chat, for opening a game.
 	 *
-	 * @param list<Move> $moves
+	 * @param list<Move>|list<VariantMove> $moves
 	 * @param list<ChatMessage> $chat
 	 * @return array<string, mixed>
 	 */
@@ -228,17 +241,31 @@ class GameSerializer {
 		$start = $game->getStartState();
 		return $this->live($game, $viewer) + [
 			'startState' => $start === null ? null : json_decode($start, true),
-			'moves' => array_map(fn (Move $m) => $this->move($m), $moves),
+			'moves' => array_map(fn (Move|VariantMove $m) => $this->move($m), $moves),
 			'chat' => array_map(fn (ChatMessage $c) => $this->chat($c), $chat),
 		];
 	}
 
 	/**
-	 * A played move with its measurement record and hash-chain value.
+	 * A played move with its measurement record and hash-chain value; for a variant game, with its roll and settlement.
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function move(Move $move): array {
+	public function move(Move|VariantMove $move): array {
+		if ($move instanceof VariantMove) {
+			return [
+				'ply' => $move->getPly(),
+				'seat' => $move->getSeat(),
+				'userId' => $move->getUid(),
+				'code' => $move->getCode(),
+				'u' => $move->getU(),
+				'nextSeat' => $move->getNextSeat(),
+				'result' => $move->getResult(),
+				'stateHash' => $move->getStateHash(),
+				'chain' => $move->getChain(),
+				'createdAt' => $move->getCreatedAt(),
+			];
+		}
 		return [
 			'ply' => $move->getPly(),
 			'color' => $move->getColor(),

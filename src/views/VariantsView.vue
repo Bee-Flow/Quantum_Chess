@@ -10,6 +10,11 @@
   multiverse, which cannot turn its board) gets the view of the human's side preselected against the computer: Black
   at the bottom when the human plays Black. A game that the browser storage refuses is not opened: the dialog stays
   open and says that the game could not be saved on this device.
+
+  Online (a two-player variant without hidden information, when online games are available to the user): an invited
+  opponent or an open challenge, the time per move and the side (or random), with the variant's options; the game is
+  created on the server and opens in the online game screen (route /game/:id) once it starts. Online variant games are
+  never rated.
 -->
 <template>
 	<div class="qc-variants">
@@ -100,7 +105,42 @@
 						name="qc-variant-opponent">
 						{{ t('quantumchess', 'Pass & play') }}
 					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch
+						v-if="onlineFor(setup.entry)"
+						v-model="setup.opponent"
+						type="radio"
+						value="online"
+						name="qc-variant-opponent"
+						data-test="variant-online">
+						{{ t('quantumchess', 'Online') }}
+					</NcCheckboxRadioSwitch>
 				</fieldset>
+				<template v-if="setup.opponent === 'online'">
+					<OpponentPicker
+						v-model:open="setup.online.open"
+						v-model:opponent="setup.online.opponent"
+						v-model:timeControl="setup.online.timeControl"
+						unrated />
+					<fieldset>
+						<legend>{{ t('quantumchess', 'You play') }}</legend>
+						<NcCheckboxRadioSwitch
+							v-for="(s, i) in setup.variant.sides"
+							:key="i"
+							v-model="setup.online.color"
+							type="radio"
+							:value="i === 0 ? 'w' : 'b'"
+							name="qc-variant-online-side">
+							{{ sideName(setup.variant, i) }}
+						</NcCheckboxRadioSwitch>
+						<NcCheckboxRadioSwitch
+							v-model="setup.online.color"
+							type="radio"
+							value="r"
+							name="qc-variant-online-side">
+							{{ t('quantumchess', 'Random') }}
+						</NcCheckboxRadioSwitch>
+					</fieldset>
+				</template>
 				<fieldset v-if="setup.opponent === 'computer'">
 					<legend>{{ t('quantumchess', 'Level') }}</legend>
 					<NcCheckboxRadioSwitch
@@ -172,8 +212,11 @@
 				<p v-if="setup.notSaved" class="qc-variants__not-saved" role="alert">
 					{{ t('quantumchess', 'This game could not be saved on this device.') }}
 				</p>
+				<p v-if="setup.error" class="qc-variants__not-saved" role="alert">
+					{{ setup.error }}
+				</p>
 				<div class="qc-variants__buttons">
-					<NcButton variant="primary" type="submit">
+					<NcButton variant="primary" type="submit" :disabled="setup.busy || !onlineReady">
 						{{ t('quantumchess', 'Start game') }}
 					</NcButton>
 				</div>
@@ -193,15 +236,20 @@ import NcDialog from '@nextcloud/vue/components/NcDialog'
 import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcTextField from '@nextcloud/vue/components/NcTextField'
+import OpponentPicker from '../online/components/OpponentPicker.vue'
+import { createGame } from '../services/api.js'
+import { features } from '../services/initialState.js'
 import { createVariantGame, deleteVariantGame, listVariantGames } from '../variantplay/variantGames.js'
 import {
 	CATALOG,
 	catalogEntry,
 	CATEGORIES,
 	categoryName,
+	isOnlineVariant,
 	loadVariant,
 	newGame,
 	optionValues,
+	seatCount,
 	sideName,
 } from '../variants/index.js'
 
@@ -266,6 +314,9 @@ async function openSetup(entry) {
 		options: {},
 		autoFlip: false,
 		notSaved: false,
+		online: { open: false, opponent: null, timeControl: 'corr:3d', color: 'r' },
+		busy: false,
+		error: null,
 	}
 	const V = markRaw(await loadVariant(entry.id))
 	const options = {}
@@ -303,6 +354,49 @@ watch(() => [setup.value?.variant, setup.value?.side, setup.value?.opponent], ([
 	setup.value.options[o.id] = black ? 'black' : o.default
 })
 
+/**
+ * Whether a variant can be played online here: two players, no hidden information, and online games available to the
+ * user (the four-player variants come later).
+ *
+ * @param {object} entry catalogue entry
+ * @return {boolean}
+ */
+function onlineFor(entry) {
+	return Boolean(features.multiplayer) && isOnlineVariant(entry.id) && seatCount(entry.id) === 2
+}
+
+/** Whether an online game has an opponent: an invited user, or an open challenge. */
+const onlineReady = computed(() => setup.value?.opponent !== 'online'
+	|| setup.value.online.open || Boolean(setup.value.online.opponent))
+
+/**
+ * Create an online game on the server and open it.
+ *
+ * @param {object} V variant
+ * @param {object} options option values
+ */
+async function startOnline(V, options) {
+	const s = setup.value
+	s.busy = true
+	s.error = null
+	try {
+		const game = await createGame({
+			opponent: s.online.open ? null : s.online.opponent.id,
+			color: s.online.color,
+			rated: false,
+			timeControl: s.online.timeControl,
+			variant: V.id,
+			options,
+		})
+		setup.value = null
+		router.push({ name: 'online-game', params: { id: game.id } })
+	} catch (e) {
+		s.error = e?.message || t('quantumchess', 'The game could not be created. Please try again.')
+	} finally {
+		s.busy = false
+	}
+}
+
 /** Create the game and open it; when the storage refuses it, keep the dialog open with a notice. */
 function start() {
 	const s = setup.value
@@ -312,6 +406,10 @@ function start() {
 		given[o.id] = o.type === 'number' ? Number.parseInt(s.options[o.id], 10) : s.options[o.id]
 	}
 	const options = optionValues(V, given)
+	if (s.opponent === 'online') {
+		startOnline(V, options)
+		return
+	}
 	const players = V.sides.map((x, i) => (s.opponent === 'local' || String(i) === s.side
 		? { kind: 'human' }
 		: { kind: 'computer', level: s.level }))

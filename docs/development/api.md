@@ -144,6 +144,11 @@ Used in lists: the lobby, the history, the answers to invitations.
 - `preview`: every occupied square as `[square, letter, percent]` (upper case for White, letters `KQRBNP`), `[]`
   before the game starts.
 - `rev`: the revision of the game row. It increases with every change (section 6).
+- A **chess variant game** ([`online-variants.md`](online-variants.md)) adds `variant` (the variant's id),
+  `variantOptions` (its option values), `variantRules` (the version of the variant rules it is played with) and
+  `variantResult` (the settled result code, such as `win:0/exploded`). Seat 0 plays as `white`, seat 1 as `black`, and
+  `result` is written as for a classic game. Its `preview` is always `[]`: the server keeps no board. Classic games
+  have none of these fields.
 
 ### GameLive
 
@@ -170,6 +175,8 @@ The game screen's view of a game: a GameSummary plus
 - `ratings` is `null` per side for a player without a rating. `ratingBefore` holds the ratings before a rated game
   was scored.
 - `chatOpen` is false when chat is disabled, for viewers who do not play, and some days after the game ended.
+- A chess variant game has `state: null`, and adds `seatToMove` and `pendingPly` (the ply of the move that waits for
+  its settlement, or `null`). `canAbort` holds until both players have passed the turn once.
 
 ### GameFull
 
@@ -190,6 +197,19 @@ The complete game, answered by `GET /api/games/{id}` and in `conflict` errors: a
 `ply` is the ply **before** the move, starting at 0. `measurement` is the stored measurement record
 ([`docs/engine-rules.md`](../engine-rules.md) §5.5), or `null` for a move without a roll. Clients replay the moves
 and recompute the chain from these fields.
+
+The moves of a chess variant game have another shape:
+
+```json
+{
+  "ply": 4, "seat": 0, "userId": "alice", "code": "f1-c4", "u": 9126805,
+  "nextSeat": 1, "result": "", "stateHash": "934c43eb8bc8b48d", "chain": "5be1…09aa", "createdAt": 1790000050
+}
+```
+
+`u` is the roll the server drew after the move arrived, an integer in `[0, 2^24)`. `nextSeat`, `result` (the result
+code, empty while the game goes on) and `stateHash` are what the browser that settled the move claims; they are
+`null` until the move is settled.
 
 ### ChatDTO
 
@@ -253,6 +273,9 @@ Paths are relative to `/index.php/apps/quantumchess`. `{id}` and `{taskId}` are 
 | POST | `/api/games/{id}/chat` | `game#chat` | 30 / min | `message` (text) or `phrase` (a phrase key) | `{message: ChatDTO, rev}` |
 | PUT | `/api/games/{id}/mute` | `game#mute` | 60 / min | `muted` | `{muted: bool}` |
 | POST | `/api/games/{id}/rematch` | `game#rematch` | 30 / h | | `{game: GameLive}` |
+| POST | `/api/games/{id}/v/moves` | `game#variantMove` | 240 / min | `code`, `ply`, `clientId`, `thinkMs` | `{game: GameLive, move, rev, now, replayed}` |
+| POST | `/api/games/{id}/v/moves/{ply}/settle` | `game#settle` | 240 / min | `nextSeat`, `result`, `stateHash` | `{game: GameLive}` |
+| POST | `/api/games/{id}/v/dispute` | `game#dispute` | 30 / 10 min | `ply` | `{game: GameLive}` |
 
 Notes:
 
@@ -268,6 +291,14 @@ Notes:
   invitation; when the other player asks, the rematch starts.
 - **Polling.** `summary` is cheap and answers with an `ETag`, so the lobby can poll it and load `GET /api/games` only
   when `rev` changes. `poll` returns only the moves after `ply` and the chat after `chat`.
+- **Chess variants** ([`online-variants.md`](online-variants.md)). `POST /api/games` takes `variant` and `options`
+  (an object of strings, integers and booleans) for a two-player variant without hidden information; anything else is
+  `400 invalid_argument`, and a variant game is never rated. Its moves go to the `/v/` routes, and
+  `POST /api/games/{id}/moves` answers `409 invalid_status`. `v/moves` stores the move and draws its roll after the
+  move arrived; the turn stays with the mover (`pendingPly`) until any player settles the move with `settle`, which
+  passes the turn to `nextSeat` and, with a `result`, ends the game. The same settlement again changes nothing; a
+  different one annuls the game (`aborted`, reason `disputed`), as `dispute` does. Show, poll, accept, decline,
+  cancel, join, resign, abort, draw, chat, mute and rematch work as for classic games.
 
 ### Statistics, trainer progress and preferences
 
@@ -361,15 +392,15 @@ with the status of the error code and its translated message.
 
 ## 6. Database schema
 
-The schema is created by `lib/Migration/Version1000Date20260923000000.php`. Table and column names are part of the
-stable contract.
+The schema is created by `lib/Migration/Version1000Date20260923000000.php`; `Version2000Date20261006000000.php` adds
+the tables and columns of the chess variants. Table and column names are part of the stable contract.
 
 | Table | Holds | Keys and indexes |
 |---|---|---|
-| `qchess_games` | One row per online game: players (`creator_uid`, `opponent_uid`, `white_uid`, `black_uid`), `status`, `result`, `result_reason`, the current `state` (JSON), `ply`, `turn`, the revision `rev`, rating flags and snapshots, `time_control`, `deadline_at`, `expires_at`, the draw offer, rematch links, the head of the hash `chain`, chat counters and mute flags, and timestamps; for chess variant games (prepared, not used yet) `variant`, `variant_options` (JSON), `variant_rules`, `variant_result`, `seat_count` and `seat_to_move` | primary key `id`; indexes on each player column with `status`, and on `status` with `deadline_at`, `expires_at` and `finished_at` |
+| `qchess_games` | One row per online game: players (`creator_uid`, `opponent_uid`, `white_uid`, `black_uid`), `status`, `result`, `result_reason`, the current `state` (JSON), `ply`, `turn`, the revision `rev`, rating flags and snapshots, `time_control`, `deadline_at`, `expires_at`, the draw offer, rematch links, the head of the hash `chain`, chat counters and mute flags, and timestamps; for chess variant games `variant`, `variant_options` (JSON), `variant_rules`, `variant_result`, `seat_count` and `seat_to_move` | primary key `id`; indexes on each player column with `status`, and on `status` with `deadline_at`, `expires_at` and `finished_at` |
 | `qchess_moves` | One row per move: `game_id`, `ply`, `color`, `uid`, `code`, `notation`, the `measurement` record (JSON), `chain`, `state_hash`, `support_key`, `client_id`, `think_ms`, `created_at` | unique `(game_id, ply)` and `(game_id, client_id)`; index on `uid` |
-| `qchess_seats` | The players of a chess variant game, one row per seat (prepared for online variant play, not used yet; see [`online-variants.md`](online-variants.md)): `game_id`, `seat`, `uid`, `team`, `accepted_at`, `resigned_at`, `out_at`, `draw_vote`, `mute`, `last_seen_ply` | unique `(game_id, seat)`; index on `uid` |
-| `qchess_vmoves` | The moves of a chess variant game (prepared, not used yet): `game_id`, `ply`, `seat`, `uid`, `code`, the roll `u` the server drew, the settled claims `next_seat`, `result` and `state_hash`, `settled_by`, `settled_at`, `chain`, `client_id`, `think_ms`, `created_at` | unique `(game_id, ply)` and `(game_id, client_id)`; index on `uid` |
+| `qchess_seats` | The players of a chess variant game, one row per seat, created when it starts (see [`online-variants.md`](online-variants.md)): `game_id`, `seat`, `uid`, `team`, `accepted_at`, `resigned_at`, `out_at`, `draw_vote`, `mute`, `last_seen_ply` | unique `(game_id, seat)`; index on `uid` |
+| `qchess_vmoves` | The moves of a chess variant game: `game_id`, `ply`, `seat`, `uid`, `code`, the roll `u` the server drew, the settled claims `next_seat`, `result` and `state_hash`, `settled_by`, `settled_at`, `chain`, `client_id`, `think_ms`, `created_at` | unique `(game_id, ply)` and `(game_id, client_id)`; index on `uid` |
 | `qchess_chat` | Chat lines: `game_id`, `uid`, `kind` (text, system, phrase), `message`, `params` (JSON), `created_at` | index on `(game_id, id)` and on `uid` |
 | `qchess_ratings` | One row per rated player: `rating`, `peak`, `rated_games`, `games`, `wins`, `losses`, `draws`, `listed` (leaderboard choice), `last_rated_at` | unique `uid`; index on `rating` |
 

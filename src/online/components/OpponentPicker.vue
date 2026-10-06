@@ -5,7 +5,8 @@
 
 <!--
   The online options of the New game dialog: an open challenge or an invited opponent (recent opponents first, then a
-  user search), the time per move and whether the game is rated.
+  user search), the time per move and whether the game is rated (not for a game that is never rated, `unrated`: the
+  chess variants).
 -->
 <template>
 	<NcCheckboxRadioSwitch v-if="features.openChallenges" v-model="open" type="switch">
@@ -35,7 +36,7 @@
 		</div>
 	</fieldset>
 	<NcCheckboxRadioSwitch
-		v-if="features.rated"
+		v-if="features.rated && !unrated"
 		v-model="rated"
 		type="switch"
 		:disabled="ratedBlocked !== null"
@@ -67,6 +68,8 @@ const rated = defineModel('rated', { type: Boolean, default: false })
 defineProps({
 	/** Why the game cannot be rated with this opponent, in words, or null */
 	ratedBlocked: { type: String, default: null },
+	/** Whether the game is never rated (the chess variants), so that there is nothing to choose */
+	unrated: { type: Boolean, default: false },
 })
 
 const timeControls = [

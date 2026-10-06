@@ -14,6 +14,7 @@ use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Service\Game\GameClock;
 use OCA\QuantumChess\Service\Game\GameQueryService;
 use OCA\QuantumChess\Service\Game\TimeControl;
+use OCA\QuantumChess\Service\Game\VariantCatalog;
 use OCA\QuantumChess\Service\Settings\AppSettings;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Dashboard\IAPIWidgetV2;
@@ -128,9 +129,15 @@ class GamesWidget implements
 				: $this->l->t('%s invited you', [$name]);
 			$subtitle = TimeControl::fromStored($game->getTimeControl())->label($this->l) . ' · '
 				. ($game->getRatedRequested() === 1 ? $this->l->t('Rated') : $this->l->t('Unrated'));
+			if ($game->isVariant()) {
+				$subtitle = VariantCatalog::name($this->l, (string)$game->getVariant()) . ' · ' . $subtitle;
+			}
 			return new WidgetItem($title, $subtitle, $link, $avatar, (string)$game->getId());
 		}
-		$subtitle = $this->l->t('Move %d', [intdiv($game->getPly(), 2) + 1]);
+		// A variant game counts its plies differently (several moves per turn in 5D chess), so it shows its name.
+		$subtitle = $game->isVariant()
+			? VariantCatalog::name($this->l, (string)$game->getVariant())
+			: $this->l->t('Move %d', [intdiv($game->getPly(), 2) + 1]);
 		$deadline = $game->getDeadlineAt();
 		if ($deadline !== null) {
 			$left = max(0, $deadline - $this->time->getTime());

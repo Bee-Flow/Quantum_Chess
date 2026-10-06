@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Controller;
 
 use OCA\QuantumChess\Db\Game;
-use OCA\QuantumChess\Db\Move;
 use OCA\QuantumChess\Exception\ApiError;
 use OCA\QuantumChess\Exception\ApiException;
 use OCA\QuantumChess\Exception\GameConflictException;
@@ -20,6 +19,7 @@ use OCA\QuantumChess\Service\Game\GameplayService;
 use OCA\QuantumChess\Service\Game\GameQueryService;
 use OCA\QuantumChess\Service\Game\GameSerializer;
 use OCA\QuantumChess\Service\Game\InvitationService;
+use OCA\QuantumChess\Service\Game\VariantGameplayService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
@@ -42,6 +42,7 @@ final class GameController extends ApiController {
 		private readonly GameQueryService $queries,
 		private readonly InvitationService $invitations,
 		private readonly GameplayService $gameplay,
+		private readonly VariantGameplayService $variantGameplay,
 		private readonly ChatService $chat,
 		private readonly GameSerializer $serializer,
 		private readonly GameClock $clock,
@@ -126,6 +127,8 @@ final class GameController extends ApiController {
 		mixed $timeControl = 'corr:3d',
 		mixed $message = null,
 		mixed $scopeGroup = null,
+		mixed $variant = null,
+		mixed $options = null,
 	): JSONResponse {
 		return $this->respond(function (string $uid) use (
 			$opponent,
@@ -134,6 +137,8 @@ final class GameController extends ApiController {
 			$timeControl,
 			$message,
 			$scopeGroup,
+			$variant,
+			$options,
 		): array {
 			$game = $this->invitations->create($uid, [
 				'opponent' => $opponent === '' ? null : $opponent,
@@ -142,6 +147,8 @@ final class GameController extends ApiController {
 				'timeControl' => $timeControl,
 				'message' => $message,
 				'scopeGroup' => $scopeGroup === '' ? null : $scopeGroup,
+				'variant' => $variant,
+				'options' => $options,
 			]);
 			return ['game' => $this->serializer->live($game, $uid)];
 		}, Http::STATUS_CREATED);
@@ -178,7 +185,7 @@ final class GameController extends ApiController {
 				'rev' => $result['rev'],
 				'now' => $result['now'],
 				'game' => $this->serializer->live($result['game'], $uid),
-				'moves' => array_map(fn (Move $m) => $this->serializer->move($m), $result['moves'] ?? []),
+				'moves' => array_map(fn ($m) => $this->serializer->move($m), $result['moves'] ?? []),
 				'chat' => array_map(fn ($c) => $this->serializer->chat($c), $result['chat'] ?? []),
 			];
 		});
@@ -267,6 +274,94 @@ final class GameController extends ApiController {
 				'now' => $this->clock->now(),
 				'replayed' => $result['replayed'],
 			];
+		});
+	}
+
+	/**
+	 * Sends a move of a chess variant game. The answer carries the roll the server drew for it; the move waits for its
+	 * settlement (`settle`) before the turn passes.
+	 */
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 240, period: 60)]
+	public function variantMove(
+		int $id,
+		mixed $code = null,
+		mixed $ply = null,
+		mixed $clientId = null,
+		mixed $thinkMs = null,
+	): JSONResponse {
+		return $this->respond(function (string $uid) use ($id, $code, $ply, $clientId, $thinkMs): array {
+			if (!is_string($code) || $code === '' || strlen($code) > 255) {
+				throw ApiException::invalidArgument('code', 'Invalid move');
+			}
+			if (!is_int($ply) || $ply < 0) {
+				throw ApiException::invalidArgument('ply', 'Invalid ply');
+			}
+			try {
+				$result = $this->variantGameplay->move(
+					$id,
+					$uid,
+					$code,
+					$ply,
+					is_string($clientId) ? $clientId : null,
+					is_int($thinkMs) ? $thinkMs : null,
+				);
+			} catch (GameConflictException $e) {
+				$full = $this->queries->getFull($id, $uid);
+				throw $e->withExtra([
+					'game' => $this->serializer->full($full['game'], $uid, $full['moves'], $full['chat']),
+				]);
+			}
+			$game = $result['game'];
+			return [
+				'game' => $this->serializer->live($game, $uid),
+				'move' => $this->serializer->move($result['move']),
+				'rev' => $game->getRev(),
+				'now' => $this->clock->now(),
+				'replayed' => $result['replayed'],
+			];
+		});
+	}
+
+	/**
+	 * Settles a move of a chess variant game: the seat to move next, the result code and the position hash that the
+	 * move led to with its roll.
+	 */
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 240, period: 60)]
+	public function settle(
+		int $id,
+		int $ply,
+		mixed $nextSeat = null,
+		mixed $result = null,
+		mixed $stateHash = null,
+	): JSONResponse {
+		return $this->respond(function (string $uid) use ($id, $ply, $nextSeat, $result, $stateHash): array {
+			if (!is_int($nextSeat)) {
+				throw ApiException::invalidArgument('nextSeat', 'Invalid seat');
+			}
+			if (!is_string($result) || strlen($result) > 64) {
+				throw ApiException::invalidArgument('result', 'Invalid result');
+			}
+			if (!is_string($stateHash)) {
+				throw ApiException::invalidArgument('stateHash', 'Invalid hash');
+			}
+			$game = $this->variantGameplay->settle($id, $uid, $ply, $nextSeat, $result, $stateHash);
+			return ['game' => $this->serializer->live($game, $uid)];
+		});
+	}
+
+	/**
+	 * Reports a move or settlement of a chess variant game that does not agree with the rules, which annuls the game.
+	 */
+	#[NoAdminRequired]
+	#[UserRateLimit(limit: 30, period: 600)]
+	public function dispute(int $id, mixed $ply = null): JSONResponse {
+		return $this->respond(function (string $uid) use ($id, $ply): array {
+			if (!is_int($ply) || $ply < 0) {
+				throw ApiException::invalidArgument('ply', 'Invalid ply');
+			}
+			return ['game' => $this->serializer->live($this->variantGameplay->dispute($id, $uid, $ply), $uid)];
 		});
 	}
 

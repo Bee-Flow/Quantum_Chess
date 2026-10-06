@@ -13,6 +13,7 @@ use OCA\QuantumChess\AppInfo\Application;
 use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Db\GameMapper;
 use OCA\QuantumChess\Service\Game\TimeControl;
+use OCA\QuantumChess\Service\Game\VariantCatalog;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
@@ -147,9 +148,15 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		switch ($subject) {
 			case 'invite':
 			case 'rematch':
-				$text = $subject === 'invite'
-					? $l->t('{user} invited you to a game of Quantum Chess')
-					: $l->t('{user} wants a rematch');
+				$variant = is_string($params['variant'] ?? null) ? $params['variant'] : null;
+				$text = match (true) {
+					$subject === 'rematch' => $l->t('{user} wants a rematch'),
+					$variant !== null => $l->t(
+						'{user} invited you to a game of %s',
+						[VariantCatalog::name($l, $variant)],
+					),
+					default => $l->t('{user} invited you to a game of Quantum Chess'),
+				};
 				$parts = [
 					TimeControl::fromStored((string)($params['timeControl'] ?? TimeControl::DEFAULT->value))->label($l),
 				];
@@ -179,7 +186,9 @@ class Notifier implements INotifier, IPreloadableNotifier {
 				$text = $l->t('{user} declined your invitation');
 				break;
 			case 'your_turn':
-				$text = $l->t('Your move against {user}');
+				$text = is_string($params['variant'] ?? null)
+					? $l->t('Your move in %s against {user}', [VariantCatalog::name($l, $params['variant'])])
+					: $l->t('Your move against {user}');
 				$message = is_array($params['lastMove'] ?? null)
 					? $this->describer->describe($l, $params['lastMove'])
 					: '';

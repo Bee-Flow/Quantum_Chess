@@ -10,6 +10,7 @@
 import { n, t } from '@nextcloud/l10n'
 import { otherColor } from '../engine/index.js'
 import { formatDeadline } from '../services/format.js'
+import { catalogEntry } from '../variants/index.js'
 
 /** @typedef {import('../services/api.js').GameSummary} GameSummary */
 /** @typedef {import('../services/api.js').UserRef} UserRef */
@@ -67,16 +68,17 @@ export function colorText(g, me) {
 }
 
 /**
- * "Move 14 · 18 h left".
+ * "Move 14 · 18 h left" ("18 h left" for a chess variant game).
  *
  * @param {GameSummary} g the game
  * @param {number} now Unix seconds
  * @return {string}
  */
 export function progressText(g, now) {
-	const move = t('quantumchess', 'Move {n}', { n: Math.floor((g.ply ?? 0) / 2) + 1 })
+	// a variant game counts its plies differently (several moves per turn in 5D chess): its badge names the variant
+	const move = g.variant ? '' : t('quantumchess', 'Move {n}', { n: Math.floor((g.ply ?? 0) / 2) + 1 })
 	const left = g.deadlineAt ? formatDeadline(g.deadlineAt, now) : ''
-	return left ? `${move} · ${left}` : move
+	return [move, left].filter(Boolean).join(' · ')
 }
 
 /**
@@ -97,4 +99,14 @@ export function outcomeText(g) {
 	return g.winner === g.myColor
 		? { text: t('quantumchess', 'Won'), outcome: 'win', delta: deltaText }
 		: { text: t('quantumchess', 'Lost'), outcome: 'loss', delta: deltaText }
+}
+
+/**
+ * The name of the chess variant of a game, or '' for a game of classic Quantum Chess.
+ *
+ * @param {{variant?: string|null}} game the game
+ * @return {string}
+ */
+export function variantText(game) {
+	return game?.variant ? (catalogEntry(game.variant)?.name() ?? game.variant) : ''
 }

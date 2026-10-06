@@ -61,6 +61,10 @@ class GameplayService {
 		if ($game === null || !$game->isParticipant($uid)) {
 			throw $this->errors->notFound();
 		}
+		if ($game->isVariant()) {
+			// Variant games have their own move route (VariantGameplayService).
+			throw $this->errors->invalidStatus();
+		}
 		if ($clientId !== null && !preg_match('/^[A-Za-z0-9-]{8,36}$/', $clientId)) {
 			throw ApiException::invalidArgument('clientId', $this->l->t('Invalid client id'));
 		}
@@ -218,7 +222,7 @@ class GameplayService {
 	 */
 	public function abort(int $id, string $uid): Game {
 		$game = $this->lifecycle->loadActive($id, $uid);
-		if ($game->getPly() >= 2) {
+		if (!self::canAbort($game)) {
 			throw new ApiException(
 				ApiError::AbortNotAllowed,
 				$this->l->t('The game can only be aborted before both sides have moved.'),
@@ -291,9 +295,25 @@ class GameplayService {
 	}
 
 	/**
+	 * Whether a game may still be aborted: before both sides have moved. In a variant game a side may make several
+	 * moves in one turn (5D chess), so the passed turns count there instead of the plies.
+	 */
+	public static function canAbort(Game $game): bool {
+		return $game->isVariant() ? !VariantTurn::of($game)->bothHavePlayed() : $game->getPly() < 2;
+	}
+
+	/**
 	 * Declines the pending offer of `$offerer`; its cool-down starts at `$ply`. The caller saves the game.
 	 */
 	private function closeDrawOffer(Game $game, string $offerer, int $ply): void {
+		self::declineDrawOffer($game, $offerer, $ply, $this->lifecycle);
+	}
+
+	/**
+	 * Declines the pending draw offer of `$offerer` because the other side moved; its cool-down starts at `$ply`. The
+	 * caller saves the game.
+	 */
+	public static function declineDrawOffer(Game $game, string $offerer, int $ply, GameLifecycle $lifecycle): void {
 		$game->setDrawOffer(null);
 		$game->setDrawOfferPly(null);
 		if ($offerer === 'w') {
@@ -301,6 +321,6 @@ class GameplayService {
 		} else {
 			$game->setLastDrawB($ply);
 		}
-		$this->lifecycle->addSystemLine($game, 'draw_declined', ['color' => $offerer]);
+		$lifecycle->addSystemLine($game, 'draw_declined', ['color' => $offerer]);
 	}
 }

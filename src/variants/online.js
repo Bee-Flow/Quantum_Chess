@@ -158,11 +158,13 @@ export function settlementOf(state) {
  * @param {object} V variant
  * @param {object} start the state to replay from: the start of the game, or a snapshot taken after `start.ply` plies
  * @param {OnlineMove[]} moves the stored moves; those before `start.ply` are skipped
+ * @param {(move: OnlineMove, played: {state: object, branch: object, outcomes: object[]}, before: object) => void}
+ *   [onStep] called after each move that agrees, with the result of `applyMove` and the state before the move
  * @return {{state: object, settlement: OnlineSettlement|null, mismatch: null|{ply: number, reason: string}}} the
  *   state after the last move that agrees, what that move leads to, and the first disagreement with the ply where
  *   the replay stopped
  */
-export function replayOnline(V, start, moves) {
+export function replayOnline(V, start, moves, onStep = null) {
 	let state = start
 	let settlement = null
 	for (const m of moves) {
@@ -192,6 +194,7 @@ export function replayOnline(V, start, moves) {
 				return fail(field)
 			}
 		}
+		onStep?.(m, played, state)
 		state = played.state
 		settlement = next
 	}
