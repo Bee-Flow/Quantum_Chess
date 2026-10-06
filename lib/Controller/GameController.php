@@ -117,14 +117,16 @@ final class GameController extends ApiController {
 	}
 
 	/**
-	 * Creates an invitation, or an open challenge when no opponent is given.
+	 * Creates an invitation, or an open challenge when no opponent is given. Without `rated` the server decides
+	 * (InvitationService::create): rated for classic games and the server-ruled variants, unrated for the other
+	 * variants.
 	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 30, period: 3600)]
 	public function create(
 		?string $opponent = null,
 		mixed $color = 'r',
-		mixed $rated = true,
+		mixed $rated = null,
 		mixed $timeControl = 'corr:3d',
 		mixed $message = null,
 		mixed $scopeGroup = null,
