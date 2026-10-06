@@ -12,6 +12,14 @@ release as its release notes.
 
 ## [Unreleased]
 
+Maintenance release, and the first step towards playing the chess variants online, four-player games included.
+
+### Changed
+
+- The database gets the tables that online games of the chess variants will use. Nothing uses them yet: the variants
+  are still played on your own device, and online games of classic Quantum Chess are unchanged.
+- Updated the Nextcloud components of the app.
+
 ## [2.0.0] - 2026-09-26
 
 Quantum Chess 2: twenty chess variants with the quantum element of the classic game, led by 5D chess with multiverse
