@@ -6,8 +6,14 @@
 # Online play for the chess variants
 
 **Status:** in progress, tracked in [issue #12](https://github.com/Bee-Flow/Quantum_Chess/issues/12). Phase 1
-(foundations) shipped in 2.0.1. Phase 2 is done: the two-player variants without hidden information can be played
-online, as section 5.6.6 of [`architecture.md`](architecture.md) describes. Phases 3 to 5 are open.
+(foundations) shipped in 2.0.1. Phases 2 and 3 are done: every variant without hidden information can be played
+online, Four-player chess and Bughouse with four seats, as section 5.6.6 of [`architecture.md`](architecture.md)
+describes. Phases 4 and 5 are open.
+
+One decision of phase 3 differs from the first plan: a seat that resigns or runs out of time ends the game for
+everyone (the other team wins, or in a free-for-all every other seat), as resigning does in a local game, instead of
+leaving the others to play on. The server does not know which seats are already out on the board, so a
+free-for-all names every other seat as a winner.
 
 **Goal: all twenty variants online, with nothing to install but the app.** An administrator installs Quantum Chess
 from the App Store and nothing else: no external app, no container, no Node.js on the server. Everything below is

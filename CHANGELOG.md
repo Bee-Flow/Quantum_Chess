@@ -10,8 +10,6 @@ All notable changes to Quantum Chess are documented in this file. The format is 
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The Nextcloud App Store shows the section of each
 release as its release notes.
 
-## [Unreleased]
-
 The chess variants go online.
 
 ### Added
@@ -20,8 +18,11 @@ The chess variants go online.
   Crazyhouse, Antichess, King of the Hill, Three-check, Horde, Hexagonal chess, Capablanca chess, Shogi, Xiangqi and
   Makruk. Choose *Online* as the opponent in a variant's New game dialog and invite someone or open a challenge. The
   server draws the dice of every move; both players' devices check every move against the rules, and if they ever
-  disagree, the game is annulled. Online variant games are not rated. Four-player chess, Bughouse, Kriegspiel and Fog
-  of war follow later.
+  disagree, the game is annulled. Online variant games are not rated. Kriegspiel and Fog of war follow later.
+- **Four-player chess and Bughouse online**: choose a player for every seat, or leave seats open for anyone to join,
+  optionally with random seats. Each invited player answers on their own, and the game starts when every seat is taken.
+  Resigning or running out of time ends the game for everyone (the other team wins, or the others share the win); a
+  draw needs every player.
 
 ## [2.0.1] - 2026-10-06
 

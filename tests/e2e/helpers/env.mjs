@@ -64,7 +64,7 @@ function findServerRoot() {
  */
 
 /**
- * @param {string} key short name used in variable names (ADMIN, BOB, CAROL)
+ * @param {string} key short name used in variable names (ADMIN, BOB, CAROL, DAVE)
  * @param {string} uid default login name
  * @param {string} password default password
  * @param {string} displayName display name
@@ -100,11 +100,13 @@ export const env = Object.freeze({
 		admin: user('ADMIN', 'admin', 'QuantumAdmin!2026', 'Alice Admin', true),
 		bob: user('BOB', 'bob', 'QuantumBob!2026', 'Bob Builder'),
 		carol: user('CAROL', 'carol', 'QuantumCarol!2026', 'Carol Quantum'),
+		// the fourth player of the four-seat variants (Four-player chess, Bughouse)
+		dave: user('DAVE', 'dave', 'QuantumDave!2026', 'Dave Quantum'),
 	}),
 })
 
 /**
- * Look up a test user by key (admin, bob, carol) or by uid.
+ * Look up a test user by key (admin, bob, carol, dave) or by uid.
  *
  * @param {string|TestUser} who key, uid or user object
  * @return {TestUser}
