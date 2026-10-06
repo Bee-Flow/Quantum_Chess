@@ -86,7 +86,10 @@ final class RefereedGameplayTest extends TestCase {
 
 	public function testAGameStartsWithTheRealPositionAndAViewPerPlayer(): void {
 		$game = $this->started();
-		$this->assertSame(VariantEngine::positionHash(VariantEngine::newGame('kriegspiel')), VariantEngine::positionHash($this->board($game)));
+		$this->assertSame(
+			VariantEngine::positionHash(VariantEngine::newGame('kriegspiel')),
+			VariantEngine::positionHash($this->board($game)),
+		);
 		$alice = VariantGameplayService::viewOf($game, 'alice');
 		$this->assertNotNull($alice);
 		$this->assertSame([], $this->squaresOf($alice, 1), 'white sees no black piece');
@@ -137,7 +140,10 @@ final class RefereedGameplayTest extends TestCase {
 		$this->assertContains("notify variantTurn(#100, 'alice')", $this->log);
 		$again = $this->variantGameplay()->move(100, 'alice', 'e2-e4', 0, 'client-0001', null);
 		$this->assertTrue($again['replayed']);
-		$this->assertApiError('not_your_turn', fn () => $this->variantGameplay()->move(100, 'alice', 'd2-d4', 1, null, null));
+		$this->assertApiError(
+			'not_your_turn',
+			fn () => $this->variantGameplay()->move(100, 'alice', 'd2-d4', 1, null, null),
+		);
 	}
 
 	public function testTheBrowsersSettleAndDisputeNothing(): void {
@@ -172,7 +178,8 @@ final class RefereedGameplayTest extends TestCase {
 	}
 
 	public function testAKingCaptureFinishesTheGame(): void {
-		$fixture = json_decode((string)file_get_contents(__DIR__ . '/../../../../fixtures/referee/kriegspiel.json'), true);
+		$file = __DIR__ . '/../../../../fixtures/referee/kriegspiel.json';
+		$fixture = json_decode((string)file_get_contents($file), true);
 		$replay = null;
 		foreach ($fixture['games'] as $candidate) {
 			if (($candidate['result']['reason'] ?? null) === 'king') {

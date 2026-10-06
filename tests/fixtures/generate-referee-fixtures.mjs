@@ -52,6 +52,9 @@ const DIR = join(dirname(fileURLToPath(import.meta.url)), 'referee')
  */
 const GAMES = [[3, 400], [7, 400], [19, 400], [37, 400], [38, 400], [53, 400], [29, 400], [4, 120]]
 
+/** Games that play castling, en passant and promotions whenever they can (seed and most plies). */
+const SPECIAL_GAMES = [[111, 200], [112, 200]]
+
 /** The plies after which both full views are kept. */
 const FULL_VIEW_PLIES = new Set([6, 25])
 
@@ -117,6 +120,26 @@ function takesKing(state, m) {
 }
 
 /**
+ * The moves a game of `SPECIAL_GAMES` picks from: castling and en passant whenever possible, then promotions, else
+ * moves that keep the castling rights (no king or rook moves), so that castling and en passant come up.
+ *
+ * @param {object} state state
+ * @param {object[]} list legal moves
+ * @return {object[]}
+ */
+function specialPool(state, list) {
+	for (const wanted of [(m) => m.kind === 'castle' || m.kind === 'ep', (m) => Boolean(m.promo)]) {
+		const found = list.filter(wanted)
+		if (found.length) {
+			return found
+		}
+	}
+	const b = state.worlds[0].b
+	const keeps = list.filter((m) => m.type === 'move' && b.board[m.from] >= 0 && !'kr'.includes(b.ty[b.board[m.from]]))
+	return keeps.length ? keeps : list
+}
+
+/**
  * A seeded random game: quantum moves now and then, a certain capture of the king mostly left out, so that the games
  * reach rolled captures, the escape rule and the 50-move rule.
  *
@@ -125,7 +148,7 @@ function takesKing(state, m) {
  * @param {number} plies most plies
  * @return {object}
  */
-function game(V, seed, plies) {
+function game(V, seed, plies, special = false) {
 	const rng = seededRng(seed * 31 + 1)
 	const tries = seededRng(seed * 31 + 2)
 	let state = newGame(V, {}, rng)
@@ -137,7 +160,8 @@ function game(V, seed, plies) {
 			break
 		}
 		const lasting = list.filter((m) => !takesKing(state, m))
-		const pool = rng() < 0.85 && lasting.length ? lasting : list
+		const usual = lasting.length ? lasting : list
+		const pool = special ? specialPool(state, usual) : rng() < 0.85 && lasting.length ? lasting : list
 		const { code } = pool[Math.floor(rng() * pool.length)]
 		const u = Math.floor(rng() * T)
 		const step = {
@@ -159,13 +183,16 @@ function game(V, seed, plies) {
 			fullViews.push({ ply: state.ply, views: [0, 1].map((seat) => viewFor(V, state, seat)) })
 		}
 	}
-	return { seed, steps, fullViews, result: state.result, history: state.history }
+	return { seed, special, steps, fullViews, result: state.result, history: state.history }
 }
 
 mkdirSync(DIR, { recursive: true })
 for (const id of ['kriegspiel', 'darkchess']) {
 	const V = await loadVariant(id)
-	const games = GAMES.map(([seed, plies]) => game(V, seed, plies))
+	const games = [
+		...GAMES.map(([seed, plies]) => game(V, seed, plies)),
+		...SPECIAL_GAMES.map(([seed, plies]) => game(V, seed, plies, true)),
+	]
 	const file = join(DIR, id + '.json')
 	writeFileSync(file, JSON.stringify({ variant: id, T, games }) + '\n')
 	const ends = games.map((g) => (g.result ? g.result.reason : 'open') + '@' + g.steps.length)

@@ -197,7 +197,8 @@ As built in phase 4:
   Move lists stay empty while the game runs. Once it has ended, for any reason, `view` is the real state with
   `visible: null`, the moves come with their codes and rolls, and the browser replays them and checks the chain.
 - Parity: `tests/fixtures/generate-referee-fixtures.mjs` writes `tests/fixtures/referee/{kriegspiel,darkchess}.json`
-  (eight seeded games each, ending by the escape rule, a king capture and the 50-move rule), which
+  (ten seeded games each, ending by the escape rule, a king capture and the 50-move rule, two of them with castling,
+  en passant and promotions), which
   `tests/php/Unit/Variants/` replays; CI checks that the files are up to date.
 
 ## 7. Phases
