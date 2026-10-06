@@ -152,12 +152,13 @@ the JavaScript layer and replayed by PHPUnit in `tests/php/Unit/Variants/Referee
 npm run fixtures:referee    # node tests/fixtures/generate-referee-fixtures.mjs
 ```
 
-Each file holds seeded random games from the start position (games that end by the escape rule, by a king capture,
-by the 50-move rule, and ones that go on; two games play castling, en passant and promotions whenever they can). Every step records the position before the move (`ply`, `turn`), moves
-the referee refuses (`refused`), the move and the server's roll (`code`, `u`), its odds before the roll (`preview`),
-what it leads to (`nextSeat`, `result`, `stateHash`), its history record (`record`) and both players' views
-(`views[seat]`: the view's position hash, number of worlds, visible squares, legal moves and last history record).
-Full views after plies 6 and 25 (`fullViews`) and each game's final `history` and `result` are kept too.
+Each file holds seeded random games from the start position (games that end by the escape rule, by a king capture, by
+the 50-move rule, and ones that go on; two games play castling, en passant and promotions whenever they can). Every step
+records the position before the move (`ply`, `turn`), moves the referee refuses (`refused`), the move and the server's
+roll (`code`, `u`), its odds before the roll (`preview`), what it leads to (`nextSeat`, `result`, `stateHash`), its
+history record (`record`) and both players' views (`views[seat]`: the view's position hash, number of worlds, visible
+squares, legal moves and last history record). Full views after plies 6 and 25 (`fullViews`) and each game's final
+`history` and `result` are kept too.
 
 The generator is deterministic; regenerate after any change of the shared rules or of these two variants and change
 the PHP twin with it. `REFEREE_FIXTURES=<dir>` makes the PHPUnit replay read another set written by the same
