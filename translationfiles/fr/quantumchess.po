@@ -9,7 +9,7 @@ msgstr ""
 "Language: fr\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
-#: src/App.vue:13 src/App.vue:90 src/settings/components/AdminSettings.vue:13 src/settings/components/AdminSettings.vue:16 src/settings/components/PersonalSettings.vue:12 src/settings/components/PersonalSettings.vue:17 src/views/VariantsView.vue:60 lib/Dashboard/GamesWidget.php:63 lib/Notification/Notifier.php:54 lib/Settings/Section.php:32
+#: src/App.vue:13 src/App.vue:90 src/settings/components/AdminSettings.vue:13 src/settings/components/AdminSettings.vue:16 src/settings/components/PersonalSettings.vue:12 src/settings/components/PersonalSettings.vue:17 src/stats/components/LeaderboardTable.vue:129 src/views/VariantsView.vue:61 lib/Dashboard/GamesWidget.php:63 lib/Notification/Notifier.php:54 lib/Settings/Section.php:32
 msgid "Quantum Chess"
 msgstr "Quantum Chess"
 
@@ -25,7 +25,7 @@ msgstr "Nouvelle partie"
 msgid "Home"
 msgstr "Accueil"
 
-#: src/app/components/AppNavigation.vue:23 src/home/components/PlayTiles.vue:78 src/views/VariantGameView.vue:62 src/views/VariantsView.vue:23
+#: src/app/components/AppNavigation.vue:23 src/home/components/PlayTiles.vue:78 src/views/StatsView.vue:82 src/views/VariantGameView.vue:62 src/views/VariantsView.vue:24
 msgid "Chess variants"
 msgstr "Variantes d'échecs"
 
@@ -57,7 +57,7 @@ msgstr "En attente d'un adversaire"
 msgid "On this device"
 msgstr "Sur cet appareil"
 
-#: src/app/components/AppNavigation.vue:113 src/views/VariantsView.vue:45
+#: src/app/components/AppNavigation.vue:113 src/views/VariantsView.vue:46
 msgid "Delete from this device"
 msgstr "Supprimer de cet appareil"
 
@@ -69,7 +69,7 @@ msgstr "Paramètres"
 msgid "Open challenge"
 msgstr "Défi ouvert"
 
-#: src/app/components/AppNavigation.vue:208 src/views/VariantsView.vue:39
+#: src/app/components/AppNavigation.vue:208 src/views/VariantsView.vue:40
 msgid "Finished"
 msgstr "Terminée"
 
@@ -229,11 +229,11 @@ msgstr "Panneau des possibilités"
 msgid "Describe the position"
 msgstr "Décrire la position"
 
-#: src/app/components/AppSettingsDialog.vue:213 src/app/components/NewGameDialog.vue:113 src/board/components/BoardControls.vue:36 src/llm/components/AiNoticeDialog.vue:26 src/online/components/OnlineGameHost.vue:99 src/online/components/lobby/LobbyOnlineSections.vue:79 src/views/VariantGameView.vue:353 src/views/VariantGameView.vue:368
+#: src/app/components/AppSettingsDialog.vue:213 src/app/components/NewGameDialog.vue:113 src/board/components/BoardControls.vue:36 src/llm/components/AiNoticeDialog.vue:26 src/online/components/OnlineGameHost.vue:99 src/online/components/OnlineVariantPanel.vue:90 src/online/components/lobby/LobbyOnlineSections.vue:79 src/views/VariantGameView.vue:353 src/views/VariantGameView.vue:368
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/app/components/AppSettingsDialog.vue:215
+#: src/app/components/AppSettingsDialog.vue:215 src/stats/components/LeaderboardTable.vue:18
 msgid "Game"
 msgstr "Partie"
 
@@ -313,7 +313,7 @@ msgstr "Coups avec lancer"
 msgid "Slow"
 msgstr "Lent"
 
-#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:956 src/views/VariantsView.vue:283
+#: src/app/components/AppSettingsDialog.vue:283 src/views/VariantGameView.vue:956 src/views/VariantsView.vue:284
 msgid "Normal"
 msgstr "Normal"
 
@@ -333,7 +333,7 @@ msgstr "Standard"
 msgid "Your colour"
 msgstr "Votre couleur"
 
-#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:150 src/views/VariantsView.vue:208
+#: src/app/components/ColorChoice.vue:38 src/views/VariantsView.vue:151 src/views/VariantsView.vue:209
 msgid "Random"
 msgstr "Au hasard"
 
@@ -349,7 +349,7 @@ msgstr "Noirs"
 msgid "Mode"
 msgstr "Mode"
 
-#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:158
+#: src/app/components/NewGameDialog.vue:47 src/views/VariantsView.vue:159
 msgid "Level"
 msgstr "Niveau"
 
@@ -369,11 +369,11 @@ msgstr "Tourner l'échiquier vers le camp au trait"
 msgid "Message (optional)"
 msgstr "Message (facultatif)"
 
-#: src/app/components/NewGameDialog.vue:164 src/home/components/PlayTiles.vue:48 src/views/StatsView.vue:50 src/views/VariantsView.vue:116
+#: src/app/components/NewGameDialog.vue:164 src/home/components/PlayTiles.vue:48 src/views/StatsView.vue:50 src/views/VariantsView.vue:117
 msgid "Online"
 msgstr "En ligne"
 
-#: src/app/components/NewGameDialog.vue:165 src/game/localPlayers.js:27 src/game/localPlayers.js:50 src/home/components/PlayTiles.vue:55 src/views/VariantsView.vue:100
+#: src/app/components/NewGameDialog.vue:165 src/game/localPlayers.js:27 src/game/localPlayers.js:50 src/home/components/PlayTiles.vue:55 src/views/VariantsView.vue:101
 msgid "Computer"
 msgstr "Ordinateur"
 
@@ -381,7 +381,7 @@ msgstr "Ordinateur"
 msgid "AI opponent"
 msgstr "Adversaire IA"
 
-#: src/app/components/NewGameDialog.vue:173 src/home/components/PlayTiles.vue:72 src/views/VariantsView.vue:107
+#: src/app/components/NewGameDialog.vue:173 src/home/components/PlayTiles.vue:72 src/views/VariantsView.vue:108
 msgid "Pass & play"
 msgstr "Jeu à deux"
 
@@ -393,11 +393,11 @@ msgstr "Créer le défi"
 msgid "Send invitation"
 msgstr "Envoyer l'invitation"
 
-#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:233
+#: src/app/components/NewGameDialog.vue:234 src/views/VariantsView.vue:234
 msgid "Start game"
 msgstr "Commencer la partie"
 
-#: src/app/components/NewGameDialog.vue:331 src/views/VariantsView.vue:432
+#: src/app/components/NewGameDialog.vue:331 src/views/VariantsView.vue:441
 msgid "The game could not be created. Please try again."
 msgstr "La partie n'a pas pu être créée. Veuillez réessayer."
 
@@ -1482,16 +1482,16 @@ msgstr "Jouer le niveau {n} ({name})"
 msgid "Rematch requested ✓"
 msgstr "Revanche demandée ✓"
 
-#: src/game/components/GameOverDialog.vue:76 src/game/components/ResultBar.vue:25 src/online/components/lobby/RecentGames.vue:46 src/online/components/lobby/RecentGames.vue:47 lib/Notification/Notifier.php:222
+#: src/game/components/GameOverDialog.vue:76 src/game/components/ResultBar.vue:25 src/online/components/OnlineVariantPanel.vue:101 src/online/components/lobby/RecentGames.vue:46 src/online/components/lobby/RecentGames.vue:47 lib/Notification/Notifier.php:222
 msgid "Rematch"
 msgstr "Revanche"
 
-#: src/game/components/GameOverDialog.vue:130 src/game/resultText.js:123 src/online/components/OnlineVariantPanel.vue:166
+#: src/game/components/GameOverDialog.vue:130 src/game/resultText.js:123 src/online/components/OnlineVariantPanel.vue:202
 msgid "Game aborted"
 msgstr "Partie annulée"
 
 #. TRANSLATORS: the winners of a game of four, such as "Alice & Carol won"
-#: src/game/components/GameOverDialog.vue:133 src/game/resultText.js:125 src/online/components/OnlineVariantPanel.vue:173 src/online/summaryText.js:105
+#: src/game/components/GameOverDialog.vue:133 src/game/resultText.js:125 src/online/components/OnlineVariantPanel.vue:209 src/online/summaryText.js:105
 msgid "Draw"
 msgstr "Nulle"
 
@@ -1797,7 +1797,7 @@ msgstr "La partie a atteint sa longueur maximale"
 msgid "{loser} resigned"
 msgstr "{loser} a abandonné"
 
-#: src/game/resultText.js:71 src/online/components/OnlineVariantPanel.vue:178
+#: src/game/resultText.js:71 src/online/components/OnlineVariantPanel.vue:214
 msgid "Draw by agreement"
 msgstr "Nulle par accord mutuel"
 
@@ -1813,19 +1813,19 @@ msgstr "Le temps est écoulé, mais il ne restait qu'un roi pour gagner"
 msgid "The game was aborted"
 msgstr "La partie a été annulée"
 
-#: src/game/resultText.js:79 src/online/components/OnlineVariantPanel.vue:177
+#: src/game/resultText.js:79 src/online/components/OnlineVariantPanel.vue:213
 msgid "The game was abandoned"
 msgstr "La partie a été délaissée"
 
-#: src/game/resultText.js:81 src/online/components/OnlineVariantPanel.vue:179
+#: src/game/resultText.js:81 src/online/components/OnlineVariantPanel.vue:215
 msgid "A player’s account was deleted"
 msgstr "Le compte d'un joueur a été supprimé"
 
-#: src/game/resultText.js:83 src/online/components/OnlineVariantPanel.vue:163
+#: src/game/resultText.js:83 src/online/components/OnlineVariantPanel.vue:199
 msgid "The players’ devices disagreed about a move"
 msgstr "Les appareils des joueurs n’étaient pas d’accord sur un coup"
 
-#: src/game/resultText.js:121 src/online/components/OnlineVariantPanel.vue:164
+#: src/game/resultText.js:121 src/online/components/OnlineVariantPanel.vue:200
 msgid "Game annulled"
 msgstr "Partie invalidée"
 
@@ -1877,7 +1877,7 @@ msgstr "Votre position et vos questions seront envoyées à {provider}. Aucun no
 msgid "Continue"
 msgstr "Continuer"
 
-#: src/llm/components/PersonaPicker.vue:12 src/online/components/OpponentPicker.vue:19 src/views/StatsView.vue:97 src/views/VariantsView.vue:94
+#: src/llm/components/PersonaPicker.vue:12 src/online/components/OpponentPicker.vue:19 src/views/StatsView.vue:137 src/views/VariantsView.vue:95
 msgid "Opponent"
 msgstr "Adversaire"
 
@@ -2217,7 +2217,7 @@ msgstr "La proposition de nulle a été refusée"
 msgid "Draw agreed"
 msgstr "Nulle acceptée"
 
-#: src/online/chatText.js:50 src/online/components/InvitationPanel.vue:137 src/online/components/OnlineGameHost.vue:250 src/online/components/lobby/LobbyGameCard.vue:103
+#: src/online/chatText.js:50 src/online/components/InvitationPanel.vue:137 src/online/components/OnlineGameHost.vue:250 src/online/components/OnlineVariantPanel.vue:232 src/online/components/lobby/LobbyGameCard.vue:103
 msgid "{name} wants a rematch"
 msgstr "{name} veut une revanche"
 
@@ -2284,7 +2284,7 @@ msgstr "La discussion de cette partie est fermée."
 msgid "your opponent"
 msgstr "votre adversaire"
 
-#: src/online/components/GameChat.vue:179 lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:142 lib/Service/Game/GameSerializer.php:72 lib/Service/Game/GameSerializer.php:333
+#: src/online/components/GameChat.vue:179 lib/Dashboard/GamesWidget.php:121 lib/Notification/Notifier.php:142 lib/Service/Game/GameSerializer.php:72 lib/Service/Game/GameSerializer.php:345
 msgid "Deleted user"
 msgstr "Utilisateur supprimé"
 
@@ -2304,7 +2304,7 @@ msgstr "Amicale (non classée)"
 msgid "Expires: {when}"
 msgstr "Expire : {when}"
 
-#: src/online/components/InvitationPanel.vue:46 src/online/components/OnlineGameHost.vue:59 src/online/components/OnlineGameHost.vue:78 src/online/components/OnlineVariantPanel.vue:43 src/online/components/lobby/LobbyOnlineSections.vue:45 lib/Notification/Notifier.php:177 lib/Notification/Notifier.php:203
+#: src/online/components/InvitationPanel.vue:46 src/online/components/OnlineGameHost.vue:59 src/online/components/OnlineGameHost.vue:78 src/online/components/OnlineVariantPanel.vue:43 src/online/components/OnlineVariantPanel.vue:75 src/online/components/lobby/LobbyOnlineSections.vue:45 lib/Notification/Notifier.php:177 lib/Notification/Notifier.php:203
 msgid "Decline"
 msgstr "Refuser"
 
@@ -2396,19 +2396,19 @@ msgstr "Chargement de la partie…"
 msgid "Accept draw"
 msgstr "Accepter la nulle"
 
-#: src/online/components/OnlineGameHost.vue:86
+#: src/online/components/OnlineGameHost.vue:86 src/online/components/OnlineVariantPanel.vue:82
 msgid "Accept rematch"
 msgstr "Accepter la revanche"
 
-#: src/online/components/OnlineGameHost.vue:92
+#: src/online/components/OnlineGameHost.vue:92 src/online/components/OnlineVariantPanel.vue:239
 msgid "You asked {name} for a rematch. Waiting for an answer."
 msgstr "Vous avez demandé une revanche à {name}. En attente d'une réponse."
 
-#: src/online/components/OnlineGameHost.vue:102
+#: src/online/components/OnlineGameHost.vue:102 src/online/components/OnlineVariantPanel.vue:228
 msgid "The rematch is on."
 msgstr "La revanche est lancée."
 
-#: src/online/components/OnlineGameHost.vue:104
+#: src/online/components/OnlineGameHost.vue:104 src/online/components/OnlineVariantPanel.vue:93
 msgid "Go to the rematch"
 msgstr "Aller à la revanche"
 
@@ -2482,31 +2482,35 @@ msgid "The stored history of this game was changed after it was played."
 msgstr "L’historique enregistré de cette partie a été modifié après avoir été joué."
 
 #. TRANSLATORS: the winners of a game of four, such as "Alice & Carol won"
-#: src/online/components/OnlineVariantPanel.vue:172
+#: src/online/components/OnlineVariantPanel.vue:208
 msgid "{names} won"
 msgid_plural "{names} won"
 msgstr[0] "{names} a gagné"
 msgstr[1] "{names} ont gagné"
 msgstr[2] "{names} ont gagné"
 
-#: src/online/components/OnlineVariantPanel.vue:175
+#: src/online/components/OnlineVariantPanel.vue:211
 msgid "A player resigned"
 msgstr "Un joueur a abandonné"
 
-#: src/online/components/OnlineVariantPanel.vue:176
+#: src/online/components/OnlineVariantPanel.vue:212
 msgid "A player ran out of time"
 msgstr "Un joueur n’a plus de temps"
 
-#: src/online/components/OnlineVariantPanel.vue:191
+#: src/online/components/OnlineVariantPanel.vue:238
+msgid "Rematch: waiting for the other players."
+msgstr "Revanche : en attente des autres joueurs."
+
+#: src/online/components/OnlineVariantPanel.vue:252
 msgid "You offered a draw."
 msgstr "Vous avez proposé la nulle."
 
-#: src/online/components/OnlineVariantPanel.vue:192
+#: src/online/components/OnlineVariantPanel.vue:253
 msgid "{name} offers a draw."
 msgstr "{name} propose la nulle."
 
 #. TRANSLATORS: a draw offer in a game of four: how many players agreed so far
-#: src/online/components/OnlineVariantPanel.vue:199
+#: src/online/components/OnlineVariantPanel.vue:260
 msgid "{agreed} of {all} agree."
 msgstr "{agreed} sur {all} sont d’accord."
 
@@ -2622,11 +2626,11 @@ msgstr "Le message n'a pas pu être envoyé"
 msgid "Rated games are not available for this pair."
 msgstr "Les parties classées ne sont pas disponibles pour cette paire."
 
-#: src/online/composables/useRematch.js:82
+#: src/online/composables/useRematch.js:89
 msgid "The rematch has started"
 msgstr "La revanche a commencé"
 
-#: src/online/composables/useRematch.js:87
+#: src/online/composables/useRematch.js:94
 msgid "The rematch was declined"
 msgstr "La revanche a été refusée"
 
@@ -2693,7 +2697,7 @@ msgstr "Vous jouez les Noirs"
 msgid "Colours are drawn at the start"
 msgstr "Les couleurs sont tirées au sort au début"
 
-#: src/online/summaryText.js:87 src/views/HomeView.vue:132 src/views/VariantsView.vue:40
+#: src/online/summaryText.js:87 src/views/HomeView.vue:132 src/views/VariantsView.vue:41
 msgid "Move {n}"
 msgstr "Coup {n}"
 
@@ -2701,11 +2705,11 @@ msgstr "Coup {n}"
 msgid "Aborted"
 msgstr "Annulée"
 
-#: src/online/summaryText.js:108 src/views/StatsView.vue:100
+#: src/online/summaryText.js:108 src/views/StatsView.vue:140
 msgid "Won"
 msgstr "Gagnée"
 
-#: src/online/summaryText.js:109 src/views/StatsView.vue:103
+#: src/online/summaryText.js:109 src/views/StatsView.vue:143
 msgid "Lost"
 msgstr "Perdue"
 
@@ -3399,7 +3403,7 @@ msgstr "Autoriser les parties en ligne"
 msgid "Limit online play to these groups"
 msgstr "Limiter le jeu en ligne à ces groupes"
 
-#: src/settings/components/AdminSettings.vue:39 src/settings/components/AdminSettings.vue:113 src/settings/components/AdminSettings.vue:176 src/stats/components/LeaderboardTable.vue:111
+#: src/settings/components/AdminSettings.vue:39 src/settings/components/AdminSettings.vue:113 src/settings/components/AdminSettings.vue:176 src/stats/components/LeaderboardTable.vue:125
 msgid "Everyone"
 msgstr "Tout le monde"
 
@@ -3423,7 +3427,7 @@ msgstr "Cotes et classement"
 msgid "Rated online games change an Elo rating. The leaderboard only shows people who may see each other."
 msgstr "Les parties en ligne classées modifient une cote Elo. Le classement n'affiche que les personnes qui peuvent se voir mutuellement."
 
-#: src/settings/components/AdminSettings.vue:80 src/views/StatsView.vue:84
+#: src/settings/components/AdminSettings.vue:80 src/views/StatsView.vue:119
 msgid "Leaderboard"
 msgstr "Classement"
 
@@ -3878,38 +3882,38 @@ msgstr "Jamais envoyés : votre nom d'utilisateur, votre nom d'affichage, votre
 msgid "The settings could not be saved."
 msgstr "Les paramètres n'ont pas pu être enregistrés."
 
-#: src/stats/components/LeaderboardTable.vue:17
+#: src/stats/components/LeaderboardTable.vue:28
 msgid "Group"
 msgstr "Groupe"
 
-#: src/stats/components/LeaderboardTable.vue:22
+#: src/stats/components/LeaderboardTable.vue:33
 msgid "Nobody is listed yet. Players appear after %n rated game."
 msgid_plural "Nobody is listed yet. Players appear after %n rated games."
 msgstr[0] "Personne n'est encore listé. Les joueurs apparaissent après %n partie classée."
 msgstr[1] "Personne n'est encore listé. Les joueurs apparaissent après %n parties classées."
 msgstr[2] "Personne n'est encore listé. Les joueurs apparaissent après %n parties classées."
 
-#: src/stats/components/LeaderboardTable.vue:36 src/views/VariantGameView.vue:961
+#: src/stats/components/LeaderboardTable.vue:47 src/views/VariantGameView.vue:961
 msgid "Player"
 msgstr "Joueur"
 
-#: src/stats/components/LeaderboardTable.vue:39 src/views/StatsView.vue:54
+#: src/stats/components/LeaderboardTable.vue:50 src/views/StatsView.vue:54 src/views/StatsView.vue:90
 msgid "Rating"
 msgstr "Cote"
 
-#: src/stats/components/LeaderboardTable.vue:44 src/views/StatsView.vue:67
+#: src/stats/components/LeaderboardTable.vue:55 src/views/StatsView.vue:67 src/views/StatsView.vue:93
 msgid "Games"
 msgstr "Parties"
 
-#: src/stats/components/LeaderboardTable.vue:47
+#: src/stats/components/LeaderboardTable.vue:58
 msgid "W / L / D"
 msgstr "V / D / N"
 
-#: src/stats/components/LeaderboardTable.vue:69
+#: src/stats/components/LeaderboardTable.vue:80
 msgid "(only you see this row)"
 msgstr "(vous seul voyez cette ligne)"
 
-#: src/stats/components/LeaderboardTable.vue:75 src/views/StatsView.vue:57
+#: src/stats/components/LeaderboardTable.vue:86 src/views/StatsView.vue:57
 msgid "Provisional rating: fewer than 10 rated games"
 msgstr "Cote provisoire : moins de 10 parties classées"
 
@@ -6765,7 +6769,7 @@ msgstr "plus aucune pièce ne peut traverser la rivière"
 msgid "50 moves by each side without a capture"
 msgstr "50 coups de chaque camp sans prise"
 
-#: src/views/HomeView.vue:24 src/views/VariantsView.vue:30
+#: src/views/HomeView.vue:24 src/views/VariantsView.vue:31
 msgid "Continue on this device"
 msgstr "Continuer sur cet appareil"
 
@@ -6965,7 +6969,7 @@ msgstr "M'afficher"
 msgid "Peak"
 msgstr "Maximum"
 
-#: src/views/StatsView.vue:71
+#: src/views/StatsView.vue:71 src/views/StatsView.vue:96
 msgid "Won / lost / drawn"
 msgstr "Gagnées / perdues / nulles"
 
@@ -6973,22 +6977,26 @@ msgstr "Gagnées / perdues / nulles"
 msgid "Rank"
 msgstr "Rang"
 
-#: src/views/StatsView.vue:91
+#: src/views/StatsView.vue:87
+msgid "Variant"
+msgstr "Variante"
+
+#: src/views/StatsView.vue:131
 msgid "Against the computer and AI opponents"
 msgstr "Contre l'ordinateur et les adversaires IA"
 
-#: src/views/StatsView.vue:106
+#: src/views/StatsView.vue:146
 msgid "Drawn"
 msgstr "Nulles"
 
-#: src/views/StatsView.vue:126
+#: src/views/StatsView.vue:166
 msgid "Pass & play: %n game"
 msgid_plural "Pass & play: %n games"
 msgstr[0] "Jeu à deux : %n partie"
 msgstr[1] "Jeu à deux : %n parties"
 msgstr[2] "Jeu à deux : %n parties"
 
-#: src/views/StatsView.vue:168
+#: src/views/StatsView.vue:216
 msgid "Level {n}: {name}"
 msgstr "Niveau {n} : {name}"
 
@@ -7155,7 +7163,7 @@ msgstr "Ce coup est décidé par un lancer :"
 msgid "Play and roll"
 msgstr "Jouer et lancer les dés"
 
-#: src/views/VariantGameView.vue:377 src/views/VariantsView.vue:226
+#: src/views/VariantGameView.vue:377 src/views/VariantsView.vue:227
 msgid "This game could not be saved on this device."
 msgstr "Cette partie n'a pas pu être enregistrée sur cet appareil."
 
@@ -7248,11 +7256,11 @@ msgstr "Dernier tour des {side}"
 msgid "A move"
 msgstr "Un coup"
 
-#: src/views/VariantGameView.vue:955 src/views/VariantsView.vue:282
+#: src/views/VariantGameView.vue:955 src/views/VariantsView.vue:283
 msgid "Easy"
 msgstr "Facile"
 
-#: src/views/VariantGameView.vue:957 src/views/VariantsView.vue:284
+#: src/views/VariantGameView.vue:957 src/views/VariantsView.vue:285
 msgid "Hard"
 msgstr "Difficile"
 
@@ -7260,38 +7268,38 @@ msgstr "Difficile"
 msgid "Computer ({level})"
 msgstr "Ordinateur ({level})"
 
-#: src/views/VariantsView.vue:25
+#: src/views/VariantsView.vue:26
 msgid "Twenty ways to play, from 3D, 4D and 5D chess with time travel to shogi and xiangqi. Every variant keeps the quantum rules: split, merge, measure, and land = roll, pass = link."
 msgstr "Vingt façons de jouer, des échecs en 3D, en 4D et en 5D avec voyage dans le temps au shogi et au xiangqi. Chaque variante garde les règles quantiques : diviser, fusionner, mesurer, et atterrir = lancer, passer = lier."
 
-#: src/views/VariantsView.vue:61
+#: src/views/VariantsView.vue:62
 msgid "The classic: chess with superposition. Also online against other players."
 msgstr "Le classique : les échecs avec superposition. Aussi en ligne contre d'autres joueurs."
 
-#: src/views/VariantsView.vue:76
+#: src/views/VariantsView.vue:77
 msgid "%n player"
 msgid_plural "%n players"
 msgstr[0] "%n joueur"
 msgstr[1] "%n joueurs"
 msgstr[2] "%n joueurs"
 
-#: src/views/VariantsView.vue:124
+#: src/views/VariantsView.vue:125
 msgid "Random seats: draw the seats when every player has joined"
 msgstr "Places au hasard : tirer les places au sort quand tous les joueurs ont rejoint"
 
-#: src/views/VariantsView.vue:135 src/views/VariantsView.vue:170
+#: src/views/VariantsView.vue:136 src/views/VariantsView.vue:171
 msgid "You play"
 msgstr "Votre camp"
 
-#: src/views/VariantsView.vue:154
+#: src/views/VariantsView.vue:155
 msgid "Online, the server is the umpire: it sees the whole board and sends each player only their own view. The whole board is shown when the game ends."
 msgstr "En ligne, le serveur est l’arbitre : il voit tout l’échiquier et n’envoie à chaque joueur que sa propre vue. Tout l’échiquier est montré à la fin de la partie."
 
-#: src/views/VariantsView.vue:223
+#: src/views/VariantsView.vue:224
 msgid "Turn the board to the player to move"
 msgstr "Tourner l'échiquier vers le joueur au trait"
 
-#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:78 lib/Service/Game/InvitationService.php:364 lib/Service/Game/InvitationService.php:369 lib/Service/Game/InvitationService.php:372 lib/Service/Game/VariantGameplayService.php:290 lib/Service/Game/VariantGameplayService.php:295 lib/Service/Game/VariantGameplayService.php:298 lib/Service/Game/VariantGameplayService.php:394 lib/Service/Player/StatsService.php:201 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
+#: lib/Controller/AiController.php:61 lib/Controller/ApiController.php:114 lib/Controller/SettingsController.php:107 lib/Service/Ai/AiSettingsService.php:216 lib/Service/Ai/ConnectionTester.php:127 lib/Service/Ai/Provider/ProviderValidator.php:95 lib/Service/Ai/Request/AiRequestValidator.php:395 lib/Service/Game/InvitationService.php:81 lib/Service/Game/InvitationService.php:415 lib/Service/Game/InvitationService.php:420 lib/Service/Game/InvitationService.php:423 lib/Service/Game/VariantGameplayService.php:290 lib/Service/Game/VariantGameplayService.php:295 lib/Service/Game/VariantGameplayService.php:298 lib/Service/Game/VariantGameplayService.php:394 lib/Service/Player/StatsService.php:95 lib/Service/Player/StatsService.php:225 lib/Service/Settings/AppSettings.php:275 lib/Service/Settings/MultiplayerSettingsService.php:134
 msgid "Invalid value"
 msgstr "Valeur invalide"
 
@@ -7651,55 +7659,55 @@ msgstr "Vous ne pouvez pas proposer la nulle pour le moment."
 msgid "There is no draw offer to answer."
 msgstr "Il n'y a aucune proposition de nulle à laquelle répondre."
 
-#: lib/Service/Game/InvitationService.php:63
+#: lib/Service/Game/InvitationService.php:65
 msgid "Online games are not available for you."
 msgstr "Les parties en ligne ne sont pas disponibles pour vous."
 
-#: lib/Service/Game/InvitationService.php:68 lib/Service/Game/SeatedInvitations.php:67
+#: lib/Service/Game/InvitationService.php:70 lib/Service/Game/SeatedInvitations.php:67
 msgid "Invalid opponent"
 msgstr "Adversaire invalide"
 
-#: lib/Service/Game/InvitationService.php:74
+#: lib/Service/Game/InvitationService.php:76
 msgid "Invalid colour"
 msgstr "Couleur invalide"
 
-#: lib/Service/Game/InvitationService.php:86
+#: lib/Service/Game/InvitationService.php:88
 msgid "Invalid time control"
 msgstr "Cadence invalide"
 
-#: lib/Service/Game/InvitationService.php:90
+#: lib/Service/Game/InvitationService.php:92
 msgid "Invalid message"
 msgstr "Message invalide"
 
-#: lib/Service/Game/InvitationService.php:100 lib/Service/Game/InvitationService.php:119
+#: lib/Service/Game/InvitationService.php:102 lib/Service/Game/InvitationService.php:121
 msgid "Invalid group"
 msgstr "Groupe invalide"
 
-#: lib/Service/Game/InvitationService.php:103
+#: lib/Service/Game/InvitationService.php:105
 msgid "Rated games need a time limit."
 msgstr "Les parties classées nécessitent une limite de temps."
 
-#: lib/Service/Game/InvitationService.php:108
+#: lib/Service/Game/InvitationService.php:110
 msgid "Rated games are turned off on this server."
 msgstr "Les parties classées sont désactivées sur ce serveur."
 
-#: lib/Service/Game/InvitationService.php:115 lib/Service/Game/SeatedInvitations.php:78
+#: lib/Service/Game/InvitationService.php:117 lib/Service/Game/SeatedInvitations.php:78
 msgid "Open challenges are turned off on this server."
 msgstr "Les défis ouverts sont désactivés sur ce serveur."
 
-#: lib/Service/Game/InvitationService.php:233
+#: lib/Service/Game/InvitationService.php:235
 msgid "This is your own challenge."
 msgstr "C'est votre propre défi."
 
-#: lib/Service/Game/InvitationService.php:262 lib/Service/Game/SeatedInvitations.php:178
+#: lib/Service/Game/InvitationService.php:264 lib/Service/Game/SeatedInvitations.php:199
 msgid "Someone was faster. The challenge is gone."
 msgstr "Quelqu'un a été plus rapide. Le défi n'est plus disponible."
 
-#: lib/Service/Game/InvitationService.php:315 lib/Service/Game/InvitePolicy.php:117
+#: lib/Service/Game/InvitationService.php:319 lib/Service/Game/InvitationService.php:373 lib/Service/Game/InvitePolicy.php:117
 msgid "You can't invite this user"
 msgstr "Vous ne pouvez pas inviter cet utilisateur"
 
-#: lib/Service/Game/InvitationService.php:360
+#: lib/Service/Game/InvitationService.php:411
 msgid "This chess variant cannot be played online."
 msgstr "Cette variante d’échecs ne peut pas être jouée en ligne."
 
@@ -7747,7 +7755,7 @@ msgstr "Les préférences sont trop volumineuses."
 msgid "Preferences must be an object."
 msgstr "Les préférences doivent être un objet."
 
-#: lib/Service/Player/StatsService.php:98
+#: lib/Service/Player/StatsService.php:118
 msgid "Unknown group"
 msgstr "Groupe inconnu"
 

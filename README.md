@@ -52,7 +52,8 @@ other boards.
 - Made for phones too: large boards zoom with a pinch and pan with a finger; 4D chess, 5D chess and Bughouse open on
   the boards you play
 - Played on your own device, or online against people on your Nextcloud, four players in Four-player chess and
-  Bughouse (unrated; in Kriegspiel and Fog of war the server is the umpire and shows each player only their own view). Every variant's rules: [`docs/variants.md`](docs/variants.md)
+  Bughouse; in Kriegspiel and Fog of war the server is the umpire and shows each player only their own view. Each
+  two-player variant has its own rating and leaderboard. Every variant's rules: [`docs/variants.md`](docs/variants.md)
 
 **Learn**
 
@@ -249,7 +250,8 @@ id), and an optional text you can append to the first-use notice (for example a 
 - **Updates**: open games poll the server adaptively (every 2 seconds right after your move, slower while you wait,
   once a minute in background tabs), with back-off and a banner when the connection is lost.
 - **Ratings**: Elo starting at 1200; the first 10 rated games use K = 40 (the rating is shown as provisional), then
-  K = 20. Colours in rated games are assigned at random.
+  K = 20. Colours in rated games are assigned at random. Every two-player chess variant has a rating of its own, with
+  its own leaderboard.
 - **Fair play**: in your own online games that are still running, the coach, hints, analysis and the AI coach are
   not available. The king-danger ring and the safety net stay, because they are rule information.
 - **Integrity**: the server draws every online roll with a cryptographic random number generator when it applies the

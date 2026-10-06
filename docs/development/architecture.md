@@ -569,7 +569,8 @@ their rules; it draws the dice and keeps the order of play, and the browsers rul
   work as for classic games. `VariantGameplayService` stores a move and draws its roll after it arrived, records the
   settlement a browser sends (the seat to move next, the result code, the position hash), passes the turn and ends
   the game on a result; a settlement that differs from an earlier one, or a dispute, annuls the game. Variant games
-  are never rated. Moves are chained with `VariantChain`, not with the classic chain.
+  count in the players' ratings of that variant (`qchess_vratings`), never in the classic one, and are rated when both
+  players agree. Moves are chained with `VariantChain`, not with the classic chain.
 - **Four seats.** A game with more than two seats (`Game::isMultiSeat`) names its sides by seat number: `colorOf` and
   `turn` are `'0'` to `'3'`, so turns, deadlines and notifications work unchanged. Its players, who has accepted, draw
   votes and chat mutes are in its record (`VariantTurn`, read by `Game::seatUids`), and in a `qchess_seats` row per
