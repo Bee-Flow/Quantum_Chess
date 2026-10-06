@@ -1,6 +1,6 @@
 {
   "name": "quantumchess",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "description": "Quantum Chess for Nextcloud — superposition, entanglement and measurement on the chessboard",
   "repository": {
