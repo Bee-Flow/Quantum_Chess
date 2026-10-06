@@ -421,6 +421,7 @@ side: no variant game, move or result is sent to the server. The player-facing r
 | `core/variant.js` | `defineVariant()`: the defaults and caches of a declaration, and the classic end-rule flags. Its header states the contract of the hooks the quantum layer reads |
 | `core/quantum.js` | The quantum layer (section 5.6.2) |
 | `core/ai.js` | The computer player of the variants (section 5.6.4) |
+| `online.js` | What online play needs (prepared, see [`online-variants.md`](online-variants.md)): which variants can be played online, their seats and teams, result codes, the position hash, and `replayOnline`, the replay of stored moves with the server's rolls that finds the first claim that does not agree |
 | `<id>.js` | One module per variant: its board, pieces, setup, options, special moves, win conditions and rules card, declared through the hooks of section 5.6.3 |
 | `chess960/`, `kriegspiel/`, `trid/`, `multiverse/` | The parts of the larger variants: the Chess960 start-position numbers; the Kriegspiel umpire and the computer's view; the Tri-Dimensional board; and the multiverse (5D) in `skeleton.js` (geometry, timelines, the present), `pieces.js`, `setup.js` (the 21 official setups), `moves.js`, `engine.js` (applying moves, idle worlds, the unfinishable turn), `texts.js` (records and texts), `layout.js` (the drawing) and `ai.js` (the computer's hooks) |
 

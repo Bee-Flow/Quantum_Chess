@@ -1,0 +1,3458 @@
+{
+	"rulesVersion": 1,
+	"catalog": [
+		{
+			"id": "raumschach",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "trid",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "hyper4d",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "multiverse",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "kriegspiel",
+			"seats": 2,
+			"online": false,
+			"teams": null
+		},
+		{
+			"id": "darkchess",
+			"seats": 2,
+			"online": false,
+			"teams": null
+		},
+		{
+			"id": "chess960",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "atomic",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "crazyhouse",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "bughouse",
+			"seats": 4,
+			"online": true,
+			"teams": [
+				[
+					0,
+					2
+				],
+				[
+					1,
+					3
+				]
+			]
+		},
+		{
+			"id": "antichess",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "koth",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "threecheck",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "horde",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "hexagonal",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "fourplayer",
+			"seats": 4,
+			"online": true,
+			"teams": null,
+			"teamOptions": {
+				"mode": "teams"
+			},
+			"teamsWithOptions": [
+				[
+					0,
+					2
+				],
+				[
+					1,
+					3
+				]
+			]
+		},
+		{
+			"id": "capablanca",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "shogi",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "xiangqi",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		},
+		{
+			"id": "makruk",
+			"seats": 2,
+			"online": true,
+			"teams": null
+		}
+	],
+	"results": [
+		{
+			"result": null,
+			"code": ""
+		},
+		{
+			"result": {
+				"winner": 0,
+				"reason": "king"
+			},
+			"code": "win:0/king"
+		},
+		{
+			"result": {
+				"winner": 1,
+				"reason": "resign"
+			},
+			"code": "win:1/resign"
+		},
+		{
+			"result": {
+				"winner": null,
+				"winners": [
+					2,
+					0
+				],
+				"reason": "king"
+			},
+			"code": "win:0,2/king"
+		},
+		{
+			"result": {
+				"winner": 3,
+				"reason": "king"
+			},
+			"code": "win:3/king"
+		},
+		{
+			"result": {
+				"winner": null,
+				"reason": "quiet"
+			},
+			"code": "draw/quiet"
+		}
+	],
+	"chains": [
+		{
+			"gameId": 7,
+			"variant": "atomic",
+			"options": {},
+			"seats": [
+				"alice",
+				"bob"
+			],
+			"createdAt": 1790000000,
+			"start": "8b4fc37df7a79687cf3ebdb3b7c8d72cd825089592442e12a571c85260cefd59",
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "e2-e4",
+					"u": 0,
+					"chain": "c9cc13e7a79f73155cb0b73f71c4ac92936dcaa72b91f0780f7bd4423ac04198"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "g8-f6|h6",
+					"u": 16777215,
+					"chain": "e1f7d9d7bc0a435aedff376fb9c5e38fdf16b2a5223c53791f75b6c6f910d882"
+				}
+			]
+		},
+		{
+			"gameId": 42,
+			"variant": "fourplayer",
+			"options": {
+				"mode": "teams"
+			},
+			"seats": [
+				"ann",
+				"ben",
+				"cat",
+				"dan"
+			],
+			"createdAt": 1790000123,
+			"start": "acc5c9acd9cfb0fb95aeb9c820fd56b05973e49197bd9deba31f16d3ac392f0b",
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "e2-e4",
+					"u": 5,
+					"chain": "12a7b75a8a6406f761f6c5675bb546f53e564b2893ef417ff9d2efe3ff13f4b7"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "b5-d5",
+					"u": 123456,
+					"chain": "869698d9bf96c32ff1c27eb285488e6b1397a8b4356cf5eb91a0fa27d0c3be24"
+				},
+				{
+					"ply": 2,
+					"seat": 2,
+					"code": "?k13",
+					"u": 8388608,
+					"chain": "6491e548720efa0b0c5ec4230bd8fae195baeea4181cb723f222817dd6c002b6"
+				}
+			]
+		},
+		{
+			"gameId": 9,
+			"variant": "multiverse",
+			"options": {
+				"timelines": "3",
+				"setup": "standard",
+				"reach": "1",
+				"view": "auto"
+			},
+			"seats": [
+				"zoë",
+				null
+			],
+			"createdAt": 1790009999,
+			"start": "ef71a2e85e3ec422036ac0764b4851c2245394b02a9bfe0e6b4d95a58d36628c",
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "submit",
+					"u": 0,
+					"chain": "876134a297df2c45826e113cbf14e06e2bada6dfa67fb7379f519925a6fc0bca"
+				}
+			]
+		},
+		{
+			"gameId": 1,
+			"variant": "chess960",
+			"options": {
+				"position": 518
+			},
+			"seats": [
+				"x|y",
+				"ü"
+			],
+			"createdAt": 0,
+			"start": "2f7a76bf26f8f5c29edd9f3ae31db99b14978bba4c99cb55a77d68c6b64db300",
+			"moves": []
+		}
+	],
+	"replays": [
+		{
+			"variant": "atomic",
+			"options": {},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "b1-c3",
+					"u": 8849092,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "934c43eb8bc8b48d"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "h7-h5",
+					"u": 4716134,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "3913b43847114fff"
+				},
+				{
+					"ply": 2,
+					"seat": 0,
+					"code": "a2-a4",
+					"u": 7143687,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "672d6ca8080b0be6"
+				},
+				{
+					"ply": 3,
+					"seat": 1,
+					"code": "d7-d6",
+					"u": 8200507,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "17b3c2799fe0a09c"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "f2-f3",
+					"u": 4152761,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "a1db35fac303bcb9"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "h5-h4",
+					"u": 1130279,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "42c4866cd98cb958"
+				},
+				{
+					"ply": 6,
+					"seat": 0,
+					"code": "h2-h3",
+					"u": 4795963,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "d20059a90707598b"
+				},
+				{
+					"ply": 7,
+					"seat": 1,
+					"code": "b8-d7",
+					"u": 7170279,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "2d72c4e9572be9a0"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "g2-g3",
+					"u": 4947095,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "da47369e9540283d"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "d7-c5|e5",
+					"u": 9161741,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "9b86a889a143d70b"
+				},
+				{
+					"ply": 10,
+					"seat": 0,
+					"code": "c3-e4",
+					"u": 12095495,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "8973ab459958ac68"
+				},
+				{
+					"ply": 11,
+					"seat": 1,
+					"code": "c5-d7",
+					"u": 16685511,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "a70aeee6e6598bc7"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "e4-f2|c5",
+					"u": 2571459,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "571232d83d5466bc"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "e7-e6",
+					"u": 4181094,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "5ed3059dd2e0bfaf"
+				},
+				{
+					"ply": 14,
+					"seat": 0,
+					"code": "?f2",
+					"u": 9669404,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "d58c3e298b0cf6a8"
+				},
+				{
+					"ply": 15,
+					"seat": 1,
+					"code": "h8-h5",
+					"u": 817444,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "aea3f7dbcc855d65"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "b2-b4",
+					"u": 4001268,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "5bf3f0eaa6fb4606"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "f7-f5",
+					"u": 6749438,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "002f296d1c740873"
+				},
+				{
+					"ply": 18,
+					"seat": 0,
+					"code": "c2-c3",
+					"u": 15982503,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "6ebc895134518a40"
+				},
+				{
+					"ply": 19,
+					"seat": 1,
+					"code": "b7-b5",
+					"u": 15416311,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "b00f78c519b53395"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "d2-d4",
+					"u": 1926119,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "1cd78954634e9e02"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "d8-f6|e7",
+					"u": 4940486,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "dff14e7f26ab2bb1"
+				},
+				{
+					"ply": 22,
+					"seat": 0,
+					"code": "d1-d2",
+					"u": 15701700,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "3a6582f77850ff82"
+				},
+				{
+					"ply": 23,
+					"seat": 1,
+					"code": "e7-f6",
+					"u": 11354970,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "090b4f9af61f230b"
+				},
+				{
+					"ply": 24,
+					"seat": 0,
+					"code": "c5-e6",
+					"u": 16406147,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "cef5384bc242c815"
+				},
+				{
+					"ply": 25,
+					"seat": 1,
+					"code": "h5-h8",
+					"u": 1972960,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "3dc6680a568a6bc8"
+				},
+				{
+					"ply": 26,
+					"seat": 0,
+					"code": "d2-d3",
+					"u": 11031883,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "2904099f7802f3cf"
+				},
+				{
+					"ply": 27,
+					"seat": 1,
+					"code": "h8-h7",
+					"u": 1276955,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "256d0e6279143b46"
+				},
+				{
+					"ply": 28,
+					"seat": 0,
+					"code": "e2-e3",
+					"u": 4576598,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "0084f4b8ea0c1ff5"
+				},
+				{
+					"ply": 29,
+					"seat": 1,
+					"code": "g8-f6",
+					"u": 14998397,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "0109595ca4a5fa06"
+				},
+				{
+					"ply": 30,
+					"seat": 0,
+					"code": "d3-e4",
+					"u": 10981972,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "33bcdc7ed0869461"
+				},
+				{
+					"ply": 31,
+					"seat": 1,
+					"code": "f8-e7",
+					"u": 2016044,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "318a76127709146e"
+				},
+				{
+					"ply": 32,
+					"seat": 0,
+					"code": "e4-f4",
+					"u": 5047038,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "12cf1e09b0e27d5d"
+				},
+				{
+					"ply": 33,
+					"seat": 1,
+					"code": "h7-h6",
+					"u": 1960227,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "8141b438fc2f8d82"
+				},
+				{
+					"ply": 34,
+					"seat": 0,
+					"code": "e1-f2",
+					"u": 3554080,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "7a0926ccc00ed3f8"
+				},
+				{
+					"ply": 35,
+					"seat": 1,
+					"code": "e8-f7",
+					"u": 16637190,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "631d98bd9f899a82"
+				},
+				{
+					"ply": 36,
+					"seat": 0,
+					"code": "c3-c4",
+					"u": 62197,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "8c7ac4a90f14f159"
+				},
+				{
+					"ply": 37,
+					"seat": 1,
+					"code": "c8-e6",
+					"u": 16512999,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "1157d26c459e68aa"
+				},
+				{
+					"ply": 38,
+					"seat": 0,
+					"code": "h1-h2",
+					"u": 14519153,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "2666cbb704c3a1fb"
+				},
+				{
+					"ply": 39,
+					"seat": 1,
+					"code": "f6-d5",
+					"u": 14592304,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "659611715277e754"
+				},
+				{
+					"ply": 40,
+					"seat": 0,
+					"code": "a4-b5",
+					"u": 3704514,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "79532e9af5cdf927"
+				},
+				{
+					"ply": 41,
+					"seat": 1,
+					"code": "f7-g8",
+					"u": 6856230,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "2b1288c95573fef8"
+				},
+				{
+					"ply": 42,
+					"seat": 0,
+					"code": "c1-a3",
+					"u": 14840057,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "9b8c5a2752553ad7"
+				},
+				{
+					"ply": 43,
+					"seat": 1,
+					"code": "h4-g3",
+					"u": 14457874,
+					"nextSeat": 0,
+					"result": "win:1/exploded",
+					"stateHash": "22b93838d638c18e"
+				}
+			]
+		},
+		{
+			"variant": "threecheck",
+			"options": {},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "b1-c3",
+					"u": 8849092,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "4a9101a6e7de5174"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "h7-h5",
+					"u": 4716134,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "ada5f52d6d2b193a"
+				},
+				{
+					"ply": 2,
+					"seat": 0,
+					"code": "a2-a4",
+					"u": 7143687,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "ba8e729c7567904d"
+				},
+				{
+					"ply": 3,
+					"seat": 1,
+					"code": "d7-d6",
+					"u": 8200507,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "c128f5744d9c80df"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "f2-f3",
+					"u": 4152761,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c0cbb60c5fcd8438"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "h5-h4",
+					"u": 1130279,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "da5dc8c607127463"
+				},
+				{
+					"ply": 6,
+					"seat": 0,
+					"code": "h2-h3",
+					"u": 4795963,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "74eadc406034705e"
+				},
+				{
+					"ply": 7,
+					"seat": 1,
+					"code": "b8-d7",
+					"u": 7170279,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "9e3d3ef8a3e9382b"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "g2-g3",
+					"u": 4947095,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "92c7ab223e31f384"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "d7-c5|e5",
+					"u": 9161741,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "f5a00218059e81ff"
+				},
+				{
+					"ply": 10,
+					"seat": 0,
+					"code": "c3-e4",
+					"u": 12095495,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "7b64c545e4d86144"
+				},
+				{
+					"ply": 11,
+					"seat": 1,
+					"code": "c5-d7",
+					"u": 16685511,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "fed196d92c7d9113"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "e4-f2|c5",
+					"u": 2571459,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "1204bd80cb9ab2c4"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "e7-e6",
+					"u": 4181094,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "9ff58fec9e90e68f"
+				},
+				{
+					"ply": 14,
+					"seat": 0,
+					"code": "?f2",
+					"u": 9669404,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "465257f87a8ded70"
+				},
+				{
+					"ply": 15,
+					"seat": 1,
+					"code": "h8-h5",
+					"u": 817444,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "d0d0467b435783f7"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "b2-b4",
+					"u": 4001268,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "58fddbe669a3a77e"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "f7-f5",
+					"u": 6749438,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "c767877d84283f97"
+				},
+				{
+					"ply": 18,
+					"seat": 0,
+					"code": "c2-c3",
+					"u": 15982503,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "67160d4c432c6466"
+				},
+				{
+					"ply": 19,
+					"seat": 1,
+					"code": "b7-b5",
+					"u": 15416311,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "e0080bcfaa879bb5"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "d2-d4",
+					"u": 1926119,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "b4716664d059e3fe"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "d8-f6|e7",
+					"u": 4940486,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "31013d4715fa7fd9"
+				},
+				{
+					"ply": 22,
+					"seat": 0,
+					"code": "d1-d2",
+					"u": 15701700,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "ac55fce9629c5182"
+				},
+				{
+					"ply": 23,
+					"seat": 1,
+					"code": "e7-f6",
+					"u": 11354970,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "6e2afe9faf4e7a95"
+				},
+				{
+					"ply": 24,
+					"seat": 0,
+					"code": "c5-e6",
+					"u": 16406147,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "7c943867726c947a"
+				},
+				{
+					"ply": 25,
+					"seat": 1,
+					"code": "c7-c5",
+					"u": 1972960,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "305e12a1dcfe5e8d"
+				},
+				{
+					"ply": 26,
+					"seat": 0,
+					"code": "d2-c2",
+					"u": 11031883,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "159968328255ec5a"
+				},
+				{
+					"ply": 27,
+					"seat": 1,
+					"code": "a7-a6",
+					"u": 1276955,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "7e2fd25d69876e0d"
+				},
+				{
+					"ply": 28,
+					"seat": 0,
+					"code": "d4-c5",
+					"u": 4576598,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "90d017cabe333d38"
+				},
+				{
+					"ply": 29,
+					"seat": 1,
+					"code": "a6-a5",
+					"u": 14998397,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "1690c3dd91a4f303"
+				},
+				{
+					"ply": 30,
+					"seat": 0,
+					"code": "c1-h6",
+					"u": 10981972,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "f486d75304e5786c"
+				},
+				{
+					"ply": 31,
+					"seat": 1,
+					"code": "f6-d8",
+					"u": 2016044,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "1f0f8b3da3aa4f61"
+				},
+				{
+					"ply": 32,
+					"seat": 0,
+					"code": "e6-d8",
+					"u": 5047038,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "a9c43532a41a6e72"
+				},
+				{
+					"ply": 33,
+					"seat": 1,
+					"code": "h4-g3",
+					"u": 1960227,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "07ba31a898b9d675"
+				},
+				{
+					"ply": 34,
+					"seat": 0,
+					"code": "c2-e4",
+					"u": 3554080,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c3b5f1b562cca623"
+				},
+				{
+					"ply": 35,
+					"seat": 1,
+					"code": "d7-b6",
+					"u": 16637190,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "d45a90afe7e68cfe"
+				},
+				{
+					"ply": 36,
+					"seat": 0,
+					"code": "c5-c6",
+					"u": 62197,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "49a72963ede5c010"
+				},
+				{
+					"ply": 37,
+					"seat": 1,
+					"code": "a8-a7",
+					"u": 16512999,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "0c421fb1910a8862"
+				},
+				{
+					"ply": 38,
+					"seat": 0,
+					"code": "e1-f2",
+					"u": 14519153,
+					"nextSeat": 1,
+					"result": "win:0/checks",
+					"stateHash": "b40da8fc6969bcbd"
+				}
+			]
+		},
+		{
+			"variant": "crazyhouse",
+			"options": {},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "c2-c3",
+					"u": 4786473,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "e1db74ca8a773ff3"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "f7-f5",
+					"u": 10583627,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "689dc158187ebcdb"
+				},
+				{
+					"ply": 2,
+					"seat": 0,
+					"code": "b2-b3",
+					"u": 13112885,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "cc181cdbb81cba87"
+				},
+				{
+					"ply": 3,
+					"seat": 1,
+					"code": "e7-e5",
+					"u": 3381369,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "81188ddeeb00874b"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "e2-e4",
+					"u": 9752938,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "db4ea1c9f619affb"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "d8-h4|e7",
+					"u": 6152176,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "df09c2345eca77a1"
+				},
+				{
+					"ply": 6,
+					"seat": 0,
+					"code": "c1-b2",
+					"u": 15354470,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "41e29588214a7b2e"
+				},
+				{
+					"ply": 7,
+					"seat": 1,
+					"code": "b7-b6",
+					"u": 3220111,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "d5e8591a78781809"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "f1-b5|a6",
+					"u": 7584549,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "8a729dcae2bea6d8"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "h4|e7-d8",
+					"u": 3905725,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "86a53e172b5e12c3"
+				},
+				{
+					"ply": 10,
+					"seat": 0,
+					"code": "a6-e2",
+					"u": 883087,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c371c6c98338af82"
+				},
+				{
+					"ply": 11,
+					"seat": 1,
+					"code": "c8-b7",
+					"u": 970027,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "0962e50e846eb9c5"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "e2-f1",
+					"u": 10504,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "b7184c30b8316918"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "b7-c8",
+					"u": 16313712,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "3ff9d57a5dae61f7"
+				},
+				{
+					"ply": 14,
+					"seat": 0,
+					"code": "d1-c2",
+					"u": 11373142,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "502f416b3b90c078"
+				},
+				{
+					"ply": 15,
+					"seat": 1,
+					"code": "f8-a3|c5",
+					"u": 15293902,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "6e361c22c8fc9179"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "g1-e2",
+					"u": 15918868,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "9519413ef3577caa"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "a3-b4|e7",
+					"u": 16442169,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "a21c187ed367fe2d"
+				},
+				{
+					"ply": 18,
+					"seat": 0,
+					"code": "c3-c4",
+					"u": 8798306,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "af7fa5d09fa7715e"
+				},
+				{
+					"ply": 19,
+					"seat": 1,
+					"code": "e7-a3|h4",
+					"u": 14073274,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "a237d7855f80d5f1"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "e1-d1",
+					"u": 15142740,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "941280517624f5da"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "g7-g5",
+					"u": 5859759,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "b154334e3c9f0041"
+				},
+				{
+					"ply": 22,
+					"seat": 0,
+					"code": "e2-g3|d4",
+					"u": 5257136,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "6792a3e551a56db0"
+				},
+				{
+					"ply": 23,
+					"seat": 1,
+					"code": "a3|b4-c5",
+					"u": 14552170,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "d82c3093ecaf1e47"
+				},
+				{
+					"ply": 24,
+					"seat": 0,
+					"code": "h1-f1",
+					"u": 3474496,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "d5e181dbedbfe630"
+				},
+				{
+					"ply": 25,
+					"seat": 1,
+					"code": "f5-f4",
+					"u": 11965651,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "8acf9561b68cbf13"
+				},
+				{
+					"ply": 26,
+					"seat": 0,
+					"code": "d1-e1",
+					"u": 4678254,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "b08a8756ba4b6980"
+				},
+				{
+					"ply": 27,
+					"seat": 1,
+					"code": "b6-b5",
+					"u": 461037,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "182822a3e3eef3a3"
+				},
+				{
+					"ply": 28,
+					"seat": 0,
+					"code": "g3-f5|h5",
+					"u": 2805305,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "9e87e30b3ef8826a"
+				},
+				{
+					"ply": 29,
+					"seat": 1,
+					"code": "c5-f2",
+					"u": 7031870,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "f537dbe4764ecac9"
+				},
+				{
+					"ply": 30,
+					"seat": 0,
+					"code": "d4-c6",
+					"u": 7980123,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "ce778b3a8cb6c312"
+				},
+				{
+					"ply": 31,
+					"seat": 1,
+					"code": "c5-d6",
+					"u": 1428563,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "68136fa46cd237e9"
+				},
+				{
+					"ply": 32,
+					"seat": 0,
+					"code": "b1-a3",
+					"u": 12318618,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "81f48648dee77b2c"
+				},
+				{
+					"ply": 33,
+					"seat": 1,
+					"code": "f4-f3",
+					"u": 4809026,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "f0d233ed19f9c93d"
+				},
+				{
+					"ply": 34,
+					"seat": 0,
+					"code": "g2-g4",
+					"u": 1803776,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c51bc84a9cec0c30"
+				},
+				{
+					"ply": 35,
+					"seat": 1,
+					"code": "c8-a6|b7",
+					"u": 16365689,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "7e5d9980f84ea585"
+				},
+				{
+					"ply": 36,
+					"seat": 0,
+					"code": "b2-d4",
+					"u": 9702469,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "ae32d9400a1f3426"
+				},
+				{
+					"ply": 37,
+					"seat": 1,
+					"code": "b8-a6",
+					"u": 9699820,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "d4236d3ee04f3141"
+				},
+				{
+					"ply": 38,
+					"seat": 0,
+					"code": "h5-g7",
+					"u": 14203849,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "0185a4359b710324"
+				},
+				{
+					"ply": 39,
+					"seat": 1,
+					"code": "d6-a3",
+					"u": 1142184,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "435de669f15a5e97"
+				}
+			]
+		},
+		{
+			"variant": "chess960",
+			"options": {
+				"position": 518
+			},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "b1-c3",
+					"u": 7653634,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "934c43eb8bc8b48d"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "e7-e5",
+					"u": 8072867,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "5f0570e7b9bc1f83"
+				},
+				{
+					"ply": 2,
+					"seat": 0,
+					"code": "c3-b5",
+					"u": 4416707,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "b03f7ea63bfe3091"
+				},
+				{
+					"ply": 3,
+					"seat": 1,
+					"code": "d8-h4",
+					"u": 1402455,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "80fcc9b879bb2e48"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "c2-c3",
+					"u": 13316614,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "724eb7940e5f62ff"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "h4-g5",
+					"u": 11586033,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "4778e82d2c492636"
+				},
+				{
+					"ply": 6,
+					"seat": 0,
+					"code": "e2-e4",
+					"u": 8832005,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c6c28040764da3f3"
+				},
+				{
+					"ply": 7,
+					"seat": 1,
+					"code": "f8-c5",
+					"u": 194715,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "7c8d3fe56565493c"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "d1-c2",
+					"u": 15717261,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "dbfe88b31692db61"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "e8-d8",
+					"u": 11990409,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "7445b20155d7b6b0"
+				},
+				{
+					"ply": 10,
+					"seat": 0,
+					"code": "g1-e2",
+					"u": 12124882,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "997d7b47db4fcc91"
+				},
+				{
+					"ply": 11,
+					"seat": 1,
+					"code": "b8-a6",
+					"u": 8024696,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "e57c5a9f0f35857a"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "b2-b3",
+					"u": 11443147,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "f8f8c812f104f417"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "c5-e3",
+					"u": 9760483,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "caee1095c75ee83e"
+				},
+				{
+					"ply": 14,
+					"seat": 0,
+					"code": "h1-g1",
+					"u": 8907539,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "97e7555624affb49"
+				},
+				{
+					"ply": 15,
+					"seat": 1,
+					"code": "g5-f4",
+					"u": 7784061,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "9e384fa4e42a179c"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "a2-a3",
+					"u": 13020479,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "7b77512d3ac198a9"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "g8-f6",
+					"u": 6245973,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "bbaadc005658aaca"
+				},
+				{
+					"ply": 18,
+					"seat": 0,
+					"code": "d2-d3",
+					"u": 7823118,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "66be5a383c29c241"
+				},
+				{
+					"ply": 19,
+					"seat": 1,
+					"code": "h7-h6",
+					"u": 11955730,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "67de74a4c5a39f60"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "g2-g4",
+					"u": 12837415,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "be73a76e264534e2"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "f4-g4",
+					"u": 9019311,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "09e738dc8581e353"
+				},
+				{
+					"ply": 22,
+					"seat": 0,
+					"code": "c2-a2",
+					"u": 9062977,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "bb84e95d633b2164"
+				},
+				{
+					"ply": 23,
+					"seat": 1,
+					"code": "g4-f3|h4",
+					"u": 9260630,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "52588a2e93f6df99"
+				},
+				{
+					"ply": 24,
+					"seat": 0,
+					"code": "e1-d2",
+					"u": 12687072,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "9a453d127647fea2"
+				},
+				{
+					"ply": 25,
+					"seat": 1,
+					"code": "f6-e8|g8",
+					"u": 10789003,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "4c347353a73147fb"
+				},
+				{
+					"ply": 26,
+					"seat": 0,
+					"code": "b3-b4",
+					"u": 1025295,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "b3459b9fe56c223c"
+				},
+				{
+					"ply": 27,
+					"seat": 1,
+					"code": "h4-h2",
+					"u": 11588164,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "c2ab86ba74b47d45"
+				},
+				{
+					"ply": 28,
+					"seat": 0,
+					"code": "e2-d4",
+					"u": 16553006,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "008bd2990a50cbfa"
+				},
+				{
+					"ply": 29,
+					"seat": 1,
+					"code": "e8|g8-f6",
+					"u": 9777875,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "b31a888c68982f04"
+				}
+			]
+		},
+		{
+			"variant": "shogi",
+			"options": {},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "4i-4h",
+					"u": 3718970,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "93aefc6b1f54b892"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "7a-7b",
+					"u": 8531161,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "8953606623aae0a5"
+				},
+				{
+					"ply": 2,
+					"seat": 0,
+					"code": "2h-3h|1h",
+					"u": 10436057,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "3bc0bccd812e94c4"
+				},
+				{
+					"ply": 3,
+					"seat": 1,
+					"code": "4c-4d",
+					"u": 6193287,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "70fb8248e9c6b2cf"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "3h-2h",
+					"u": 8871267,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "22d49aee418d8f30"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "6a-6b",
+					"u": 8228388,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "efb260f44e8b5757"
+				},
+				{
+					"ply": 6,
+					"seat": 0,
+					"code": "2h-3h",
+					"u": 16433959,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "8809c0b2b85bdeec"
+				},
+				{
+					"ply": 7,
+					"seat": 1,
+					"code": "5a-4b",
+					"u": 13221963,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "9e35a473df8df5c7"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "3h-2h",
+					"u": 8851198,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "f3d441664bbcaff8"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "6b-6a",
+					"u": 182411,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "bc9c1473390ddb77"
+				},
+				{
+					"ply": 10,
+					"seat": 0,
+					"code": "9g-9f",
+					"u": 12814735,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "048cd9cabef94e88"
+				},
+				{
+					"ply": 11,
+					"seat": 1,
+					"code": "4a-3b|5a",
+					"u": 6781632,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "2c3992e756b05d87"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "1h-3h",
+					"u": 1015817,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "bae74b8be2773c7c"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "4b-4a",
+					"u": 9341968,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "a00c35be7ef70d77"
+				},
+				{
+					"ply": 14,
+					"seat": 0,
+					"code": "?3h",
+					"u": 14303825,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "1d8f1f4bb8ea49cc"
+				},
+				{
+					"ply": 15,
+					"seat": 1,
+					"code": "6a-5b",
+					"u": 3123604,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "05c4c7a3b03ed1cf"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "4h-4i",
+					"u": 1132713,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "1c7235f25e268f84"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "?3b",
+					"u": 69224,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "8100a690fb6fecb5"
+				},
+				{
+					"ply": 18,
+					"seat": 0,
+					"code": "4g-4f",
+					"u": 11545199,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "7624bd87660aa6ae"
+				},
+				{
+					"ply": 19,
+					"seat": 1,
+					"code": "9c-9d",
+					"u": 4850606,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "3da7615fabb353c5"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "4i-4h",
+					"u": 7795922,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "fa3159e6d0b4869c"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "1a-1b",
+					"u": 4019580,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "eedc58a72352b291"
+				},
+				{
+					"ply": 22,
+					"seat": 0,
+					"code": "7g-7f",
+					"u": 14325408,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "b3ad7ce4936a3748"
+				},
+				{
+					"ply": 23,
+					"seat": 1,
+					"code": "8b-9b",
+					"u": 10699704,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "c104399a7f00a701"
+				},
+				{
+					"ply": 24,
+					"seat": 0,
+					"code": "8h-5e",
+					"u": 4712174,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "e9193b26db981058"
+				},
+				{
+					"ply": 25,
+					"seat": 1,
+					"code": "4d-4e",
+					"u": 5164311,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "748831300decf443"
+				},
+				{
+					"ply": 26,
+					"seat": 0,
+					"code": "9f-9e",
+					"u": 3040436,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "522bea15d8e7c390"
+				},
+				{
+					"ply": 27,
+					"seat": 1,
+					"code": "5b-5a",
+					"u": 16430099,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "1faaed7265793e05"
+				},
+				{
+					"ply": 28,
+					"seat": 0,
+					"code": "3i-3h",
+					"u": 2037314,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "100623e954539284"
+				},
+				{
+					"ply": 29,
+					"seat": 1,
+					"code": "3a-4b",
+					"u": 1911497,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "bd23708e3749dd81"
+				}
+			]
+		},
+		{
+			"variant": "raumschach",
+			"options": {},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "Bd1-Ce1",
+					"u": 3687011,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "f3f87ae48963b3ea"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "Ed5-Cd4",
+					"u": 9934879,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "6f2f1c78550e3103"
+				},
+				{
+					"ply": 2,
+					"seat": 0,
+					"code": "Bb1-Ca2",
+					"u": 15193807,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "ac3512dcc6c84c2c"
+				},
+				{
+					"ply": 3,
+					"seat": 1,
+					"code": "Dc5-Bc3|Cb5",
+					"u": 12425421,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "cbab14240b3a891f"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "Aa2-Aa3",
+					"u": 7808139,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "5fc04ca34f44eea4"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "Bc3-Ab2",
+					"u": 4833782,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "9ca5e2e9a615a567"
+				},
+				{
+					"ply": 6,
+					"seat": 0,
+					"code": "Bc1-Da3",
+					"u": 4254334,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c8b81a700b62372c"
+				},
+				{
+					"ply": 7,
+					"seat": 1,
+					"code": "Cb5-Cb1|Dc5",
+					"u": 3494483,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "939c2d603151b7a1"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "Da3-Bc3",
+					"u": 7886593,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "d96377cc41502b7e"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "Eb4-Eb3",
+					"u": 1358029,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "499a528815616219"
+				},
+				{
+					"ply": 10,
+					"seat": 0,
+					"code": "Ca2-Db3",
+					"u": 6837756,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "810d71574a6a76aa"
+				},
+				{
+					"ply": 11,
+					"seat": 1,
+					"code": "De5-Cd5",
+					"u": 6477723,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "71600e64669e35d3"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "Bc3-Cc3|Da3",
+					"u": 12119213,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c2da7b0a0d263f28"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "Dc5-Eb4",
+					"u": 13506810,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "393ad8cc47f58373"
+				},
+				{
+					"ply": 14,
+					"seat": 0,
+					"code": "Ad1-Cd2",
+					"u": 10671107,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "83cae3d03523f868"
+				},
+				{
+					"ply": 15,
+					"seat": 1,
+					"code": "Cd5-Cb3",
+					"u": 13067531,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "e5f7cb9e85933fe3"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "Aa3-Aa4",
+					"u": 15636537,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "956428ba08d2e498"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "Cb3-Ed3",
+					"u": 14673394,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "820b88eabd5d745b"
+				},
+				{
+					"ply": 18,
+					"seat": 0,
+					"code": "Cd2-Cb3|Ce4",
+					"u": 13986593,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "3856344cfa8a6220"
+				},
+				{
+					"ply": 19,
+					"seat": 1,
+					"code": "Da5-Bc3|Cb4",
+					"u": 230275,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "e18d279412b4dfdf"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "Cc3-Ea1",
+					"u": 5271934,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "6c2b7d2cc639a5bc"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "Cd4-Cb5",
+					"u": 1341118,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "8871a76116d22507"
+				},
+				{
+					"ply": 22,
+					"seat": 0,
+					"code": "Ce1-Cb4",
+					"u": 4251960,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "8434d9d1b3fdc424"
+				},
+				{
+					"ply": 23,
+					"seat": 1,
+					"code": "Ee4-Ee3",
+					"u": 12326391,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "33ce9f896d260d57"
+				}
+			]
+		},
+		{
+			"variant": "multiverse",
+			"options": {
+				"setup": "small",
+				"timelines": "3",
+				"reach": "auto",
+				"view": "white"
+			},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "(0T1)d1-e3",
+					"u": 11126170,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "d8458015970a1cae"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "(0T1)d4-d3",
+					"u": 1187220,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "dcd781a7a70accc6"
+				},
+				{
+					"ply": 2,
+					"seat": 0,
+					"code": "(0T2)e3>>(0T1)e5",
+					"u": 16283221,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "a16c43c388944318"
+				},
+				{
+					"ply": 3,
+					"seat": 1,
+					"code": "(0)d5-(0)c3|(0)e3",
+					"u": 6421302,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "5a20b6944fd000a4"
+				},
+				{
+					"ply": 4,
+					"seat": 1,
+					"code": "(+1T1)a4-a3",
+					"u": 7600009,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "b457d7aaae458075"
+				},
+				{
+					"ply": 5,
+					"seat": 0,
+					"code": "(+1T2)c2-c3",
+					"u": 8070628,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "31d9222fca062c5b"
+				},
+				{
+					"ply": 6,
+					"seat": 0,
+					"code": "(0T3)a2-a3",
+					"u": 16573872,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "181d300390d78fba"
+				},
+				{
+					"ply": 7,
+					"seat": 1,
+					"code": "(0T3)c4-c3",
+					"u": 15852435,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "78f0be428ba13579"
+				},
+				{
+					"ply": 8,
+					"seat": 1,
+					"code": "(+1T2)d5>>(+1T1)d3",
+					"u": 11718689,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "735379c33c6632b2"
+				},
+				{
+					"ply": 9,
+					"seat": 0,
+					"code": "(+1T3)e5>>(+1T2)e3",
+					"u": 15842983,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "de86f08031b41511"
+				},
+				{
+					"ply": 10,
+					"seat": 0,
+					"code": "(−1T2)d1>(0T4)d1",
+					"u": 3445906,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "f0786b74e2f4fc12"
+				},
+				{
+					"ply": 11,
+					"seat": 1,
+					"code": "(0T4)a5>(+1T3)a4",
+					"u": 13947306,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "d48c269a50ef6a98"
+				},
+				{
+					"ply": 12,
+					"seat": 1,
+					"code": "(+2T2)b4-b3",
+					"u": 9702287,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "51449ad64636960a"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "(−1T2)b4-b3",
+					"u": 14687393,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "1da6a48538f87853"
+				},
+				{
+					"ply": 14,
+					"seat": 0,
+					"code": "(+1T4)d1>>(+1T3)d3",
+					"u": 4572940,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "4039af60faf093d6"
+				},
+				{
+					"ply": 15,
+					"seat": 0,
+					"code": "(+2T3)c2-c3",
+					"u": 3428525,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "58e3ac18c5504936"
+				}
+			]
+		},
+		{
+			"variant": "fourplayer",
+			"options": {
+				"mode": "ffa"
+			},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "e1-d3",
+					"u": 16389790,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "d8b87253cd59afde"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "b5-c5",
+					"u": 6803524,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "9b72e72ccfb7eba2"
+				},
+				{
+					"ply": 2,
+					"seat": 2,
+					"code": "k13-k12",
+					"u": 9283263,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "f2a8e493d463cc26"
+				},
+				{
+					"ply": 3,
+					"seat": 3,
+					"code": "m5-l5",
+					"u": 2616379,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "31defc25de43cd92"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "h2-h3",
+					"u": 3307414,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "40e8849e14606f80"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "a5-c4",
+					"u": 8971440,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "e591d6830becc0ee"
+				},
+				{
+					"ply": 6,
+					"seat": 2,
+					"code": "e14-d12|f12",
+					"u": 4152924,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "6877bfcc4bc31a32"
+				},
+				{
+					"ply": 7,
+					"seat": 3,
+					"code": "n6-k3",
+					"u": 2410170,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "f7c5a3009387522b"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "i1-c7",
+					"u": 9192260,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "b10d5d5af9e30cc4"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "a10-c9",
+					"u": 15316603,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "5f3897b1d70e0835"
+				},
+				{
+					"ply": 10,
+					"seat": 2,
+					"code": "e13-e11",
+					"u": 11410032,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "0d8ac45d065d854a"
+				},
+				{
+					"ply": 11,
+					"seat": 3,
+					"code": "m6-l6",
+					"u": 15455252,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "4139bc01fc27e59b"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "d3-e5",
+					"u": 2935032,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "3d053e22881beb9c"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "c4-d2",
+					"u": 338499,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "119ae7ce9fe9b89d"
+				},
+				{
+					"ply": 14,
+					"seat": 2,
+					"code": "d12-f11",
+					"u": 6190277,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "a245fe09719abbb0"
+				},
+				{
+					"ply": 15,
+					"seat": 3,
+					"code": "n7-m6",
+					"u": 15874956,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "ca6c5f4daee0d185"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "j1-h2",
+					"u": 5547351,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "62cffa4da738d6e6"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "c9-a10",
+					"u": 2236289,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "c4f2bd16d0215f6f"
+				},
+				{
+					"ply": 18,
+					"seat": 2,
+					"code": "f12-d11",
+					"u": 3193971,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "965dcda4c1b28834"
+				},
+				{
+					"ply": 19,
+					"seat": 3,
+					"code": "m6-n6",
+					"u": 732012,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "d138767edc53be89"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "f2-f4",
+					"u": 9191777,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "9501d708c37910ee"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "b6-c7",
+					"u": 15432992,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "3db31d01f6e46087"
+				},
+				{
+					"ply": 22,
+					"seat": 2,
+					"code": "f13-f12",
+					"u": 10891198,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "2346aba9f2ed0e24"
+				},
+				{
+					"ply": 23,
+					"seat": 3,
+					"code": "m10-k10",
+					"u": 14058593,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "6005f83f8585b7b5"
+				},
+				{
+					"ply": 24,
+					"seat": 0,
+					"code": "i2-i4",
+					"u": 16232062,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "3452536e09561986"
+				},
+				{
+					"ply": 25,
+					"seat": 1,
+					"code": "b11-d11",
+					"u": 95629,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "102a9282ba47061f"
+				},
+				{
+					"ply": 26,
+					"seat": 2,
+					"code": "d11-e9",
+					"u": 12151260,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "b3dc067ec7e616db"
+				},
+				{
+					"ply": 27,
+					"seat": 3,
+					"code": "m8-l8",
+					"u": 16390232,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "2a8ffaec8caafb2f"
+				},
+				{
+					"ply": 28,
+					"seat": 0,
+					"code": "j2-j3",
+					"u": 7214104,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "aca0d774028e6849"
+				},
+				{
+					"ply": 29,
+					"seat": 1,
+					"code": "c5-d5",
+					"u": 9255934,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "2ddc9b57a4dc12c1"
+				},
+				{
+					"ply": 30,
+					"seat": 2,
+					"code": "f14-b10",
+					"u": 156276,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "5f966d174a50aaad"
+				},
+				{
+					"ply": 31,
+					"seat": 3,
+					"code": "n9-m8|m10",
+					"u": 13981610,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "acb2e4b472413d65"
+				},
+				{
+					"ply": 32,
+					"seat": 0,
+					"code": "d1-e1",
+					"u": 10383353,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "613e4ce40b2c15d2"
+				},
+				{
+					"ply": 33,
+					"seat": 1,
+					"code": "b8-c8",
+					"u": 16690991,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "6a0727471e38b5a9"
+				},
+				{
+					"ply": 34,
+					"seat": 2,
+					"code": "e9-d11|f11",
+					"u": 10904705,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "569c21625f5063da"
+				},
+				{
+					"ply": 35,
+					"seat": 3,
+					"code": "m4-l4",
+					"u": 13927419,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "a86946686626a687"
+				},
+				{
+					"ply": 36,
+					"seat": 0,
+					"code": "k1-i1|j1",
+					"u": 8504902,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "544addd6ce1bad14"
+				},
+				{
+					"ply": 37,
+					"seat": 1,
+					"code": "a9-b8",
+					"u": 6646567,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "b2024cdba9c9e9ad"
+				},
+				{
+					"ply": 38,
+					"seat": 2,
+					"code": "g13-g11",
+					"u": 14454700,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "bc71e1221eeac012"
+				},
+				{
+					"ply": 39,
+					"seat": 3,
+					"code": "m7-l7",
+					"u": 16613518,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "896eadcbcc87d8f7"
+				}
+			]
+		},
+		{
+			"variant": "fourplayer",
+			"options": {
+				"mode": "teams"
+			},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "e2-e4",
+					"u": 5044314,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "8e9c52fbbe6b4085"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "b4-c4",
+					"u": 7539664,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "d363dac7930f6039"
+				},
+				{
+					"ply": 2,
+					"seat": 2,
+					"code": "k13-k12",
+					"u": 8499634,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "3d201541850a259f"
+				},
+				{
+					"ply": 3,
+					"seat": 3,
+					"code": "m11-l11",
+					"u": 1230750,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "7d6f86d4879fa135"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "f1-c4",
+					"u": 2693542,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c113c12831aee3b0"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "b11-d11",
+					"u": 1526656,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "573c8382f51c512d"
+				},
+				{
+					"ply": 6,
+					"seat": 2,
+					"code": "k14-k13",
+					"u": 9327904,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "187d4d7a6ba79767"
+				},
+				{
+					"ply": 7,
+					"seat": 3,
+					"code": "m6-k6",
+					"u": 12988675,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "0359c5fb694c6e1e"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "c4-f1|e6",
+					"u": 6016552,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "92c2dea2e4ded760"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "a4-c4",
+					"u": 8699929,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "0c63d1881fbc4bfd"
+				},
+				{
+					"ply": 10,
+					"seat": 2,
+					"code": "f13-f11",
+					"u": 5435742,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "cdb9895b50549c92"
+				},
+				{
+					"ply": 11,
+					"seat": 3,
+					"code": "m8-k8",
+					"u": 8579905,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "b11d7a83a2fd37db"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "g2-g4",
+					"u": 10892401,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "2f1d210318cfe888"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "c4-a4",
+					"u": 1746322,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "aaf7d403ac0d1e85"
+				},
+				{
+					"ply": 14,
+					"seat": 2,
+					"code": "e13-e11",
+					"u": 9533021,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "f31f0ada36b1217e"
+				},
+				{
+					"ply": 15,
+					"seat": 3,
+					"code": "n5-l4",
+					"u": 7421598,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "bbc41a5664ecf73f"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "f1|e6-c4",
+					"u": 4193657,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "8d21560f22a5fed2"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "a11-c11",
+					"u": 9174965,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "412fb3aab3217ae3"
+				},
+				{
+					"ply": 18,
+					"seat": 2,
+					"code": "f14-e13",
+					"u": 6801233,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "bde7f2f352540ed1"
+				},
+				{
+					"ply": 19,
+					"seat": 3,
+					"code": "n7-k10",
+					"u": 16682021,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "e2f1850bd5819cbd"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "c4-g8",
+					"u": 379858,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "5ac2ba5bb1d674d3"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "b10-c10",
+					"u": 13325793,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "b9ee3ca1d1ceacc1"
+				},
+				{
+					"ply": 22,
+					"seat": 2,
+					"code": "e13-d12",
+					"u": 516050,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "8f5e5df280af6e05"
+				},
+				{
+					"ply": 23,
+					"seat": 3,
+					"code": "k10-k11",
+					"u": 11782905,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "9283ad018b10a7cd"
+				},
+				{
+					"ply": 24,
+					"seat": 0,
+					"code": "g8-i6|h7",
+					"u": 6281330,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "af96c3f4b486beb6"
+				},
+				{
+					"ply": 25,
+					"seat": 1,
+					"code": "a4-c4|d4",
+					"u": 14882521,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "069828262226c5f5"
+				},
+				{
+					"ply": 26,
+					"seat": 2,
+					"code": "h13-h12",
+					"u": 11241296,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "04e85eba1c3ff38a"
+				},
+				{
+					"ply": 27,
+					"seat": 3,
+					"code": "k11-k9",
+					"u": 1589306,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "bcc958d34871bf5f"
+				},
+				{
+					"ply": 28,
+					"seat": 0,
+					"code": "j1-i3",
+					"u": 5648035,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "9eb0e79094afd8cc"
+				},
+				{
+					"ply": 29,
+					"seat": 1,
+					"code": "d4-d8",
+					"u": 9209464,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "e715457a4ab6e015"
+				},
+				{
+					"ply": 30,
+					"seat": 2,
+					"code": "f11-f10",
+					"u": 8966203,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "51a1a716e4d4295a"
+				},
+				{
+					"ply": 31,
+					"seat": 3,
+					"code": "n10-l9",
+					"u": 8701112,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "4aa46a8439b50417"
+				},
+				{
+					"ply": 32,
+					"seat": 0,
+					"code": "i6-e10",
+					"u": 6099167,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "6bd5fe4d9293f91c"
+				},
+				{
+					"ply": 33,
+					"seat": 1,
+					"code": "c4|d8-c8",
+					"u": 992778,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "07bddcfebd4a8ee9"
+				},
+				{
+					"ply": 34,
+					"seat": 2,
+					"code": "i13-i11",
+					"u": 5319805,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "ed2cb2624a243aa4"
+				},
+				{
+					"ply": 35,
+					"seat": 3,
+					"code": "l4-m6",
+					"u": 9714505,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "8d7c49e535b0238b"
+				},
+				{
+					"ply": 36,
+					"seat": 0,
+					"code": "h7-j9",
+					"u": 2007896,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "2f25718aa40422f6"
+				},
+				{
+					"ply": 37,
+					"seat": 1,
+					"code": "b9-d9",
+					"u": 12657437,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "2d88567f15ff4fbb"
+				},
+				{
+					"ply": 38,
+					"seat": 2,
+					"code": "i14-h13",
+					"u": 8958731,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "fc094869cd097274"
+				},
+				{
+					"ply": 39,
+					"seat": 3,
+					"code": "l9-n10",
+					"u": 4472454,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "7e4fbccc655509c7"
+				}
+			]
+		},
+		{
+			"variant": "bughouse",
+			"options": {},
+			"moves": [
+				{
+					"ply": 0,
+					"seat": 0,
+					"code": "A:g2-A:g4",
+					"u": 2378440,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c40fded85d63bb46"
+				},
+				{
+					"ply": 1,
+					"seat": 1,
+					"code": "B:c2-B:c4",
+					"u": 11557180,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "94f299e487d53690"
+				},
+				{
+					"ply": 2,
+					"seat": 2,
+					"code": "B:b8-B:a6|B:c6",
+					"u": 2195494,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "2279e81e4826910a"
+				},
+				{
+					"ply": 3,
+					"seat": 3,
+					"code": "A:b7-A:b5",
+					"u": 9853013,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "17b03f0c99bc0327"
+				},
+				{
+					"ply": 4,
+					"seat": 0,
+					"code": "A:f1-A:g2|A:h3",
+					"u": 4815438,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "c347d82bbe2b5f08"
+				},
+				{
+					"ply": 5,
+					"seat": 1,
+					"code": "B:h2-B:h3",
+					"u": 6156176,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "7931e674d3cc6b01"
+				},
+				{
+					"ply": 6,
+					"seat": 2,
+					"code": "B:c7-B:c5",
+					"u": 14521667,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "801915b0919b09be"
+				},
+				{
+					"ply": 7,
+					"seat": 3,
+					"code": "A:f7-A:f5",
+					"u": 3184583,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "b2b10847772b8f15"
+				},
+				{
+					"ply": 8,
+					"seat": 0,
+					"code": "A:f2-A:f3",
+					"u": 806898,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "ff6d2c448bc3889e"
+				},
+				{
+					"ply": 9,
+					"seat": 1,
+					"code": "B:d1-B:a4",
+					"u": 8830792,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "9efdbd370b5df03d"
+				},
+				{
+					"ply": 10,
+					"seat": 2,
+					"code": "B:a6-B:b8",
+					"u": 13995993,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "5cb11d3197dddb4e"
+				},
+				{
+					"ply": 11,
+					"seat": 3,
+					"code": "A:e8-A:f7",
+					"u": 1146410,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "a52841312a49293b"
+				},
+				{
+					"ply": 12,
+					"seat": 0,
+					"code": "A:c2-A:c3",
+					"u": 11051650,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "425fcc19f11a3d7e"
+				},
+				{
+					"ply": 13,
+					"seat": 1,
+					"code": "B:a4-B:d1|B:a6",
+					"u": 16056956,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "d6f9a551f2b8bee9"
+				},
+				{
+					"ply": 14,
+					"seat": 2,
+					"code": "B:d8-B:b6",
+					"u": 8682868,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "484574072762845e"
+				},
+				{
+					"ply": 15,
+					"seat": 3,
+					"code": "A:c7-A:c6",
+					"u": 13417530,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "aa880faa04a0f083"
+				},
+				{
+					"ply": 16,
+					"seat": 0,
+					"code": "A:a2-A:a4",
+					"u": 8951168,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "ec971d5208dafa6c"
+				},
+				{
+					"ply": 17,
+					"seat": 1,
+					"code": "B:d2-B:d3",
+					"u": 3015728,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "f66d80c9ced1851d"
+				},
+				{
+					"ply": 18,
+					"seat": 2,
+					"code": "B:b7-B:a6",
+					"u": 10756851,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "f0bffcbbb778b2d6"
+				},
+				{
+					"ply": 19,
+					"seat": 3,
+					"code": "A:e7-A:e6",
+					"u": 16484103,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "73f87f51596be131"
+				},
+				{
+					"ply": 20,
+					"seat": 0,
+					"code": "A:a1-A:a3",
+					"u": 12276756,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "f1197feaf94b73b4"
+				},
+				{
+					"ply": 21,
+					"seat": 1,
+					"code": "B:b1-B:d2|B:a3",
+					"u": 10739085,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "2038efc9d5c73971"
+				},
+				{
+					"ply": 22,
+					"seat": 2,
+					"code": "B:f7-B:f6",
+					"u": 15180884,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "2fcfd49ae9142e5e"
+				},
+				{
+					"ply": 23,
+					"seat": 3,
+					"code": "A:d8-A:c7",
+					"u": 11511201,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "a1797c82c748b9e3"
+				},
+				{
+					"ply": 24,
+					"seat": 0,
+					"code": "A:h3-A:g2",
+					"u": 15797261,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "26a9bdc04796053a"
+				},
+				{
+					"ply": 25,
+					"seat": 1,
+					"code": "B:d2-B:f3",
+					"u": 5803876,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "a581935bf6721545"
+				},
+				{
+					"ply": 26,
+					"seat": 2,
+					"code": "B:b6-B:b3",
+					"u": 11996251,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "7beba632cfc6670e"
+				},
+				{
+					"ply": 27,
+					"seat": 3,
+					"code": "A:c8-A:a6",
+					"u": 9790392,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "55bbb87d74d8510b"
+				},
+				{
+					"ply": 28,
+					"seat": 0,
+					"code": "A:g4-A:g5",
+					"u": 8966529,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "cba99ee04da1e5e0"
+				},
+				{
+					"ply": 29,
+					"seat": 1,
+					"code": "B:f2-B:f3",
+					"u": 3122721,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "6a3c4fdeb7319a38"
+				},
+				{
+					"ply": 30,
+					"seat": 2,
+					"code": "B:d7-B:d6",
+					"u": 9586009,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "522c10d169f7f0ad"
+				},
+				{
+					"ply": 31,
+					"seat": 3,
+					"code": "A:e6-A:e5",
+					"u": 583348,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "88e7045ac69752be"
+				},
+				{
+					"ply": 32,
+					"seat": 0,
+					"code": "q@A:d4",
+					"u": 11497558,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "478bc394e00db47f"
+				},
+				{
+					"ply": 33,
+					"seat": 1,
+					"code": "B:e1-B:d1",
+					"u": 15003469,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "872d258bb02343f5"
+				},
+				{
+					"ply": 34,
+					"seat": 2,
+					"code": "B:b8-B:c6",
+					"u": 7733529,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "b9655c796d0ae4e4"
+				},
+				{
+					"ply": 35,
+					"seat": 3,
+					"code": "A:f7-A:g6",
+					"u": 1875073,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "3ae82b66636b7237"
+				},
+				{
+					"ply": 36,
+					"seat": 0,
+					"code": "A:d4-A:c4",
+					"u": 4842529,
+					"nextSeat": 1,
+					"result": "",
+					"stateHash": "add563ada00642be"
+				},
+				{
+					"ply": 37,
+					"seat": 1,
+					"code": "B:f3-B:e5",
+					"u": 14349718,
+					"nextSeat": 2,
+					"result": "",
+					"stateHash": "748cd2d32958dd63"
+				},
+				{
+					"ply": 38,
+					"seat": 2,
+					"code": "B:e7-B:e6",
+					"u": 6355606,
+					"nextSeat": 3,
+					"result": "",
+					"stateHash": "33f13261f89108bc"
+				},
+				{
+					"ply": 39,
+					"seat": 3,
+					"code": "A:f8-A:b4",
+					"u": 15990276,
+					"nextSeat": 0,
+					"result": "",
+					"stateHash": "f6a56b36a6086395"
+				}
+			]
+		}
+	]
+}

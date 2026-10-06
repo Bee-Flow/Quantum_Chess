@@ -124,3 +124,19 @@ total. Regenerate after any intended rules change and commit the output together
 - `cannot_merge` is never returned: kings and pawns are never on two squares, so check 6 (`merge_mismatch`) always
   fires first.
 - The per-step `trapped` view is `false` for finished games.
+
+# Online variant fixture
+
+`online-variants.json` is shared by the browser and the server halves of online variant play
+([`docs/development/online-variants.md`](../../docs/development/online-variants.md)). It holds the catalogue (seats,
+online or not, teams), result codes, variant chains, and seeded random games with the roll of every move and the
+claims it settles to. `tests/js/variants/online.spec.js` and `tests/js/online/vchain.spec.js` check the JavaScript
+side, and `tests/php/Unit/Service/Game/OnlineVariantFixtureTest.php` the PHP side.
+
+```sh
+npm run fixtures:online        # node tests/fixtures/generate-online-variant-fixtures.mjs
+```
+
+The recorded games change whenever a rule of a variant changes. Then raise `ONLINE_RULES_VERSION`
+(`src/variants/online.js`) and `VariantCatalog::RULES_VERSION` together and regenerate: browsers with different rules
+must not judge each other's moves. CI fails when regenerating changes the file.
