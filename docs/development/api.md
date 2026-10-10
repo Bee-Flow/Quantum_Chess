@@ -298,7 +298,7 @@ Notes:
   when `rev` changes. `poll` returns only the moves after `ply` and the chat after `chat`.
 - **Chess variants** ([`online-variants.md`](online-variants.md)). `POST /api/games` takes `variant` and `options` (an
   object of strings, integers and booleans) for a variant of the catalogue; anything else is `400 invalid_argument`. A
-  two-player variant game is rated when `rated` is true (default true for Bee Flow Chess, Kriegspiel and Fog of war, false for the
+  two-player variant game is rated when `rated` is true (default true for Kriegspiel and Fog of war, false for the
   others) and the invited player accepts; it counts in that variant's rating only. A game with more than two seats is
   never rated. A variant with more than two seats takes `players` instead of `opponent`: one entry per seat, a user id
   or `null` for an open seat, with the creator in exactly one seat; `color: "r"` draws the seats at random when the game
@@ -312,7 +312,7 @@ Notes:
   `result`, ends the game. The same settlement again changes nothing; a different one annuls the game (`aborted`, reason
   `disputed`), as `dispute` does. Show, poll, accept, decline, cancel, join, resign, abort, draw, chat, mute and rematch
   work as for classic games.
-- **Bee Flow Chess, Kriegspiel and Fog of war** are ruled by the server ([`online-variants.md`](online-variants.md), section 6).
+- **Kriegspiel and Fog of war** are ruled by the server ([`online-variants.md`](online-variants.md), section 6).
   `v/moves` answers `refused: true` (and `move: null`) for a move the referee does not allow: nothing is stored and
   the turn is not used. An accepted move is rolled, played and settled by the server at once; the answer's `move` is
   only `{ply, seat}`. Every GameLive of a player carries `view`, the state as that player may know it (with `visible`,

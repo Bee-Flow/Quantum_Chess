@@ -12,7 +12,7 @@
 **Chess in which a piece can stand on two squares at once, until something asks where it really is.**
 Quantum Chess lives inside your Nextcloud: challenge colleagues and family with the notifications, avatars and
 dashboard you already use, play the computer or an AI opponent, or learn the game in ten minutes with the trainer.
-Twenty-one chess variants, from Bee Flow Chess and 5D chess with multiverse time travel to shogi and xiangqi, bring the same quantum rules to
+Twenty chess variants, from 5D chess with multiverse time travel to shogi and xiangqi, bring the same quantum rules to
 other boards.
 
 ![A game in progress: a knight split over two squares, with its odds, a queen linked to it and a king in danger](screenshots/01-game-ghosts.png)
@@ -41,8 +41,6 @@ other boards.
   pieces that travel back in time and to other timelines, turns with a move on every board that must move, and ghosts
   across the whole multiverse, past boards included; every official piece and 44 official start positions, starting
   on the quick *Small* 5 × 5 board
-- **Bee Flow Chess**, named after [Bee-Flow](https://github.com/Bee-Flow/Bee-Flow): protect your Queen Bee, with shuffled
-  back ranks, enemy pieces hidden until they move, and a privacy shield around the queen
 - Nineteen more variants: *other dimensions* (3D chess, Tri-Dimensional chess, 4D chess), *hidden information*
   (Kriegspiel, Fog of war), *different rules* (Chess960, Atomic, Crazyhouse, Bughouse, Antichess, King of the Hill,
   Three-check, Horde), *different boards and more players* (Hexagonal, Four-player and Capablanca chess) and the
@@ -88,7 +86,7 @@ other boards.
 | ![An AI opponent with a comment](screenshots/05-ai-opponent.png) | ![Dark theme](screenshots/06-dark.png) |
 | **AI opponents** with a personality | **Dark theme** and high contrast follow Nextcloud |
 | ![Phone layout](screenshots/07-phone.png) | ![The catalogue of the chess variants](screenshots/08-variants.png) |
-| **Phone layout** | **Chess variants**: twenty-one ways to play, all with the quantum rules |
+| **Phone layout** | **Chess variants**: twenty ways to play, all with the quantum rules |
 | ![Multiverse chess: timelines, time travel and ghosts](screenshots/09-multiverse.png) | ![Shogi and hexagonal chess](screenshots/10-variant-boards.png) |
 | **Multiverse chess (5D)**: timelines, time travel and ghosts across the multiverse | **Shogi and hexagonal chess**, with split pieces |
 

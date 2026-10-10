@@ -29,7 +29,6 @@ final class VariantEngineTest extends TestCase {
 	public function testSupportsOnlyTheServerRuledVariants(): void {
 		$this->assertTrue(VariantEngine::supports('kriegspiel'));
 		$this->assertTrue(VariantEngine::supports('darkchess'));
-		$this->assertTrue(VariantEngine::supports('beeflow'));
 		$this->assertFalse(VariantEngine::supports('classic'));
 		$this->assertFalse(VariantEngine::supports('atomic'));
 		$this->expectException(\InvalidArgumentException::class);
@@ -146,73 +145,5 @@ final class VariantEngineTest extends TestCase {
 				}
 			}
 		}
-	}
-
-	public function testBeeFlowNeedsBothArrangementNumbers(): void {
-		$this->assertSame(5040, VariantEngine::BEEFLOW_ARRANGEMENTS);
-		foreach ([[], ['white' => 1], ['white' => 1, 'black' => 5040], ['white' => -1, 'black' => 0],
-			['white' => '1', 'black' => 2], ['white' => 1.0, 'black' => 2]] as $options) {
-			try {
-				VariantEngine::newGame('beeflow', $options);
-				$this->fail('accepted ' . json_encode($options));
-			} catch (\InvalidArgumentException) {
-				$this->addToAssertionCount(1);
-			}
-		}
-		// the stored options are the two numbers, white first
-		$state = VariantEngine::newGame('beeflow', ['black' => 5039, 'white' => 0, 'other' => true]);
-		$json = json_encode($state, JSON_THROW_ON_ERROR);
-		$this->assertStringContainsString('"options":{"white":0,"black":5039}', $json);
-		$this->assertStringContainsString('"x":{"ep":-1,"epVictim":-1,"castle":[],"seen":[]}', $json);
-		$b = $state['worlds'][0]['b'];
-		// backRank(0) is bbknnqrr, backRank(5039) rrqnnkbb; Black's rank is not mirrored
-		$this->assertSame('bbknnqrr', implode('', array_slice($b['ty'], 0, 8)));
-		$this->assertSame('rrqnnkbb', implode('', array_slice($b['ty'], 16, 8)));
-		$this->assertSame([56, 57, 58, 59, 60, 61, 62, 63], array_slice($b['sq'], 16, 8));
-		$text = VariantEngine::encode($state);
-		$this->assertSame($text, VariantEngine::encode(VariantEngine::decode($text)));
-	}
-
-	public function testBeeFlowViewsShowUnmovedEnemyPiecesAsPlaceholders(): void {
-		$state = VariantEngine::newGame('beeflow', ['white' => 4398, 'black' => 4398]);
-		$this->assertFalse(VariantEngine::isLegal($state, 'O-O'));
-		foreach (['e2-e4', 'g8-f6', 'g1-f3'] as $code) {
-			$state = VariantEngine::apply($state, $code, 0);
-			$this->assertNotNull($state, $code);
-		}
-		$this->assertSame([6, 12, 22], $state['worlds'][0]['b']['x']['seen']);
-		$view = VariantEngine::viewFor($state, 1);
-		$this->assertSame('{}', json_encode($view['options']));
-		$this->assertSame(range(0, 63), $view['visible']);
-		$this->assertContains('f6-e4', $view['legal']);
-		$ty = $view['worlds'][0]['b']['ty'];
-		// White: the knight that moved (id 6) and the pawns are known, the other pieces are placeholders
-		$this->assertSame(['x', 'x', 'x', 'x', 'x', 'x', 'n', 'x'], array_slice($ty, 0, 8));
-		$this->assertSame(array_fill(0, 8, 'p'), array_slice($ty, 8, 8));
-		// Black's own pieces keep their types
-		$this->assertSame(str_split('rnbqkbnr'), array_slice($ty, 16, 8));
-		$this->assertSame([], VariantEngine::viewFor($state, 0)['legal']);
-		$this->assertSame([], VariantEngine::candidateMoves($state));
-	}
-
-	public function testBeeFlowPrivacyShield(): void {
-		// 1. e4 d5 2. Ke2 a6 3. Ke3: the pawn on e4 stands next to its Queen Bee
-		$state = VariantEngine::newGame('beeflow', ['white' => 4398, 'black' => 4398]);
-		foreach (['e2-e4', 'd7-d5', 'e1-e2', 'a7-a6', 'e2-e3'] as $code) {
-			$state = VariantEngine::apply($state, $code, 0);
-			$this->assertNotNull($state, $code);
-		}
-		// d5 cannot take the pawn on e4 while the Queen Bee stands on e3, then d3; from c3 she no longer shields it
-		$this->assertFalse(VariantEngine::isLegal($state, 'd5-e4'));
-		$state = VariantEngine::apply($state, 'a6-a5', 0);
-		$this->assertNotNull($state);
-		$state = VariantEngine::apply($state, 'e3-d3', 0);
-		$this->assertNotNull($state);
-		$this->assertFalse(VariantEngine::isLegal($state, 'd5-e4'));
-		$state = VariantEngine::apply($state, 'a5-a4', 0);
-		$this->assertNotNull($state);
-		$state = VariantEngine::apply($state, 'd3-c3', 0);
-		$this->assertNotNull($state);
-		$this->assertTrue(VariantEngine::isLegal($state, 'd5-e4'));
 	}
 }

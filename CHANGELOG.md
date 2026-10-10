@@ -12,6 +12,11 @@ release as its release notes.
 
 ## [Unreleased]
 
+### Removed
+
+- **Bee Flow Chess** is no longer offered. Its games, ratings and leaderboard entries stay stored, but the variant can
+  no longer be started or played.
+
 ## [2.2.0] - 2026-10-06
 
 ### Added

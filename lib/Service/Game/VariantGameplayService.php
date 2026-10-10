@@ -32,11 +32,11 @@ use OCP\IL10N;
  * time-outs, notifications and the lobby therefore work as for classic games. A game with more than two seats names
  * its sides by seat number (`'0'` to `'3'`, see Game) and keeps its result as a variant result code only.
  *
- * Bee Flow Chess, Kriegspiel and Fog of war are ruled by the server instead (VariantCatalog::isRefereed,
- * docs/development/ online-variants.md section 6): the server keeps the real position (VariantTurn `board`) and plays
- * every move with the PHP twin of the variant layer (lib/Variants/). A move it refuses changes nothing and uses no
- * turn; a move it accepts is rolled, played and settled at once. Every player receives only their own view (`viewOf`),
- * and the moves stay hidden until the game has ended.
+ * Kriegspiel and Fog of war are ruled by the server instead (VariantCatalog::isRefereed, docs/development/
+ * online-variants.md section 6): the server keeps the real position (VariantTurn `board`) and plays every move with
+ * the PHP twin of the variant layer (lib/Variants/). A move it refuses changes nothing and uses no turn; a move it
+ * accepts is rolled, played and settled at once. Every player receives only their own view (`viewOf`), and the
+ * moves stay hidden until the game has ended.
  */
 class VariantGameplayService {
 	/** The longest thinking time a client may report for a move (30 days, in milliseconds). */
@@ -139,25 +139,12 @@ class VariantGameplayService {
 		return $board === null ? null : VariantEngine::decode($board);
 	}
 
-	/**
-	 * The start record of a variant game: for a server-ruled variant with its start position. Bee Flow Chess draws
-	 * each side's back rank here (`white`, `black`: arrangement numbers), which stay in the hidden position until the
-	 * game ends.
-	 *
-	 * @param ?callable(int): int $draw a random integer in [0, n) (tests); default random_int
-	 */
-	public static function startTurn(string $variant, ?callable $draw = null): VariantTurn {
+	/** The start record of a variant game: for a server-ruled variant with its start position. */
+	public static function startTurn(string $variant): VariantTurn {
 		$turn = VariantTurn::start();
-		if (!VariantCatalog::isRefereed($variant)) {
-			return $turn;
-		}
-		$options = [];
-		if ($variant === 'beeflow') {
-			$draw ??= static fn (int $n): int => random_int(0, $n - 1);
-			$n = VariantEngine::BEEFLOW_ARRANGEMENTS;
-			$options = ['white' => $draw($n), 'black' => $draw($n)];
-		}
-		return $turn->withBoard(VariantEngine::encode(VariantEngine::newGame($variant, $options)));
+		return VariantCatalog::isRefereed($variant)
+			? $turn->withBoard(VariantEngine::encode(VariantEngine::newGame($variant)))
+			: $turn;
 	}
 
 	/**

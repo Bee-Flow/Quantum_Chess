@@ -82,7 +82,7 @@
 import { normaliseType } from './world.js'
 
 /** The categories of the variant catalogue, in display order. */
-export const CATEGORIES = Object.freeze(['featured', 'dimensions', 'uncertainty', 'rules', 'boards', 'regional'])
+export const CATEGORIES = Object.freeze(['dimensions', 'uncertainty', 'rules', 'boards', 'regional'])
 
 /**
  * The default orientation of "oriented" vectors (pawns, soldiers, shogi pieces): the vectors are written for side 0,

@@ -10,9 +10,8 @@ declare(strict_types=1);
 namespace OCA\QuantumChess\Variants;
 
 /**
- * The referee of the server-ruled variants, Bee Flow Chess, Kriegspiel and Fog of war
- * (docs/development/online-variants.md, section 6): new games, legality, applying a move with the server's roll `u`,
- * what a move leads to, and each player's view. What sets the variants apart is in their `VariantRules`.
+ * The referee of the server-ruled variants, Kriegspiel and Fog of war (docs/development/online-variants.md, section
+ * 6): new games, legality, applying a move with the server's roll `u`, what a move leads to, and each player's view.
  *
  * JavaScript twins: `newGame`, `isLegal`, `applyMove` of src/variants/core/quantum.js, `settlementOf`, `resultCode`
  * and `positionHash` of src/variants/online.js, and `viewFor`, `preview` of src/variants/referee.js. Checked against
@@ -27,8 +26,8 @@ final class VariantEngine {
 	/** The sum of all world weights: `u` is an integer in [0, T). */
 	public const T = Quantum::T;
 
-	/** The number of different back ranks of one side in Bee Flow Chess (`options.white`, `options.black`). */
-	public const BEEFLOW_ARRANGEMENTS = BeeFlow::ARRANGEMENTS;
+	/** The variants the server rules, with their bare-kings draw. */
+	private const VARIANTS = ['kriegspiel' => true, 'darkchess' => false];
 
 	/** @var array<string, Quantum> */
 	private static array $rules = [];
@@ -37,7 +36,7 @@ final class VariantEngine {
 	 * Whether the server rules the online games of a variant (`isRefereed` of referee.js).
 	 */
 	public static function supports(string $variant): bool {
-		return VariantRules::of($variant) !== null;
+		return isset(self::VARIANTS[$variant]);
 	}
 
 	/**
@@ -46,14 +45,10 @@ final class VariantEngine {
 	 * @throws \InvalidArgumentException for another variant
 	 */
 	private static function rules(string $variant): Quantum {
-		if (isset(self::$rules[$variant])) {
-			return self::$rules[$variant];
-		}
-		$rules = VariantRules::of($variant);
-		if ($rules === null) {
+		if (!isset(self::VARIANTS[$variant])) {
 			throw new \InvalidArgumentException('not a server-ruled variant: ' . $variant);
 		}
-		return self::$rules[$variant] = new Quantum($rules);
+		return self::$rules[$variant] ??= new Quantum($variant, self::VARIANTS[$variant]);
 	}
 
 	/**
@@ -68,16 +63,12 @@ final class VariantEngine {
 	}
 
 	/**
-	 * The start state of a new game (`newGame(V, options)`). Bee Flow Chess needs the numbers of both shuffled back
-	 * ranks, `['white' => n, 'black' => n]`, integers in [0, BEEFLOW_ARRANGEMENTS); the other variants take no
-	 * options and ignore any given.
+	 * The start state of a new game (`newGame(V, {})`).
 	 *
-	 * @param array<array-key, mixed> $options
 	 * @return array<string, mixed>
-	 * @throws \InvalidArgumentException for another variant, or options the variant cannot start with
 	 */
-	public static function newGame(string $variant, array $options = []): array {
-		return self::rules($variant)->newGame($options)->toArray();
+	public static function newGame(string $variant): array {
+		return self::rules($variant)->newGame()->toArray();
 	}
 
 	/**
@@ -187,10 +178,9 @@ final class VariantEngine {
 	}
 
 	/**
-	 * The view of a seat (`viewFor` of referee.js): the state as that player may know it, without the option values,
-	 * with `visible` (the squares the player sees, ascending; in Bee Flow Chess all) and `legal` (the ordinary moves
-	 * of the side to move, to that side; in Kriegspiel none), both null after the end, when the view is the real
-	 * state.
+	 * The view of a seat (`viewFor` of referee.js): the state as that player may know it, with `visible` (the squares
+	 * the player sees, ascending) and `legal` (in Fog of war the ordinary moves of the side to move, to that side; in
+	 * Kriegspiel none), both null after the end, when the view is the real state.
 	 *
 	 * @param array<array-key, mixed> $state the real state
 	 * @return array<string, mixed>
@@ -203,10 +193,11 @@ final class VariantEngine {
 			$out['legal'] = null;
 			return $out;
 		}
-		$visible = $q->rules->visibleSquares($s, $seat);
-		$worlds = $q->rules->viewWorlds($s, $seat, $visible);
+		$kriegspiel = $q->id === 'kriegspiel';
+		$visible = $kriegspiel ? Kriegspiel::visibility($s, $seat) : FogOfWar::visibility($s, $seat);
+		$worlds = $kriegspiel ? Kriegspiel::ownView($s, $seat)->worlds : FogOfWar::fogWorlds($s, $seat, $visible);
 		$legal = [];
-		if (!$q->rules->umpire() && $s->turn === $seat) {
+		if (!$kriegspiel && $s->turn === $seat) {
 			$legal = array_column(Quantum::ordinaryMoves($s), 'code');
 		}
 		$history = [];
@@ -215,7 +206,6 @@ final class VariantEngine {
 		}
 		$squares = array_keys($visible);
 		sort($squares);
-		$out['options'] = new \stdClass();
 		$out['worlds'] = State::worldsToArray($worlds);
 		$out['quiet'] = 0;
 		$out['history'] = $history;
@@ -238,15 +228,18 @@ final class VariantEngine {
 	}
 
 	/**
-	 * The moves the player to move may try in Kriegspiel (`candidateMoves` of umpire.js), as codes; empty in the other
-	 * variants and after the end.
+	 * The moves the player to move may try in Kriegspiel (`candidateMoves` of umpire.js), as codes; empty in Fog of
+	 * war and after the end.
 	 *
 	 * @param array<array-key, mixed> $state the real state
 	 * @return array<int, string>
 	 */
 	public static function candidateMoves(array $state): array {
 		[$q, $s] = self::load($state);
-		return $q->rules->candidateCodes($s);
+		if ($q->id !== 'kriegspiel') {
+			return [];
+		}
+		return array_column(Kriegspiel::candidateMoves($s), 'code');
 	}
 
 	/**

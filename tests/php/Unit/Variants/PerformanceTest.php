@@ -26,9 +26,6 @@ final class PerformanceTest extends TestCase {
 	private const TO_64 = ['g1-f3', 'g8-f6', 'b1-c3', 'b8-c6', 'e2-e4', 'e7-e5', 'f1-c4', 'f8-c5', 'd2-d3', 'd7-d6',
 		'c3-b1|e2', 'c6-b4|d4', 'c1-d2|e3', 'c8-h3|g4', 'c4-b3|b5', 'a8-b8|c8'];
 
-	/** Bee Flow Chess with the orthodox back rank (`backRank(4398)` is `rnbqkbnr`) on both sides, for `TO_64`. */
-	private const BEEFLOW_ORTHODOX = ['white' => 4398, 'black' => 4398];
-
 	/**
 	 * @param list<float> $times
 	 */
@@ -71,10 +68,10 @@ final class PerformanceTest extends TestCase {
 	}
 
 	public function testMoveRequestsOfTheFixtureGames(): void {
-		foreach (RefereeParityTest::VARIANTS as $variant) {
+		foreach (['kriegspiel', 'darkchess'] as $variant) {
 			$times = [];
 			foreach (RefereeParityTest::fixture($variant)['games'] as $game) {
-				$json = VariantEngine::encode(VariantEngine::newGame($variant, $game['options']));
+				$json = VariantEngine::encode(VariantEngine::newGame($variant));
 				foreach ($game['steps'] as $step) {
 					[$times[], $json] = $this->request($json, $step['code'], $step['u']);
 				}
@@ -84,19 +81,18 @@ final class PerformanceTest extends TestCase {
 	}
 
 	public function testMoveRequestsOnA64WorldState(): void {
-		// Bee Flow Chess's privacy shield (`filterMoves`) turns off the escape search's shortcuts
-		foreach (RefereeParityTest::VARIANTS as $variant) {
-			$state = VariantEngine::newGame($variant, $variant === 'beeflow' ? self::BEEFLOW_ORTHODOX : []);
+		foreach (['kriegspiel', 'darkchess'] as $variant) {
+			$state = VariantEngine::newGame($variant);
 			foreach (self::TO_64 as $code) {
 				$state = VariantEngine::apply($state, $code, 7);
 				$this->assertNotNull($state, $code);
 			}
 			$this->assertCount(64, $state['worlds']);
 			$json = VariantEngine::encode($state);
-			// the view lists the legal moves to the side to move; in Kriegspiel the player tries the candidates
-			$codes = $variant === 'kriegspiel'
-				? VariantEngine::candidateMoves($state)
-				: VariantEngine::viewFor($state, $state['turn'])['legal'];
+			// Fog of war lists the legal moves to the side to move; in Kriegspiel the player tries the candidates
+			$codes = $variant === 'darkchess'
+				? VariantEngine::viewFor($state, $state['turn'])['legal']
+				: VariantEngine::candidateMoves($state);
 			$times = [];
 			foreach ($codes as $code) {
 				if (!VariantEngine::isLegal($state, $code)) {

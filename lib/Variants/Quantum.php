@@ -17,10 +17,9 @@ namespace OCA\QuantumChess\Variants;
  *
  * JavaScript twin: src/variants/core/quantum.js, for a variant built by `orthodoxSpec()` with the defaults of
  * `defineVariant` (two sides, royal king, no compulsory capture, no hands, no `nextSide`, `isOut`, `generate`,
- * `stateResult`, `worldResult`, `budgetRule`, `allowQuantum`, `solidExtra` or `passWhenStuck`; `escapeRule` and
- * `drawsWait` on, `bareKingsDraw` as the variant says, `maxPly` 600, `quietPlies` 100). The hooks that differ per
- * variant (`setup`, `extraMoves`, `filterMoves`, `afterMove`, `unifyWorlds`, `recordInfo`) are those of its
- * `VariantRules`. Every iteration order follows the JavaScript one, since it decides which outcome a roll `u` picks.
+ * `filterMoves`, `stateResult`, `worldResult`, `budgetRule`, `allowQuantum`, `solidExtra` or `passWhenStuck`;
+ * `escapeRule` and `drawsWait` on, `bareKingsDraw` as the variant says, `maxPly` 600, `quietPlies` 100). Every
+ * iteration order follows the JavaScript one, since it decides which outcome a roll `u` picks.
  *
  * An entry (a world of an outcome) is `{ b, w, k, cap, idle, rq, m }`, a branch `{ weight, key, rolled, notes,
  * worlds, captures }`, as in JavaScript.
@@ -52,31 +51,22 @@ final class Quantum {
 	/** Outcome keys in display order. */
 	private const KEY_ORDER = ['miss' => 0, 'move' => 1, 'capture' => 2];
 
-	/** The variant id. */
-	public readonly string $id;
-	/** Whether bare kings draw (`bareKingsDraw`). */
-	public readonly bool $bareKingsDraw;
-
 	/**
-	 * @param VariantRules $rules the rules of the variant
+	 * @param string $id variant id (`kriegspiel` or `darkchess`)
+	 * @param bool $bareKingsDraw whether bare kings draw (`bareKingsDraw`)
 	 */
 	public function __construct(
-		public readonly VariantRules $rules,
+		public string $id,
+		public bool $bareKingsDraw,
 	) {
-		$this->id = $rules->id();
-		$this->bareKingsDraw = $rules->bareKingsDraw();
 	}
 
 	/**
-	 * Start a new game (`newGame(V, options)`), with the option values the variant accepts.
-	 *
-	 * @param array<array-key, mixed> $given
-	 * @throws \InvalidArgumentException for options the variant cannot start with
+	 * Start a new game (`newGame`).
 	 */
-	public function newGame(array $given = []): State {
-		$options = $this->rules->options($given);
-		return new State(self::STATE_VERSION, $this->id, $options,
-			[['b' => $this->rules->setup($options), 'w' => self::T]], 0, 0, 0, null, []);
+	public function newGame(): State {
+		return new State(self::STATE_VERSION, $this->id, [], [['b' => Orthodox::setup(), 'w' => self::T]], 0, 0, 0,
+			null, []);
 	}
 
 	/**
@@ -1268,7 +1258,7 @@ final class Quantum {
 		bool $unify): State {
 		$entries = $branch['worlds'];
 		if ($unify) {
-			$bs = $this->rules->unifyWorlds(array_column($entries, 'b'));
+			$bs = Orthodox::unifyCastling(array_column($entries, 'b'));
 			foreach ($entries as $i => $e) {
 				if ($bs[$i] !== $e['b']) {
 					$entries[$i]['b'] = $bs[$i];
@@ -1322,7 +1312,9 @@ final class Quantum {
 			$next->result = ['winner' => null, 'reason' => 'noMoves'];
 		}
 		if ($record !== null) {
-			$info = $this->rules->recordInfo($state, $code, $branch, $next);
+			$info = $this->id === 'kriegspiel'
+				? Kriegspiel::recordInfo($state, $code, $branch, $next)
+				: FogOfWar::recordInfo($state, $code, $branch);
 			if ($info !== null) {
 				$record['info'] = $info;
 			}
@@ -1576,12 +1568,11 @@ final class Quantum {
 	}
 
 	/**
-	 * The move of side `e` with the key of `m0` in world `b`, or null (`keyMove`). Without a `filterMoves` hook the
-	 * moves of the piece on the key's from square onto its target are enough; otherwise every move is generated.
+	 * The move of side `e` with the key of `m0` in world `b`, or null (`keyMove`).
 	 */
 	private static function keyMove(World $b, int $e, Move $m0): ?Move {
 		$id = $m0->from >= 0 ? $b->board[$m0->from] : -1;
-		if (!$b->rules->filters() && $id >= 0 && $b->sd[$id] === $e && $m0->to >= 0) {
+		if ($id >= 0 && $b->sd[$id] === $e && $m0->to >= 0) {
 			foreach (World::movesOnto($b, $id, $m0->to) as $m) {
 				if ($m->key === $m0->key) {
 					return $m;
@@ -1751,8 +1742,7 @@ final class Quantum {
 	}
 
 	/**
-	 * The move a merge of piece X onto `t` plays in world `b` (`mergeMove`), remembered per world. As in `keyMove`,
-	 * the movement lines of X alone are used only without a `filterMoves` hook.
+	 * The move a merge of piece X onto `t` plays in world `b` (`mergeMove`), remembered per world.
 	 */
 	private static function mergeMove(EscapeSearch $ctx, World $b, int $X, int $t): ?Move {
 		$f = self::worldFacts($ctx, $b);
@@ -1764,12 +1754,10 @@ final class Quantum {
 		$fits = static fn (Move $m): bool => $m->id === $X && $m->from === $s && $m->to === $t && $m->promo === null
 			&& !$m->certain();
 		$r = null;
-		if (!$b->rules->filters()) {
-			foreach (World::movesOnto($b, $X, $t) as $m) {
-				if ($fits($m)) {
-					$r = $m;
-					break;
-				}
+		foreach (World::movesOnto($b, $X, $t) as $m) {
+			if ($fits($m)) {
+				$r = $m;
+				break;
 			}
 		}
 		if ($r === null) {

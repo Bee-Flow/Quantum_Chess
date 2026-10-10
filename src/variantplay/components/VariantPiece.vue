@@ -6,9 +6,8 @@
 <!--
   One piece of a variant board, drawn in SVG user units around (0, 0): a cburnett sprite (possibly smaller, a knight
   with a unicorn's horn, a pawn with a crossbar: the multiverse's brawn, or a knight's head on a bishop's base or in a
-  rook's turret: Capablanca's archbishop and chancellor, a king with a small bee: Bee Flow Chess's Queen Bee), a
-  compound of two sprites side by side, or a text token (round, shogi pentagon, xiangqi disc, or a honeycomb hexagon:
-  a hidden piece of Bee Flow Chess). A promoted sprite
+  rook's turret: Capablanca's archbishop and chancellor), a compound of two sprites side by side, or a text token
+  (round, shogi pentagon or xiangqi disc). A promoted sprite
   piece carries a small red disc with a white "+" at its top right. A ghost part is faded and carries a probability
   ring (a track with an arc of its chance, as on the Quantum Chess board) and its percentage in a badge at its bottom
   right. The ring and the badge are drawn above the fade, so they stay sharp. With `unit` (the size of one CSS pixel
@@ -104,35 +103,6 @@
 							stroke-linejoin="miter" />
 					</template>
 				</g>
-				<!-- the Queen Bee's bee: a striped body with two wings at the top right of the crown -->
-				<g
-					v-if="glyph.bee"
-					class="qc-vpiece__bee"
-					:transform="`translate(${size * 0.3}, ${-size * 0.3}) scale(${size / 45})`">
-					<ellipse
-						cx="-2.6"
-						cy="-3.2"
-						rx="3"
-						ry="2"
-						fill="#e8f4ff"
-						stroke="#1b1b1b"
-						stroke-width="0.8" />
-					<ellipse
-						cx="2.6"
-						cy="-3.2"
-						rx="3"
-						ry="2"
-						fill="#e8f4ff"
-						stroke="#1b1b1b"
-						stroke-width="0.8" />
-					<ellipse
-						rx="4.6"
-						ry="3.4"
-						fill="#f5b82e"
-						stroke="#1b1b1b"
-						stroke-width="0.9" />
-					<path d="M-1.6 -3.2 V3.2 M1.4 -3 V3" stroke="#1b1b1b" stroke-width="1.3" />
-				</g>
 				<g
 					v-if="glyph.promoted"
 					class="qc-vpiece__promoted"
@@ -147,13 +117,7 @@
 			</template>
 			<template v-else>
 				<polygon
-					v-if="glyph.shape === 'hex'"
-					:points="hexagon"
-					:fill="glyph.fill"
-					stroke="#3d2a00"
-					:stroke-width="size * 0.04" />
-				<polygon
-					v-else-if="glyph.shape === 'shogi'"
+					v-if="glyph.shape === 'shogi'"
 					:points="pentagon"
 					:fill="glyph.fill"
 					stroke="#5d4222"
@@ -330,13 +294,6 @@ const plusPath = computed(() => {
 	const a = props.size * 0.06
 	return `M ${-a} 0 H ${a} M 0 ${-a} V ${a}`
 })
-const hexagon = computed(() => {
-	const r = props.size * 0.42
-	return Array.from({ length: 6 }, (_, i) => {
-		const a = (Math.PI / 3) * i
-		return [r * Math.cos(a), r * Math.sin(a)].join(',')
-	}).join(' ')
-})
 const pentagon = computed(() => {
 	const s = props.size
 	return [
@@ -361,7 +318,6 @@ const pentagon = computed(() => {
 .qc-vpiece__body,
 .qc-vpiece__horn,
 .qc-vpiece__bar,
-.qc-vpiece__bee,
 .qc-vpiece__ring {
 	pointer-events: none;
 }

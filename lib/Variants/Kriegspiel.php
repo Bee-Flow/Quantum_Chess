@@ -21,29 +21,9 @@ namespace OCA\QuantumChess\Variants;
  *
  * @internal
  */
-final class Kriegspiel extends VariantRules {
+final class Kriegspiel {
 	/** The check directions in the order in which they are announced (`DIRECTIONS`). */
 	public const DIRECTIONS = ['file', 'rank', 'long', 'short', 'knight'];
-
-	public function id(): string {
-		return 'kriegspiel';
-	}
-
-	public function umpire(): bool {
-		return true;
-	}
-
-	public function visibleSquares(State $state, int $seat): array {
-		return self::visibility($state, $seat);
-	}
-
-	public function viewWorlds(State $state, int $seat, array $visible): array {
-		return self::ownView($state, $seat)->worlds;
-	}
-
-	public function candidateCodes(State $state): array {
-		return array_column(self::candidateMoves($state), 'code');
-	}
 
 	/**
 	 * The squares a side sees: those of its own pieces in some world (`visibility`).
@@ -271,7 +251,7 @@ final class Kriegspiel extends VariantRules {
 	 * @param Branch $branch
 	 * @return array<string, mixed>
 	 */
-	public function recordInfo(State $prev, string $code, array $branch, State $next): array {
+	public static function recordInfo(State $prev, string $code, array $branch, State $next): array {
 		$info = ['announce' => [
 			'captures' => self::capturesOf($prev, $code, $branch),
 			'check' => self::checkOf($next),

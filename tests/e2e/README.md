@@ -18,7 +18,7 @@
 | `trainer.spec.mjs` | Lessons and a puzzle solved by clicking; the progress survives a reload |
 | `coach-review.spec.mjs` | The coach during a computer game, then the post-game review |
 | `settings.spec.mjs` | The admin and personal settings pages |
-| `variants.spec.mjs` | The catalogue of the twenty-one chess variants (Bee Flow Chess first); a multiverse (5D) game against the computer with a turn ended by Submit turn, a reload and "Continue on this device"; every variant tile starts a game against the computer in which the player splits a piece and the computer answers |
+| `variants.spec.mjs` | The catalogue of the twenty chess variants; a multiverse (5D) game against the computer with a turn ended by Submit turn, a reload and "Continue on this device"; every variant tile starts a game against the computer in which the player splits a piece and the computer answers |
 | `api/*.spec.mjs` | The HTTP API without a browser: online games and notifications (`games`), the LLM and settings routes (`ai`), the app page and the per-user routes (`pages`) |
 
 The shared configuration is `playwright.config.mjs`, the shared code is in `helpers/`.

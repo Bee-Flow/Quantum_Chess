@@ -142,7 +142,6 @@ their names in all three languages.
 
 | English | Dutch (nl) | German (de) | French (fr) |
 |---|---|---|---|
-| Bee-Flow (the category of Bee Flow Chess, a product name) | Bee-Flow | Bee-Flow | Bee-Flow |
 | Other dimensions | Andere dimensies | Andere Dimensionen | Autres dimensions |
 | Hidden information | Verborgen informatie | Verdeckte Informationen | Information cachée |
 | Different rules | Andere regels | Andere Regeln | Règles différentes |
@@ -303,16 +302,6 @@ The French colours are singular; *Bleu* is the same msgid as the blue board them
 | Khun (king), Met, Khon, Ma, Rua, Bia (pawn) | Khun, Met, Khon, Ma, Rua, Bia | Khun, Met, Khon, Ma, Rua, Bia (masculine; plural *Khuns*) | Khun, Met, Khon, Ma, Rua, Bia |
 | lone Khun | kale Khun | blanker Khun | Khun seul |
 | counting (the moves left to capture a lone Khun) / the counting rule | telling / de telregel | Zählung / die Zählregel | décompte / la règle du décompte |
-
-### Bee Flow Chess
-
-| English | Dutch (nl) | German (de) | French (fr) |
-|---|---|---|---|
-| Bee Flow Chess, Bee-Flow (product names: never translated) | Bee Flow Chess, Bee-Flow | Bee Flow Chess, Bee-Flow | Bee Flow Chess, Bee-Flow |
-| Queen Bee (the king) | Bijenkoningin | Bienenkönigin | reine des abeilles |
-| hidden piece / honeycomb cell | verborgen stuk / honingraatcel | verdeckte Figur / Wabenzelle | pièce cachée / alvéole |
-| privacy shield | privacyschild | Privatsphäre-Schild | bouclier de confidentialité |
-| swarm | zwerm | Schwarm | essaim |
 
 ### Game ends
 

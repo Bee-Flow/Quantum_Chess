@@ -100,7 +100,7 @@
 				<VariantBoard
 					class="qc-vgame__drawing"
 					:variant="V"
-					:state="game.shown.value"
+					:state="state"
 					:rotation="game.rotation.value"
 					:marks="game.marks.value"
 					:hidden="game.curtain.value ? allSquares : game.hidden.value"

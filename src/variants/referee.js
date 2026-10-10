@@ -4,10 +4,9 @@
  */
 
 /**
- * The server-ruled variants, Bee Flow Chess, Kriegspiel and Fog of war (docs/development/online-variants.md, section
- * 6). In an online game of these variants the server holds the real state, decides every move and sends each player
- * only their own view: a state of the variant layer that holds what that player may know, which the board shows as it
- * is.
+ * The server-ruled variants, Kriegspiel and Fog of war (docs/development/online-variants.md, section 6). In an online
+ * game of these variants the server holds the real state, decides every move and sends each player only their own
+ * view: a state of the variant layer that holds what that player may know, which the board shows as it is.
  *
  * - **Kriegspiel**: the worlds of `ownView` (every enemy piece off the board), and the squares of the own pieces.
  * - **Fog of war**: every enemy piece on a square the player cannot see is taken off the board and shown as a pawn
@@ -16,9 +15,6 @@
  *   its chance. The view lists the visible squares (`visible`), since the board cannot work them out without the
  *   hidden pieces (a pawn does not see the square in front of it when a hidden piece stands there), and, to the side to
  *   move, its legal ordinary moves (`legal`).
- * - **Bee Flow Chess**: every square is visible, but the enemy pieces whose type is not public are placeholders
- *   (`V.viewOf`, src/variants/beeflow.js), the shuffled back ranks (`options`) are left out, and the player to move
- *   gets the legal ordinary moves (`legal`): the privacy shield depends on where the hidden Queen Bee stands.
  * - **History**: the player's own records as they are; the opponent's without the move (code, outcome, squares and
  *   captures), with only what the variant announces (`info`: the umpire's announcements, the squares where the
  *   player's pieces were taken).
@@ -34,7 +30,7 @@ import { legalMoves, outcomes } from './core/quantum.js'
 import { cloneWorld, OFF, placePiece, worldKey } from './core/world.js'
 
 /** The variants whose online games the server rules. */
-const REFEREED = new Set(['beeflow', 'kriegspiel', 'darkchess'])
+const REFEREED = new Set(['kriegspiel', 'darkchess'])
 
 /**
  * Whether the server rules the online games of a variant (hidden information).
@@ -109,7 +105,7 @@ function hiddenRecord(h) {
 /**
  * The view of a seat: the state as that player may know it (see the header).
  *
- * @param {object} V variant (Bee Flow Chess, Kriegspiel or Fog of war)
+ * @param {object} V variant (Kriegspiel or Fog of war)
  * @param {object} state the real state
  * @param {number} seat the player's side
  * @return {object} a state, with `visible` (sorted squares) and `legal` (move codes), both null after the end
@@ -118,18 +114,13 @@ export function viewFor(V, state, seat) {
 	if (state.result) {
 		return { ...state, visible: null, legal: null }
 	}
-	const visibleSet = V.visibility
-		? V.visibility(state, seat)
-		: new Set(Array.from({ length: V.topology.size }, (_, sq) => sq))
-	const worlds = V.viewOf
-		? V.viewOf(state, seat).worlds
-		: V.ownView ? V.ownView(state, seat).worlds : fogWorlds(state, seat, visibleSet)
+	const visibleSet = V.visibility(state, seat)
+	const worlds = V.ownView ? V.ownView(state, seat).worlds : fogWorlds(state, seat, visibleSet)
 	const legal = !V.umpire && state.turn === seat
 		? legalMoves(V, state).filter((m) => m.type === 'move').map((m) => m.code)
 		: []
 	return {
 		...state,
-		options: {},
 		worlds,
 		quiet: 0,
 		history: state.history.map((h) => (h.side === seat ? h : hiddenRecord(h))),

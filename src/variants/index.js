@@ -59,7 +59,6 @@ export { isRefereed, preview as refereePreview, viewFor } from './referee.js'
 
 /** Loaders of the rules modules, one chunk per variant. */
 const LOADERS = {
-	beeflow: () => import('./beeflow.js'),
 	raumschach: () => import('./raumschach.js'),
 	trid: () => import('./trid.js'),
 	hyper4d: () => import('./hyper4d.js'),

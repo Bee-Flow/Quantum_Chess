@@ -13,7 +13,7 @@ import { t } from '@nextcloud/l10n'
 /**
  * @typedef {object} CatalogEntry
  * @property {string} id variant id (route and storage key)
- * @property {string} category featured (Bee-Flow, first), dimensions, uncertainty, rules, boards or regional
+ * @property {string} category dimensions, uncertainty, rules, boards or regional
  * @property {number} players number of players
  * @property {() => string} name translated name
  * @property {() => string} summary translated one-line summary
@@ -21,16 +21,6 @@ import { t } from '@nextcloud/l10n'
 
 /** @type {CatalogEntry[]} */
 export const CATALOG = [
-	{
-		id: 'beeflow',
-		category: 'featured',
-		players: 2,
-		name: () => t('quantumchess', 'Bee Flow Chess'),
-		summary: () => t(
-			'quantumchess',
-			'Protect your Queen Bee: hidden pieces, a shuffled back rank and a privacy shield around the queen.',
-		),
-	},
 	{
 		id: 'raumschach',
 		category: 'dimensions',
@@ -193,9 +183,6 @@ export const CATALOG = [
  */
 export function categoryName(id) {
 	switch (id) {
-		case 'featured':
-			// TRANSLATORS: the heading of the variant named after Bee-Flow, the private AI workspace (a product name)
-			return t('quantumchess', 'Bee-Flow')
 		case 'dimensions':
 			return t('quantumchess', 'Other dimensions')
 		case 'uncertainty':

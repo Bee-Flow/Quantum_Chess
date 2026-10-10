@@ -4,11 +4,11 @@
  */
 
 /**
- * The chess variants: the catalogue lists all twenty-one (Bee Flow Chess first), a game of multiverse chess (5D)
- * against the computer plays a multi-board turn that ends with "Submit turn" and continues after a reload, and every
- * variant tile starts a game against the computer in which the player splits a piece and the computer answers. Variant
- * games live in the browser storage, so these tests need no server data of their own. The moves are picked in Node
- * from the same rules modules the page runs (helpers/variants.mjs) and played by clicking the board.
+ * The chess variants: the catalogue lists all twenty, a game of multiverse chess (5D) against the computer plays a
+ * multi-board turn that ends with "Submit turn" and continues after a reload, and every variant tile starts a game
+ * against the computer in which the player splits a piece and the computer answers. Variant games live in the
+ * browser storage, so these tests need no server data of their own. The moves are picked in Node from the same rules
+ * modules the page runs (helpers/variants.mjs) and played by clicking the board.
  */
 import { CATALOG } from '../../src/variants/catalog.js'
 import { applyMove, legalMoves, loadVariant, outcomes, royalDanger, VARIANT_IDS } from '../../src/variants/index.js'
@@ -160,13 +160,12 @@ async function multiverseTurn(page, V, rec, submit) {
 	return { rec, submitted: false }
 }
 
-test('the catalogue lists the twenty-one variants, Bee Flow Chess first', async ({ page }) => {
+test('the catalogue lists the twenty variants', async ({ page }) => {
 	await openApp(page, '/variants', { ready: '.qc-variants' })
 	await expect(page.getByRole('heading', { name: 'Chess variants', level: 2 })).toBeVisible()
 	const tiles = page.locator('button.qc-variants__tile')
 	await expect(tiles).toHaveCount(VARIANT_IDS.length)
-	expect(VARIANT_IDS).toHaveLength(21)
-	await expect(tiles.first()).toHaveAttribute('data-test', 'variant-beeflow')
+	expect(VARIANT_IDS).toHaveLength(20)
 	for (const e of CATALOG) {
 		await expect(page.locator(`[data-test="variant-${e.id}"]`)).toContainText(e.name())
 	}

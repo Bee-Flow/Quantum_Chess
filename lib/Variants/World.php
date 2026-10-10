@@ -43,8 +43,7 @@ final class World {
 	 * @param array<int, string> $ty type of every piece id
 	 * @param array<int, int> $sd side of every piece id
 	 * @param array<int, int> $board piece id on every square, -1 when empty
-	 * @param array<string, mixed> $x the extra state: `ep`, `epVictim`, `castle` (Bee Flow Chess: `seen`)
-	 * @param VariantRules $rules the rules of the world's variant
+	 * @param array<string, mixed> $x the extra state: `ep`, `epVictim`, `castle`
 	 */
 	public function __construct(
 		public array $sq,
@@ -52,7 +51,6 @@ final class World {
 		public array $sd,
 		public array $board,
 		public array $x,
-		public VariantRules $rules,
 	) {
 	}
 
@@ -60,7 +58,7 @@ final class World {
 	 * A copy that may be changed (`cloneWorld`).
 	 */
 	public function copy(): self {
-		return new self($this->sq, $this->ty, $this->sd, $this->board, $this->x, $this->rules);
+		return new self($this->sq, $this->ty, $this->sd, $this->board, $this->x);
 	}
 
 	/**
@@ -69,7 +67,7 @@ final class World {
 	 * @param array<string, mixed> $x
 	 */
 	public function withX(array $x): self {
-		return new self($this->sq, $this->ty, $this->sd, $this->board, $x, $this->rules);
+		return new self($this->sq, $this->ty, $this->sd, $this->board, $x);
 	}
 
 	/**
@@ -107,11 +105,11 @@ final class World {
 	}
 
 	/**
-	 * A world of a variant from its JSON form.
+	 * A world from its JSON form.
 	 *
 	 * @param array<array-key, mixed> $b
 	 */
-	public static function fromArray(array $b, VariantRules $rules): self {
+	public static function fromArray(array $b): self {
 		$x = $b['x'] ?? [];
 		if ($x instanceof \stdClass) {
 			$x = (array)$x;
@@ -123,7 +121,6 @@ final class World {
 			array_map('intval', array_values((array)$b['sd'])),
 			array_map('intval', array_values((array)$b['board'])),
 			self::plainX(is_array($x) ? $x : []),
-			$rules,
 		);
 	}
 
@@ -365,8 +362,7 @@ final class World {
 	}
 
 	/**
-	 * All ordinary moves of a side, by key, the first move of a key kept (`generate`): the descriptor moves, the
-	 * variant's `extraMoves`, filtered by its `filterMoves`. Remembered per world and side.
+	 * All ordinary moves of a side, by key, the first move of a key kept (`generate`). Remembered per world and side.
 	 *
 	 * @return array<string, Move>
 	 */
@@ -380,10 +376,8 @@ final class World {
 				self::pieceMoves($w, $id, $list);
 			}
 		}
-		$w->rules->extraMoves($w, $side, $list);
-		if ($w->rules->filters()) {
-			$list = $w->rules->filterMoves($w, $side, $list);
-		}
+		Orthodox::pawnExtras($w, $side, $list);
+		Orthodox::castlingMoves($w, $side, $list);
 		$map = [];
 		foreach ($list as $m) {
 			if (!isset($map[$m->key])) {
@@ -394,7 +388,7 @@ final class World {
 	}
 
 	/**
-	 * Apply an ordinary move and return the new world (`applyClassical`, with the variant's `afterMove`).
+	 * Apply an ordinary move and return the new world (`applyClassical`, with the orthodox `afterMove`).
 	 */
 	public static function applyClassical(self $w, Move $m): self {
 		$next = $w->copy();
@@ -418,7 +412,7 @@ final class World {
 		if ($m->promo !== null) {
 			$next->ty[$m->id] = $m->promo;
 		}
-		$next->rules->afterMove($next, $m);
+		Orthodox::afterMove($next, $m);
 		return $next;
 	}
 

@@ -209,31 +209,4 @@ final class RefereedGameplayTest extends TestCase {
 		$this->assertNull($this->variantGameplay()->preview(100, 'alice', 'e2-e5'));
 		$this->assertApiError('not_your_turn', fn () => $this->variantGameplay()->preview(100, 'bob', 'e7-e5'));
 	}
-
-	public function testBeeFlowChessKeepsItsShuffledBackRanksOnTheServer(): void {
-		$game = $this->started('beeflow');
-		$board = $this->board($game);
-		$options = (array)$board['options'];
-		$this->assertSame(['white', 'black'], array_keys($options));
-		foreach ($options as $n) {
-			$this->assertTrue(is_int($n) && $n >= 0 && $n < VariantEngine::BEEFLOW_ARRANGEMENTS);
-		}
-		$view = VariantGameplayService::viewOf($game, 'alice');
-		$this->assertNotNull($view);
-		$this->assertEquals((object)[], $view['options'], 'the shuffles never reach a player');
-		$world = (array)$view['worlds'][0]['b'];
-		$enemy = array_values(array_filter(
-			$world['ty'],
-			fn (string $ty, int $id) => $world['sd'][$id] === 1,
-			ARRAY_FILTER_USE_BOTH,
-		));
-		$this->assertSame(8, count(array_keys($enemy, 'x', true)), 'the enemy back rank is hidden');
-		$this->assertSame(8, count(array_keys($enemy, 'p', true)), 'pawns are always known');
-		$this->assertCount(64, $view['visible']);
-
-		$this->gameplay()->resign(100, 'bob');
-		$revealed = VariantGameplayService::viewOf($game, 'alice');
-		$this->assertNotNull($revealed);
-		$this->assertEquals($board['options'], $revealed['options'], 'revealed at the end');
-	}
 }
