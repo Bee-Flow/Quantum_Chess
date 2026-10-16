@@ -49,6 +49,14 @@ class NotificationService {
 	}
 
 	/**
+	 * Notes that `$uid` has game `$game` open in a visible tab (its poll said so): for a short while the player gets no
+	 * notification of their turn or of chat in that game.
+	 */
+	public function noteWatching(Game $game, string $uid): void {
+		// filled in by the presence work (issue #23)
+	}
+
+	/**
 	 * Invites the opponent to a game or to a rematch; in a game with more than two seats, the invited player `$to`.
 	 */
 	public function invite(Game $game, ?string $to = null): void {

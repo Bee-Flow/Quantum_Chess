@@ -18,7 +18,9 @@ use OCA\QuantumChess\Db\Game;
  *
  * A game with more than two seats also keeps its players here (Game::seatUids reads them): `seats` (the user id per
  * seat, null for an open seat), `accepted` (whether each seat's player has taken it), and while it runs `drawVotes`
- * (the seats that agree to the open draw offer) and `muted` (the seats that muted the chat).
+ * (the seats that agree to the open draw offer), `muted` (the seats that muted the chat) and `out` (the seats that are out
+ * of a game where every player plays for themselves, as the browsers settle it: VariantGameplayService::settle).
+ * `endedBy` is the seat whose resignation, timeout or removed account ended the game.
  * A game of a server-ruled variant (Kriegspiel, Fog of war: VariantCatalog::isRefereed) keeps its real position here
  * as well (`board`, the state of lib/Variants/ as JSON text), which no player ever receives while the game runs.
  *
@@ -30,6 +32,7 @@ final class VariantTurn {
 	 * @param list<bool> $accepted
 	 * @param list<int> $drawVotes
 	 * @param list<int> $muted
+	 * @param list<int> $out
 	 */
 	private function __construct(
 		public readonly int $turns,
@@ -39,6 +42,8 @@ final class VariantTurn {
 		public readonly array $drawVotes = [],
 		public readonly array $muted = [],
 		public readonly ?string $board = null,
+		public readonly array $out = [],
+		public readonly ?int $endedBy = null,
 	) {
 	}
 
@@ -69,7 +74,18 @@ final class VariantTurn {
 		}
 		$ints = static fn (string $key): array => array_values(array_filter(self::listOf($data, $key), 'is_int'));
 		$board = is_string($data['board'] ?? null) ? $data['board'] : null;
-		return new self($turns, $pending, $seats, $accepted, $ints('drawVotes'), $ints('muted'), $board);
+		$endedBy = is_int($data['endedBy'] ?? null) ? $data['endedBy'] : null;
+		return new self(
+			$turns,
+			$pending,
+			$seats,
+			$accepted,
+			$ints('drawVotes'),
+			$ints('muted'),
+			$board,
+			$ints('out'),
+			$endedBy,
+		);
 	}
 
 	/**
@@ -80,29 +96,43 @@ final class VariantTurn {
 		return is_array($data[$key] ?? null) ? array_values($data[$key]) : [];
 	}
 
-	public function withPending(?int $ply): self {
+	/**
+	 * A copy with some fields replaced (named arguments only).
+	 *
+	 * @param array<string, mixed> $changes
+	 */
+	private function with(array $changes): self {
+		$f = array_merge([
+			'turns' => $this->turns,
+			'pending' => $this->pending,
+			'seats' => $this->seats,
+			'accepted' => $this->accepted,
+			'drawVotes' => $this->drawVotes,
+			'muted' => $this->muted,
+			'board' => $this->board,
+			'out' => $this->out,
+			'endedBy' => $this->endedBy,
+		], $changes);
+		/** @psalm-suppress MixedArgument the keys above carry the types of the constructor */
 		return new self(
-			$this->turns,
-			$ply,
-			$this->seats,
-			$this->accepted,
-			$this->drawVotes,
-			$this->muted,
-			$this->board,
+			$f['turns'],
+			$f['pending'],
+			$f['seats'],
+			$f['accepted'],
+			$f['drawVotes'],
+			$f['muted'],
+			$f['board'],
+			$f['out'],
+			$f['endedBy'],
 		);
 	}
 
+	public function withPending(?int $ply): self {
+		return $this->with(['pending' => $ply]);
+	}
+
 	public function withTurnPassed(): self {
-		$turns = $this->turns + 1;
-		return new self(
-			$turns,
-			$this->pending,
-			$this->seats,
-			$this->accepted,
-			$this->drawVotes,
-			$this->muted,
-			$this->board,
-		);
+		return $this->with(['turns' => $this->turns + 1]);
 	}
 
 	/**
@@ -110,22 +140,14 @@ final class VariantTurn {
 	 * @param list<bool> $accepted
 	 */
 	public function withSeats(array $seats, array $accepted): self {
-		return new self($this->turns, $this->pending, $seats, $accepted, $this->drawVotes, $this->muted, $this->board);
+		return $this->with(['seats' => $seats, 'accepted' => $accepted]);
 	}
 
 	/** @param list<int> $votes */
 	public function withDrawVotes(array $votes): self {
 		$votes = array_values(array_unique($votes));
 		sort($votes);
-		return new self(
-			$this->turns,
-			$this->pending,
-			$this->seats,
-			$this->accepted,
-			$votes,
-			$this->muted,
-			$this->board,
-		);
+		return $this->with(['drawVotes' => $votes]);
 	}
 
 	public function withMuted(int $seat, bool $muted): self {
@@ -134,28 +156,28 @@ final class VariantTurn {
 			$list[] = $seat;
 			sort($list);
 		}
-		return new self(
-			$this->turns,
-			$this->pending,
-			$this->seats,
-			$this->accepted,
-			$this->drawVotes,
-			$list,
-			$this->board,
-		);
+		return $this->with(['muted' => $list]);
 	}
 
 	/** The record with the real position of a server-ruled game, as JSON text. */
 	public function withBoard(string $board): self {
-		return new self(
-			$this->turns,
-			$this->pending,
-			$this->seats,
-			$this->accepted,
-			$this->drawVotes,
-			$this->muted,
-			$board,
-		);
+		return $this->with(['board' => $board]);
+	}
+
+	/**
+	 * The record with the seats that are out of the game (sorted, without doubles).
+	 *
+	 * @param list<int> $out
+	 */
+	public function withOut(array $out): self {
+		$out = array_values(array_unique($out));
+		sort($out);
+		return $this->with(['out' => $out]);
+	}
+
+	/** The record with the seat whose resignation, timeout or removed account ended the game. */
+	public function withEndedBy(?int $seat): self {
+		return $this->with(['endedBy' => $seat]);
 	}
 
 	/** Whether every seat of a two-seat game has played a turn: the turn has passed twice. */
@@ -175,6 +197,10 @@ final class VariantTurn {
 			$data['accepted'] = $this->accepted;
 			$data['drawVotes'] = $this->drawVotes;
 			$data['muted'] = $this->muted;
+			$data['out'] = $this->out;
+		}
+		if ($this->endedBy !== null) {
+			$data['endedBy'] = $this->endedBy;
 		}
 		if ($this->board !== null) {
 			$data['board'] = $this->board;

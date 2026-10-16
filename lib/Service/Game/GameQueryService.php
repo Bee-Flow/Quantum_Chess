@@ -218,7 +218,7 @@ class GameQueryService {
 	 * }
 	 * @throws ApiException not_found
 	 */
-	public function poll(int $id, string $uid, int $rev, int $ply, int $chatId): array {
+	public function poll(int $id, string $uid, int $rev, int $ply, int $chatId, bool $watching = false): array {
 		$game = $this->lifecycle->load($id, $uid, true);
 		$now = $this->clock->now();
 		if ($game->getRev() === $rev) {

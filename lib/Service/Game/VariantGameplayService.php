@@ -293,7 +293,19 @@ class VariantGameplayService {
 	 * @param string $result the result code (VariantResult), empty while the game goes on
 	 * @throws ApiException
 	 */
-	public function settle(int $id, string $uid, int $ply, int $nextSeat, string $result, string $stateHash): Game {
+	/**
+	 * @param list<int>|null $out the seats that are out after the move (games of more than two seats; null from a
+	 *                            browser that does not say, which the server then infers from the skipped seats)
+	 */
+	public function settle(
+		int $id,
+		string $uid,
+		int $ply,
+		int $nextSeat,
+		string $result,
+		string $stateHash,
+		?array $out = null,
+	): Game {
 		$game = $this->participantGame($id, $uid);
 		if (VariantCatalog::isRefereed((string)$game->getVariant())) {
 			// the server settles the moves of the games it rules
