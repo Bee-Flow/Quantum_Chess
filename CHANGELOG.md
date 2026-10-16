@@ -12,6 +12,8 @@ release as its release notes.
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-16
+
 Online games with three or four players, played live, after the feedback in issue #23.
 
 ### Added
@@ -191,7 +193,8 @@ The first release: chess with superposition, measurement and entanglement, insid
   addresses, rate limits, a first-use notice before any AI request, and clean-up when an account is deleted.
 - **Languages**: English, Dutch, German and French.
 
-[Unreleased]: https://github.com/bee-flow/quantum_chess/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/bee-flow/quantum_chess/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/bee-flow/quantum_chess/releases/tag/v2.3.0
 [2.2.0]: https://github.com/bee-flow/quantum_chess/releases/tag/v2.2.0
 [2.1.1]: https://github.com/bee-flow/quantum_chess/releases/tag/v2.1.1
 [2.1.0]: https://github.com/bee-flow/quantum_chess/releases/tag/v2.1.0
