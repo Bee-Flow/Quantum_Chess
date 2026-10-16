@@ -8,6 +8,10 @@
  *
  *   QC_BASE_URL=http://127.0.0.1:8080 QC_NC_ROOT=/path/to/nextcloud npm run screenshots [-- <name> ...] [--out=<dir>]
  *
+ * With Nextcloud in a Docker container, set QC_OCC (tests/e2e/README.md), and run the fake AI of 05 in the container's
+ * network (`docker run --network container:<nextcloud> … startFakeOpenAi({ port: 8999 })`) with
+ * QC_FAKE_AI_URL=http://127.0.0.1:8999/v1, since the server cannot reach this machine.
+ *
  * Local games are played through the board with forced rolls (the page's random source is replaced by a queue), the
  * online lobby is seeded through the API (seed-demo.mjs) and the AI opponent answers through the local fake
  * OpenAI-compatible server of the end-to-end tests. The variant games are pass & play games written into the browser
@@ -22,14 +26,13 @@ import { mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import process from 'node:process'
 import { applyMove, initialState, T } from '../../src/engine/index.js'
-import { CATALOG } from '../../src/variants/catalog.js'
 import { api } from '../../tests/e2e/helpers/api.mjs'
 import { authFile, hasSavedLogin, saveLogin } from '../../tests/e2e/helpers/auth.mjs'
 import { appRoot, appUrl, env, getUser } from '../../tests/e2e/helpers/env.mjs'
 import { startFakeOpenAi } from '../../tests/e2e/helpers/fake-openai.mjs'
 import { occ } from '../../tests/e2e/helpers/occ.mjs'
 import { seedVariantGame } from '../../tests/e2e/helpers/variants.mjs'
-import { seedDemo } from './seed-demo.mjs'
+import { seedDemo, seedFourPlayer } from './seed-demo.mjs'
 import { parseScreenshotArgs } from './select.mjs'
 
 /** Where the images go, and whether this run makes one of the images named (file names without extension). */
@@ -66,20 +69,21 @@ const MULTIVERSE_SCENE = {
 	whole: true,
 }
 
-/** The two boards of 10, side by side: in each game both sides have split a piece. */
-const BOARD_SCENES = [
-	{
-		// the bishops are exchanged (Sente keeps one in hand, Gote drops its own), both rooks are split
-		variant: 'shogi',
-		moves: ['7g-7f', '3c-3d', '8h-2b=+b', '3a-2b', '2h-5h|4h', 'b@5e', '6i-7h', '8b-6b|4b'],
-		select: '5h',
-	},
-	{
-		// White's knight and Black's queen are split; the selected knight part shows its targets and its other part
-		variant: 'hexagonal',
-		moves: ['e4-e5', 'e7-e6', 'd1-c3|f4', 'e10-c6|e8'],
-		select: 'c3',
-	},
+/**
+ * 10: Bee Flow Chess against the computer (normal level), from a shuffled back rank: a pawn and a split knight each.
+ * The computer's pieces show as honeycomb cells until they move; the selected knight part shows its targets.
+ */
+const BEE_FLOW_SCENE = {
+	variant: 'beeflow',
+	players: [{ kind: 'human' }, { kind: 'computer', level: 'normal' }],
+	moves: ['e2-e4', 'e7-e5', 'c1-d3|b3', 'd8-e6|c6'],
+	select: 'd3',
+}
+
+/** What the fake AI of 05 answers as Captain Collapse, in turn. */
+const CAPTAIN_COMMENTS = [
+	'Arr, the centre be mine! Watch me knight, matey.',
+	'Two knights where there was one? Ye cannot fool an old sea dog!',
 ]
 
 /**
@@ -317,10 +321,9 @@ try {
 	await demoPreferences('carol')
 	await demoPreferences('bob')
 
-	// 01 (+ small), 06, 07: the demo position; the h5 part of the queen is selected, so its thread and link show
+	// 01 (+ small), 07: the demo position; the h5 part of the queen is selected, so its thread and link show
 	for (const [name, options] of [
 		['01-game-ghosts', {}],
-		['06-dark', { dark: true }],
 		['07-phone', { phone: true }],
 	].filter(([name]) => wanted(name, name + '-small'))) {
 		const page = await newPage(browser, 'carol', options)
@@ -371,12 +374,10 @@ try {
 
 	// 03 and 05 with an AI source for bob: the fake OpenAI-compatible server plays Captain Collapse
 	if (wanted('03-lobby-dashboard', '05-ai-opponent')) {
-		const fake = await startFakeOpenAi({
-			comment: [
-				'Arr, the centre be mine! Watch me knight, matey.',
-				'Two knights where there was one? Ye cannot fool an old sea dog!',
-			],
-		})
+		// a Nextcloud in a container cannot reach this machine: QC_FAKE_AI_URL names a fake that runs next to it
+		const fake = process.env.QC_FAKE_AI_URL
+			? { baseUrl: process.env.QC_FAKE_AI_URL, close: async () => {} }
+			: await startFakeOpenAi({ comment: CAPTAIN_COMMENTS })
 		const before = await api('admin', 'GET', 'api/settings/admin')
 		try {
 			await api('admin', 'PUT', 'api/settings/admin', {
@@ -447,6 +448,20 @@ try {
 		}
 	}
 
+	// 06: an online game of four from bob's seat: every player by name, split knights on all sides, the chat
+	if (wanted('06-four-player')) {
+		const id = await seedFourPlayer()
+		await demoPreferences('bob')
+		const page = await newPage(browser, 'bob')
+		await open(page, `/game/${id}`, 'svg.qc-vboard')
+		await page.mouse.move(0, 0)
+		await page.waitForTimeout(1500)
+		await save(page, '06-four-player')
+		await page.context().close()
+		// a resignation ends the game, so that the next run's other screens do not list it
+		await api('admin', 'POST', `api/games/${id}/resign`)
+	}
+
 	// 08: the catalogue of the variants
 	if (wanted('08-variants')) {
 		const page = await newPage(browser, 'carol')
@@ -464,28 +479,11 @@ try {
 		await page.context().close()
 	}
 
-	// 10: the boards of two more variants, each taken from its game screen (at scale 2, as they are shown smaller)
-	if (wanted('10-variant-boards')) {
-		const cards = []
-		for (const scene of BOARD_SCENES) {
-			const page = await openVariantScene(browser, scene, { scale: 2 })
-			// the navigation toggle floats over the top left corner of the content
-			await page.addStyleTag({ content: '.app-navigation-toggle-wrapper { visibility: hidden !important }' })
-			const file = join(OUT, `.${scene.variant}.png`)
-			await page.locator('.qc-vgame__board').screenshot({ path: file })
-			cards.push({ name: CATALOG.find((e) => e.id === scene.variant).name(), file })
-			await page.context().close()
-		}
-		const body = 'margin:0;width:1440px;height:900px;overflow:hidden;box-sizing:border-box;padding:0 48px;'
-			+ 'background:linear-gradient(135deg,#0082c9,#1cafff);font-family:sans-serif;'
-			+ 'display:flex;align-items:center;justify-content:center;gap:48px'
-		const card = 'flex:1;height:820px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;'
-			+ 'gap:12px;padding:20px 24px;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);background:#fff'
-		await renderHtml(browser, `<body style="${body}">${cards.map((c) => `<div style="${card}">
-			<div style="font-size:28px;font-weight:bold;color:#222">${c.name}</div>
-			<img src="${dataUrl(c.file)}" style="flex:1;min-height:0;width:100%;object-fit:contain">
-		</div>`).join('')}</body>`, { width: 1440, height: 900 }, '10-variant-boards')
-		cards.forEach((c) => rmSync(c.file))
+	// 10: Bee Flow Chess against the computer
+	if (wanted('10-bee-flow')) {
+		const page = await openVariantScene(browser, BEE_FLOW_SCENE)
+		await save(page, '10-bee-flow')
+		await page.context().close()
 	}
 } finally {
 	// back to the defaults, so that later end-to-end runs find the users as the global setup left them

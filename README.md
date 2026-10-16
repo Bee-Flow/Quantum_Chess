@@ -85,12 +85,12 @@ other boards.
 | **Ghosts and links**: a split knight, its odds and a link | **The roll**: odds first, then the result and an explanation |
 | ![The lobby and the dashboard widget](screenshots/03-lobby-dashboard.png) | ![A trainer lesson](screenshots/04-trainer.png) |
 | **Lobby and dashboard**: your games, invitations and open challenges | **Trainer**: eleven lessons and eleven puzzles |
-| ![An AI opponent with a comment](screenshots/05-ai-opponent.png) | ![Dark theme](screenshots/06-dark.png) |
-| **AI opponents** with a personality | **Dark theme** and high contrast follow Nextcloud |
+| ![An AI opponent with a comment](screenshots/05-ai-opponent.png) | ![An online game of Four-player chess](screenshots/06-four-player.png) |
+| **AI opponents** with a personality | **Four-player chess online**: every player by name, with chat |
 | ![Phone layout](screenshots/07-phone.png) | ![The catalogue of the chess variants](screenshots/08-variants.png) |
 | **Phone layout** | **Chess variants**: twenty-one ways to play, all with the quantum rules |
-| ![Multiverse chess: timelines, time travel and ghosts](screenshots/09-multiverse.png) | ![Shogi and hexagonal chess](screenshots/10-variant-boards.png) |
-| **Multiverse chess (5D)**: timelines, time travel and ghosts across the multiverse | **Shogi and hexagonal chess**, with split pieces |
+| ![Multiverse chess: timelines, time travel and ghosts](screenshots/09-multiverse.png) | ![Bee Flow Chess against the computer](screenshots/10-bee-flow.png) |
+| **Multiverse chess (5D)**: timelines, time travel and ghosts across the multiverse | **Bee Flow Chess**: protect your Queen Bee; hidden pieces show as honeycomb cells |
 
 The screenshots are produced from a seeded demo on a real Nextcloud with `npm run screenshots`
 (see [`screenshots/README.md`](screenshots/README.md)).
