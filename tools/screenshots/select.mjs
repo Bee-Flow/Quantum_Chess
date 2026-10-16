@@ -17,11 +17,11 @@ export const IMAGES = Object.freeze([
 	'03-lobby-dashboard',
 	'04-trainer',
 	'05-ai-opponent',
-	'06-dark',
+	'06-four-player',
 	'07-phone',
 	'08-variants',
 	'09-multiverse',
-	'10-variant-boards',
+	'10-bee-flow',
 ])
 
 /** Names that stand for several images. */

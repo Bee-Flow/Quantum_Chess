@@ -156,7 +156,7 @@ import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import { deleteLocalGame, listLocalGames } from '../../game/localGames.js'
 import { localGameTitle } from '../../game/localPlayers.js'
 import { useLobby } from '../../online/composables/useLobby.js'
-import { otherPlayer as otherPlayerOf } from '../../online/summaryText.js'
+import { otherPlayer as otherPlayerOf, playersText } from '../../online/summaryText.js'
 import { currentUser, features } from '../../services/initialState.js'
 
 /** @typedef {import('../../services/api.js').GameSummary} GameSummary */
@@ -179,12 +179,16 @@ watch(() => route.fullPath, () => {
 })
 
 /**
- * The other player of an online game.
+ * The other player of an online game; in a game with more than two seats, all of them ("Alice, Bob and Carol").
  *
  * @param {GameSummary} g the game
  * @return {string}
  */
 function opponentName(g) {
+	if (Array.isArray(g.seats)) {
+		// a game with more than two seats: every other player, not just the first
+		return playersText(g, currentUser.uid) || t('quantumchess', 'Open challenge')
+	}
 	return otherPlayer(g)?.displayName ?? t('quantumchess', 'Open challenge')
 }
 

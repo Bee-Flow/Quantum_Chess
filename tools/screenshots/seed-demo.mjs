@@ -7,13 +7,15 @@
  * Seeds the online part of the App Store demo (screenshots/README.md) through the API, as the test users of
  * tests/e2e/README.md: a running game in which bob is to move, an invitation from carol to bob and an open challenge
  * by admin. Pending invitations, challenges and running games of the three users are ended first, so the script can
- * run again.
+ * run again. `seedFourPlayer` seeds a running free-for-all of Four-player chess between all four test users, with
+ * moves the JavaScript rules play and settle as the players' browsers do, and a chat line.
  *
  *   node tools/screenshots/seed-demo.mjs
  */
 /* eslint-disable no-console -- a command-line tool */
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { applyMove, loadVariant, newGame, optionValues, settlementOf, T } from '../../src/variants/index.js'
 import { api } from '../../tests/e2e/helpers/api.mjs'
 import { getUser } from '../../tests/e2e/helpers/env.mjs'
 import { occ } from '../../tests/e2e/helpers/occ.mjs'
@@ -93,6 +95,45 @@ export async function seedDemo() {
 		allowFailure: true,
 	})
 	return { running, invitation, challenge }
+}
+
+/** The players of the game of four, seat by seat: bob is Red (seat 0) and moves first. */
+const FOUR = ['bob', 'carol', 'dave', 'admin']
+/** A centre pawn each, then a split knight each; afterwards bob is to move again. */
+const FOUR_MOVES = ['h2-h4', 'b8-d8', 'g13-g11', 'm7-k7', 'e1-f3|d3', 'a10-c11|c9', 'j14-k12|i12', 'n5-l6|l4']
+
+/**
+ * A running free-for-all of Four-player chess in which bob is to move, with a chat line.
+ *
+ * @return {Promise<number>} the game id
+ */
+export async function seedFourPlayer() {
+	for (const who of FOUR) {
+		await tidy(who)
+	}
+	const V = await loadVariant('fourplayer')
+	const game = (await api('bob', 'POST', 'api/games', {
+		variant: 'fourplayer',
+		options: { mode: 'ffa' },
+		players: FOUR.map(uid),
+		color: 'w',
+		timeControl: 'corr:3d',
+	})).game
+	for (const who of FOUR.slice(1)) {
+		await api(who, 'POST', `api/games/${game.id}/accept`)
+	}
+	const live = (await api('bob', 'GET', `api/games/${game.id}`)).game
+	let state = newGame(V, optionValues(V, live.variantOptions))
+	for (const code of FOUR_MOVES) {
+		const who = FOUR[state.turn]
+		const ply = state.ply
+		const res = await api(who, 'POST', `api/games/${game.id}/v/moves`, { code, ply })
+		state = applyMove(V, state, code, res.move.u / T).state
+		await api(who, 'POST', `api/games/${game.id}/v/moves/${ply}/settle`, settlementOf(state, V))
+	}
+	// one line: the chat box of the screenshot shows one message whole
+	await api('carol', 'POST', `api/games/${game.id}/chat`, { message: 'Game night! Who brought the snacks? 🎲' })
+	return game.id
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

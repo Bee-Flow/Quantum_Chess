@@ -16,17 +16,31 @@ seeds a demo on a running Nextcloud and captures every screen with Playwright, s
 | `03-lobby-dashboard.png` | The lobby with games, an invitation and an open challenge, next to the dashboard widget | desktop |
 | `04-trainer.png` | A trainer lesson with its board, task and hint | desktop |
 | `05-ai-opponent.png` | A game against an AI opponent with a persona comment | desktop |
-| `06-dark.png` | A game in the dark theme | desktop |
+| `06-four-player.png` | An online game of Four-player chess from Bob's seat: every player by name, split knights on all sides, the chat | desktop |
 | `07-phone.png` | The game screen on a phone | phone |
 | `08-variants.png` | The catalogue of the chess variants | desktop |
 | `09-multiverse.png` | Multiverse chess (5D) on the whole board: three timelines, ghosts on present and past boards, the gold and blue halos of the boards to play, the travel arrows and the 5D check lines | desktop |
-| `10-variant-boards.png` | The boards of a shogi and a hexagonal chess game with split pieces, each taken from its game screen | desktop |
+| `10-bee-flow.png` | Bee Flow Chess against the computer: the computer's pieces as honeycomb cells, a split knight with its targets | desktop |
 
 ## Producing them
 
 ```sh
 QC_BASE_URL=http://127.0.0.1:8080 QC_NC_ROOT=/path/to/nextcloud npm run screenshots
 ```
+
+With Nextcloud in a Docker container (`nextcloud` below), name its occ and run the fake AI of `05` in the
+container's network, since the server cannot reach this machine:
+
+```sh
+docker run -d --rm --name qc-fakeai --network container:nextcloud -v "$PWD:/app:ro" node:22-alpine node -e \
+  "import('/app/tests/e2e/helpers/fake-openai.mjs').then((m) => m.startFakeOpenAi({ port: 8999 }))
+     .then(() => setInterval(() => {}, 1 << 30))"
+QC_BASE_URL=http://127.0.0.1:8090 QC_OCC="docker exec -e OC_PASS -u www-data nextcloud php occ" \
+  QC_FAKE_AI_URL=http://127.0.0.1:8999/v1 npm run screenshots
+```
+
+A fresh server works best: disable `firstrunwizard` (its welcome dialog covers the first page) and give `admin` the
+display name Alice Admin.
 
 `npm run screenshots` runs `tools/screenshots/screenshots.mjs` (set `QC_CHROMIUM` to use an installed Chromium). It
 plays the local games through the board with forced rolls, seeds the online lobby through the API
@@ -44,12 +58,13 @@ npm run screenshots -- --out=/tmp/shots          # into another directory, to co
 ## Rules for the images
 
 - **Sizes**: desktop 1440 × 900 CSS pixels at device scale factor 1; phone 390 × 844 at scale 2; the small thumbnail
-  720 × 450 (the desktop image scaled down). The two boards of `10-variant-boards.png` are taken at scale 2, since the
-  composite shows them smaller.
+  720 × 450 (the desktop image scaled down).
 - **Number**: the App Store takes at most ten screenshots (`info.xsd`), and `info.xml` lists all ten.
 - **Content**: the default theme and board theme, English, no personal names other than the demo users, no real API
   keys or server addresses, no browser chrome.
 - **Format**: PNG, losslessly optimised (for example `oxipng -o 4 --strip safe *.png`), under 1 MB each.
 - The App Store loads them from `raw.githubusercontent.com/bee-flow/quantum_chess/main/screenshots/…`, so a change
   becomes visible there as soon as it is on `main`, without a release. Keep the file names: they are referenced by
-  `info.xml`.
+  `info.xml`. A renamed image reaches the store only with the next release (the store reads `info.xml` from the
+  released package), so the old file stays until then: `06-dark.png` and `10-variant-boards.png` are what 2.3.0
+  shows and can be deleted once a release lists `06-four-player.png` and `10-bee-flow.png`.

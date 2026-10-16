@@ -47,7 +47,7 @@ describe('parseScreenshotArgs', () => {
 	})
 
 	it('reads "variants" as 08 to 10', () => {
-		expect(made(['variants'])).toEqual(['08-variants', '09-multiverse', '10-variant-boards'])
+		expect(made(['variants'])).toEqual(['08-variants', '09-multiverse', '10-bee-flow'])
 	})
 
 	it('writes into the directory of --out', () => {

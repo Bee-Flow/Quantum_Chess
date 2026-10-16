@@ -12,6 +12,14 @@ release as its release notes.
 
 ## [Unreleased]
 
+### Changed
+
+- New App Store screenshots, among them an online game of Four-player chess and Bee Flow Chess.
+
+### Fixed
+
+- The app's navigation names every opponent of a game of four under *Your move*, not only the first.
+
 ## [2.3.0] - 2026-10-16
 
 Online games with three or four players, played live, after the feedback in issue #23.
