@@ -273,4 +273,17 @@ final class InvitePolicyTest extends TestCase {
 		$this->assertFalse($this->policy()->canSeeOpenChallenge('carol', $scoped));
 		$this->assertTrue($policy->isInGroup('alice', 'chess'));
 	}
+
+	public function testAPlayerWhoTookASeatHasNothingLeftToJoin(): void {
+		$game = GameBuilder::open([
+			'variant' => 'fourplayer',
+			'variantOptions' => '{}',
+			'variantRules' => 1,
+			'seatCount' => 4,
+			'whiteUid' => null,
+			'blackUid' => null,
+			'state' => '{"v":1,"seats":["alice","bob",null,null],"accepted":[true,true,false,false]}',
+		]);
+		$this->assertFalse($this->policy()->canSeeOpenChallenge('bob', $game));
+	}
 }

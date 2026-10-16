@@ -6,7 +6,7 @@
 
 /**
  * The lobby store: seeded from initial state, a 304 summary costs nothing, a changed token reloads the lobby, actions
- * reload it too, and Home makes the polling faster.
+ * reload it too, Home makes the polling faster, and pushed events reload it at once (debounced).
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -88,5 +88,31 @@ describe('lobby store', () => {
 		expect(api.getLobby).toHaveBeenCalledTimes(1)
 		expect(await lobby.decline(2)).toBeNull()
 		expect(notify).toHaveBeenCalledWith('Not found')
+	})
+
+	it('checks the summary once for a burst of pushed game updates and notifications, until stopped', async () => {
+		const api = fakeApi()
+		const env = { visibilityState: 'visible', addEventListener() {}, removeEventListener() {} }
+		const handlers = { game: new Set(), notification: new Set() }
+		const listen = (set) => vi.fn((fn) => {
+			set.add(fn)
+			return () => set.delete(fn)
+		})
+		const push = { onGameUpdate: listen(handlers.game), onNotification: listen(handlers.notification) }
+		const poller = { doc: env, win: env }
+		const lobby = createLobby({ api, initialLobby: SEED, poller, push, pushDebounceMs: 500 })
+		lobby.start()
+		lobby.start()
+		expect(push.onGameUpdate).toHaveBeenCalledTimes(1)
+		handlers.game.forEach((fn) => fn({ id: 7, rev: 3 }))
+		handlers.notification.forEach((fn) => fn(null))
+		expect(api.getSummary).not.toHaveBeenCalled()
+		// the debounce, then the poll that pollNow schedules
+		await vi.advanceTimersByTimeAsync(501)
+		// the cheap summary poll; the lobby itself reloads only when its token changed (304 here)
+		expect(api.getSummary).toHaveBeenCalledTimes(1)
+		expect(api.getLobby).not.toHaveBeenCalled()
+		lobby.stop()
+		expect(handlers.game.size + handlers.notification.size).toBe(0)
 	})
 })

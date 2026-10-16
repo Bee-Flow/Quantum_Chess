@@ -12,6 +12,43 @@ release as its release notes.
 
 ## [Unreleased]
 
+Online games with three or four players, played live, after the feedback in issue #23.
+
+### Added
+
+- **Instant moves with notify_push**: when the Nextcloud app *Client Push* (notify_push) is installed, a move, a chat
+  line or any other change shows on the other players' screens at once. Without it, a game that is being played live
+  now checks every few seconds instead of slowing down to half a minute.
+- **Sounds in the chess variants**: moves, captures and the end of the game sound as in classic Quantum Chess, online
+  and on this device, following the sound setting.
+- **Every player is told when a game of four starts**, and the player who moves first gets *It's your move*.
+
+### Changed
+
+- **No notification of your turn or of chat while the game is open** in a visible tab. It still comes when you are
+  elsewhere.
+- **Resigning a chess variant game asks first**, online and on this device (as the classic game does), and so does
+  aborting an online variant game.
+- **Declining a seat of an open challenge for four** frees the seat for someone else instead of cancelling the game.
+  When a declined game is cancelled, every player who had taken a seat is told.
+- **The lobby, Recent games and the dashboard** name the creator of an invitation and all opponents of a game of four,
+  instead of one of them. A game you joined shows under your own games while it waits for players.
+
+### Fixed
+
+- The players next to the board of an online variant game all read *You*; each seat now shows its player's name.
+- In a free-for-all of four, a player who was already out shared in the win when another resigned or ran out of time;
+  the player who was out could also still resign, and a draw needed their vote.
+- Every finished game of four showed as *Draw* in Recent games.
+- Open challenges you already joined showed under *Open challenges*, where joining again failed.
+- Deleting the account of the creator of a game of four deleted the game for every other player.
+- The end of a game of four names who resigned or ran out of time.
+- Accept and decline of a draw offer stayed visible after you agreed.
+- A move that another player's move overtook now says so and updates the board, instead of *The move could not be
+  sent*.
+- In the chat of a game of four, your own messages showed under your name instead of *You*.
+- Spectators of a variant game no longer read *Your king is in danger*.
+
 ## [2.2.0] - 2026-10-06
 
 ### Added

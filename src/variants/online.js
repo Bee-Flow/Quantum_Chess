@@ -128,6 +128,8 @@ export function positionHash(state) {
  * @property {number|null} [nextSeat] claimed seat to move after it, null while the move is not settled
  * @property {string|null} [result] claimed result code after it (see `resultCode`)
  * @property {string|null} [stateHash] claimed position hash after it
+ * @property {number[]|null} [out] claimed sides that are out after it (games of more than two sides; older moves
+ *   have none)
  */
 
 /**
@@ -135,22 +137,47 @@ export function positionHash(state) {
  * @property {number} nextSeat seat to move after it
  * @property {string} result result code after it
  * @property {string} stateHash position hash after it
+ * @property {number[]} [out] sides that are out after it, in ascending order: only in a variant of more than two
+ *   sides that knows when a side is out (`V.isOut`)
  */
 
 /**
- * What a move leads to.
+ * What a move leads to. With the variant, a game of more than two sides also says which sides are out (looked up in
+ * the first world); a game of two sides never has `out`, so its settlements stay as they were.
  *
  * @param {object} state state after the move
+ * @param {object|null} [V] variant
  * @return {OnlineSettlement}
  */
-export function settlementOf(state) {
-	return { nextSeat: state.turn, result: resultCode(state.result), stateHash: positionHash(state) }
+export function settlementOf(state, V = null) {
+	const settlement = { nextSeat: state.turn, result: resultCode(state.result), stateHash: positionHash(state) }
+	if (typeof V?.isOut === 'function' && V.sides?.length > 2) {
+		const b = state.worlds[0].b
+		settlement.out = V.sides.map((_, i) => i).filter((i) => V.isOut(b, i))
+	}
+	return settlement
+}
+
+/**
+ * Whether a claimed list of sides that are out agrees with the computed one. A claim that is not a list (a move
+ * stored before `out` existed, or one not settled yet) is not checked.
+ *
+ * @param {unknown} claimed the claimed `out` of a stored move
+ * @param {number[]|undefined} computed the computed `out` (see `settlementOf`)
+ * @return {boolean}
+ */
+function outAgrees(claimed, computed) {
+	if (!Array.isArray(claimed) || !computed) {
+		return true
+	}
+	return claimed.length === computed.length && claimed.every((side, i) => side === computed[i])
 }
 
 /**
  * Replay the stored moves of an online game, from its start or from a snapshot, and compare every settled claim with
  * what the rules give. Stops at the first move that does not agree: the wrong ply, the wrong seat, an illegal move, a
- * roll outside [0, T), a move after the end of the game, or a claim (next seat, result, position hash) that differs.
+ * roll outside [0, T), a move after the end of the game, or a claim (next seat, result, position hash, and the sides
+ * that are out when the move has that list) that differs.
  *
  * @param {object} V variant
  * @param {object} start the state to replay from: the start of the game, or a snapshot taken after `start.ply` plies
@@ -185,11 +212,14 @@ export function replayOnline(V, start, moves, onStep = null) {
 		if (!played) {
 			return fail('illegal')
 		}
-		const next = settlementOf(played.state)
+		const next = settlementOf(played.state, V)
 		for (const field of ['nextSeat', 'result', 'stateHash']) {
 			if (m[field] !== null && m[field] !== undefined && m[field] !== next[field]) {
 				return fail(field)
 			}
+		}
+		if (!outAgrees(m.out, next.out)) {
+			return fail('out')
 		}
 		onStep?.(m, played, state)
 		state = played.state

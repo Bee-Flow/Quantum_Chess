@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { cloneWorld, OFF, placePiece } from '../../../src/variants/core/world.js'
 import {
 	CATALOG,
 	isOnlineVariant,
@@ -22,6 +23,7 @@ import {
 	replayOnline,
 	resultCode,
 	seatCount,
+	settlementOf,
 	teamsOf,
 } from '../../../src/variants/index.js'
 
@@ -83,6 +85,39 @@ describe('online variants: result codes', () => {
 	})
 })
 
+/**
+ * A state of a game of four in which `sides` have lost their king (in the first world).
+ *
+ * @param {object} V the rules of Four-player chess
+ * @param {number[]} sides the sides without a king
+ * @return {object}
+ */
+function withoutKings(V, sides) {
+	const state = newGame(V, { mode: 'ffa' })
+	const b = cloneWorld(state.worlds[0].b)
+	for (let id = 0; id < b.sq.length; id++) {
+		if (sides.includes(b.sd[id]) && b.sq[id] >= 0 && V.types[b.ty[id]]?.royal) {
+			placePiece(b, id, OFF)
+		}
+	}
+	return { ...state, worlds: [{ ...state.worlds[0], b }, ...state.worlds.slice(1)] }
+}
+
+describe('online variants: settlement', () => {
+	it('lists the sides that are out in a game of four, in ascending order', async () => {
+		const V = await loadVariant('fourplayer')
+		expect(settlementOf(newGame(V, { mode: 'ffa' }), V).out).toEqual([])
+		expect(settlementOf(withoutKings(V, [3, 1]), V).out).toEqual([1, 3])
+	})
+
+	it('has no list of sides that are out in a game of two, or without the variant', async () => {
+		const V = await loadVariant('atomic')
+		expect(settlementOf(newGame(V, {}), V)).not.toHaveProperty('out')
+		const four = await loadVariant('fourplayer')
+		expect(settlementOf(newGame(four, { mode: 'ffa' }))).not.toHaveProperty('out')
+	})
+})
+
 describe('online variants: replay', () => {
 	const games = FIXTURE.replays.map((r, i) => [r.variant + ' #' + i, r])
 	it.each(games)('replays %s to the recorded claims', async (_, game) => {
@@ -91,7 +126,7 @@ describe('online variants: replay', () => {
 		expect(r.mismatch, REGENERATE).toBeNull()
 		const last = game.moves.at(-1)
 		expect(r.state.ply).toBe(last.ply + 1)
-		expect(r.settlement).toEqual({ nextSeat: last.nextSeat, result: last.result, stateHash: last.stateHash })
+		expect(r.settlement).toMatchObject({ nextSeat: last.nextSeat, result: last.result, stateHash: last.stateHash })
 		expect(positionHash(r.state)).toBe(last.stateHash)
 	})
 
@@ -132,6 +167,17 @@ describe('online variants: replay', () => {
 		const r = replayOnline(V, start, forged)
 		expect(r.mismatch).toEqual({ ply: 12, reason })
 		expect(r.state.ply).toBe(12)
+	})
+
+	it('checks the sides that are out only when a move has that list', async () => {
+		const { V, start, moves } = await recorded('fourplayer')
+		const honest = moves.map((m) => ({ ...m, out: null }))
+		expect(replayOnline(V, start, honest).mismatch).toBeNull()
+		const r = replayOnline(V, start, moves.slice(0, 13))
+		const claimed = moves.slice(0, 13).map((m, i) => (i === 12 ? { ...m, out: r.settlement.out } : m))
+		expect(replayOnline(V, start, claimed).mismatch).toBeNull()
+		const forged = moves.map((m, i) => (i === 12 ? { ...m, out: [...r.settlement.out, 9] } : m))
+		expect(replayOnline(V, start, forged).mismatch).toEqual({ ply: 12, reason: 'out' })
 	})
 
 	it('refuses a move after the end of the game', async () => {

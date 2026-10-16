@@ -192,6 +192,18 @@ final class VariantGameplayServiceTest extends TestCase {
 		$this->assertSame([], $this->log, 'the same settlement again changes nothing');
 	}
 
+	public function testATwoSeatGameIgnoresTheSeatsThatAreOut(): void {
+		$this->started();
+		$this->variantGameplay()->move(100, 'alice', 'e2-e4', 0, null, null);
+		$game = $this->variantGameplay()->settle(100, 'alice', 0, 1, '', self::HASH, [7]);
+		$this->assertSame(['b', null, []], [
+			$game->getTurn(),
+			$this->variantMoves[100][0]->getOutSeats(),
+			VariantTurn::of($game)->out,
+		]);
+		$this->assertSame(Game::STATUS_ACTIVE, $this->vg()->settle(100, 'bob', 0, 1, '', self::HASH, [0])->getStatus());
+	}
+
 	public function testAnyPlayerMaySettleForAMoverWhoLeft(): void {
 		$this->started();
 		$this->variantGameplay()->move(100, 'alice', 'e2-e4', 0, null, null);

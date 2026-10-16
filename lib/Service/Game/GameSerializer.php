@@ -148,18 +148,19 @@ class GameSerializer {
 	}
 
 	/**
-	 * The seats of a game with more than two seats: the player (null for an open seat), whether they took the seat,
-	 * and the team.
+	 * The seats of a game with more than two seats: the player (null for an open seat, "Deleted user" once the game has
+	 * started), whether they took the seat, and the team.
 	 *
 	 * @return list<array{seat: int, player: ?array, accepted: bool, team: ?int}>
 	 */
 	private function seats(Game $game): array {
 		$turn = VariantTurn::of($game);
+		$started = $game->getStartedAt() !== null;
 		$out = [];
 		foreach ($game->seatUids() as $number => $uid) {
 			$out[] = [
 				'seat' => $number,
-				'player' => $uid === null ? null : $this->userRef($uid),
+				'player' => $this->seat($uid, $started),
 				'accepted' => $turn->accepted[$number] ?? false,
 				'team' => VariantCatalog::teamOf((string)$game->getVariant(), $game->getVariantOptionValues(), $number),
 			];
@@ -232,7 +233,8 @@ class GameSerializer {
 
 	/**
 	 * The summary plus what the game screen needs: the position, the hash chain, draw and chat state, the players'
-	 * ratings and what the viewer may do.
+	 * ratings and what the viewer may do. In a game of more than two seats a seat that is out may not resign, abort or
+	 * take part in a draw, and a seat that agreed to the open draw offer may not answer it again.
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -249,14 +251,19 @@ class GameSerializer {
 			? !in_array(null, $game->seatUids(), true)
 			: $game->opponentOf($viewer) !== null);
 		$chatOpen = $this->settings->chatEnabled() && ChatService::isOpen($game, $now);
+		$turn = $game->isVariant() ? VariantTurn::of($game) : null;
+		$playing = $active && !VariantGameplayService::isOut($game, (int)$color);
+		$voted = $game->isMultiSeat() && in_array((int)$color, $turn?->drawVotes ?? [], true);
 		return $dto + [
 			'state' => !$game->isVariant() && is_array($state) ? $state : null,
 			'chain' => $game->getChain(),
 			'drawOffer' => $offer === null ? null : ['by' => $offer, 'ply' => $game->getDrawOfferPly()],
-			'canOfferDraw' => $active && $offer !== $color && ($drawAt === null || $game->getPly() >= $drawAt),
+			'canOfferDraw' => $playing && !$voted && $offer !== $color
+				&& ($drawAt === null || $game->getPly() >= $drawAt),
+			'canAnswerDraw' => $playing && !$voted && $offer !== null && $offer !== $color,
 			'drawAvailableAtPly' => $drawAt !== null && $game->getPly() < $drawAt ? $drawAt : null,
-			'canAbort' => $active && GameplayService::canAbort($game),
-			'canResign' => $active,
+			'canAbort' => $playing && GameplayService::canAbort($game),
+			'canResign' => $playing,
 			'canRematch' => $rematch,
 			'ratings' => [
 				'w' => $this->rating($game->getWhiteUid(), $game->getVariant()),
@@ -269,10 +276,12 @@ class GameSerializer {
 			'chatCount' => $game->getChatCount(),
 			'chatOpen' => $chatOpen && $color !== null,
 			'now' => $now,
-		] + ($game->isVariant() ? [
+		] + ($turn !== null ? [
 			'seatToMove' => $game->getSeatToMove(),
-			'pendingPly' => VariantTurn::of($game)->pending,
-			'drawVotes' => VariantTurn::of($game)->drawVotes,
+			'pendingPly' => $turn->pending,
+			'drawVotes' => $turn->drawVotes,
+			'outSeats' => $turn->out,
+			'endedBySeat' => $turn->endedBy,
 		] : []) + (VariantCatalog::isRefereed((string)$game->getVariant()) ? [
 			// a server-ruled game: the viewer's own view of the position, the real one once the game has ended
 			'view' => VariantGameplayService::viewOf($game, $viewer),
@@ -311,6 +320,7 @@ class GameSerializer {
 				'nextSeat' => $move->getNextSeat(),
 				'result' => $move->getResult(),
 				'stateHash' => $move->getStateHash(),
+				'out' => self::seatList($move->getOutSeats()),
 				'chain' => $move->getChain(),
 				'createdAt' => $move->getCreatedAt(),
 			];
@@ -326,6 +336,18 @@ class GameSerializer {
 			'stateHash' => $move->getStateHash(),
 			'createdAt' => $move->getCreatedAt(),
 		];
+	}
+
+	/**
+	 * The seats of a comma-separated list (VariantMove `outSeats`): empty for none, null when the list was not said.
+	 *
+	 * @return list<int>|null
+	 */
+	private static function seatList(?string $seats): ?array {
+		if ($seats === null) {
+			return null;
+		}
+		return $seats === '' ? [] : array_map('intval', explode(',', $seats));
 	}
 
 	/**

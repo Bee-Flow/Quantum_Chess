@@ -5,7 +5,8 @@
 
 <!--
   The online sections of Home: Your move, Invitations (Accept and Decline inline), Waiting for opponent (with outgoing
-  invitations and own open challenges), and Open challenges to join. Sections without games are not shown. Home polls
+  invitations, own open challenges and games of more than two seats the viewer took a seat in; only the creator can
+  cancel), and Open challenges to join. Sections without games are not shown. Home polls
   the lobby faster while it is open.
 -->
 <template>
@@ -72,6 +73,7 @@
 							{{ t('quantumchess', 'Copy link') }}
 						</NcButton>
 						<NcButton
+							v-if="w.game.creator?.userId === me"
 							size="small"
 							:disabled="busy === w.game.id"
 							:data-test="'lobby-cancel-' + w.game.id"
@@ -117,13 +119,14 @@ import { useRouter } from 'vue-router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcCounterBubble from '@nextcloud/vue/components/NcCounterBubble'
 import LobbyGameCard from './LobbyGameCard.vue'
-import { features } from '../../../services/initialState.js'
+import { currentUser, features } from '../../../services/initialState.js'
 import { useLobby } from '../../composables/useLobby.js'
 
 const router = useRouter()
 const lobby = useLobby()
 const enabled = features.multiplayer
 const busy = ref(null)
+const me = currentUser.uid
 
 const data = computed(() => lobby.lobby.value ?? {})
 const now = computed(() => data.value.now ?? Date.now() / 1000)

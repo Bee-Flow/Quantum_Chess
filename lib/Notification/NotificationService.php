@@ -17,6 +17,8 @@ use OCA\QuantumChess\Service\Game\VariantResult;
 use OCA\QuantumChess\Service\Game\VariantTurn;
 use OCA\QuantumChess\Service\Settings\MultiplayerSettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use OCP\Notification\IManager as INotificationManager;
 use Psr\Log\LoggerInterface;
 
@@ -24,14 +26,15 @@ use Psr\Log\LoggerInterface;
  * Sends and removes the app's notifications. The game services call it after their transaction has committed.
  *
  * Notifications come in families; a user has at most one notification per game and family, and a new one replaces
- * the old one. The user's notification switches only stop new notifications from being sent. A failure here is logged
- * and never breaks the game.
+ * the old one. The user's notification switches only stop new notifications from being sent. A player who has the game
+ * open (noteWatching) gets no notification of their turn or of chat in it. A failure here is logged and never breaks
+ * the game.
  */
 class NotificationService {
 	/** The subjects of each family. */
 	public const FAMILIES = [
 		'invite' => ['invite', 'rematch'],
-		'info' => ['invite_accepted', 'open_joined', 'invite_declined', 'game_ended_deleted'],
+		'info' => ['invite_accepted', 'open_joined', 'invite_declined', 'game_ended_deleted', 'game_started'],
 		'turn' => ['your_turn'],
 		'draw' => ['draw_offer'],
 		'result' => ['game_over'],
@@ -39,13 +42,24 @@ class NotificationService {
 	];
 	/** The length of the chat excerpt in a chat notification, in characters. */
 	public const EXCERPT_LENGTH = 80;
+	/** How long a player counts as watching a game after their last poll said so, in seconds. */
+	public const WATCH_TTL = 45;
+	/** The families that a player who watches the game does not get. */
+	private const QUIET_WHILE_WATCHING = ['turn', 'chat'];
+
+	private ?ICache $watching = null;
 
 	public function __construct(
 		private readonly INotificationManager $manager,
 		private readonly MultiplayerSettingsService $settings,
 		private readonly ITimeFactory $time,
 		private readonly LoggerInterface $logger,
+		private readonly ICacheFactory $cacheFactory,
 	) {
+	}
+
+	private function watchCache(): ICache {
+		return $this->watching ??= $this->cacheFactory->createDistributed('quantumchess-watch');
 	}
 
 	/**
@@ -53,7 +67,21 @@ class NotificationService {
 	 * notification of their turn or of chat in that game.
 	 */
 	public function noteWatching(Game $game, string $uid): void {
-		// filled in by the presence work (issue #23)
+		try {
+			$this->watchCache()->set($game->getId() . '/' . $uid, 1, self::WATCH_TTL);
+		} catch (\Throwable $e) {
+			$this->logger->debug('Could not note that a player watches a game.', ['exception' => $e]);
+		}
+	}
+
+	/** Whether `$uid` has game `$gameId` open (noteWatching); when the cache fails, they do not. */
+	private function isWatching(string $uid, int $gameId): bool {
+		try {
+			return $this->watchCache()->get($gameId . '/' . $uid) !== null;
+		} catch (\Throwable $e) {
+			$this->logger->debug('Could not check whether a player watches a game.', ['exception' => $e]);
+			return false;
+		}
 	}
 
 	/**
@@ -98,14 +126,56 @@ class NotificationService {
 		], 'info', 'invites');
 	}
 
-	/** Tells the creator that the opponent (in a game with more than two seats, `$by`) declined the invitation. */
-	public function inviteDeclined(Game $game, ?string $by = null): void {
-		$to = $game->getCreatorUid();
+	/**
+	 * Tells the creator that the opponent declined the invitation. In a game with more than two seats `$by` declined:
+	 * with `$reopened` their seat is open again and only the creator hears of it; otherwise the game was cancelled and
+	 * every player who had taken a seat hears of it.
+	 */
+	public function inviteDeclined(Game $game, ?string $by = null, bool $reopened = false): void {
 		$from = $by ?? $game->getOpponentUid();
-		if ($to === null || $from === null) {
+		if ($from === null) {
 			return;
 		}
-		$this->send($to, $game, 'invite_declined', ['actor' => $from], 'info', 'invites');
+		if (!$game->isMultiSeat()) {
+			$to = $game->getCreatorUid();
+			if ($to !== null) {
+				$this->send($to, $game, 'invite_declined', ['actor' => $from], 'info', 'invites');
+			}
+			return;
+		}
+		$params = ['actor' => $from, 'variant' => $game->getVariant()];
+		if ($reopened) {
+			$to = $game->getCreatorUid();
+			if ($to !== null && $to !== $from) {
+				$this->send($to, $game, 'invite_declined', $params + ['reopened' => true], 'info', 'invites');
+			}
+			return;
+		}
+		$accepted = VariantTurn::of($game)->accepted;
+		foreach ($game->seatUids() as $seat => $uid) {
+			if ($uid !== null && $uid !== $from && ($accepted[$seat] ?? false)) {
+				$this->send($uid, $game, 'invite_declined', $params + ['cancelled' => true], 'info', 'invites');
+			}
+		}
+	}
+
+	/**
+	 * Tells the players of a game with more than two seats that it started, except `$by`, who took the last seat. The
+	 * player of seat 0 moves first and hears that it is their move.
+	 */
+	public function gameStarted(Game $game, string $by): void {
+		foreach ($game->seatUids() as $seat => $uid) {
+			if ($uid === null || $uid === $by) {
+				continue;
+			}
+			$yourMove = (string)$seat === $game->getTurn();
+			$this->send($uid, $game, 'game_started', [
+				'actor' => $by,
+				'variant' => $game->getVariant(),
+				'yourMove' => $yourMove,
+				'ply' => $game->getPly(),
+			], 'info', $yourMove ? 'yourTurn' : 'invites');
+		}
 	}
 
 	/**
@@ -183,7 +253,12 @@ class NotificationService {
 		if ($from === null) {
 			return;
 		}
+		// a seat that is out of a free-for-all has no say in a draw
+		$out = $game->isMultiSeat() ? VariantTurn::of($game)->out : [];
 		foreach ($game->othersOf($from) as $to) {
+			if (in_array((int)$game->colorOf($to), $out, true)) {
+				continue;
+			}
 			$this->send($to, $game, 'draw_offer', [
 				'actor' => $from,
 				'moveNumber' => intdiv($game->getPly(), 2) + 1,
@@ -263,6 +338,8 @@ class NotificationService {
 		} catch (\InvalidArgumentException) {
 			$result = null;
 		}
+		$endedBy = VariantTurn::of($game)->endedBy;
+		$ender = $endedBy === null ? null : $game->uidOf((string)$endedBy);
 		$deferred = $this->manager->defer();
 		try {
 			foreach ($game->seatUids() as $seat => $uid) {
@@ -272,7 +349,8 @@ class NotificationService {
 				foreach (['turn', 'draw', 'invite'] as $family) {
 					$this->clear($uid, $game->getId(), $family);
 				}
-				$other = $game->othersOf($uid)[0] ?? null;
+				$byEnder = $ender !== null && $ender !== $uid;
+				$other = $byEnder ? $ender : ($game->othersOf($uid)[0] ?? null);
 				if ($uid === $except || $other === null) {
 					continue;
 				}
@@ -288,6 +366,9 @@ class NotificationService {
 					'reason' => $game->getResultReason(),
 					'rating' => null,
 					'delta' => null,
+					'seats' => true,
+					'variant' => $game->getVariant(),
+					'endedBy' => $byEnder,
 				], 'result', 'results');
 			}
 		} finally {
@@ -391,6 +472,9 @@ class NotificationService {
 		string $switch,
 	): void {
 		$this->clear($uid, $game->getId(), $family);
+		if (in_array($family, self::QUIET_WHILE_WATCHING, true) && $this->isWatching($uid, (int)$game->getId())) {
+			return;
+		}
 		try {
 			if (!($this->settings->notificationSwitches($uid)[$switch] ?? true)) {
 				return;

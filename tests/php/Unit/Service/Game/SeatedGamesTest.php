@@ -69,11 +69,25 @@ final class SeatedGamesTest extends TestCase {
 		return $game;
 	}
 
-	/** Plays and settles a move of `$uid`; the turn passes to `$next`. */
-	private function play(Game $game, string $uid, int $next, string $result = ''): Game {
+	/**
+	 * Plays and settles a move of `$uid`; the turn passes to `$next`.
+	 *
+	 * @param list<int>|null $out the seats that are out after the move, as the settling browser names them
+	 */
+	private function play(Game $game, string $uid, int $next, string $result = '', ?array $out = null): Game {
 		$ply = $game->getPly();
 		$this->variantGameplay()->move((int)$game->getId(), $uid, 'a' . $ply, $ply, null, null);
-		return $this->variantGameplay()->settle((int)$game->getId(), $uid, $ply, $next, $result, self::HASH);
+		return $this->variantGameplay()->settle((int)$game->getId(), $uid, $ply, $next, $result, self::HASH, $out);
+	}
+
+	/** A free-for-all game in which every seat has played and carol (seat 2) is out; dave is to move. */
+	private function withCarolOut(): Game {
+		$game = $this->started();
+		foreach ([['alice', 1, []], ['bob', 2, []], ['carol', 3, []], ['dave', 0, []], ['alice', 1, []]] as $step) {
+			$game = $this->play($game, $step[0], $step[1], '', $step[2]);
+		}
+		// bob takes carol's king: her turn is skipped
+		return $this->play($game, 'bob', 3, '', [2]);
 	}
 
 	public function testAnInvitationNamesAPlayerPerSeat(): void {
@@ -149,7 +163,7 @@ final class SeatedGamesTest extends TestCase {
 			$game->getChain(),
 		);
 		$this->assertSame(['alice', 'bob', 'dave', 'carol'], array_map(fn ($s) => $s->getUid(), $this->seats));
-		$this->assertContains("notify inviteAccepted(#100, false, 'carol')", $this->log);
+		$this->assertContains("notify gameStarted(#100, 'carol')", $this->log, 'the game started');
 	}
 
 	public function testRandomSeatsAreDrawnAtTheStart(): void {
@@ -174,7 +188,7 @@ final class SeatedGamesTest extends TestCase {
 		]);
 		$game = $this->invitations()->decline(100, 'carol');
 		$this->assertSame(Game::STATUS_DECLINED, $game->getStatus());
-		$this->assertContains("notify inviteDeclined(#100, 'carol')", $this->log);
+		$this->assertContains("notify inviteDeclined(#100, 'carol', false)", $this->log);
 		$this->assertApiError('invalid_status', fn () => $this->invitations()->accept(100, 'bob'));
 	}
 
@@ -254,6 +268,156 @@ final class SeatedGamesTest extends TestCase {
 		$game = $this->gameplay()->draw(100, 'dave', 'decline');
 		$this->assertSame([null, []], [$game->getDrawOffer(), VariantTurn::of($game)->drawVotes]);
 		$this->assertApiError('no_draw_offer', fn () => $this->gameplay()->draw(100, 'bob', 'accept'));
+	}
+
+	public function testTheSettlementNamesTheSeatsThatAreOut(): void {
+		$game = $this->withCarolOut();
+		$this->assertSame([[2], '3', [0, 1, 3]], [
+			VariantTurn::of($game)->out,
+			$game->getTurn(),
+			VariantGameplayService::playingSeats($game),
+		]);
+		$this->assertSame('2', $this->variantMoves[100][5]->getOutSeats());
+		$this->assertSame('', $this->variantMoves[100][4]->getOutSeats(), 'no seat out');
+	}
+
+	public function testTheSeatsThatAreOutAreChecked(): void {
+		$game = $this->started();
+		$this->variantGameplay()->move(100, 'alice', 'a0', 0, null, null);
+		$settle = fn (int $next, ?array $out) => fn () => $this->variantGameplay()
+			->settle(100, 'alice', 0, $next, '', self::HASH, $out);
+		foreach ([[4], [-1], [2, 2], [1]] as $out) {
+			$e = $this->assertApiError('invalid_argument', $settle(1, $out));
+			$this->assertSame('out', $e->getExtra()['field'] ?? null, json_encode($out));
+		}
+		// a skipped seat may still play: in free for all a player who cannot move sits out
+		$game = $this->variantGameplay()->settle(100, 'alice', 0, 2, '', self::HASH, []);
+		$this->assertSame(['2', []], [$game->getTurn(), VariantTurn::of($game)->out]);
+	}
+
+	public function testASeatThatIsOutStaysOut(): void {
+		$game = $this->withCarolOut();
+		$this->variantGameplay()->move(100, 'dave', 'a6', 6, null, null);
+		$this->assertApiError(
+			'invalid_argument',
+			fn () => $this->variantGameplay()->settle(100, 'dave', 6, 0, '', self::HASH, []),
+		);
+		$this->assertApiError(
+			'invalid_argument',
+			fn () => $this->variantGameplay()->settle(100, 'dave', 6, 2, '', self::HASH, [2]),
+			'the seat to move next is not out',
+		);
+		$game = $this->variantGameplay()->settle(100, 'dave', 6, 1, '', self::HASH, [0, 2]);
+		$this->assertSame([0, 2], VariantTurn::of($game)->out);
+	}
+
+	public function testABrowserThatDoesNotNameThemTakesNoSkippedSeatAsOut(): void {
+		$game = $this->started();
+		foreach ([['alice', 1], ['bob', 2], ['carol', 3], ['dave', 0]] as [$uid, $next]) {
+			$game = $this->play($game, $uid, $next);
+		}
+		$game = $this->play($game, 'alice', 3);
+		$this->assertSame([], VariantTurn::of($game)->out, 'a skipped seat may only sit out');
+		$this->assertNull($this->variantMoves[100][4]->getOutSeats(), 'the move keeps what the browser said');
+		$game = $this->play($game, 'dave', 0, '', [1, 2]);
+		$this->assertSame([1, 2], VariantTurn::of($game)->out, 'a newer browser names them');
+		$this->assertSame('win:3/resign', $this->gameplay()->resign(100, 'alice')->getVariantResult());
+	}
+
+	public function testATeamGameDoesNotTakeSkippedSeatsAsOut(): void {
+		$game = $this->started('fourplayer', ['mode' => 'teams']);
+		$game = $this->play($game, 'alice', 2);
+		$this->assertSame([], VariantTurn::of($game)->out);
+	}
+
+	public function testTwoSettlementsOfOneMoveAgreeWhenOneDoesNotNameTheSeatsThatAreOut(): void {
+		$game = $this->withCarolOut();
+		$settle = fn (string $uid, ?array $out) => $this->variantGameplay()
+			->settle(100, $uid, 5, 3, '', self::HASH, $out);
+		$this->assertSame(Game::STATUS_ACTIVE, $settle('dave', null)->getStatus(), 'an older browser');
+		$this->assertSame(Game::STATUS_ACTIVE, $settle('alice', [2])->getStatus());
+		$this->variantGameplay()->move(100, 'dave', 'a6', 6, null, null);
+		$this->variantGameplay()->settle(100, 'dave', 6, 0, '', self::HASH, null);
+		$this->assertSame(Game::STATUS_ACTIVE, $this->variantGameplay()
+			->settle(100, 'alice', 6, 0, '', self::HASH, [2])->getStatus(), 'the first settler did not say');
+		$this->assertSame(Game::STATUS_ABORTED, $settle('carol', [1, 2])->getStatus(), 'a different list disputes');
+		$this->assertSame('disputed', $this->stored[100]->getResultReason());
+	}
+
+	public function testAResignationAfterAnEliminationLeavesTheSeatThatIsOut(): void {
+		$this->withCarolOut();
+		$game = $this->gameplay()->resign(100, 'bob');
+		$this->assertSame(['win:0,3/resign', 1], [$game->getVariantResult(), VariantTurn::of($game)->endedBy]);
+	}
+
+	public function testATimeOutAfterAnEliminationLeavesTheSeatThatIsOut(): void {
+		$game = $this->withCarolOut();
+		$game->setDeadlineAt(self::NOW - 1);
+		$this->assertApiError('game_over', fn () => $this->variantGameplay()->move(100, 'dave', 'x', 6, null, null));
+		$this->assertSame(['timeout', 'win:0,1/timeout', 3], [
+			$game->getResultReason(),
+			$game->getVariantResult(),
+			VariantTurn::of($game)->endedBy,
+		]);
+	}
+
+	public function testASeatThatIsOutCannotResignAbortOrDraw(): void {
+		$this->withCarolOut();
+		foreach ([
+			fn () => $this->gameplay()->resign(100, 'carol'),
+			fn () => $this->gameplay()->abort(100, 'carol'),
+			fn () => $this->gameplay()->draw(100, 'carol', 'offer'),
+		] as $action) {
+			$this->assertApiError('invalid_status', $action);
+		}
+		$this->gameplay()->draw(100, 'alice', 'offer');
+		$this->assertApiError('invalid_status', fn () => $this->gameplay()->draw(100, 'carol', 'accept'));
+		$this->assertApiError('invalid_status', fn () => $this->gameplay()->draw(100, 'carol', 'decline'));
+	}
+
+	public function testADrawNeedsOnlyTheSeatsThatStillPlay(): void {
+		$this->withCarolOut();
+		$this->gameplay()->draw(100, 'alice', 'offer');
+		$game = $this->gameplay()->draw(100, 'bob', 'accept');
+		$this->assertApiError('draw_not_allowed', fn () => $this->gameplay()->draw(100, 'bob', 'accept'));
+		$this->assertSame(Game::STATUS_ACTIVE, $game->getStatus());
+		$game = $this->gameplay()->draw(100, 'dave', 'accept');
+		$this->assertSame([Game::STATUS_FINISHED, 'draw/agreement'], [$game->getStatus(), $game->getVariantResult()]);
+	}
+
+	public function testASeatThatGoesOutLeavesTheDrawOffer(): void {
+		$game = $this->started();
+		foreach ([['alice', 1], ['bob', 2], ['carol', 3], ['dave', 0]] as [$uid, $next]) {
+			$game = $this->play($game, $uid, $next, '', []);
+		}
+		$this->gameplay()->draw(100, 'bob', 'offer');
+		$this->gameplay()->draw(100, 'carol', 'accept');
+		$this->gameplay()->draw(100, 'dave', 'accept');
+		$game = $this->play($game, 'alice', 1, '', [2]);
+		$this->assertSame(['1', [1, 3]], [$game->getDrawOffer(), VariantTurn::of($game)->drawVotes], 'carol is out');
+		$game = $this->play($game, 'bob', 3, '', [0, 2]);
+		$this->assertSame(
+			[Game::STATUS_FINISHED, 'draw/agreement'],
+			[$game->getStatus(), $game->getVariantResult()],
+			'every seat that still plays agreed',
+		);
+	}
+
+	public function testTheDrawOfferOfASeatThatGoesOutIsClosed(): void {
+		$game = $this->started();
+		foreach ([['alice', 1], ['bob', 2], ['carol', 3], ['dave', 0]] as [$uid, $next]) {
+			$game = $this->play($game, $uid, $next, '', []);
+		}
+		$this->gameplay()->draw(100, 'bob', 'offer');
+		$this->log = [];
+		$game = $this->play($game, 'alice', 2, '', [1]);
+		$this->assertSame([null, [], Game::STATUS_ACTIVE], [
+			$game->getDrawOffer(),
+			VariantTurn::of($game)->drawVotes,
+			$game->getStatus(),
+		]);
+		$this->assertContains('chat #100 draw_declined {"color":"1"}', $this->log);
+		$this->assertContains('notify drawClosed(#100)', $this->log);
 	}
 
 	public function testChatMuteBySeat(): void {

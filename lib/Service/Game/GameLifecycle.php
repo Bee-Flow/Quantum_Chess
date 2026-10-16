@@ -96,6 +96,11 @@ class GameLifecycle {
 				// The server keeps no board of a variant game.
 				$state = $game->isVariant() ? [] : $this->repository->state($game);
 				$outcome = $this->clock->resolveTimeout($game, $state);
+				if ($game->isMultiSeat()) {
+					// the seat whose time ran out, for the game-over text
+					$seat = VariantGameplayService::seatOfColor($game, $game->getTurn());
+					$game->setState(VariantTurn::of($game)->withEndedBy($seat)->json());
+				}
 				if ($outcome['status'] === Game::STATUS_ABORTED) {
 					$this->abort($game, $outcome['reason'], $at);
 				} else {

@@ -6,8 +6,12 @@
 <!--
   The online panel of a running chess variant game (in the `online` slot of VariantGameView, put together by
   views/OnlineVariantGame.vue): the players, whose move it is or how the game ended, what keeps this device from
-  playing along (a changed history, a dispute), the draw offer, Offer draw and Abort, after the end the rematch (ask
-  for one, accept or decline one, wait for the others, go to it), and the chat. Resign is the board's own button.
+  playing along (a changed history, a dispute), the draw offer, Offer draw and Abort (after a confirmation), after the
+  end the rematch (ask for one, accept or decline one, wait for the others, go to it), and the chat. Resign is the
+  board's own button. A seat that is out of a game of four (`outSeats`) is marked "(out)", the end names the player who
+  resigned or ran out of time (`endedBySeat`), and Accept and Decline show only to a seat that may still answer the
+  draw offer (`canAnswerDraw`; not a seat that already agreed). A game that ends on the server without a result on the
+  board (a resignation, a time-out, an agreed draw) plays the end sound here; the board plays it for a result it has.
 -->
 <template>
 	<section class="qc-vonline" data-test="variant-online">
@@ -16,6 +20,8 @@
 				<!-- TRANSLATORS: an online variant game's player: {side} is White, Black, Sente…; {name} the user -->
 				{{ t('quantumchess', '{side}: {name}', { side: p.side, name: p.name }) }}
 				<small v-if="p.me">{{ t('quantumchess', '(you)') }}</small>
+				<!-- TRANSLATORS: a player of a game of four who is out, while the others play on -->
+				<small v-if="p.out" class="qc-vonline__out">{{ t('quantumchess', '(out)') }}</small>
 			</li>
 		</ul>
 		<p class="qc-vonline__status" role="status">
@@ -38,7 +44,7 @@
 		</p>
 		<div v-if="drawOffer" class="qc-vonline__offer" data-test="draw-offer">
 			<span>{{ drawOffer }}</span>
-			<span v-if="c.can.value.answerDraw" class="qc-vonline__buttons">
+			<span v-if="canAnswerDraw" class="qc-vonline__buttons">
 				<NcButton size="small" :disabled="busy" @click="run(() => c.answerDraw(false))">
 					{{ t('quantumchess', 'Decline') }}
 				</NcButton>
@@ -63,7 +69,8 @@
 				v-if="c.can.value.abort"
 				size="small"
 				:disabled="busy"
-				@click="run(() => c.abort())">
+				data-test="variant-abort"
+				@click="confirmAbort = true">
 				{{ t('quantumchess', 'Abort') }}
 			</NcButton>
 		</div>
@@ -103,16 +110,33 @@
 			</span>
 		</div>
 		<GameChat v-if="c.participant.value" :controller="c" class="qc-vonline__chat" />
+		<NcDialog
+			v-if="confirmAbort"
+			:name="t('quantumchess', 'Abort this game?')"
+			size="small"
+			@update:open="(v) => !v && (confirmAbort = false)">
+			<p>{{ t('quantumchess', 'Nobody wins and the game is not rated.') }}</p>
+			<template #actions>
+				<NcButton @click="confirmAbort = false">
+					{{ t('quantumchess', 'Keep playing') }}
+				</NcButton>
+				<NcButton variant="error" data-test="confirm-abort" @click="abort">
+					{{ t('quantumchess', 'Abort') }}
+				</NcButton>
+			</template>
+		</NcDialog>
 	</section>
 </template>
 
 <script setup>
 import { n, t } from '@nextcloud/l10n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import NcButton from '@nextcloud/vue/components/NcButton'
+import NcDialog from '@nextcloud/vue/components/NcDialog'
 import GameChat from './GameChat.vue'
 import { resultText } from '../../game/resultText.js'
 import { currentUser } from '../../services/initialState.js'
+import { endSound, variantSound } from '../../variantplay/sounds.js'
 import { reasonText } from '../../variantplay/texts.js'
 import { sideName } from '../../variants/index.js'
 
@@ -133,6 +157,8 @@ const c = props.controller
 const online = props.online
 
 const busy = ref(false)
+/** Whether the confirmation of Abort is open. */
+const confirmAbort = ref(false)
 
 /**
  * Run an action of the online controller once at a time.
@@ -148,7 +174,30 @@ async function run(fn) {
 	}
 }
 
+/** Abort the game, once confirmed. */
+function abort() {
+	confirmAbort.value = false
+	run(() => c.abort())
+}
+
 const g = computed(() => c.game.value)
+
+/** The seats that are out of a game of four (the server's `outSeats`). */
+const outSeats = computed(() => (Array.isArray(g.value?.outSeats) ? g.value.outSeats.map(Number) : []))
+
+/**
+ * Whether the viewer may answer the open draw offer: the server says so (`canAnswerDraw`; older servers: the
+ * controller's rule), and the viewer's seat has not agreed yet.
+ */
+const canAnswerDraw = computed(() => {
+	const game = g.value
+	if (!c.can.value.answerDraw || game?.canAnswerDraw === false) {
+		return false
+	}
+	const seat = online.mySeat.value
+	const votes = Array.isArray(game?.drawVotes) ? game.drawVotes.map(Number) : []
+	return !(Number.isInteger(seat) && votes.includes(seat))
+})
 const V = computed(() => online.game.V.value)
 
 /** The players by seat: side name, display name, whether it is the viewer and whether it is their move. */
@@ -165,6 +214,7 @@ const players = computed(() => {
 			name: c.names.value[color],
 			me: online.mySeat.value === seat,
 			toMove: g.value.status === 'active' && g.value.turn === color,
+			out: outSeats.value.includes(seat),
 		}
 	})
 })
@@ -208,13 +258,30 @@ function seatedEnd(game) {
 		? n('quantumchess', '{names} won', '{names} won', winners.length, { names: winners.join(' & ') })
 		: t('quantumchess', 'Draw')
 	const words = {
-		resignation: t('quantumchess', 'A player resigned'),
-		timeout: t('quantumchess', 'A player ran out of time'),
+		resignation: endedBy(game, false)
+			? t('quantumchess', '{name} resigned', { name: endedBy(game, false) })
+			: t('quantumchess', 'A player resigned'),
+		timeout: endedBy(game, true)
+			? t('quantumchess', '{name} ran out of time', { name: endedBy(game, true) })
+			: t('quantumchess', 'A player ran out of time'),
 		abandoned: t('quantumchess', 'The game was abandoned'),
 		agreement: t('quantumchess', 'Draw by agreement'),
 		player_deleted: t('quantumchess', 'A player’s account was deleted'),
 	}
 	return { title, reason: words[reason] ?? (V.value ? reasonText(V.value, reason) : reason) }
+}
+
+/**
+ * The name of the player whose resignation or flag ended a game of four: the server's `endedBySeat`, for a timeout else
+ * the seat whose turn it was; '' when unknown.
+ *
+ * @param {object} game the game
+ * @param {boolean} timeout whether the game ended on time
+ * @return {string}
+ */
+function endedBy(game, timeout) {
+	const seat = Number.isInteger(game.endedBySeat) ? String(game.endedBySeat) : (timeout ? game.turn : null)
+	return seat === null || seat === undefined ? '' : (c.names.value[seat] ?? '')
 }
 
 /**
@@ -241,6 +308,30 @@ const rematch = computed(() => {
 	}
 	return c.can.value.rematch ? { kind: 'ask', text: '' } : null
 })
+
+/**
+ * The winning seats of a finished game: from the variant result code of a game of four ("win:0,2/king"), else from
+ * the result of a two-player game ("1-0", "0-1"); none for a draw.
+ *
+ * @param {object} game the game
+ * @return {number[]}
+ */
+function winningSeats(game) {
+	const match = /^win:([\d,]+)\//.exec(game.variantResult ?? '')
+	if (match) {
+		return match[1].split(',').map(Number)
+	}
+	return game.result === '1-0' ? [0] : game.result === '0-1' ? [1] : []
+}
+
+// the end sound of a game that the server ended while it was shown, when the board has no result of its own
+watch(() => g.value?.status, (now, before) => {
+	if (before !== 'active' || now !== 'finished' || online.game.state?.value?.result) {
+		return
+	}
+	const seat = online.mySeat.value
+	variantSound(endSound({ winners: winningSeats(g.value) }, Number.isInteger(seat) ? [seat] : []))
+}, { flush: 'post' })
 
 /** The open draw offer in words. */
 const drawOffer = computed(() => {
@@ -282,6 +373,10 @@ const drawOffer = computed(() => {
 
 .qc-vonline__player--turn {
 	font-weight: bold;
+}
+
+.qc-vonline__out {
+	color: var(--color-text-maxcontrast);
 }
 
 .qc-vonline__status {

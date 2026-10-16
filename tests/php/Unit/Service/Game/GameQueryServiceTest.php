@@ -119,4 +119,58 @@ final class GameQueryServiceTest extends TestCase {
 		$this->config['ratedEnabled'] = false;
 		$this->assertSame(['rated' => false, 'reason' => 'admin'], $this->queries()->ratedCheck());
 	}
+
+	/**
+	 * An open Four-player chess challenge of alice with the given seats.
+	 *
+	 * @param list<?string> $seats
+	 * @param array<string, mixed> $fields
+	 */
+	private static function fourPlayer(int $id, array $seats, array $fields = []): Game {
+		return GameBuilder::open($fields + [
+			'id' => $id,
+			'variant' => 'fourplayer',
+			'variantOptions' => '{}',
+			'variantRules' => 1,
+			'seatCount' => 4,
+			'whiteUid' => null,
+			'blackUid' => null,
+			'state' => json_encode([
+				'v' => 1,
+				'seats' => $seats,
+				'accepted' => array_map(fn (?string $uid) => $uid !== null, $seats),
+			]),
+		]);
+	}
+
+	public function testAJoinedSeatedGameIsTheUsersOwnAndNoLongerAnOpenChallenge(): void {
+		$this->store(
+			self::fourPlayer(1, ['alice', 'bob', null, null]),
+			self::fourPlayer(2, ['alice', null, null, null]),
+			self::fourPlayer(3, ['alice', 'bob', 'carol', null], ['status' => Game::STATUS_PENDING]),
+		);
+		$ids = fn (array $lobby) => [
+			array_map(fn (Game $g) => $g->getId(), $lobby['outgoing']),
+			array_map(fn (Game $g) => $g->getId(), $lobby['open']),
+		];
+		$lobby = $this->queries()->getLobby('bob');
+		$this->assertSame([[1, 3], [2]], $ids($lobby), 'joined, also once every seat is taken');
+		$this->assertSame([[1, 2, 3], []], $ids($this->queries()->getLobby('alice')));
+	}
+
+	public function testAWatchingPlayerIsNotedOnEveryPollAndAChangeClearsTheNotifications(): void {
+		$this->store(GameBuilder::active(), GameBuilder::open(['id' => 8, 'creatorUid' => 'carol']));
+		$this->moveMapper->method('findByGame')->willReturn([]);
+		$this->chatMapper->method('findByGame')->willReturn([]);
+		$queries = $this->queries();
+		$queries->poll(7, 'bob', 5, 0, 0, true);
+		$this->assertSame(['notify noteWatching(#7, \'bob\')'], $this->log, 'also when nothing changed');
+		$this->log = [];
+		$queries->poll(7, 'bob', 4, 0, 0, true);
+		$this->assertSame(['notify noteWatching(#7, \'bob\')', 'notify markSeen(#7, \'bob\')'], $this->log);
+		$this->log = [];
+		$queries->poll(7, 'bob', 4, 0, 0);
+		$queries->poll(8, 'bob', 1, 0, 0, true);
+		$this->assertSame([], $this->log, 'only a watching participant');
+	}
 }

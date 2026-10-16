@@ -12,8 +12,9 @@ every game, as section 5.6.6 of [`architecture.md`](architecture.md) describes.
 
 One decision of phase 3 differs from the first plan: a seat that resigns or runs out of time ends the game for
 everyone (the other team wins, or in a free-for-all every other seat), as resigning does in a local game, instead of
-leaving the others to play on. The server does not know which seats are already out on the board, so a
-free-for-all names every other seat as a winner.
+leaving the others to play on. Since 2.3.0 the browser that settles a move also claims the seats that are out on the
+board (`out`, checked by the other browsers like the rest of the settlement), so a free-for-all names only the seats
+still playing as winners, and a draw needs the votes of those seats only.
 
 **Goal: all twenty variants online, with nothing to install but the app.** An administrator installs Quantum Chess
 from the App Store and nothing else: no external app, no container, no Node.js on the server. Everything below is

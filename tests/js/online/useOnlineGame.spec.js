@@ -10,9 +10,10 @@
  * (only the last one animated), the chain alarm and chat.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 import { applyMove, serializeState } from '../../../src/engine/index.js'
-import { useOnlineGame } from '../../../src/online/composables/useOnlineGame.js'
+import { SLOW_CAP_MS, SLOW_CAP_PUSH_MS, useOnlineGame } from '../../../src/online/composables/useOnlineGame.js'
 import { live, makeGame } from './fixtures.js'
 
 vi.mock('@nextcloud/dialogs', () => ({ showError: vi.fn(), showInfo: vi.fn(), showSuccess: vi.fn() }))
@@ -352,5 +353,165 @@ describe('useOnlineGame', () => {
 		})
 		await c.rematch()
 		expect(c.rematchState.value).toBe('pending')
+	})
+})
+
+/**
+ * A visibility-controllable document and window for the poller.
+ *
+ * @return {object}
+ */
+function fakeEnv() {
+	return { visibilityState: 'visible', navigator: { onLine: true }, addEventListener() {}, removeEventListener() {} }
+}
+
+/**
+ * A fake live push that records its subscribers.
+ *
+ * @param {boolean} [active] push is set up
+ * @return {object}
+ */
+function fakePush(active = false) {
+	const push = {
+		pushActive: ref(active),
+		handlers: new Set(),
+		onGameUpdate: vi.fn((fn) => {
+			push.handlers.add(fn)
+			return () => push.handlers.delete(fn)
+		}),
+		emit: (body) => push.handlers.forEach((fn) => fn(body)),
+	}
+	return push
+}
+
+/**
+ * A four-player game in which seat 0 (alice) waits while seat `turn` moves.
+ *
+ * @param {number} ply the ply
+ * @return {object} GameFull
+ */
+function fourPlayer(ply) {
+	const turn = ply % 4
+	return makeGame([], {
+		variant: 'fourplayer',
+		myColor: '0',
+		turn: String(turn),
+		seatToMove: turn,
+		pendingPly: null,
+		ply,
+		rev: 10 + ply,
+		moves: Array.from({ length: ply }, (_, i) => ({ ply: i, nextSeat: (i + 1) % 4 })),
+	})
+}
+
+/**
+ * The gaps between the polls so far.
+ *
+ * @param {number[]} times poll times
+ * @return {number[]}
+ */
+const gaps = (times) => times.slice(1).map((t, i) => t - times[i])
+
+describe('useOnlineGame polling', () => {
+	beforeEach(() => {
+		vi.useFakeTimers()
+	})
+	afterEach(() => {
+		vi.useRealTimers()
+	})
+
+	/**
+	 * Start a four-player game that records when it polls.
+	 *
+	 * @param {object} [push] fake push
+	 * @return {Promise<object>}
+	 */
+	async function startFourPlayer(push = fakePush()) {
+		const env = fakeEnv()
+		const full = fourPlayer(1)
+		const times = []
+		const { c, api } = await setup(full, { poller: { doc: env, win: env }, push })
+		const quiet = api.pollGame.getMockImplementation()
+		api.pollGame.mockImplementation(async (...args) => {
+			times.push(Date.now())
+			return quiet(...args)
+		})
+		await c.start()
+		return { c, api, env, times, push }
+	}
+
+	it('backs off to a 10 s cap while the opponents think, and an opponent move makes it quick again', async () => {
+		const { c, api, times } = await startFourPlayer()
+		await vi.advanceTimersByTimeAsync(120000)
+		expect(Math.max(...gaps(times))).toBe(SLOW_CAP_MS)
+		expect(gaps(times).slice(-2)).toEqual([SLOW_CAP_MS, SLOW_CAP_MS])
+		// an opponent moves: the next poll comes after 2 s again
+		const later = fourPlayer(2)
+		api.pollGame.mockImplementationOnce(async () => {
+			times.push(Date.now())
+			return {
+				changed: true,
+				rev: later.rev,
+				now: later.now,
+				game: live(later),
+				moves: later.moves.slice(1),
+				chat: [],
+			}
+		})
+		await vi.advanceTimersByTimeAsync(SLOW_CAP_MS)
+		expect(c.game.value.ply).toBe(2)
+		const n = times.length
+		await vi.advanceTimersByTimeAsync(2000)
+		expect(times.length).toBe(n + 1)
+		expect(times[n] - times[n - 1]).toBe(2000)
+		c.dispose()
+	})
+
+	it('caps at 30 s when live push is active', async () => {
+		const { c, times } = await startFourPlayer(fakePush(true))
+		await vi.advanceTimersByTimeAsync(240000)
+		expect(Math.max(...gaps(times))).toBe(SLOW_CAP_PUSH_MS)
+		c.dispose()
+	})
+
+	it('only says it is watching while the tab is visible', async () => {
+		const { c, api, env } = await startFourPlayer()
+		await vi.advanceTimersByTimeAsync(2000)
+		expect(api.pollGame.mock.calls.at(-1)[1].watching).toBe(1)
+		env.visibilityState = 'hidden'
+		c.pollNow()
+		await vi.advanceTimersByTimeAsync(0)
+		expect(api.pollGame.mock.calls.at(-1)[1].watching).toBe(0)
+		c.dispose()
+	})
+
+	it('polls at once on a push for this game (or an unnamed game), not for another game', async () => {
+		const { c, times, push } = await startFourPlayer()
+		expect(push.onGameUpdate).toHaveBeenCalledTimes(1)
+		await vi.advanceTimersByTimeAsync(2000)
+		const n = times.length
+		push.emit({ id: 99, rev: 5 })
+		await vi.advanceTimersByTimeAsync(0)
+		expect(times.length).toBe(n)
+		push.emit({ id: 42, rev: 5 })
+		await vi.advanceTimersByTimeAsync(0)
+		expect(times.length).toBe(n + 1)
+		push.emit(null)
+		await vi.advanceTimersByTimeAsync(0)
+		expect(times.length).toBe(n + 2)
+		c.dispose()
+		expect(push.handlers.size).toBe(0)
+	})
+})
+
+describe('useOnlineGame draw answers', () => {
+	it('follows the server on who may still answer a draw offer', async () => {
+		const offer = { by: 'b', ply: 2 }
+		const { c } = await setup(makeGame(OPENING, { drawOffer: offer }))
+		expect(c.can.value.answerDraw).toBe(true)
+		const { c: voted } = await setup(makeGame(OPENING, { drawOffer: offer, canAnswerDraw: false }))
+		expect(voted.can.value.answerDraw).toBe(false)
+		const { c: own } = await setup(makeGame(OPENING, { drawOffer: { by: 'w', ply: 2 } }))
+		expect(own.can.value.answerDraw).toBe(false)
 	})
 })

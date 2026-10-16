@@ -159,12 +159,13 @@ class InvitePolicy {
 
 	/**
 	 * Whether `$viewer` may see and join an open challenge: one restricted to a group is visible to its members, any
-	 * other one to everyone the creator could invite.
+	 * other one to everyone the creator could invite. Someone who already takes part, like a player who has taken a
+	 * seat of a game with more than two seats, has nothing left to join.
 	 */
 	public function canSeeOpenChallenge(string $viewer, Game $game): bool {
 		$creator = $game->getCreatorUid();
 		if ($game->getStatus() !== Game::STATUS_OPEN || $creator === null || $creator === $viewer
-			|| !$this->isMultiplayerUser($viewer)) {
+			|| $game->isParticipant($viewer) || !$this->isMultiplayerUser($viewer)) {
 			return false;
 		}
 		$group = $game->getScopeGroup();

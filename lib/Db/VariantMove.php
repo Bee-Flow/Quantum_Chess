@@ -20,7 +20,8 @@ use OCP\DB\Types;
  * move leads to is claimed by the browser that settles it (`settledBy`), as the seat to move next (`nextSeat`), the
  * result code (`result`, empty while the game goes on), the position hash (`stateHash`) and, in a game of more than two
  * seats, the seats that are out after the move (`outSeats`, comma separated, empty for none; null when the settling
- * browser did not say); these are null until the move is settled. `chain` is the variant chain after the move, and `clientId` the idempotency key of the sender.
+ * browser did not say); these are null until the move is settled. `chain` is the variant chain after the move, and
+ * `clientId` the idempotency key of the sender.
  *
  * The properties have no defaults on purpose: Entity inserts only the fields whose setter was called with a changed
  * value, so every column of a new move is written explicitly.

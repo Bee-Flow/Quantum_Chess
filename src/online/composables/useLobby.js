@@ -6,7 +6,8 @@
 /**
  * The lobby store: a singleton seeded from the `lobby` initial state, so Home and the navigation paint without a
  * request. `start()` polls the cheap summary with its ETag (30 s, 15 s while Home shows the lobby, 120 s in a hidden
- * tab) and loads the full lobby only when the token changed.
+ * tab) and loads the full lobby only when the token changed. With live push (notify_push) a changed game or a new
+ * notification reloads the lobby at once (debounced).
  */
 
 import { showError } from '@nextcloud/dialogs'
@@ -14,14 +15,19 @@ import { t } from '@nextcloud/l10n'
 import { computed, ref } from 'vue'
 import * as realApi from '../../services/api.js'
 import { initial } from '../../services/initialState.js'
+import * as livePush from '../livePush.js'
 import { usePoller } from './usePoller.js'
 
 let store = null
 
+/** How long a burst of pushed events is gathered into one lobby reload. */
+export const PUSH_DEBOUNCE_MS = 500
+
 /**
  * Create a lobby store (exported for tests; the app uses the singleton `useLobby()`).
  *
- * @param {object} [deps] {api, initialLobby, notify, poller}
+ * @param {object} [deps] {api, initialLobby, notify, poller, push (the live push: {onGameUpdate, onNotification}),
+ *   pushDebounceMs}
  * @return {object}
  */
 export function createLobby(deps = {}) {
@@ -30,6 +36,8 @@ export function createLobby(deps = {}) {
 		initialLobby: initial('lobby', null),
 		notify: (text) => showError(text),
 		poller: {},
+		push: livePush,
+		pushDebounceMs: PUSH_DEBOUNCE_MS,
 		...deps,
 	}
 	const api = d.api
@@ -83,6 +91,39 @@ export function createLobby(deps = {}) {
 		...d.poller,
 	})
 
+	let pushTimer = null
+	let pushSubscriptions = []
+
+	/** Something was pushed: check the lobby soon (the cheap summary poll), once for a burst of events. */
+	function onPushed() {
+		if (pushTimer !== null) {
+			return
+		}
+		pushTimer = setTimeout(() => {
+			pushTimer = null
+			poller.pollNow()
+		}, d.pushDebounceMs)
+	}
+
+	/** Start polling and listening to pushed events (idempotent). */
+	function start() {
+		poller.start({ immediate: false })
+		if (!pushSubscriptions.length) {
+			pushSubscriptions = [d.push.onGameUpdate?.(onPushed), d.push.onNotification?.(onPushed)].filter(Boolean)
+		}
+	}
+
+	/** Stop polling and listening. */
+	function stop() {
+		poller.stop()
+		for (const unsubscribe of pushSubscriptions) {
+			unsubscribe()
+		}
+		pushSubscriptions = []
+		clearTimeout(pushTimer)
+		pushTimer = null
+	}
+
 	/**
 	 * Run an action on a game, then reload the lobby.
 	 *
@@ -107,9 +148,8 @@ export function createLobby(deps = {}) {
 		loading,
 		error,
 		refresh: () => refresh().catch(() => {}),
-		/** Start polling (idempotent). */
-		start: () => poller.start({ immediate: false }),
-		stop: () => poller.stop(),
+		start,
+		stop,
 		/** Check the summary now (after an action elsewhere). */
 		poke: () => poller.pollNow(),
 		/**

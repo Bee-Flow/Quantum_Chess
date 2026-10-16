@@ -50,7 +50,8 @@ class GameQueryService {
 
 	/**
 	 * The user's lobby. Games where it is the user's move come first, nearest deadline first; open challenges are the
-	 * ones the user may join.
+	 * ones the user may join. `outgoing` holds the games waiting for players that the user created or, in a game with
+	 * more than two seats, has already taken a seat in.
 	 *
 	 * @return array{
 	 *     yourTurn: list<Game>,
@@ -78,7 +79,8 @@ class GameQueryService {
 				$groups[$game->colorOf($uid) === $game->getTurn() ? 'yourTurn' : 'waiting'][] = $game;
 			} elseif ($game->isInviteeOf($uid)) {
 				$groups['invitations'][] = $game;
-			} elseif ($game->isAwaitingOpponent() && $game->getCreatorUid() === $uid) {
+			} elseif ($game->isAwaitingOpponent() && ($game->getCreatorUid() === $uid
+				|| ($game->isMultiSeat() && in_array($uid, $game->seatUids(), true)))) {
 				$groups['outgoing'][] = $game;
 			}
 		}
@@ -91,7 +93,8 @@ class GameQueryService {
 			if (count($groups['open']) >= self::LOBBY_GROUP_MAX) {
 				break;
 			}
-			if ($this->policy->canSeeOpenChallenge($uid, $game)) {
+			// A game the user takes part in is already in their own groups.
+			if (!$game->isParticipant($uid) && $this->policy->canSeeOpenChallenge($uid, $game)) {
 				$game = $this->lifecycle->resolveLazy($game);
 				if ($game->getStatus() === Game::STATUS_OPEN) {
 					$groups['open'][] = $game;
@@ -208,6 +211,10 @@ class GameQueryService {
 	 * What changed since the client's revision: nothing, or the game with the moves from `$ply` and the chat lines
 	 * after `$chatId`.
 	 *
+	 * With `$watching` (the client shows the game in a visible tab), a player is noted as watching on every poll, so
+	 * they get no notification of their turn or of chat meanwhile, and a changed answer clears the game's
+	 * notifications.
+	 *
 	 * @return array{
 	 *     changed: bool,
 	 *     rev: int,
@@ -221,10 +228,16 @@ class GameQueryService {
 	public function poll(int $id, string $uid, int $rev, int $ply, int $chatId, bool $watching = false): array {
 		$game = $this->lifecycle->load($id, $uid, true);
 		$now = $this->clock->now();
+		$participant = $game->isParticipant($uid);
+		if ($watching && $participant) {
+			$this->notifications->noteWatching($game, $uid);
+		}
 		if ($game->getRev() === $rev) {
 			return ['changed' => false, 'rev' => $rev, 'now' => $now];
 		}
-		$participant = $game->isParticipant($uid);
+		if ($watching && $participant) {
+			$this->notifications->markSeen($game, $uid);
+		}
 		return [
 			'changed' => true,
 			'rev' => $game->getRev(),

@@ -18,8 +18,8 @@ use OCA\QuantumChess\Db\Game;
  *
  * A game with more than two seats also keeps its players here (Game::seatUids reads them): `seats` (the user id per
  * seat, null for an open seat), `accepted` (whether each seat's player has taken it), and while it runs `drawVotes`
- * (the seats that agree to the open draw offer), `muted` (the seats that muted the chat) and `out` (the seats that are out
- * of a game where every player plays for themselves, as the browsers settle it: VariantGameplayService::settle).
+ * (the seats that agree to the open draw offer), `muted` (the seats that muted the chat) and `out` (the seats that are
+ * out of a game where every player plays for themselves, as the browsers settle it: VariantGameplayService::settle).
  * `endedBy` is the seat whose resignation, timeout or removed account ended the game.
  * A game of a server-ruled variant (Kriegspiel, Fog of war: VariantCatalog::isRefereed) keeps its real position here
  * as well (`board`, the state of lib/Variants/ as JSON text), which no player ever receives while the game runs.

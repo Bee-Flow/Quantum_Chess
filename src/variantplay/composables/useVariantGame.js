@@ -49,7 +49,9 @@
  * to the roll `u` the server drew for it, `played(state, code, next)` settles it, and `resign()` resigns on the server.
  * The other seat's moves arrive through `playRemote(code, u)`; its players have the kind `remote`, whose turns this
  * composable only waits for. An online game has no undo, and a move that the server refused leaves the position as it
- * was, with the notice `sendFailed`.
+ * was, with a notice for the reason (`sendNotice`): `conflict` (another move was played first), `gameOver`,
+ * `notYourTurn` or else `sendFailed`; for the first three the host reloads the game (`recover(error)`). A spectator (an
+ * online game without a human side) gets no danger line, and resigning needs a human side that is still in the game.
  *
  * A host with `ruled: true` (Kriegspiel and Fog of war online, src/variants/referee.js) rules nothing here: the board
  * shows the player's view that the server sent, a state with the squares the player sees (`visible`) and, in Fog of
@@ -107,12 +109,39 @@ function candidateMoves(V, state) {
 	return Array.isArray(state.legal) ? list.filter((m) => state.legal.includes(m.code)) : list
 }
 
+/** The notices of an own move that the server refused (sendNotice), which explain the board that changed. */
+const SERVER_REFUSALS = ['conflict', 'gameOver', 'notYourTurn']
+
+/**
+ * The notice kind for a move the server did not take: `conflict` (another move was played first, HTTP 409), `gameOver`,
+ * `notYourTurn`, or `sendFailed` (any other failure, such as the network).
+ *
+ * @param {unknown} error what the host threw (an ApiError of services/api.js)
+ * @return {'conflict'|'gameOver'|'notYourTurn'|'sendFailed'}
+ */
+export function sendNotice(error) {
+	// the server answers these with 409 as well: look at the code first
+	const code = error?.code
+	if (code === 'game_over') {
+		return 'gameOver'
+	}
+	if (code === 'not_your_turn') {
+		return 'notYourTurn'
+	}
+	if (error?.status === 409 || code === 'conflict') {
+		return 'conflict'
+	}
+	return 'sendFailed'
+}
+
 /**
  * @typedef {object} VariantGameHost where an online game comes from and where its moves go (see the header)
  * @property {() => Promise<object|null>} load the record, or null when the game cannot be shown
  * @property {(state: object, code: string) => Promise<number>} send send a move; resolves to its roll u in [0, T)
  * @property {(state: object, code: string, next: object) => void} played the move was played: settle it
  * @property {() => void} resign resign the game
+ * @property {(error: unknown) => Promise<void>} [recover] reload the game after a refused move (see the header)
+ * @property {() => boolean} [canResign] whether the server still lets the viewer resign (a seat that is out may not)
  * @property {boolean} [ruled] the server rules the game and sends views (see the header)
  * @property {(state: object, code: string) => Promise<object[]|null>} [preview] the outcomes of a move (ruled)
  */
@@ -351,10 +380,10 @@ export function useVariantGame(id, host = null) {
 			let u
 			try {
 				u = await host.send(before, code)
-			} catch {
-				notice.value = { kind: 'sendFailed', code }
+			} catch (e) {
 				pending.value = null
 				clearSelection()
+				refusedByServer(e, code)
 				return
 			} finally {
 				sending.value = false
@@ -379,6 +408,24 @@ export function useVariantGame(id, host = null) {
 	}
 
 	/**
+	 * A move (or its preview) that the server did not take: the notice for the reason (`sendNotice`), and when the
+	 * board is behind the server (another move came first, the game ended, another seat is to move) the host reloads
+	 * it.
+	 *
+	 * @param {unknown} error what the host threw
+	 * @param {string} code move code
+	 */
+	function refusedByServer(error, code) {
+		// the reload waits for no move on its way
+		sending.value = false
+		const kind = sendNotice(error)
+		notice.value = { kind, code }
+		if (kind !== 'sendFailed') {
+			Promise.resolve(host?.recover?.(error)).catch(() => {})
+		}
+	}
+
+	/**
 	 * Send a move of a game that the server rules, and show the view it answers with; a move it refuses gets the
 	 * notice of a refused attempt (the umpire's "no" in Kriegspiel), and the turn is not used.
 	 *
@@ -391,10 +438,10 @@ export function useVariantGame(id, host = null) {
 		let res
 		try {
 			res = await host.send(before, code)
-		} catch {
-			notice.value = { kind: 'sendFailed', code }
+		} catch (e) {
 			pending.value = null
 			clearSelection()
+			refusedByServer(e, code)
 			return
 		} finally {
 			sending.value = false
@@ -473,7 +520,7 @@ export function useVariantGame(id, host = null) {
 	 * @return {boolean} whether the move was legal
 	 */
 	function playRemote(code, u) {
-		return Boolean(playWith(code, u / T))
+		return Boolean(playWith(code, u / T, true))
 	}
 
 	/**
@@ -481,9 +528,10 @@ export function useVariantGame(id, host = null) {
 	 *
 	 * @param {string} code move code
 	 * @param {number} r random number
+	 * @param {boolean} [remote] another player's move: a notice of a refused own move stays until the player acts
 	 * @return {object|null} the result of `applyMove`, or null for an illegal move
 	 */
-	function playWith(code, r) {
+	function playWith(code, r, remote = false) {
 		const res = applyMove(V.value, state.value, code, r)
 		if (!res) {
 			return null
@@ -506,7 +554,9 @@ export function useVariantGame(id, host = null) {
 				}
 			: null
 		pending.value = null
-		notice.value = null
+		if (!remote || !SERVER_REFUSALS.includes(notice.value?.kind)) {
+			notice.value = null
+		}
 		refused.value = []
 		clearSelection()
 		// a turn of several moves: the next board is played with an ordinary move far more often than not
@@ -596,8 +646,8 @@ export function useVariantGame(id, host = null) {
 		let outs
 		try {
 			outs = await host.preview(before, code)
-		} catch {
-			notice.value = { kind: 'sendFailed', code }
+		} catch (e) {
+			refusedByServer(e, code)
 			return
 		}
 		if (state.value !== before) {
@@ -953,6 +1003,10 @@ export function useVariantGame(id, host = null) {
 		if (!V.value || !state.value || state.value.result || secret.value) {
 			return 0
 		}
+		// a spectator of an online game has no king to warn about
+		if (host && !humanSides.value.length) {
+			return 0
+		}
 		return royalDanger(V.value, state.value, dangerSide.value)
 	})
 
@@ -1055,10 +1109,30 @@ export function useVariantGame(id, host = null) {
 		return s
 	}
 
+	/**
+	 * Whether the viewer may resign: a running game, not during the hidden hand-over, and the human side that would
+	 * resign (the only one, or in pass & play the side to move) is not out of the game (a game of four).
+	 */
+	const canResign = computed(() => {
+		const s = state.value
+		if (!s || s.result || handover.value || curtain.value || frozen.value) {
+			return false
+		}
+		if (!humanSides.value.length) {
+			// a spectator online; on this device a game of computers only, which the side to move gives up
+			return !host
+		}
+		if (host?.canResign?.() === false) {
+			return false
+		}
+		const out = (side) => Boolean(V.value?.isOut?.(s.worlds[0].b, side))
+		return humanSides.value.length > 1 ? !out(s.turn) : !out(humanSides.value[0])
+	})
+
 	/** Resign for the side to move (or the only human); online, on the server. */
 	function resign() {
 		const s = state.value
-		if (!s || s.result || handover.value || curtain.value) {
+		if (!canResign.value) {
 			return
 		}
 		if (host) {
@@ -1132,6 +1206,7 @@ export function useVariantGame(id, host = null) {
 		compulsory,
 		budgetFull,
 		canUndo,
+		canResign,
 		marks,
 		danger,
 		load,

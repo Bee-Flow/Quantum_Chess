@@ -48,6 +48,12 @@
   fog legend does for hidden squares. A failed save shows "This game could not be saved on this device." until a save
   works again; this notice and the refusal notice are drawn as warning notes (the main text colour on a light tint of
   the warning colour).
+
+  Resign asks first (online always, on this device when the preference "Confirm resign" is on) and is not offered to a
+  player whose side is out of the game, nor to a spectator. A player row names who plays it: "You" for the viewer's
+  side, an online opponent by name, the computer with its level. A move the server did not take says why (another move
+  came first, the game ended, not the player's turn, or it could not be sent). Moves and the end of a game play the
+  sounds of the classic board (src/variantplay/sounds.js), with the user's sound preference.
 -->
 <template>
 	<div ref="rootEl" class="qc-vgame">
@@ -478,7 +484,7 @@
 					<NcButton v-if="V.flipBoard !== false" @click="game.flipped.value = !game.flipped.value">
 						{{ t('quantumchess', 'Flip board') }}
 					</NcButton>
-					<NcButton v-if="!state.result && !game.handover.value && !game.frozen.value" @click="game.resign">
+					<NcButton v-if="canResign" data-test="variant-resign" @click="askResign">
 						{{ t('quantumchess', 'Resign') }}
 					</NcButton>
 					<NcButton :to="{ name: controller ? 'home' : 'variants' }">
@@ -487,6 +493,21 @@
 				</div>
 			</aside>
 		</template>
+		<NcDialog
+			v-if="resignOpen"
+			:name="t('quantumchess', 'Resign this game?')"
+			size="small"
+			@update:open="(v) => !v && (resignOpen = false)">
+			<p>{{ t('quantumchess', 'The game ends and counts as a loss.') }}</p>
+			<template #actions>
+				<NcButton @click="resignOpen = false">
+					{{ t('quantumchess', 'Keep playing') }}
+				</NcButton>
+				<NcButton variant="error" data-test="confirm-resign" @click="resign">
+					{{ t('quantumchess', 'Resign') }}
+				</NcButton>
+			</template>
+		</NcDialog>
 	</div>
 </template>
 
@@ -495,14 +516,17 @@ import { t } from '@nextcloud/l10n'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import NcButton from '@nextcloud/vue/components/NcButton'
+import NcDialog from '@nextcloud/vue/components/NcDialog'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import VariantBoard from '../variantplay/components/VariantBoard.vue'
 import VariantPiece from '../variantplay/components/VariantPiece.vue'
+import { preferences } from '../services/preferences.js'
 import { useVariantGame } from '../variantplay/composables/useVariantGame.js'
 import { glyphOf, pieceSpin, sideFill, typeName } from '../variantplay/glyphs.js'
 import { focusSquares } from '../variantplay/marks.js'
 import { budgetPips, handGroups, moveRows, recordsSince, sideInfoOf, sortHand } from '../variantplay/panel.js'
+import { endSound, moveSound, variantSound } from '../variantplay/sounds.js'
 import {
 	dangerLine,
 	endText,
@@ -777,6 +801,12 @@ const noticeText = computed(() => {
 			return t('quantumchess', 'Choose one of your pieces.')
 		case 'sendFailed':
 			return t('quantumchess', 'The move could not be sent. Try again.')
+		case 'conflict':
+			return t('quantumchess', 'Another move was played first; the board was updated.')
+		case 'gameOver':
+			return t('quantumchess', 'This game has already ended; the board was updated.')
+		case 'notYourTurn':
+			return t('quantumchess', 'It is not your turn; the board was updated.')
 		default:
 			return ''
 	}
@@ -958,8 +988,45 @@ function playerText(i) {
 		}[p.level] ?? ''
 		return t('quantumchess', 'Computer ({level})', { level })
 	}
+	if (p.kind === 'remote') {
+		// another player of an online game
+		return typeof p.name === 'string' && p.name ? p.name : t('quantumchess', 'Player')
+	}
 	return game.humanSides.value.length === 1 ? t('quantumchess', 'You') : t('quantumchess', 'Player')
 }
+
+/** Whether the Resign button is offered (`canResign` of the game; not for a side that is out, nor a spectator). */
+const canResign = computed(() => game.canResign.value)
+
+/** Whether the confirmation of Resign is open. */
+const resignOpen = ref(false)
+
+/** Resign, after a confirmation: always online, on this device when the preference asks for it. */
+function askResign() {
+	if (props.controller || preferences.confirmResign !== false) {
+		resignOpen.value = true
+	} else {
+		resign()
+	}
+}
+
+/** Resign now. */
+function resign() {
+	resignOpen.value = false
+	game.resign()
+}
+
+// the sounds of the classic board: a move or a capture (every player's), and the end of the game
+watch(() => game.state.value, (now, before) => {
+	if (!before || !now) {
+		return
+	}
+	if (now.result && !before.result) {
+		variantSound(endSound(now.result, game.humanSides.value))
+	} else {
+		variantSound(moveSound(before, now))
+	}
+})
 
 /**
  * Whether a side is out of the game.

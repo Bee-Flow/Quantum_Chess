@@ -87,4 +87,31 @@ final class GameTransactionTest extends TestCase {
 		$this->expectException(\LogicException::class);
 		$this->transaction()->afterCommit(fn () => null);
 	}
+
+	public function testAKeyedCallbackRunsOncePerTransactionInItsFirstPlace(): void {
+		$tx = $this->transaction();
+		$this->assertFalse($tx->isRunning());
+		$tx->run(function () use ($tx): void {
+			$this->assertTrue($tx->isRunning());
+			$tx->afterCommit(function (): void {
+				$this->log[] = 'push 7';
+			}, 'push:7');
+			$tx->afterCommit(function (): void {
+				$this->log[] = 'notify';
+			});
+			$tx->afterCommit(function (): void {
+				$this->log[] = 'push 7 again';
+			}, 'push:7');
+			$tx->afterCommit(function (): void {
+				$this->log[] = 'push 8';
+			}, 'push:8');
+		});
+		$this->assertSame(['begin', 'commit', 'push 7', 'notify', 'push 8'], $this->log);
+		$this->assertFalse($tx->isRunning());
+		$this->log = [];
+		$tx->run(fn () => $tx->afterCommit(function (): void {
+			$this->log[] = 'push 7';
+		}, 'push:7'));
+		$this->assertSame(['begin', 'commit', 'push 7'], $this->log, 'the next transaction starts with no keys');
+	}
 }

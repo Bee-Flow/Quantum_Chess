@@ -221,6 +221,8 @@ trait GameServiceFixture {
 			'gameOver',
 			'chat',
 			'gameEndedDeleted',
+			'gameStarted',
+			'noteWatching',
 			'markSeen',
 			'removeForGame',
 		] as $method) {
