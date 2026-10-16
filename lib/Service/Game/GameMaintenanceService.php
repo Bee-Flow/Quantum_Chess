@@ -100,9 +100,11 @@ class GameMaintenanceService {
 	/**
 	 * Removes a user from all their games.
 	 *
-	 * Invitations and open challenges are deleted. Running games end: as `player_deleted` when the account is gone,
-	 * as a resignation otherwise. The user's id, their chat lines and their invitation texts are removed from the
-	 * remaining games, and a game without any player left is deleted.
+	 * Invitations and open challenges are deleted; in one with more than two seats that the user did not create, their
+	 * seat becomes open instead where that is allowed (SeatedInvitations::releasable). Running games end: as
+	 * `player_deleted` when the account is gone, as a resignation otherwise; a game where every player plays for
+	 * themselves goes on without a seat that is already out. The user's id, their chat lines and their invitation texts
+	 * are removed from the remaining games, and a game without any player left is deleted.
 	 *
 	 * @param bool $accountDeleted whether the account itself is being deleted
 	 */
@@ -111,14 +113,27 @@ class GameMaintenanceService {
 		foreach ($this->games->findForUser($uid, $all, 100000) as $game) {
 			$id = (int)$game->getId();
 			if ($game->isAwaitingOpponent()) {
+				// only an open challenge frees the seat: an invitation never becomes public on its own
+				if ($game->getCreatorUid() !== $uid && $game->getStatus() === Game::STATUS_OPEN
+					&& SeatedInvitations::releasable($game, $this->settings)) {
+					$this->transaction->run(function () use ($game, $uid): void {
+						SeatedInvitations::release($game, $uid, $this->seats);
+						$this->repository->save($game);
+					});
+					$this->notifications->inviteClosed($game, $uid);
+					continue;
+				}
 				$this->transaction->run(fn () => $this->games->deleteWithChildren($id));
 				$this->notifications->removeForGame($id);
 				continue;
 			}
-			$remaining = null;
+			$remaining = [];
 			$this->transaction->run(function () use ($game, $uid, $accountDeleted, &$remaining): void {
+				$changed = false;
 				$color = $game->colorOf($uid);
-				if ($game->getStatus() === Game::STATUS_ACTIVE && $color !== null) {
+				$out = $game->isMultiSeat() && $color !== null
+					&& in_array((int)$color, VariantTurn::of($game)->out, true);
+				if ($game->getStatus() === Game::STATUS_ACTIVE && $color !== null && !$out) {
 					$reason = $accountDeleted ? 'player_deleted' : 'resignation';
 					if ($accountDeleted) {
 						$game->setRated(0);
@@ -129,14 +144,27 @@ class GameMaintenanceService {
 						$loss = VariantGameplayService::lossOf($game, $seat, $accountDeleted ? 'deleted' : 'resign');
 						$now = $this->clock->now();
 						VariantGameplayService::finishWith($game, $loss, $reason, $now, $this->lifecycle);
+						if ($game->isMultiSeat()) {
+							$game->setState(VariantTurn::of($game)->withEndedBy($seat)->json());
+						}
 					} else {
 						$this->lifecycle->finish($game, $color === 'w' ? '0-1' : '1-0', $reason, $this->clock->now());
 					}
 					if ($accountDeleted) {
-						$remaining = $game->opponentOf($uid);
+						$remaining = $game->othersOf($uid);
 					} else {
 						$this->lifecycle->addSystemLine($game, 'resigned', ['color' => $color]);
 					}
+					$changed = true;
+				}
+				if ($game->isMultiSeat() && in_array($uid, $game->seatUids(), true)) {
+					// the players of the seats live in the game's record, which the raw clearing below does not reach
+					$turn = VariantTurn::of($game);
+					$seats = array_map(fn (?string $player) => $player === $uid ? null : $player, $turn->seats);
+					$game->setState($turn->withSeats($seats, $turn->accepted)->json());
+					$changed = true;
+				}
+				if ($changed) {
 					$this->repository->save($game);
 				}
 				$this->games->clearUser((int)$game->getId(), $uid);
@@ -148,14 +176,17 @@ class GameMaintenanceService {
 				$this->chat->deleteOwn((int)$game->getId(), $uid);
 				$fresh = $this->games->findById((int)$game->getId());
 				if ($fresh !== null && $fresh->getWhiteUid() === null && $fresh->getBlackUid() === null
-					&& $fresh->getCreatorUid() === null && $fresh->getOpponentUid() === null) {
+					&& $fresh->getCreatorUid() === null && $fresh->getOpponentUid() === null
+					&& array_filter($fresh->seatUids(), fn (?string $player) => $player !== null) === []) {
 					$this->games->deleteWithChildren((int)$game->getId());
 				}
 			});
 			// Notifications of this game carry the removed player's id, name, chat excerpts or a rematch offer.
 			$this->notifications->removeForGame($id);
-			if ($remaining !== null) {
-				$this->notifications->gameEndedDeleted($game, $remaining);
+			if ($remaining !== []) {
+				foreach ($remaining as $player) {
+					$this->notifications->gameEndedDeleted($game, $player);
+				}
 			} elseif ($game->getStatus() === Game::STATUS_FINISHED && $game->getResultReason() === 'resignation'
 				&& !$accountDeleted) {
 				$this->notifications->gameOver($game, $uid);

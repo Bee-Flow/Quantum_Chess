@@ -110,6 +110,7 @@ import NcButton from '@nextcloud/vue/components/NcButton'
 import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import NcTextField from '@nextcloud/vue/components/NcTextField'
 import { otherColor } from '../../engine/index.js'
+import { currentUser } from '../../services/initialState.js'
 import { PHRASE_KEYS, phraseText, systemText } from '../chatText.js'
 
 const props = defineProps({
@@ -126,10 +127,21 @@ const sending = ref(false)
 const reveal = ref(false)
 const list = ref(null)
 const muted = computed(() => !!c.game.value?.muted)
+/**
+ * The viewer's user id: the player on the viewer's seat (a game with more than two seats has no white and black), the
+ * white or black player, else the signed-in user.
+ */
 const me = computed(() => {
 	const g = c.game.value
 	const color = g?.myColor
-	return color ? (color === 'w' ? g.white?.userId : g.black?.userId) : null
+	if (Array.isArray(g?.seats)) {
+		const seat = color === null || color === undefined
+			? null
+			: g.seats.find((s) => String(s.seat) === String(color))
+		return seat?.player?.userId ?? currentUser.uid ?? null
+	}
+	const id = color === 'w' ? g?.white?.userId : color === 'b' ? g?.black?.userId : null
+	return id ?? currentUser.uid ?? null
 })
 const opponentName = computed(() => {
 	const color = c.myColor.value

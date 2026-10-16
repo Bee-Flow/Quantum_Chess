@@ -18,8 +18,10 @@ use OCP\DB\Types;
  * `ply` is the number of plies played before the move and `seat` the seat that played it. `u` is the roll the server
  * drew after the move was sent, an integer in [0, 2^24). The server does not know the rules of the variants: what the
  * move leads to is claimed by the browser that settles it (`settledBy`), as the seat to move next (`nextSeat`), the
- * result code (`result`, empty while the game goes on) and the position hash (`stateHash`); these are null until the
- * move is settled. `chain` is the variant chain after the move, and `clientId` the idempotency key of the sender.
+ * result code (`result`, empty while the game goes on), the position hash (`stateHash`) and, in a game of more than two
+ * seats, the seats that are out after the move (`outSeats`, comma separated, empty for none; null when the settling
+ * browser did not say); these are null until the move is settled. `chain` is the variant chain after the move, and
+ * `clientId` the idempotency key of the sender.
  *
  * The properties have no defaults on purpose: Entity inserts only the fields whose setter was called with a changed
  * value, so every column of a new move is written explicitly.
@@ -42,6 +44,8 @@ use OCP\DB\Types;
  * @method void setResult(?string $v)
  * @method string|null getStateHash()
  * @method void setStateHash(?string $v)
+ * @method string|null getOutSeats()
+ * @method void setOutSeats(?string $v)
  * @method string|null getSettledBy()
  * @method void setSettledBy(?string $v)
  * @method int|null getSettledAt()
@@ -65,6 +69,7 @@ class VariantMove extends Entity {
 	protected $nextSeat;
 	protected $result;
 	protected $stateHash;
+	protected $outSeats;
 	protected $settledBy;
 	protected $settledAt;
 	protected $chain;

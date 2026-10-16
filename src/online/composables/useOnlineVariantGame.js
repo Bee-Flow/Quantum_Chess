@@ -54,13 +54,30 @@ const RETRY_DELAYS_MS = [1000, 3000, 9000]
 const settled = (m) => m.nextSeat !== null && m.nextSeat !== undefined
 
 /**
+ * Whether a settled claim of a stored move agrees with the settlement this browser computed. The sides that are out
+ * are compared only when the move has that list and this browser computed one (moves stored before it existed, and
+ * games of two, have none).
+ *
+ * @param {object} m stored move
+ * @param {object} mine the settlement this browser computed
+ * @return {boolean}
+ */
+function agrees(m, mine) {
+	if (m.nextSeat !== mine.nextSeat || m.result !== mine.result || m.stateHash !== mine.stateHash) {
+		return false
+	}
+	return !Array.isArray(m.out) || !mine.out || m.out.join(',') === mine.out.join(',')
+}
+
+/**
  * @param {object} c the online controller of the game (useOnlineGame)
  * @param {object} [deps] dependencies (tests)
  * @param {object} [deps.api] the HTTP API
  * @param {() => string} [deps.uuid] client ids of moves
  * @param {(ms: number) => Promise<void>} [deps.sleep] waits between retries
  * @param {() => number} [deps.now] the clock in ms
- * @return {object} `game` (useVariantGame), `problem` (null, 'rules', 'altered' or 'disputed'), `mySeat`, `stop()`
+ * @return {object} `game` (useVariantGame), `problem` (null, 'rules', 'altered' or 'disputed'), `mySeat`, `start()`,
+ *   `stop()` and `recover()` (also on the host)
  */
 export function useOnlineVariantGame(c, {
 	api = realApi,
@@ -127,14 +144,14 @@ export function useOnlineVariantGame(c, {
 	 * @return {boolean} whether the claim (if any) agrees
 	 */
 	function remember(m, next) {
-		const mine = settlementOf(next)
+		const mine = settlementOf(next, V)
 		const list = settlements.value.slice()
 		list[m.ply] = mine
 		settlements.value = list
 		if (!settled(m)) {
 			return true
 		}
-		return m.nextSeat === mine.nextSeat && m.result === mine.result && m.stateHash === mine.stateHash
+		return agrees(m, mine)
 	}
 
 	/**
@@ -158,6 +175,32 @@ export function useOnlineVariantGame(c, {
 				return
 			}
 		}
+	}
+
+	/**
+	 * The display name of the player in a seat, from the controller's names (by seat number in a game of more than two
+	 * seats, by colour in a game of two) or else from the game itself.
+	 *
+	 * @param {number} seat seat
+	 * @return {string|null}
+	 */
+	function seatPlayerName(seat) {
+		const names = c.names?.value ?? {}
+		const g = c.game.value
+		const color = seat === 0 ? 'w' : seat === 1 ? 'b' : null
+		const fromGame = Array.isArray(g?.seats)
+			? g.seats.find((s) => s.seat === seat)?.player?.displayName
+			: (seat === 0 ? g?.white : seat === 1 ? g?.black : null)?.displayName
+		return names[String(seat)] ?? (color ? names[color] : null) ?? fromGame ?? null
+	}
+
+	/**
+	 * The players of the board: the viewer's seat is human, every other seat a remote player; each with its name.
+	 *
+	 * @return {object[]}
+	 */
+	function boardPlayers() {
+		return V.sides.map((_, i) => ({ kind: i === mySeat.value ? 'human' : 'remote', name: seatPlayerName(i) }))
 	}
 
 	const ruled = isRefereed(c.game.value.variant)
@@ -203,6 +246,23 @@ export function useOnlineVariantGame(c, {
 		}
 	}
 
+	/**
+	 * Catch up after the server refused a move because the board was behind (a conflict, a game that ended, or a turn
+	 * that had passed): load the game again and rebuild the board from it. `useVariantGame` calls it after such a
+	 * refusal; the error itself is not needed, the server's game is the truth.
+	 *
+	 * @return {Promise<void>}
+	 */
+	async function recover() {
+		if (stopped) {
+			return
+		}
+		await c.load()
+		if (!stopped) {
+			await start()
+		}
+	}
+
 	/** The host of a server-ruled game (see the header). */
 	const ruledHost = {
 		ruled: true,
@@ -222,7 +282,7 @@ export function useOnlineVariantGame(c, {
 				id: 'online-' + id,
 				variant: g.variant,
 				options: optionValues(V, g.variantOptions ?? {}),
-				players: V.sides.map((_, i) => ({ kind: i === mySeat.value ? 'human' : 'remote' })),
+				players: boardPlayers(),
 				autoFlip: false,
 				initial: view,
 				moves: (view.history ?? []).map((h) => ({ code: h.code, i: 0 })),
@@ -247,6 +307,8 @@ export function useOnlineVariantGame(c, {
 		resign() {
 			c.resign()
 		},
+		canResign: () => c.game.value?.canResign !== false,
+		recover,
 	}
 
 	/**
@@ -278,6 +340,7 @@ export function useOnlineVariantGame(c, {
 						return null
 					}
 					V = await loadVariant(g.variant)
+					settlements.value = []
 					const options = optionValues(V, g.variantOptions ?? {})
 					const initial = newGame(V, options)
 					const stored = c.variantMoves.value.filter(Boolean)
@@ -297,7 +360,7 @@ export function useOnlineVariantGame(c, {
 					if (last && !settled(last) && r.settlement) {
 						settle(last.ply, r.settlement)
 					}
-					const seats = V.sides.map((_, i) => ({ kind: i === mySeat.value ? 'human' : 'remote' }))
+					const seats = boardPlayers()
 					return {
 						v: 2,
 						id: 'online-' + id,
@@ -319,11 +382,13 @@ export function useOnlineVariantGame(c, {
 					const m = { ply: before.ply, nextSeat: null }
 					remember(m, next)
 					turnSince = now()
-					settle(before.ply, settlementOf(next))
+					settle(before.ply, settlementOf(next, V))
 				},
 				resign() {
 					c.resign()
 				},
+				canResign: () => c.game.value?.canResign !== false,
+				recover,
 			}
 
 	const game = useVariantGame('online-' + id, host)
@@ -338,7 +403,7 @@ export function useOnlineVariantGame(c, {
 		for (const m of moves) {
 			if (m && m.ply < s.ply && settled(m) && settlements.value[m.ply]) {
 				const mine = settlements.value[m.ply]
-				if (m.nextSeat !== mine.nextSeat || m.result !== mine.result || m.stateHash !== mine.stateHash) {
+				if (!agrees(m, mine)) {
 					dispute(m.ply)
 					return
 				}
@@ -362,7 +427,7 @@ export function useOnlineVariantGame(c, {
 			remember(m, game.state.value)
 			turnSince = now()
 			if (!settled(m)) {
-				settle(m.ply, settlementOf(game.state.value))
+				settle(m.ply, settlementOf(game.state.value, V))
 			}
 		}
 	}
@@ -399,5 +464,5 @@ export function useOnlineVariantGame(c, {
 		game.stop()
 	}
 
-	return { game, problem, mySeat, start, stop }
+	return { game, problem, mySeat, start, stop, recover }
 }

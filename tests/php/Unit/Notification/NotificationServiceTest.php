@@ -15,8 +15,10 @@ use OCA\QuantumChess\Db\Move;
 use OCA\QuantumChess\Notification\NotificationService;
 use OCA\QuantumChess\Service\Game\VariantTurn;
 use OCA\QuantumChess\Service\Settings\MultiplayerSettingsService;
+use OCA\QuantumChess\Tests\Support\ArrayMemcache;
 use OCA\QuantumChess\Tests\Support\FakeNotification;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\ICacheFactory;
 use OCP\Notification\IManager;
 use OCP\Notification\INotification;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -48,7 +50,7 @@ final class NotificationServiceTest extends TestCase {
 	 *
 	 * @return array{0: NotificationService, 1: \ArrayObject<int, array>}
 	 */
-	private function service(array $switches = []): array {
+	private function service(array $switches = [], ?ArrayMemcache $cache = null, bool $cacheFails = false): array {
 		$log = new \ArrayObject();
 		$manager = $this->createMock(IManager::class);
 		$manager->method('createNotification')->willReturnCallback(fn () => new FakeNotification());
@@ -70,7 +72,15 @@ final class NotificationServiceTest extends TestCase {
 		]);
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1790000000);
-		return [new NotificationService($manager, $settings, $time, $this->createMock(LoggerInterface::class)), $log];
+		$factory = $this->createMock(ICacheFactory::class);
+		if ($cacheFails) {
+			$factory->method('createDistributed')->willThrowException(new \RuntimeException('no cache'));
+		} else {
+			$factory->method('createDistributed')->with('quantumchess-watch')
+				->willReturn($cache ?? new ArrayMemcache());
+		}
+		$logger = $this->createMock(LoggerInterface::class);
+		return [new NotificationService($manager, $settings, $time, $logger, $factory), $log];
 	}
 
 	public function testYourTurnReplacesTheFamilyAndCarriesTheMove(): void {
@@ -182,6 +192,12 @@ final class NotificationServiceTest extends TestCase {
 		$this->assertSame(['bob:draw_offer', 'carol:draw_offer', 'dave:draw_offer'], $notified());
 
 		$log->exchangeArray([]);
+		$game->setState(VariantTurn::of($game)->withOut([2])->json());
+		$service->drawOffered($game);
+		$this->assertSame(['bob:draw_offer', 'dave:draw_offer'], $notified(), 'carol is out and has no say');
+		$game->setState(VariantTurn::of($game)->withOut([])->json());
+
+		$log->exchangeArray([]);
 		$game->setStatus(Game::STATUS_FINISHED);
 		$game->setVariantResult('win:1,3/resign');
 		$service->gameOver($game, 'alice');
@@ -194,5 +210,112 @@ final class NotificationServiceTest extends TestCase {
 			['carol:game_over', 'loss'],
 			['dave:game_over', 'win'],
 		], $outcomes, 'alice resigned: no notification for her');
+	}
+
+	/** @return list<string> the notified `user:subject` entries */
+	private static function notified(\ArrayObject $log): array {
+		return array_values(array_map(
+			fn ($e) => $e[1],
+			array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify'),
+		));
+	}
+
+	public function testAPlayerWhoWatchesTheGameGetsNoTurnOrChatNotification(): void {
+		$cache = new ArrayMemcache();
+		[$service, $log] = $this->service([], $cache);
+		$game = $this->game();
+		$service->noteWatching($game, 'bob');
+		$this->assertSame([1], array_values($cache->data));
+		$this->assertSame(['42/bob'], array_keys($cache->data));
+		$move = new Move();
+		$move->setPly(2);
+		$move->setColor('w');
+		$move->setCode('e2-e4');
+		$move->setNotation('e4');
+		$service->yourTurn($game, $move);
+		$message = new ChatMessage();
+		$message->setUid('alice');
+		$message->setKind(ChatMessage::KIND_TEXT);
+		$message->setMessage('hi');
+		$service->chat($game, $message);
+		$this->assertSame([], self::notified($log), 'watching: nothing new');
+		$this->assertContains(['processed', 'bob:your_turn'], $log->getArrayCopy(), 'the old one is still removed');
+		$this->assertContains(['processed', 'bob:chat'], $log->getArrayCopy());
+
+		$game->setDrawOffer('w');
+		$service->drawOffered($game);
+		$this->assertSame(['bob:draw_offer'], self::notified($log), 'other families are still sent');
+
+		$log->exchangeArray([]);
+		$service->noteWatching($game, 'alice');
+		$cache->data = [];
+		$service->chat($game, $message);
+		$this->assertSame(['bob:chat'], self::notified($log), 'no longer watching');
+	}
+
+	public function testABrokenCacheSendsAsBefore(): void {
+		[$service, $log] = $this->service([], null, true);
+		$game = $this->game();
+		$service->noteWatching($game, 'bob');
+		$message = new ChatMessage();
+		$message->setUid('alice');
+		$message->setKind(ChatMessage::KIND_TEXT);
+		$message->setMessage('hi');
+		$service->chat($game, $message);
+		$this->assertSame(['bob:chat'], self::notified($log));
+	}
+
+	public function testTheStartOfASeatedGameReachesEveryoneButTheStarter(): void {
+		[$service, $log] = $this->service();
+		$game = $this->seatedGame();
+		$game->setTurn('0');
+		$game->setPly(0);
+		$service->gameStarted($game, 'carol');
+		$entries = array_values(array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify'));
+		$this->assertSame(
+			[['alice:game_started', true], ['bob:game_started', false], ['dave:game_started', false]],
+			array_map(fn ($e) => [$e[1], $e[2]['yourMove']], $entries),
+			'seat 0 moves first',
+		);
+		$this->assertSame(['carol', 'fourplayer', 0], [
+			$entries[0][2]['actor'],
+			$entries[0][2]['variant'],
+			$entries[0][2]['ply'],
+		]);
+	}
+
+	public function testADeclineInASeatedGame(): void {
+		[$service, $log] = $this->service();
+		$game = $this->seatedGame();
+		$game->setStatus(Game::STATUS_PENDING);
+		$game->setState(VariantTurn::start(['alice', 'bob', 'carol', 'dave'], [true, true, false, false])->json());
+		$service->inviteDeclined($game, 'carol');
+		$entries = array_values(array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify'));
+		$this->assertSame(['alice:invite_declined', 'bob:invite_declined'], array_column($entries, 1));
+		$this->assertTrue($entries[1][2]['cancelled'], 'every player who took a seat hears that the game is off');
+
+		$log->exchangeArray([]);
+		$service->inviteDeclined($game, 'carol', true);
+		$entries = array_values(array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify'));
+		$this->assertSame(['alice:invite_declined'], array_column($entries, 1));
+		$this->assertTrue($entries[0][2]['reopened']);
+	}
+
+	public function testASeatedGameOverNamesWhoEndedIt(): void {
+		[$service, $log] = $this->service();
+		$game = $this->seatedGame();
+		$game->setStatus(Game::STATUS_FINISHED);
+		$game->setVariantResult('win:0,2/timeout');
+		$game->setResultReason('timeout');
+		$game->setState(VariantTurn::of($game)->withEndedBy(1)->json());
+		$service->gameOver($game);
+		$entries = array_values(array_filter($log->getArrayCopy(), fn ($e) => $e[0] === 'notify'));
+		$this->assertSame([
+			['alice:game_over', 'bob', true, 'win'],
+			['bob:game_over', 'alice', false, 'loss'],
+			['carol:game_over', 'bob', true, 'win'],
+			['dave:game_over', 'bob', true, 'loss'],
+		], array_map(fn ($e) => [$e[1], $e[2]['actor'], $e[2]['endedBy'], $e[2]['outcome']], $entries));
+		$this->assertSame([true, 'fourplayer'], [$entries[0][2]['seats'], $entries[0][2]['variant']]);
 	}
 }

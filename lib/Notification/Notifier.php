@@ -124,6 +124,9 @@ class Notifier implements INotifier, IPreloadableNotifier {
 			'invite', 'rematch' => $status !== Game::STATUS_PENDING,
 			'draw_offer' => $status !== Game::STATUS_ACTIVE || $game->getDrawOffer() === null,
 			'your_turn' => $status !== Game::STATUS_ACTIVE || $game->getPly() !== ($params['ply'] ?? $game->getPly()),
+			// the first move was made: the player of seat 0 has seen the game
+			'game_started' => !empty($params['yourMove'])
+				&& ($status !== Game::STATUS_ACTIVE || $game->getPly() !== ($params['ply'] ?? $game->getPly())),
 			default => false,
 		};
 		if ($obsolete) {
@@ -145,6 +148,9 @@ class Notifier implements INotifier, IPreloadableNotifier {
 			: ['user' => ['type' => 'user', 'id' => $actor, 'name' => $actorName]];
 
 		$message = '';
+		// whether the message names the actor as {user} (a chat excerpt is the player's own text)
+		$messageNamesActor = false;
+		$variantName = is_string($params['variant'] ?? null) ? VariantCatalog::name($l, $params['variant']) : null;
 		switch ($subject) {
 			case 'invite':
 			case 'rematch':
@@ -186,7 +192,20 @@ class Notifier implements INotifier, IPreloadableNotifier {
 					: $l->t('Waiting for their first move.');
 				break;
 			case 'invite_declined':
-				$text = $l->t('{user} declined your invitation');
+				$text = match (true) {
+					!empty($params['reopened']) => $l->t('{user} declined; the seat is open again'),
+					!empty($params['cancelled']) && $notification->getUser() !== $game->getCreatorUid() => $l->t(
+						'{user} declined, so the game of %s was cancelled',
+						[$variantName ?? $l->t('Quantum Chess')],
+					),
+					default => $l->t('{user} declined your invitation'),
+				};
+				break;
+			case 'game_started':
+				$name = $variantName ?? $l->t('Quantum Chess');
+				$text = !empty($params['yourMove'])
+					? $l->t('It\'s your move: the game of %s has started', [$name])
+					: $l->t('The game of %s has started', [$name]);
 				break;
 			case 'your_turn':
 				$text = is_string($params['variant'] ?? null)
@@ -203,13 +222,34 @@ class Notifier implements INotifier, IPreloadableNotifier {
 				$this->addAction($notification, $l->t('Decline'), 'drawDecline', $id, false);
 				break;
 			case 'game_over':
-				$text = match ($params['outcome'] ?? 'draw') {
-					'win' => $l->t('You won against {user}'),
-					'loss' => $l->t('You lost against {user}'),
-					'aborted' => $l->t('Your game against {user} was aborted'),
-					default => $l->t('Your game against {user} ended in a draw'),
-				};
-				$message = self::reasonLabel($l, is_string($params['reason'] ?? null) ? $params['reason'] : null);
+				$reason = is_string($params['reason'] ?? null) ? $params['reason'] : null;
+				if (!empty($params['seats'])) {
+					// a game with more than two seats: no single opponent to name
+					$name = $variantName ?? $l->t('Quantum Chess');
+					$text = match ($params['outcome'] ?? 'draw') {
+						'win' => $l->t('You won the game of %s', [$name]),
+						'loss' => $l->t('You lost the game of %s', [$name]),
+						'aborted' => $l->t('The game of %s was aborted', [$name]),
+						default => $l->t('The game of %s ended in a draw', [$name]),
+					};
+					$message = $actor === null || empty($params['endedBy']) ? '' : match ($reason) {
+						'resignation' => $l->t('{user} resigned'),
+						'timeout' => $l->t('{user} ran out of time'),
+						'abandoned' => $l->t('{user} stopped playing'),
+						default => '',
+					};
+					$messageNamesActor = $message !== '';
+				} else {
+					$text = match ($params['outcome'] ?? 'draw') {
+						'win' => $l->t('You won against {user}'),
+						'loss' => $l->t('You lost against {user}'),
+						'aborted' => $l->t('Your game against {user} was aborted'),
+						default => $l->t('Your game against {user} ended in a draw'),
+					};
+				}
+				if ($message === '') {
+					$message = self::reasonLabel($l, $reason);
+				}
 				if (is_int($params['rating'] ?? null) && is_int($params['delta'] ?? null)) {
 					$delta = $params['delta'];
 					$message .= ' · ' . $l->t('Rating %1$d (%2$s)', [
@@ -218,7 +258,7 @@ class Notifier implements INotifier, IPreloadableNotifier {
 					]);
 				}
 				if ($actor !== null && $game->getRematchId() === null
-					&& $game->opponentOf($notification->getUser()) !== null) {
+					&& $this->canRematch($game, $notification->getUser())) {
 					$this->addAction($notification, $l->t('Rematch'), 'rematch', $id, false);
 				}
 				break;
@@ -242,11 +282,27 @@ class Notifier implements INotifier, IPreloadableNotifier {
 		$notification->setRichSubject($text, str_contains($text, '{user}') ? $rich : []);
 		$notification->setParsedSubject(str_replace('{user}', $actorName, $text));
 		if ($message !== '') {
+			if ($messageNamesActor) {
+				$notification->setRichMessage($message, $rich);
+				$message = str_replace('{user}', $actorName, $message);
+			}
 			$notification->setParsedMessage($message);
 		}
 		$notification->setLink($this->url->linkToRouteAbsolute('quantumchess.page.index') . '#/game/' . $id);
 		$notification->setIcon($this->url->getAbsoluteURL($this->url->imagePath(Application::APP_ID, 'app-dark.svg')));
 		return $notification;
+	}
+
+	/**
+	 * Whether `$uid` can ask for a rematch of the ended game: every other player is still there (in a game with more
+	 * than two seats, every seat still has its player).
+	 */
+	private function canRematch(Game $game, string $uid): bool {
+		if ($game->isMultiSeat()) {
+			$players = $game->seatUids();
+			return in_array($uid, $players, true) && !in_array(null, $players, true);
+		}
+		return $game->opponentOf($uid) !== null;
 	}
 
 	private function addAction(

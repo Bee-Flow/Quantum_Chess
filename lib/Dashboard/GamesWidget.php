@@ -117,13 +117,24 @@ class GamesWidget implements
 	}
 
 	private function item(Game $game, string $uid): WidgetItem {
-		$other = $game->opponentOf($uid);
-		$name = $other === null ? $this->l->t('Deleted user') : ($this->userManager->getDisplayName($other) ?? $other);
+		$invitation = $game->isAwaitingOpponent();
+		if (!$game->isMultiSeat()) {
+			$other = $game->opponentOf($uid);
+			$name = $this->nameOf($other);
+		} elseif ($invitation) {
+			// An invitation to a game with more than two seats comes from its creator.
+			$other = $game->getCreatorUid();
+			$name = $this->nameOf($other);
+		} else {
+			$others = $game->othersOf($uid);
+			$other = $others[0] ?? null;
+			$name = $others === [] ? $this->nameOf(null) : $this->listOf(array_map($this->nameOf(...), $others));
+		}
 		$avatar = $other === null
 			? ''
 			: $this->url->linkToRouteAbsolute('core.avatar.getAvatar', ['userId' => $other, 'size' => 64]);
 		$link = $this->appUrl('/game/' . $game->getId());
-		if ($game->getStatus() === Game::STATUS_PENDING) {
+		if ($invitation) {
 			$title = $game->getRematchOf() !== null
 				? $this->l->t('%s wants a rematch', [$name])
 				: $this->l->t('%s invited you', [$name]);
@@ -158,5 +169,24 @@ class GamesWidget implements
 			(string)$game->getId(),
 			$overlay,
 		);
+	}
+
+	/** The display name of a user, or "Deleted user". */
+	private function nameOf(?string $uid): string {
+		return $uid === null ? $this->l->t('Deleted user') : ($this->userManager->getDisplayName($uid) ?? $uid);
+	}
+
+	/**
+	 * Names as running text: "Alice", "Alice and Bob", "Alice, Bob and Carol".
+	 *
+	 * @param list<string> $names
+	 */
+	private function listOf(array $names): string {
+		$last = array_pop($names);
+		if ($names === []) {
+			return (string)$last;
+		}
+		// TRANSLATORS: the end of a list of players, e.g. "Alice, Bob and Carol"
+		return $this->l->t('%1$s and %2$s', [implode(', ', $names), (string)$last]);
 	}
 }

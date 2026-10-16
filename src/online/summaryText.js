@@ -9,7 +9,9 @@
 
 import { n, t } from '@nextcloud/l10n'
 import { otherColor } from '../engine/index.js'
+import { reasonCopy } from '../game/resultText.js'
 import { formatDeadline } from '../services/format.js'
+import { reasonText } from '../variantplay/texts.js'
 import { catalogEntry } from '../variants/index.js'
 
 /** @typedef {import('../services/api.js').GameSummary} GameSummary */
@@ -101,12 +103,64 @@ export function outcomeText(g) {
 	}
 	const delta = g.ratingChange && g.myColor ? g.ratingChange[g.myColor] : null
 	const deltaText = typeof delta === 'number' ? (delta >= 0 ? '+' : '') + delta : ''
-	if (!g.winner) {
-		return { text: t('quantumchess', 'Draw'), outcome: 'draw', delta: deltaText }
+	let outcome
+	if (Array.isArray(g.seats)) {
+		// a game of more than two seats keeps the result '*': the variant result code names the winning seats
+		const winners = seatedWinners(g)
+		const mine = g.myColor === null || g.myColor === undefined ? null : Number(g.myColor)
+		outcome = !winners.length ? 'draw' : (winners.includes(mine) ? 'win' : 'loss')
+	} else {
+		outcome = !g.winner ? 'draw' : (g.winner === g.myColor ? 'win' : 'loss')
 	}
-	return g.winner === g.myColor
-		? { text: t('quantumchess', 'Won'), outcome: 'win', delta: deltaText }
-		: { text: t('quantumchess', 'Lost'), outcome: 'loss', delta: deltaText }
+	const text = {
+		draw: t('quantumchess', 'Draw'),
+		win: t('quantumchess', 'Won'),
+		loss: t('quantumchess', 'Lost'),
+	}[outcome]
+	return { text, outcome, delta: deltaText }
+}
+
+/**
+ * The winning seats of a game with more than two seats from its variant result code ("win:0,2/resignation"); empty for
+ * a draw or a game without a result.
+ *
+ * @param {GameSummary} g the game
+ * @return {number[]}
+ */
+export function seatedWinners(g) {
+	const m = /^win:(\d+(?:,\d+)*)\//.exec(g?.variantResult ?? '')
+	return m ? m[1].split(',').map(Number) : []
+}
+
+/**
+ * Why a finished game ended, for the recent games: "Alice resigned", "Draw by agreement"; '' for an aborted game or an
+ * unknown reason. A game with more than two seats names no colour: "A player resigned".
+ *
+ * @param {GameSummary} g the game
+ * @return {string}
+ */
+export function endReasonText(g) {
+	if (g.status === 'aborted') {
+		return ''
+	}
+	const reason = g.resultReason ?? ''
+	if (!Array.isArray(g.seats)) {
+		const names = { w: g.white?.displayName ?? '', b: g.black?.displayName ?? '' }
+		return reasonCopy(reason, { winner: g.winner, names })
+	}
+	const words = {
+		resignation: t('quantumchess', 'A player resigned'),
+		timeout: t('quantumchess', 'A player ran out of time'),
+		abandoned: t('quantumchess', 'The game was abandoned'),
+		agreement: t('quantumchess', 'Draw by agreement'),
+		player_deleted: t('quantumchess', 'A player’s account was deleted'),
+	}
+	if (words[reason]) {
+		return words[reason]
+	}
+	// the generic words of the variant rules ("a king was captured"); the variant itself is not loaded on Home
+	const text = reason ? reasonText({}, reason) : ''
+	return text && text !== reason ? text.charAt(0).toUpperCase() + text.slice(1) : ''
 }
 
 /**
@@ -142,4 +196,84 @@ export function otherPlayers(g, me) {
  */
 export function seatsText(g) {
 	return (g?.seats ?? []).map((s) => s.player?.displayName ?? t('quantumchess', 'open seat')).join(', ')
+}
+
+/**
+ * Names joined as a list: "Alice", "Alice and Bob", "Alice, Bob and Carol".
+ *
+ * @param {string[]} names the names
+ * @return {string}
+ */
+export function nameList(names) {
+	const list = names.filter(Boolean)
+	if (list.length < 2) {
+		return list[0] ?? ''
+	}
+	// TRANSLATORS: the end of a list of player names, such as "Alice, Bob and Carol"; {list} is "Alice, Bob"
+	return t('quantumchess', '{list} and {last}', { list: list.slice(0, -1).join(', '), last: list[list.length - 1] })
+}
+
+/**
+ * The other players of a game in words: "Bob" for a game of two, "Alice, Bob and Carol" for a game of four (open seats
+ * left out).
+ *
+ * @param {GameSummary} g the game
+ * @param {string|null} me viewer uid
+ * @return {string}
+ */
+export function playersText(g, me) {
+	return nameList(otherPlayers(g, me).map((p) => p.displayName ?? p.userId ?? ''))
+}
+
+/**
+ * The player whose move it is in a running game, or null.
+ *
+ * @param {GameSummary} g the game
+ * @return {UserRef|null}
+ */
+export function toMovePlayer(g) {
+	if (Array.isArray(g?.seats)) {
+		return g.seats.find((s) => String(s.seat) === String(g.turn))?.player ?? null
+	}
+	if (g?.turn === 'w') {
+		return g.white ?? null
+	}
+	return g?.turn === 'b' ? (g.black ?? null) : null
+}
+
+/**
+ * The name of the player whose move it is in a running game, or ''.
+ *
+ * @param {GameSummary} g the game
+ * @return {string}
+ */
+export function toMoveName(g) {
+	const p = toMovePlayer(g)
+	return p?.displayName ?? p?.userId ?? ''
+}
+
+/**
+ * Whose move it is, from the viewer's side: "Your move" or "Waiting for Carol".
+ *
+ * @param {GameSummary} g the game
+ * @return {string}
+ */
+export function turnText(g) {
+	if (g.yourTurn) {
+		return t('quantumchess', 'Your move')
+	}
+	const name = toMoveName(g)
+	return name ? t('quantumchess', 'Waiting for {name}', { name }) : t('quantumchess', 'Waiting for opponent')
+}
+
+/**
+ * A game with more than two seats that waits for players: "Waiting for players (2 of 4)", counting the seats taken.
+ *
+ * @param {GameSummary} g the game
+ * @return {string}
+ */
+export function seatsJoinedText(g) {
+	const seats = g?.seats ?? []
+	const joined = seats.filter((s) => s.player && s.accepted).length
+	return t('quantumchess', 'Waiting for players ({joined} of {seats})', { joined, seats: seats.length })
 }

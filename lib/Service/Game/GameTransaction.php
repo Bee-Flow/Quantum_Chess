@@ -20,7 +20,7 @@ use Psr\Log\LoggerInterface;
  * a warning and never undoes the committed change. Transactions do not nest.
  */
 class GameTransaction {
-	/** @var list<callable(): void>|null the queued callbacks while a transaction runs, null otherwise */
+	/** @var array<int|string, callable(): void>|null the queued callbacks while a transaction runs, null otherwise */
 	private ?array $queue = null;
 
 	public function __construct(
@@ -63,16 +63,27 @@ class GameTransaction {
 		return $result;
 	}
 
+	/** Whether a transaction is running, so afterCommit() may be called. */
+	public function isRunning(): bool {
+		return $this->queue !== null;
+	}
+
 	/**
 	 * Queues `$callback` to run after the current transaction commits.
 	 *
 	 * @param callable(): void $callback
+	 * @param ?string $key with a key, the callback runs once per transaction: queuing it again under the same key
+	 *                     keeps its place in the queue and does nothing else
 	 * @throws \LogicException when no transaction is running
 	 */
-	public function afterCommit(callable $callback): void {
+	public function afterCommit(callable $callback, ?string $key = null): void {
 		if ($this->queue === null) {
 			throw new \LogicException('afterCommit() needs a running game transaction.');
 		}
-		$this->queue[] = $callback;
+		if ($key === null) {
+			$this->queue[] = $callback;
+		} elseif (!array_key_exists('k:' . $key, $this->queue)) {
+			$this->queue['k:' . $key] = $callback;
+		}
 	}
 }

@@ -21,7 +21,7 @@
 					disableMenu />
 				<router-link class="qc-recent__main" :to="`/game/${r.game.id}`">
 					<span class="qc-recent__name">{{
-						t('quantumchess', 'vs {name}', { name: r.other?.displayName ?? '' })
+						t('quantumchess', 'vs {name}', { name: r.players })
 					}}</span>
 					<span class="qc-recent__result">
 						<strong :class="'qc-recent__outcome--' + r.outcome.outcome">{{ r.outcome.text }}</strong>
@@ -66,10 +66,9 @@ import { useRouter } from 'vue-router'
 import NcAvatar from '@nextcloud/vue/components/NcAvatar'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
-import { reasonCopy } from '../../../game/resultText.js'
 import { currentUser, features } from '../../../services/initialState.js'
 import { useLobby } from '../../composables/useLobby.js'
-import { otherPlayer, outcomeText } from '../../summaryText.js'
+import { endReasonText, otherPlayer, outcomeText, playersText } from '../../summaryText.js'
 
 const router = useRouter()
 const lobby = useLobby()
@@ -78,15 +77,13 @@ const busy = ref(null)
 const me = currentUser.uid
 
 const recent = computed(() => lobby.lobby.value?.recent ?? [])
-const rows = computed(() => recent.value.slice(0, 5).map((game) => {
-	const names = { w: game.white?.displayName ?? '', b: game.black?.displayName ?? '' }
-	return {
-		game,
-		other: otherPlayer(game, me),
-		outcome: outcomeText(game),
-		reason: game.status === 'aborted' ? '' : reasonCopy(game.resultReason, { winner: game.winner, names }),
-	}
-}))
+const rows = computed(() => recent.value.slice(0, 5).map((game) => ({
+	game,
+	other: otherPlayer(game, me),
+	players: playersText(game, me),
+	outcome: outcomeText(game),
+	reason: endReasonText(game),
+})))
 
 /**
  * Offer (or accept) a rematch and open it.

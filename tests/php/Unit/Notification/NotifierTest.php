@@ -14,6 +14,7 @@ use OCA\QuantumChess\Db\GameMapper;
 use OCA\QuantumChess\Engine\Engine;
 use OCA\QuantumChess\Notification\MoveDescriber;
 use OCA\QuantumChess\Notification\Notifier;
+use OCA\QuantumChess\Service\Game\VariantTurn;
 use OCA\QuantumChess\Tests\Support\FakeNotification;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -242,5 +243,92 @@ final class NotifierTest extends TestCase {
 		);
 		$this->assertSame('They moved their pawn to e4', $d->describe($l, ['notation' => 'e2-e4']));
 		$this->assertSame('They castled.', $d->describe($l, ['notation' => 'O-O']));
+	}
+
+	/** A game of Four-player chess for alice, bob, carol and dave. */
+	private function seatedGame(string $status = Game::STATUS_FINISHED): Game {
+		$game = new Game();
+		$game->setId(42);
+		$game->setCreatorUid('alice');
+		$game->setVariant('fourplayer');
+		$game->setVariantOptions('{"mode":"ffa"}');
+		$game->setSeatCount(4);
+		$game->setStatus($status);
+		$game->setStartedAt(1790000000);
+		$game->setPly(0);
+		$game->setTurn('0');
+		$game->setState(VariantTurn::start(['alice', 'bob', 'carol', 'dave'], [true, true, true, true])->json());
+		return $game;
+	}
+
+	public function testSeatedGameOverNamesTheGameAndWhoEndedIt(): void {
+		$game = $this->seatedGame();
+		$notifier = $this->notifier($game);
+		$base = ['actor' => 'carol', 'seats' => true, 'variant' => 'fourplayer', 'endedBy' => true];
+		$won = $this->incoming('game_over', $base + ['outcome' => 'win', 'reason' => 'resignation']);
+		$n = $notifier->prepare($won, 'en');
+		$this->assertSame(['You won the game of Four-player chess', 'Carol resigned'], [
+			$n->getParsedSubject(),
+			$n->getParsedMessage(),
+		]);
+		$this->assertSame(['Rematch'], array_map(fn (IAction $a) => $a->getParsedLabel(), $n->getParsedActions()));
+
+		$lost = $this->incoming('game_over', $base + ['outcome' => 'loss', 'reason' => 'timeout']);
+		$n = $notifier->prepare($lost, 'en');
+		$this->assertSame(['You lost the game of Four-player chess', 'Carol ran out of time'], [
+			$n->getParsedSubject(),
+			$n->getParsedMessage(),
+		]);
+
+		$n = $notifier->prepare($this->incoming('game_over', ['endedBy' => false] + $base + [
+			'outcome' => 'draw',
+			'reason' => 'agreement',
+		]), 'en');
+		$this->assertSame(['The game of Four-player chess ended in a draw', 'Draw agreed'], [
+			$n->getParsedSubject(),
+			$n->getParsedMessage(),
+		]);
+
+		$n = $notifier->prepare($this->incoming('game_over', ['actor' => 'zed'] + $base + [
+			'outcome' => 'win',
+			'reason' => 'player_deleted',
+		]), 'en');
+		$this->assertSame('Account deleted', $n->getParsedMessage(), 'a deleted account is not named');
+
+		$game->setState(VariantTurn::start(['alice', 'bob', null, 'dave'], [true, true, true, true])->json());
+		$won = $this->incoming('game_over', $base + ['outcome' => 'win', 'reason' => 'resignation']);
+		$n = $notifier->prepare($won, 'en');
+		$this->assertSame([], $n->getParsedActions(), 'a seat without its player: no rematch');
+	}
+
+	public function testSeatedGameStarted(): void {
+		$game = $this->seatedGame(Game::STATUS_ACTIVE);
+		$notifier = $this->notifier($game);
+		$params = ['actor' => 'dave', 'variant' => 'fourplayer', 'ply' => 0];
+		$n = $notifier->prepare($this->incoming('game_started', $params + ['yourMove' => true]), 'en');
+		$this->assertSame('It\'s your move: the game of Four-player chess has started', $n->getParsedSubject());
+		$n = $notifier->prepare($this->incoming('game_started', $params + ['yourMove' => false]), 'en');
+		$this->assertSame('The game of Four-player chess has started', $n->getParsedSubject());
+		$game->setPly(1);
+		$n = $notifier->prepare($this->incoming('game_started', $params + ['yourMove' => false]), 'en');
+		$this->assertSame('The game of Four-player chess has started', $n->getParsedSubject());
+		$this->expectException(AlreadyProcessedException::class);
+		$notifier->prepare($this->incoming('game_started', $params + ['yourMove' => true]), 'en');
+	}
+
+	public function testSeatedDeclines(): void {
+		$game = $this->seatedGame(Game::STATUS_DECLINED);
+		$notifier = $this->notifier($game);
+		$params = ['actor' => 'carol', 'variant' => 'fourplayer'];
+		$n = $notifier->prepare($this->incoming('invite_declined', $params + ['cancelled' => true]), 'en');
+		$this->assertSame('Carol declined, so the game of Four-player chess was cancelled', $n->getParsedSubject());
+		$creator = $this->incoming('invite_declined', $params + ['cancelled' => true])->setUser('alice');
+		$this->assertSame('Carol declined your invitation', $notifier->prepare($creator, 'en')->getParsedSubject());
+		$game->setStatus(Game::STATUS_OPEN);
+		$reopened = $this->incoming('invite_declined', $params + ['reopened' => true])->setUser('alice');
+		$this->assertSame(
+			'Carol declined; the seat is open again',
+			$notifier->prepare($reopened, 'en')->getParsedSubject(),
+		);
 	}
 }

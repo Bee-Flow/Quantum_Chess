@@ -78,7 +78,16 @@ import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
 import MiniBoard from '../../../board/components/MiniBoard.vue'
 import { formatRelative } from '../../../services/format.js'
 import { currentUser } from '../../../services/initialState.js'
-import { colorText, otherPlayer, progressText, timeControlText, variantText } from '../../summaryText.js'
+import {
+	colorText,
+	otherPlayer,
+	playersText,
+	progressText,
+	seatsJoinedText,
+	timeControlText,
+	turnText,
+	variantText,
+} from '../../summaryText.js'
 
 const props = defineProps({
 	/** GameSummary */
@@ -92,24 +101,43 @@ const props = defineProps({
 })
 
 const me = currentUser.uid
-const other = computed(() => otherPlayer(props.game, me))
+const seated = computed(() => Array.isArray(props.game.seats))
+const waitingForPlayers = computed(() => ['invite', 'open', 'outgoing'].includes(props.kind))
+/** The player on the card: the creator of a game of more than two seats that waits for players, else the opponent. */
+const other = computed(() => {
+	const g = props.game
+	if (seated.value && waitingForPlayers.value && g.creator && g.creator.userId !== me) {
+		return g.creator
+	}
+	return otherPlayer(g, me)
+})
 const highlight = computed(() => props.kind === 'turn' || props.kind === 'invite')
 
 const title = computed(() => {
+	const g = props.game
 	const name = other.value?.displayName ?? ''
 	switch (props.kind) {
 		case 'invite':
-			return props.game.rematchOf
+			return g.rematchOf
 				? t('quantumchess', '{name} wants a rematch', { name })
 				: t('quantumchess', '{name} invites you', { name })
 		case 'open':
 			return t('quantumchess', 'Open challenge by {name}', { name })
 		case 'outgoing':
-			return props.game.status === 'open'
+			if (seated.value && g.creator?.userId !== me) {
+				// a seat the viewer took in another player's game
+				return g.status === 'open'
+					? t('quantumchess', 'Open challenge by {name}', { name })
+					: t('quantumchess', 'Game by {name}', { name })
+			}
+			if (seated.value && g.status !== 'open') {
+				return t('quantumchess', 'Invitation to {name}', { name: playersText(g, me) })
+			}
+			return g.status === 'open'
 				? t('quantumchess', 'Your open challenge')
 				: t('quantumchess', 'Invitation to {name}', { name })
 		default:
-			return t('quantumchess', 'vs {name}', { name })
+			return t('quantumchess', 'vs {name}', { name: seated.value ? playersText(g, me) : name })
 	}
 })
 
@@ -117,6 +145,9 @@ const line = computed(() => {
 	const g = props.game
 	if (props.kind === 'invite' || props.kind === 'open') {
 		return colorText(g, me)
+	}
+	if (props.kind === 'outgoing' && seated.value) {
+		return seatsJoinedText(g)
 	}
 	if (props.kind === 'outgoing') {
 		return g.expiresAt
@@ -132,6 +163,10 @@ const line = computed(() => {
 					},
 				)
 			: t('quantumchess', 'Waiting for an answer')
+	}
+	if (seated.value) {
+		// several players move in turn: name the one to move
+		return [turnText(g), progressText(g, props.now)].filter(Boolean).join(' · ')
 	}
 	if (props.kind === 'waiting') {
 		const moved = g.lastMoveAt ? formatRelative(g.lastMoveAt, props.now) : ''

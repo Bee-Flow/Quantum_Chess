@@ -13,6 +13,7 @@ use OCA\QuantumChess\Db\Game;
 use OCA\QuantumChess\Service\Game\GameLifecycle;
 use OCA\QuantumChess\Service\Game\GameMaintenanceService;
 use OCA\QuantumChess\Service\Game\GameTransaction;
+use OCA\QuantumChess\Service\Game\VariantTurn;
 use OCA\QuantumChess\Tests\Support\GameBuilder;
 use OCA\QuantumChess\Tests\Support\GameServiceFixture;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -208,5 +209,114 @@ final class GameMaintenanceServiceTest extends TestCase {
 			$this->stored[3]->getResultReason(),
 			$this->stored[3]->getRated(),
 		]);
+	}
+
+	/**
+	 * A started game of Four-player chess, every player for themselves, with alice (the creator), bob, carol and dave
+	 * in seats 0 to 3.
+	 *
+	 * @param list<int> $out the seats that are out
+	 */
+	private function seated(int $id, string $status = Game::STATUS_ACTIVE, array $out = []): Game {
+		$builder = $status === Game::STATUS_ACTIVE ? GameBuilder::active(...) : GameBuilder::finished(...);
+		return $builder([
+			'id' => $id,
+			'variant' => 'fourplayer',
+			'variantOptions' => '{"mode":"ffa"}',
+			'seatCount' => 4,
+			'status' => $status,
+			'opponentUid' => null,
+			'whiteUid' => null,
+			'blackUid' => null,
+			'rated' => 0,
+			'ratedRequested' => 0,
+			'turn' => '1',
+			'ply' => 5,
+			'state' => VariantTurn::start(['alice', 'bob', 'carol', 'dave'], [true, true, true, true])
+				->withOut($out)->json(),
+		]);
+	}
+
+	public function testADeletedAccountEndsASeatedGameForEveryone(): void {
+		$this->store($this->seated(10));
+		$this->maintenance()->removeUser('carol', true);
+		$game = $this->stored[10];
+		$turn = VariantTurn::of($game);
+		$this->assertSame([Game::STATUS_FINISHED, 'player_deleted', 2, ['alice', 'bob', null, 'dave']], [
+			$game->getStatus(),
+			$game->getResultReason(),
+			$turn->endedBy,
+			$turn->seats,
+		]);
+		$this->assertStringStartsWith('win:0,1,3', (string)$game->getVariantResult());
+		$this->assertSame([
+			'begin', 'save #10 rev 5→6',
+			'clear games #10 carol', 'clear moves #10 carol', 'clear seats #10 carol', 'delete own chat #10 carol',
+			'commit',
+			'notify removeForGame(10)',
+			"notify gameEndedDeleted(#10, 'alice')",
+			"notify gameEndedDeleted(#10, 'bob')",
+			"notify gameEndedDeleted(#10, 'dave')",
+		], array_values(array_filter($this->log, fn (string $l) => !str_starts_with($l, 'rate '))));
+	}
+
+	public function testASeatThatIsOutLeavesTheGameRunning(): void {
+		$this->store($this->seated(11, Game::STATUS_ACTIVE, [2]));
+		$this->maintenance()->removeUser('carol', true);
+		$game = $this->stored[11];
+		$this->assertSame([Game::STATUS_ACTIVE, ['alice', 'bob', null, 'dave'], null], [
+			$game->getStatus(),
+			$game->seatUids(),
+			VariantTurn::of($game)->endedBy,
+		]);
+		$this->assertNotContains("notify gameEndedDeleted(#11, 'alice')", $this->log);
+	}
+
+	public function testASeatedGameIsKeptWhileSeatedPlayersRemain(): void {
+		$this->store($this->seated(12, Game::STATUS_FINISHED));
+		$this->maintenance()->removeUser('alice', true);
+		$this->assertArrayHasKey(12, $this->stored, 'bob, carol and dave still play it');
+		$this->assertSame([null, 'bob', 'carol', 'dave'], $this->stored[12]->seatUids());
+		foreach (['bob', 'carol', 'dave'] as $uid) {
+			$this->maintenance()->removeUser($uid, true);
+		}
+		$this->assertArrayNotHasKey(12, $this->stored, 'nobody left');
+	}
+
+	public function testAnInvitedPlayerOfAWaitingSeatedGameFreesTheSeat(): void {
+		$waiting = fn (int $id) => GameBuilder::open([
+			'id' => $id,
+			'variant' => 'fourplayer',
+			'variantOptions' => '{"mode":"ffa"}',
+			'seatCount' => 4,
+			'turn' => '0',
+			'state' => VariantTurn::start(['alice', 'bob', 'carol', null], [true, true, false, false])->json(),
+		]);
+		$this->store($waiting(13));
+		$this->maintenance()->removeUser('bob', true);
+		$game = $this->stored[13];
+		$this->assertSame([Game::STATUS_OPEN, ['alice', null, 'carol', null], [true, false, false, false]], [
+			$game->getStatus(),
+			$game->seatUids(),
+			VariantTurn::of($game)->accepted,
+		]);
+		$this->assertContains("notify inviteClosed(#13, 'bob')", $this->log);
+		$this->assertNotContains('notify removeForGame(13)', $this->log);
+
+		$this->config['openChallengesEnabled'] = false;
+		$this->store($waiting(14));
+		$this->maintenance()->removeUser('carol', true);
+		$this->assertArrayNotHasKey(14, $this->stored, 'no open seats allowed: the game is deleted as before');
+
+		$this->config['openChallengesEnabled'] = true;
+		$invitation = $waiting(15);
+		$invitation->setStatus(Game::STATUS_PENDING);
+		$this->store($invitation);
+		$this->maintenance()->removeUser('bob', true);
+		$this->assertArrayNotHasKey(15, $this->stored, 'an invitation never becomes an open challenge');
+
+		$this->config['openChallengesEnabled'] = true;
+		$this->maintenance()->removeUser('alice', true);
+		$this->assertArrayNotHasKey(13, $this->stored, 'the creator takes the game with them');
 	}
 }

@@ -74,8 +74,24 @@ class VariantGameplayService {
 	}
 
 	/**
+	 * The seats that still play: every seat but the ones that are out (VariantTurn `out`, games of more than two
+	 * seats).
+	 *
+	 * @return list<int>
+	 */
+	public static function playingSeats(Game $game): array {
+		$all = range(0, max(0, $game->getSeatCount() - 1));
+		return array_values(array_diff($all, VariantTurn::of($game)->out));
+	}
+
+	/** Whether seat `$seat` is out of the game (always false with two seats). */
+	public static function isOut(Game $game, int $seat): bool {
+		return $game->isMultiSeat() && in_array($seat, VariantTurn::of($game)->out, true);
+	}
+
+	/**
 	 * The result when seat `$seat` leaves the game (it resigns, its time runs out, its player's account is deleted):
-	 * in a team game the other team wins, otherwise every other seat.
+	 * in a team game the other team wins, otherwise every other seat that still plays.
 	 */
 	public static function lossOf(Game $game, int $seat, string $reason): VariantResult {
 		$teams = VariantCatalog::teams((string)$game->getVariant(), $game->getVariantOptionValues()) ?? [];
@@ -86,8 +102,7 @@ class VariantGameplayService {
 			$others = array_values(array_filter($teams, fn (array $t) => $t !== $team));
 			return VariantResult::of(array_merge(...$others), $reason);
 		}
-		$all = range(0, max(0, $game->getSeatCount() - 1));
-		return VariantResult::of(array_values(array_diff($all, [$seat])), $reason);
+		return VariantResult::of(array_values(array_diff(self::playingSeats($game), [$seat])), $reason);
 	}
 
 	/**
@@ -236,6 +251,7 @@ class VariantGameplayService {
 		$move->setNextSeat(null);
 		$move->setResult(null);
 		$move->setStateHash(null);
+		$move->setOutSeats(null);
 		$move->setSettledBy(null);
 		$move->setSettledAt(null);
 		$move->setChain($chain);
@@ -288,12 +304,27 @@ class VariantGameplayService {
 	/**
 	 * Settles the move at `$ply`: what it led to when played with its roll. Any player may settle, so a game goes on
 	 * when the mover leaves before settling. The same settlement again changes nothing; a different one disputes the
-	 * game.
+	 * game. A settlement that names no out seats (null) does not differ from one that does in that respect.
+	 *
+	 * In a game of more than two seats the settlement also names the seats that are out (`$out`): seats of the game,
+	 * each once, every seat that was out before, and while the game goes on not the seat to move next. A seat that is
+	 * out loses its draw vote, and its open draw offer is closed. A two-seat game ignores `$out`.
 	 *
 	 * @param string $result the result code (VariantResult), empty while the game goes on
+	 * @param list<int>|null $out the seats that are out after the move; null from a browser that does not say, for
+	 *                            which the server keeps the seats that were out and, when every seat plays for itself,
+	 *                            adds the seats that the turn skipped
 	 * @throws ApiException
 	 */
-	public function settle(int $id, string $uid, int $ply, int $nextSeat, string $result, string $stateHash): Game {
+	public function settle(
+		int $id,
+		string $uid,
+		int $ply,
+		int $nextSeat,
+		string $result,
+		string $stateHash,
+		?array $out = null,
+	): Game {
 		$game = $this->participantGame($id, $uid);
 		if (VariantCatalog::isRefereed((string)$game->getVariant())) {
 			// the server settles the moves of the games it rules
@@ -310,19 +341,30 @@ class VariantGameplayService {
 		if (!preg_match('/^[0-9a-f]{16}\z/', $stateHash)) {
 			throw ApiException::invalidArgument('stateHash', $this->l->t('Invalid value'));
 		}
+		if (!$game->isMultiSeat()) {
+			$out = null;
+		} elseif ($out !== null) {
+			$out = $this->checkedSeats($out, $game->getSeatCount());
+		}
 		$move = $this->moves->findByPly($id, $ply);
 		if ($move === null) {
 			throw $this->errors->conflict();
 		}
 		if ($move->isSettled()) {
+			$stored = $move->getOutSeats();
 			$same = $move->getNextSeat() === $nextSeat && $move->getResult() === $result
-				&& $move->getStateHash() === $stateHash;
+				&& $move->getStateHash() === $stateHash
+				&& ($out === null || $stored === null || $stored === implode(',', $out));
 			return $same ? $game : $this->annul($game, $uid, $ply);
 		}
 		$game = $this->activeGame($game);
 		$turn = VariantTurn::of($game);
 		if ($turn->pending !== $ply) {
 			throw $this->errors->conflict();
+		}
+		$outSeats = null;
+		if ($game->isMultiSeat()) {
+			$outSeats = $this->outAfter($turn, $nextSeat, $parsed === null, $out);
 		}
 		$now = $this->clock->now();
 		return $this->transaction->run(function () use (
@@ -334,17 +376,110 @@ class VariantGameplayService {
 			$result,
 			$parsed,
 			$stateHash,
+			$out,
+			$outSeats,
 			$now,
 		): Game {
 			$move->setNextSeat($nextSeat);
 			$move->setResult($result);
 			$move->setStateHash($stateHash);
+			// an inferred list stays unsaid on the move, so that a browser that names the seats does not dispute it
+			$move->setOutSeats($out === null ? null : implode(',', $out));
 			$move->setSettledBy($uid);
 			$move->setSettledAt($now);
 			$this->moves->update($move);
+			if ($outSeats !== null) {
+				[$turn, $parsed] = $this->leaveOut($game, $turn, $outSeats, $parsed);
+			}
 			$this->conclude($game, $move, $turn, $parsed, $now);
 			return $game;
 		});
+	}
+
+	/**
+	 * Seats as a settlement names them: each a seat of the game, each once; sorted.
+	 *
+	 * @param list<int> $seats
+	 * @return list<int>
+	 * @throws ApiException
+	 */
+	private function checkedSeats(array $seats, int $seatCount): array {
+		foreach ($seats as $seat) {
+			if ($seat < 0 || $seat >= $seatCount) {
+				throw ApiException::invalidArgument('out', $this->l->t('Invalid value'));
+			}
+		}
+		if (count(array_unique($seats)) !== count($seats)) {
+			throw ApiException::invalidArgument('out', $this->l->t('Invalid value'));
+		}
+		sort($seats);
+		return $seats;
+	}
+
+	/**
+	 * The seats that are out after a move that hands the turn to `$nextSeat`.
+	 *
+	 * A settlement that names them must keep every seat that was out, and while the game goes on must not name the
+	 * seat to move next. The turn order alone does not prove that a skipped seat is out: in free for all a player who
+	 * cannot move sits out with their king on the board. A settlement that does not name them (null, a browser of an
+	 * older version) keeps the seats that were out and adds none: a guess from the turn order could take a seat that
+	 * only sat out as out, which every newer browser would then contradict. The next settlement of a newer browser
+	 * names them.
+	 *
+	 * @param list<int>|null $claimed checked seats (checkedSeats), or null
+	 * @return list<int>
+	 * @throws ApiException
+	 */
+	private function outAfter(
+		VariantTurn $turn,
+		int $nextSeat,
+		bool $goesOn,
+		?array $claimed,
+	): array {
+		// a seat that is to move still plays
+		$before = array_values(array_diff($turn->out, $goesOn ? [$nextSeat] : []));
+		if ($claimed !== null) {
+			if (array_diff($before, $claimed) !== [] || ($goesOn && in_array($nextSeat, $claimed, true))) {
+				throw ApiException::invalidArgument('out', $this->l->t('Invalid value'));
+			}
+			return $claimed;
+		}
+		return $before;
+	}
+
+	/**
+	 * Records the seats that are out: a seat that is newly out loses its draw vote, and its open draw offer is closed.
+	 * When every seat that still plays has agreed to the open offer, the game ends in a draw. Runs inside the
+	 * transaction; the caller saves the game.
+	 *
+	 * @param list<int> $out
+	 * @return array{0: VariantTurn, 1: ?VariantResult} the record and the result the game ends with
+	 */
+	private function leaveOut(Game $game, VariantTurn $turn, array $out, ?VariantResult $parsed): array {
+		$gone = array_values(array_diff($out, $turn->out));
+		$turn = $turn->withOut($out);
+		if ($gone === []) {
+			return [$turn, $parsed];
+		}
+		$offer = $game->getDrawOffer();
+		if ($offer === null) {
+			return [$turn, $parsed];
+		}
+		if (in_array((int)$offer, $gone, true)) {
+			$game->setDrawOffer(null);
+			$game->setDrawOfferPly(null);
+			$this->lifecycle->addSystemLine($game, 'draw_declined', ['color' => $offer]);
+			$this->transaction->afterCommit(fn () => $this->notifications->drawClosed($game));
+			return [$turn->withDrawVotes([]), $parsed];
+		}
+		$votes = array_values(array_diff($turn->drawVotes, $gone));
+		$playing = array_values(array_diff(range(0, $game->getSeatCount() - 1), $out));
+		if ($parsed === null && array_diff($playing, $votes) === []) {
+			$this->lifecycle->addSystemLine($game, 'draw_accepted', ['color' => $offer]);
+			$this->transaction->afterCommit(fn () => $this->notifications->drawClosed($game));
+			return [$turn->withDrawVotes([]), VariantResult::of([], 'agreement')];
+		}
+		return [$turn->withDrawVotes($votes), $parsed];
 	}
 
 	/**

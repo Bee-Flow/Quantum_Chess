@@ -23,6 +23,7 @@ import { NO_CAPABILITIES } from '../../game/gameController.js'
 import * as realApi from '../../services/api.js'
 import { sleep } from '../../services/async.js'
 import { currentUser } from '../../services/initialState.js'
+import * as livePush from '../livePush.js'
 import { onlineBanners } from '../onlineBanners.js'
 import { isParticipant, onlinePlayerInfo, onlineResult, seatName } from '../onlinePlayers.js'
 import { useMoveSender } from './useMoveSender.js'
@@ -74,13 +75,17 @@ export { RETRY_DELAYS_MS } from './useMoveSender.js'
  * @property {import('vue').ComputedRef<string>} shareUrl the link to the game
  */
 
+/** The slowest poll of an active game in a visible tab while the opponents think, without and with live push. */
+export const SLOW_CAP_MS = 10000
+export const SLOW_CAP_PUSH_MS = 30000
+
 /** Statuses after which the game never changes again. */
 const FINAL = ['finished', 'aborted', 'declined', 'cancelled', 'expired']
 
 /**
  * @param {number|string} id game id
  * @param {object} [deps] injected dependencies (tests): api, me, notify {error, info}, sleep, now, onRematchStarted,
- *   onLobbyChange, poller options
+ *   onLobbyChange, poller options, push (the live push: {pushActive, onGameUpdate})
  * @return {OnlineGameController}
  */
 export function useOnlineGame(id, deps = {}) {
@@ -93,6 +98,7 @@ export function useOnlineGame(id, deps = {}) {
 		onRematchStarted: () => {},
 		onLobbyChange: () => {},
 		poller: {},
+		push: livePush,
 		...deps,
 	}
 	const api = d.api
@@ -114,6 +120,7 @@ export function useOnlineGame(id, deps = {}) {
 	let serverOffset = 0
 	let slowMs = 2000
 	let poller = null
+	let stopPush = null
 
 	const myColor = computed(() => game.value?.myColor ?? null)
 	const participant = computed(() => isParticipant(game.value, me))
@@ -210,7 +217,9 @@ export function useOnlineGame(id, deps = {}) {
 			resign: active && !!g.canResign && g.ply >= 2,
 			abort: active && !!g.canAbort,
 			offerDraw: active && !!g.canOfferDraw,
-			answerDraw: active && !!drawOffer.value && drawOffer.value.by !== myColor.value,
+			answerDraw: active && !!drawOffer.value && (g.canAnswerDraw === undefined
+				? drawOffer.value.by !== myColor.value
+				: !!g.canAnswerDraw),
 			rematch: participant.value && !!g?.canRematch,
 			chat: participant.value && !!g?.chatOpen,
 		}
@@ -346,7 +355,8 @@ export function useOnlineGame(id, deps = {}) {
 				slowMs = 2000
 				return 2000
 			}
-			slowMs = Math.min(30000, Math.round(slowMs * 1.5))
+			const cap = d.push.pushActive?.value ? SLOW_CAP_PUSH_MS : SLOW_CAP_MS
+			slowMs = Math.min(cap, Math.round(slowMs * 1.5))
 			return slowMs
 		}
 		if (g.status === 'pending' || g.status === 'open') {
@@ -368,6 +378,27 @@ export function useOnlineGame(id, deps = {}) {
 		return null
 	}
 
+	/** Something happened in the game: poll quickly again for a while. */
+	function noteBusy() {
+		timing.fastSince = d.now()
+		slowMs = 2000
+	}
+
+	/**
+	 * The fingerprint of what changes when someone acts: the ply, the side and seat to move, the move that waits for
+	 * its settlement.
+	 *
+	 * @param {GameLive|null} g the game
+	 * @return {string}
+	 */
+	const progress = (g) => [g?.ply, g?.turn, g?.seatToMove, g?.pendingPly].join('|')
+
+	/** The user looks at the game: the tab is visible (the server then holds back turn and chat notifications). */
+	function watching() {
+		const doc = d.poller.doc ?? globalThis.document
+		return doc?.visibilityState === 'hidden' ? 0 : 1
+	}
+
 	/**
 	 * One poll of the game (and of a pending rematch).
 	 *
@@ -379,12 +410,16 @@ export function useOnlineGame(id, deps = {}) {
 		}
 		const res = await api.pollGame(
 			gameId,
-			{ rev: game.value.rev, ply: pollFromPly(), chat: lastChatId(), watching: 1 },
+			{ rev: game.value.rev, ply: pollFromPly(), chat: lastChatId(), watching: watching() },
 			{ signal },
 		)
 		if (res?.changed && !pending.value) {
 			const hadTurn = game.value.turn
+			const before = progress(game.value)
 			await ingest(res)
+			if (progress(game.value) !== before || res.chat?.length) {
+				noteBusy()
+			}
 			if (game.value.turn !== hadTurn || res.chat?.length) {
 				d.onLobbyChange()
 			}
@@ -537,6 +572,12 @@ export function useOnlineGame(id, deps = {}) {
 		}, 30000)
 		if (!error.value || error.value?.status !== 404) {
 			poller.start({ immediate: false })
+			// a pushed change of this game (or of any game, from a server that does not say which) polls at once
+			stopPush = d.push.onGameUpdate?.((body) => {
+				if (!disposed && (body?.id === undefined || body?.id === null || Number(body.id) === gameId)) {
+					poller.pollNow()
+				}
+			}) ?? null
 		}
 	}
 
@@ -544,6 +585,8 @@ export function useOnlineGame(id, deps = {}) {
 	function dispose() {
 		disposed = true
 		poller.stop()
+		stopPush?.()
+		stopPush = null
 		clearInterval(clockTimer)
 	}
 

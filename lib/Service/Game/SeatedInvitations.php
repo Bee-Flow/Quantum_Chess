@@ -24,9 +24,10 @@ use OCP\IL10N;
  * (docs/development/online-variants.md, phase 3). InvitationService hands these games over.
  *
  * The creator names a player per seat, themselves included, or leaves a seat open for anyone who may see open
- * challenges. Every invited player answers on their own; one who declines declines the whole game. The game starts
- * when every seat is taken: with the seats as chosen, or, with the colour choice `r`, the players drawn onto the
- * seats at random. A game with an open seat is an open challenge until every seat is filled.
+ * challenges. Every invited player answers on their own. One who declines an open challenge (that is not a
+ * rematch) frees their seat for anyone, while open challenges are allowed; otherwise they decline the whole game. The
+ * game starts when every seat is taken: with the seats as chosen, or, with the colour choice `r`, the players drawn
+ * onto the seats at random. A game with an open seat is an open challenge until every seat is filled.
  *
  * Until the start, the players of the seats live in the game's record (VariantTurn: `seats` and `accepted`) and in a
  * `qchess_seats` row per seat, so that invited players find the game in their lobby.
@@ -161,7 +162,8 @@ class SeatedInvitations {
 	}
 
 	/**
-	 * An invited player declines, which declines the game for everyone.
+	 * An invited player declines. In an open challenge that is not a rematch, while open challenges are allowed, their
+	 * seat becomes open (`releasable`); otherwise the game is declined for everyone.
 	 *
 	 * @throws ApiException
 	 */
@@ -169,16 +171,63 @@ class SeatedInvitations {
 		if (!$game->isInviteeOf($uid)) {
 			throw $this->errors->invalidStatus();
 		}
-		return $this->transaction->run(function () use ($game, $uid): Game {
-			$game->setStatus(Game::STATUS_DECLINED);
-			$game->setFinishedAt($this->clock->now());
+		$reopen = $game->getStatus() === Game::STATUS_OPEN && self::releasable($game, $this->settings);
+		return $this->transaction->run(function () use ($game, $uid, $reopen): Game {
+			if ($reopen) {
+				self::release($game, $uid, $this->seats);
+			} else {
+				$game->setStatus(Game::STATUS_DECLINED);
+				$game->setFinishedAt($this->clock->now());
+			}
 			$this->repository->save($game);
-			$this->transaction->afterCommit(function () use ($game, $uid): void {
-				$this->notifications->inviteClosed($game);
-				$this->notifications->inviteDeclined($game, $uid);
+			$this->transaction->afterCommit(function () use ($game, $uid, $reopen): void {
+				if ($reopen) {
+					$this->notifications->inviteClosed($game, $uid);
+					$this->notifications->inviteDeclined($game, $uid, true);
+				} else {
+					$this->notifications->inviteClosed($game);
+					$this->notifications->inviteDeclined($game, $uid);
+				}
 			});
 			return $game;
 		});
+	}
+
+	/**
+	 * Whether a player may leave the waiting game `$game` with more than two seats and leave their seat open for
+	 * anyone, instead of ending it: open challenges are allowed and it is not a rematch (which is meant for its
+	 * players only).
+	 */
+	public static function releasable(Game $game, AppSettings $settings): bool {
+		return $game->isMultiSeat() && $game->isAwaitingOpponent() && $game->getRematchOf() === null
+			&& $settings->openChallengesEnabled();
+	}
+
+	/**
+	 * Frees the seat of `$uid` in the waiting game `$game` (in its record and its seat row): the seat is open again and
+	 * the game an open challenge. The caller saves the game.
+	 */
+	public static function release(Game $game, string $uid, SeatMapper $seatMapper): void {
+		$turn = VariantTurn::of($game);
+		$number = array_search($uid, $turn->seats, true);
+		if ($number === false) {
+			return;
+		}
+		$seats = $turn->seats;
+		$accepted = $turn->accepted;
+		$seats[$number] = null;
+		$accepted[$number] = false;
+		/** @var list<?string> $seats */
+		/** @var list<bool> $accepted */
+		$game->setState($turn->withSeats($seats, $accepted)->json());
+		$game->setStatus(Game::STATUS_OPEN);
+		foreach ($seatMapper->findByGame((int)$game->getId()) as $seat) {
+			if ($seat->getSeat() === $number) {
+				$seat->setUid(null);
+				$seat->setAcceptedAt(null);
+				$seatMapper->update($seat);
+			}
+		}
 	}
 
 	/**
@@ -228,11 +277,16 @@ class SeatedInvitations {
 				$game->setStatus(Game::STATUS_PENDING);
 			}
 			$this->repository->save($game);
-			$this->transaction->afterCommit(function () use ($game, $uid, $joined): void {
+			$this->transaction->afterCommit(function () use ($game, $uid, $joined, $full): void {
 				if (!$joined) {
 					$this->notifications->inviteClosed($game, $uid);
 				}
-				$this->notifications->inviteAccepted($game, $joined, $uid);
+				if ($full) {
+					// every player hears that the game started, the creator included
+					$this->notifications->gameStarted($game, $uid);
+				} else {
+					$this->notifications->inviteAccepted($game, $joined, $uid);
+				}
 			});
 			return $game;
 		});

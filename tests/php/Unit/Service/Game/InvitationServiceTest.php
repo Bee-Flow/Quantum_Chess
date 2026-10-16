@@ -232,7 +232,13 @@ final class InvitationServiceTest extends TestCase {
 		$game = $this->invitations()->decline(7, 'bob');
 		$this->assertSame([Game::STATUS_DECLINED, self::NOW], [$game->getStatus(), $game->getFinishedAt()]);
 		$this->assertSame(
-			['begin', 'save #7 rev 1→2', 'commit', 'notify inviteClosed(#7, NULL)', 'notify inviteDeclined(#7, NULL)'],
+			[
+				'begin',
+				'save #7 rev 1→2',
+				'commit',
+				'notify inviteClosed(#7, NULL)',
+				'notify inviteDeclined(#7, NULL, false)',
+			],
 			$this->log,
 		);
 	}

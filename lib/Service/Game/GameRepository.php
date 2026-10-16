@@ -18,7 +18,8 @@ use OCA\QuantumChess\Exception\GameConflictException;
 /**
  * Loads and saves online games.
  *
- * Saving is optimistic: a game is written only while its revision still has the value that was read.
+ * Saving is optimistic: a game is written only while its revision still has the value that was read. A saved game is
+ * pushed to its players' open clients (see LivePush), within a game transaction once after its commit.
  */
 class GameRepository {
 	public function __construct(
@@ -27,6 +28,8 @@ class GameRepository {
 		private readonly Engine $engine,
 		private readonly GameClock $clock,
 		private readonly GameErrors $errors,
+		private readonly ?LivePush $livePush = null,
+		private readonly ?GameTransaction $transaction = null,
 	) {
 	}
 
@@ -70,6 +73,20 @@ class GameRepository {
 			$game->setRev($rev);
 			throw $this->errors->conflict();
 		}
+		$this->pushChange($game);
+	}
+
+	/** Pushes the saved game to its players: right away, or once after the commit of the running transaction. */
+	private function pushChange(Game $game): void {
+		$push = $this->livePush;
+		if ($push === null) {
+			return;
+		}
+		if ($this->transaction !== null && $this->transaction->isRunning()) {
+			$this->transaction->afterCommit(fn () => $push->gameChanged($game), 'live-push:' . (int)$game->getId());
+			return;
+		}
+		$push->gameChanged($game);
 	}
 
 	/**

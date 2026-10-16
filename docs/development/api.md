@@ -180,7 +180,12 @@ The game screen's view of a game: a GameSummary plus
 - `chatOpen` is false when chat is disabled, for viewers who do not play, and some days after the game ended.
 - A chess variant game has `state: null`, and adds `seatToMove`, `pendingPly` (the ply of the move that waits for its
   settlement, or `null`) and `drawVotes` (the seats that agree to the open draw offer, in a game with more than two
-  seats). `canAbort` holds until every player has passed the turn once.
+  seats). `canAbort` holds until every player has passed the turn once. It also has `outSeats` (the seats that are
+  out of a free-for-all, as the browsers settled it; empty with two seats) and `endedBySeat` (the seat whose
+  resignation, timeout or removed account ended the game, or `null`). A seat that is out may not resign, abort or vote
+  on a draw.
+- `canAnswerDraw` is true when a draw is offered and the viewer may still accept or decline it: not the seat that
+  offered it, not one that already agreed, and not one that is out.
 
 ### GameFull
 
@@ -212,8 +217,10 @@ The moves of a chess variant game have another shape:
 ```
 
 `u` is the roll the server drew after the move arrived, an integer in `[0, 2^24)`. `nextSeat`, `result` (the result
-code, empty while the game goes on) and `stateHash` are what the browser that settled the move claims; they are
-`null` until the move is settled.
+code, empty while the game goes on), `stateHash` and `out` (in a game with more than two seats, the sorted seats
+without a king after the move) are what the browser that settled the move claims; they are `null` until the move is
+settled. `out` stays `null` when the settling browser did not send it (an older version); the server then takes the
+seats that were out before and the seats the turn skipped.
 
 ### ChatDTO
 
@@ -265,7 +272,7 @@ Paths are relative to `/index.php/apps/quantumchess`. `{id}` and `{taskId}` are 
 | GET | `/api/users/recent` | `game#recentOpponents` | | | `{users: UserRef[]}` |
 | POST | `/api/games` | `game#create` | 30 / h | `opponent` (user id, or `null` for an open challenge), `color` (`w`, `b`, `r`), `rated`, `timeControl`, `message`, `scopeGroup` | `{game: GameLive}` |
 | GET | `/api/games/{id}` | `game#show` | | | `{game: GameFull}` |
-| GET | `/api/games/{id}/poll` | `game#poll` | 3000 / 10 min | `rev`, `ply`, `chat` (the last revision, ply and chat id the client has) | `{changed: false, rev, now}` or `{changed: true, rev, now, game: GameLive, moves: MoveDTO[], chat: ChatDTO[]}` |
+| GET | `/api/games/{id}/poll` | `game#poll` | 3000 / 10 min | `rev`, `ply`, `chat` (the last revision, ply and chat id the client has), `watching` (1 while the game shows in a visible tab: no notification of the player's turn or of chat for 45 seconds) | `{changed: false, rev, now}` or `{changed: true, rev, now, game: GameLive, moves: MoveDTO[], chat: ChatDTO[]}` |
 | POST | `/api/games/{id}/accept` | `game#accept` | 60 / min | | `{game: GameLive}` |
 | POST | `/api/games/{id}/decline` | `game#decline` | 60 / min | | `{game: GameSummary}` |
 | POST | `/api/games/{id}/cancel` | `game#cancel` | 60 / min | | `{game: GameSummary}` |
@@ -279,7 +286,7 @@ Paths are relative to `/index.php/apps/quantumchess`. `{id}` and `{taskId}` are 
 | POST | `/api/games/{id}/rematch` | `game#rematch` | 30 / h | | `{game: GameLive}` |
 | POST | `/api/games/{id}/v/moves` | `game#variantMove` | 240 / min | `code`, `ply`, `clientId`, `thinkMs` | `{game: GameLive, move, refused, rev, now, replayed}` |
 | POST | `/api/games/{id}/v/preview` | `game#variantPreview` | 240 / min | `code` | `{refused, outcomes}` |
-| POST | `/api/games/{id}/v/moves/{ply}/settle` | `game#settle` | 240 / min | `nextSeat`, `result`, `stateHash` | `{game: GameLive}` |
+| POST | `/api/games/{id}/v/moves/{ply}/settle` | `game#settle` | 240 / min | `nextSeat`, `result`, `stateHash`, `out` | `{game: GameLive}` |
 | POST | `/api/games/{id}/v/dispute` | `game#dispute` | 30 / 10 min | `ply` | `{game: GameLive}` |
 
 Notes:
@@ -296,6 +303,9 @@ Notes:
   invitation; when the other player asks, the rematch starts.
 - **Polling.** `summary` is cheap and answers with an `ETag`, so the lobby can poll it and load `GET /api/games` only
   when `rev` changes. `poll` returns only the moves after `ply` and the chat after `chat`.
+- **Push.** When the Nextcloud app notify_push is installed, every saved change of a game sends the custom event
+  `quantumchess_game` with the body `{id, rev}` to each of its players, after the transaction commits. The client
+  then polls at once; without notify_push it polls every 2 seconds after any change and slows down to 10 seconds.
 - **Chess variants** ([`online-variants.md`](online-variants.md)). `POST /api/games` takes `variant` and `options` (an
   object of strings, integers and booleans) for a variant of the catalogue; anything else is `400 invalid_argument`. A
   two-player variant game is rated when `rated` is true (default true for Bee Flow Chess, Kriegspiel and Fog of war, false for the

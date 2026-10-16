@@ -334,12 +334,92 @@ final class GameSerializerTest extends TestCase {
 		$move->setNextSeat(null);
 		$move->setResult(null);
 		$move->setStateHash(null);
+		$move->setOutSeats(null);
 		$move->setChain(str_repeat('c', 64));
 		$move->setCreatedAt(5);
 		$this->assertSame([
 			'ply' => 4, 'seat' => 1, 'userId' => 'bob', 'code' => 'e7-e5', 'u' => 77, 'nextSeat' => null,
-			'result' => null, 'stateHash' => null, 'chain' => str_repeat('c', 64), 'createdAt' => 5,
+			'result' => null, 'stateHash' => null, 'out' => null, 'chain' => str_repeat('c', 64), 'createdAt' => 5,
 		], $this->serializer()->move($move));
+		$move->setOutSeats('');
+		$this->assertSame([], $this->serializer()->move($move)['out'], 'no seat is out');
+		$move->setOutSeats('1,3');
+		$this->assertSame([1, 3], $this->serializer()->move($move)['out']);
+		$this->assertSame([[], null], [$live['outSeats'], $live['endedBySeat']]);
+	}
+
+	/**
+	 * A game of four in which every seat plays for itself, with the given VariantTurn fields.
+	 *
+	 * @param array<string, mixed> $turn
+	 * @param array<string, mixed> $fields
+	 */
+	private static function fourPlayer(array $turn, array $fields = []): Game {
+		return GameBuilder::active($fields + [
+			'variant' => 'fourplayer',
+			'variantOptions' => '{"mode":"ffa"}',
+			'variantRules' => 1,
+			'seatCount' => 4,
+			'whiteUid' => null,
+			'blackUid' => null,
+			'opponentUid' => null,
+			'turn' => '2',
+			'seatToMove' => 2,
+			'state' => json_encode($turn + [
+				'v' => 1,
+				'turns' => 6,
+				'pending' => null,
+				'seats' => ['alice', 'bob', 'carol', 'dave'],
+				'accepted' => [true, true, true, true],
+				'drawVotes' => [],
+				'muted' => [],
+			]),
+		]);
+	}
+
+	public function testSeatsThatAreOutMayNotResignOrDraw(): void {
+		$game = self::fourPlayer(['out' => [1], 'drawVotes' => [0]], ['drawOffer' => '0', 'drawOfferPly' => 5]);
+		$flags = fn (string $viewer, ?Game $other = null): array => array_intersect_key(
+			$this->serializer()->live($other ?? $game, $viewer),
+			array_flip(['canOfferDraw', 'canAnswerDraw', 'canAbort', 'canResign']),
+		);
+		$this->assertSame([1], $this->serializer()->live($game, 'alice')['outSeats']);
+		$this->assertSame(
+			['canOfferDraw' => false, 'canAnswerDraw' => false, 'canAbort' => false, 'canResign' => false],
+			$flags('bob'),
+			'bob is out',
+		);
+		$this->assertSame(
+			['canOfferDraw' => false, 'canAnswerDraw' => false, 'canAbort' => false, 'canResign' => true],
+			$flags('alice'),
+			'alice offered the draw',
+		);
+		$this->assertSame(
+			['canOfferDraw' => true, 'canAnswerDraw' => true, 'canAbort' => false, 'canResign' => true],
+			$flags('carol'),
+		);
+		$voted = self::fourPlayer(['out' => [1], 'drawVotes' => [0, 2]], ['drawOffer' => '0', 'drawOfferPly' => 5]);
+		$this->assertSame(
+			['canOfferDraw' => false, 'canAnswerDraw' => false, 'canAbort' => false, 'canResign' => true],
+			$flags('carol', $voted),
+			'carol already agreed',
+		);
+		$this->assertTrue($flags('dave', $voted)['canAnswerDraw']);
+	}
+
+	public function testTheSeatThatEndedTheGameAndDeletedPlayers(): void {
+		$game = self::fourPlayer(['endedBy' => 3, 'seats' => ['alice', null, 'carol', 'dave']], [
+			'status' => Game::STATUS_FINISHED,
+			'result' => '*',
+			'resultReason' => 'resignation',
+		]);
+		$live = $this->serializer()->live($game, 'alice');
+		$this->assertSame(3, $live['endedBySeat']);
+		$this->assertSame(
+			[null, 'Deleted user'],
+			[$live['seats'][1]['player']['userId'], $live['seats'][1]['player']['displayName']],
+			'a started game has no open seat: the account was deleted',
+		);
 	}
 
 	/**
@@ -779,6 +859,7 @@ final class GameSerializerTest extends TestCase {
 			'chain' => '62148aa205f477589daef0514105b2497f2c03d2a91b39c4ce76789a50346683',
 			'drawOffer' => ['by' => 'w', 'ply' => 2],
 			'canOfferDraw' => false,
+			'canAnswerDraw' => false,
 			'drawAvailableAtPly' => null,
 			'canAbort' => false,
 			'canResign' => true,
@@ -829,6 +910,7 @@ final class GameSerializerTest extends TestCase {
 			'chain' => '62148aa205f477589daef0514105b2497f2c03d2a91b39c4ce76789a50346683',
 			'drawOffer' => ['by' => 'w', 'ply' => 2],
 			'canOfferDraw' => true,
+			'canAnswerDraw' => true,
 			'drawAvailableAtPly' => null,
 			'canAbort' => false,
 			'canResign' => true,
@@ -879,6 +961,7 @@ final class GameSerializerTest extends TestCase {
 			'chain' => null,
 			'drawOffer' => null,
 			'canOfferDraw' => false,
+			'canAnswerDraw' => false,
 			'drawAvailableAtPly' => null,
 			'canAbort' => false,
 			'canResign' => false,
@@ -926,6 +1009,7 @@ final class GameSerializerTest extends TestCase {
 			'chain' => '62148aa205f477589daef0514105b2497f2c03d2a91b39c4ce76789a50346683',
 			'drawOffer' => null,
 			'canOfferDraw' => false,
+			'canAnswerDraw' => false,
 			'drawAvailableAtPly' => null,
 			'canAbort' => false,
 			'canResign' => false,
@@ -976,6 +1060,7 @@ final class GameSerializerTest extends TestCase {
 			'chain' => '62148aa205f477589daef0514105b2497f2c03d2a91b39c4ce76789a50346683',
 			'drawOffer' => ['by' => 'w', 'ply' => 2],
 			'canOfferDraw' => false,
+			'canAnswerDraw' => false,
 			'drawAvailableAtPly' => null,
 			'canAbort' => false,
 			'canResign' => true,

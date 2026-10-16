@@ -23,14 +23,26 @@ vi.mock('@nextcloud/vue/components/NcEmojiPicker', () => ({
 /**
  * A minimal online controller for the chat.
  *
- * @param {object} [options] {muted, chatOpen}
+ * @param {object} [options] {muted, chatOpen, seats: a game with more than two seats, the viewer on seat 2}
  * @return {object}
  */
-function controller({ muted = false, chatOpen = true } = {}) {
-	const game = shallowRef({ myColor: 'w', white: { userId: 'alice' }, black: { userId: 'bob' }, muted })
+function controller({ muted = false, chatOpen = true, seats = false } = {}) {
+	const game = shallowRef(seats
+		? {
+				myColor: '2',
+				white: null,
+				black: null,
+				muted,
+				seats: [
+					{ seat: 0, player: { userId: 'bob', displayName: 'Bob' } },
+					{ seat: 1, player: { userId: 'carol', displayName: 'Carol' } },
+					{ seat: 2, player: { userId: 'alice', displayName: 'Alice' } },
+				],
+			}
+		: { myColor: 'w', white: { userId: 'alice' }, black: { userId: 'bob' }, muted })
 	return {
 		game,
-		myColor: computed(() => 'w'),
+		myColor: computed(() => (seats ? '2' : 'w')),
 		names: computed(() => ({ w: 'Alice', b: 'Bob' })),
 		participant: computed(() => true),
 		can: computed(() => ({ chat: chatOpen })),
@@ -96,5 +108,14 @@ describe('GameChat', () => {
 		const closed = mount(GameChat, { props: { controller: controller({ chatOpen: false }) } })
 		expect(closed.find('[data-test=chat-send]').exists()).toBe(false)
 		expect(closed.text()).toContain('The chat of this game is closed.')
+	})
+
+	it('knows the viewer in a game with more than two seats: own messages read "You", shown while muted', () => {
+		const wrapper = mount(GameChat, { props: { controller: controller({ muted: true, seats: true }) } })
+		const mine = wrapper.findAll('[data-test=chat-mine]')
+		expect(mine).toHaveLength(1)
+		expect(mine[0].text()).toContain('You')
+		expect(mine[0].text()).toContain('Good game')
+		expect(wrapper.text()).not.toContain('second')
 	})
 })

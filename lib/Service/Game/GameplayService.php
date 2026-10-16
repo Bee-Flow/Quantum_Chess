@@ -199,17 +199,21 @@ class GameplayService {
 	}
 
 	/**
-	 * The player to move resigns.
+	 * A player resigns. In a game of more than two seats the game records the seat that resigned (VariantTurn
+	 * `endedBy`); a seat that is already out cannot resign.
 	 *
 	 * @throws ApiException
 	 */
 	public function resign(int $id, string $uid): Game {
-		$game = $this->lifecycle->loadActive($id, $uid);
+		$game = $this->playingGame($id, $uid);
 		$color = (string)$game->colorOf($uid);
 		return $this->transaction->run(function () use ($game, $color, $uid): Game {
 			if ($game->isVariant()) {
 				$seat = VariantGameplayService::seatOfColor($game, $color);
 				$result = VariantGameplayService::lossOf($game, $seat, 'resign');
+				if ($game->isMultiSeat()) {
+					$game->setState(VariantTurn::of($game)->withEndedBy($seat)->json());
+				}
 				$now = $this->clock->now();
 				VariantGameplayService::finishWith($game, $result, 'resignation', $now, $this->lifecycle);
 			} else {
@@ -228,7 +232,7 @@ class GameplayService {
 	 * @throws ApiException
 	 */
 	public function abort(int $id, string $uid): Game {
-		$game = $this->lifecycle->loadActive($id, $uid);
+		$game = $this->playingGame($id, $uid);
 		if (!self::canAbort($game)) {
 			throw new ApiException(
 				ApiError::AbortNotAllowed,
@@ -258,7 +262,7 @@ class GameplayService {
 		if (!in_array($action, ['offer', 'accept', 'decline'], true)) {
 			throw ApiException::invalidArgument('action', $this->l->t('Invalid action'));
 		}
-		$game = $this->lifecycle->loadActive($id, $uid);
+		$game = $this->playingGame($id, $uid);
 		$color = (string)$game->colorOf($uid);
 		if ($game->isMultiSeat()) {
 			return $this->seatedDraw($game, $color, $action);
@@ -316,9 +320,23 @@ class GameplayService {
 	}
 
 	/**
+	 * An active game in which `$uid` still plays: in a game of more than two seats, not from a seat that is out.
+	 *
+	 * @throws ApiException not_found, game_over or invalid_status
+	 */
+	private function playingGame(int $id, string $uid): Game {
+		$game = $this->lifecycle->loadActive($id, $uid);
+		if (VariantGameplayService::isOut($game, (int)$game->colorOf($uid))) {
+			throw $this->errors->invalidStatus();
+		}
+		return $game;
+	}
+
+	/**
 	 * A draw offer in a game with more than two seats: an offer is the offering seat's vote, every other seat accepts
-	 * with its own vote (offering while an offer is open accepts it), and the game is drawn once every seat agrees. Any
-	 * seat may decline, which closes the offer. There is no cool-down.
+	 * with its own vote (offering while an offer is open accepts it), and the game is drawn once every seat that still
+	 * plays agrees (VariantGameplayService::playingSeats). Any seat may decline, which closes the offer. A seat that
+	 * agreed cannot agree again. There is no cool-down.
 	 *
 	 * @throws ApiException
 	 */
@@ -328,6 +346,11 @@ class GameplayService {
 		$turn = VariantTurn::of($game);
 		if ($action === 'offer' && $offer !== null) {
 			$action = $offer === $color ? 'offer' : 'accept';
+		}
+		$voted = in_array($seat, $turn->drawVotes, true);
+		if ($action === 'accept' && $voted && $offer !== null && $offer !== $color) {
+			throw new ApiException(ApiError::DrawNotAllowed, $this->l->t('You cannot offer a draw right now.'),
+				['availableAtPly' => null]);
 		}
 		if ($action === 'offer') {
 			if ($offer === $color) {
@@ -352,7 +375,7 @@ class GameplayService {
 			$agreed = false;
 			if ($action === 'accept') {
 				$votes[] = $seat;
-				$agreed = count(array_unique($votes)) >= $game->getSeatCount();
+				$agreed = array_diff(VariantGameplayService::playingSeats($game), $votes) === [];
 			}
 			if ($agreed) {
 				$game->setState($turn->withDrawVotes([])->json());

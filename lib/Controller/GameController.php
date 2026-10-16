@@ -176,13 +176,14 @@ final class GameController extends ApiController {
 	 * What changed since the client's revision `$rev`: the game, the moves from `$ply` and the chat lines after the
 	 * chat line id `$chat`.
 	 *
-	 * @param int $watching whether the client shows the game (clients send it; it does not change the answer)
+	 * @param int $watching 1 while the client shows the game in a visible tab: the player then gets no notification of
+	 *                      their turn or of chat in this game (NotificationService::noteWatching)
 	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 3000, period: 600)]
 	public function poll(int $id, int $rev = 0, int $ply = 0, int $chat = 0, int $watching = 0): JSONResponse {
-		return $this->respond(function (string $uid) use ($id, $rev, $ply, $chat): array {
-			$result = $this->queries->poll($id, $uid, $rev, $ply, $chat);
+		return $this->respond(function (string $uid) use ($id, $rev, $ply, $chat, $watching): array {
+			$result = $this->queries->poll($id, $uid, $rev, $ply, $chat, $watching === 1);
 			if (!$result['changed'] || !isset($result['game'])) {
 				return ['changed' => false, 'rev' => $result['rev'], 'now' => $result['now']];
 			}
@@ -354,7 +355,7 @@ final class GameController extends ApiController {
 
 	/**
 	 * Settles a move of a chess variant game: the seat to move next, the result code and the position hash that the
-	 * move led to with its roll.
+	 * move led to with its roll, and in a game of more than two seats the seats that are out after it (`out`).
 	 */
 	#[NoAdminRequired]
 	#[UserRateLimit(limit: 240, period: 60)]
@@ -364,8 +365,9 @@ final class GameController extends ApiController {
 		mixed $nextSeat = null,
 		mixed $result = null,
 		mixed $stateHash = null,
+		mixed $out = null,
 	): JSONResponse {
-		return $this->respond(function (string $uid) use ($id, $ply, $nextSeat, $result, $stateHash): array {
+		return $this->respond(function (string $uid) use ($id, $ply, $nextSeat, $result, $stateHash, $out): array {
 			if (!is_int($nextSeat)) {
 				throw ApiException::invalidArgument('nextSeat', 'Invalid seat');
 			}
@@ -375,7 +377,12 @@ final class GameController extends ApiController {
 			if (!is_string($stateHash)) {
 				throw ApiException::invalidArgument('stateHash', 'Invalid hash');
 			}
-			$game = $this->variantGameplay->settle($id, $uid, $ply, $nextSeat, $result, $stateHash);
+			if ($out !== null && (!is_array($out) || !array_is_list($out) || count($out) > 8
+				|| array_filter($out, fn (mixed $seat) => !is_int($seat)) !== [])) {
+				throw ApiException::invalidArgument('out', 'Invalid seats');
+			}
+			/** @var list<int>|null $out */
+			$game = $this->variantGameplay->settle($id, $uid, $ply, $nextSeat, $result, $stateHash, $out);
 			return ['game' => $this->serializer->live($game, $uid)];
 		});
 	}

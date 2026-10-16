@@ -60,7 +60,8 @@ final class GamesWidgetTest extends TestCase {
 		$url->method('getAbsoluteURL')->willReturnCallback(fn (string $path) => 'https://cloud.example' . $path);
 		$users = $this->createMock(IUserManager::class);
 		$users->method('getDisplayName')->willReturnCallback(
-			fn (string $uid) => ['alice' => 'Alice', 'bob' => 'Bob'][$uid] ?? null,
+			fn (string $uid) => ['alice' => 'Alice', 'bob' => 'Bob', 'carol' => 'Carol', 'dave' => 'Dave'][$uid]
+				?? null,
 		);
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturnCallback(fn () => $this->user);
@@ -144,6 +145,42 @@ final class GamesWidgetTest extends TestCase {
 		$this->games = [GameBuilder::active(['whiteUid' => null, 'creatorUid' => null, 'turn' => 'b', 'ply' => 1])];
 		$items = $this->items();
 		$this->assertSame(['Your move against Deleted user', ''], [$items[0][0], $items[0][3]]);
+	}
+
+	public function testNamesTheCreatorOfAnInvitationAndAllOtherPlayersOfASeatedGame(): void {
+		$seated = [
+			'variant' => 'fourplayer',
+			'variantOptions' => '{}',
+			'variantRules' => 1,
+			'seatCount' => 4,
+			'whiteUid' => null,
+			'blackUid' => null,
+			'opponentUid' => null,
+		];
+		$this->games = [
+			GameBuilder::open($seated + [
+				'state' => '{"v":1,"seats":["carol","alice","bob",null],"accepted":[true,true,false,false]}',
+			]),
+			GameBuilder::active($seated + [
+				'id' => 8,
+				'turn' => '2',
+				'seatToMove' => 2,
+				'state' => '{"v":1,"seats":["alice","carol","bob","dave"],"accepted":[true,true,true,true]}',
+			]),
+			GameBuilder::active($seated + [
+				'id' => 9,
+				'turn' => '1',
+				'seatToMove' => 1,
+				'state' => '{"v":1,"seats":["alice","bob",null,null],"accepted":[true,true,true,true]}',
+			]),
+		];
+		$items = $this->items();
+		$this->assertSame(
+			['Alice invited you', 'Your move against Alice, Carol and Dave', 'Your move against Alice'],
+			array_column($items, 0),
+			'an invitation comes from the creator, not the first other seat',
+		);
+		$this->assertSame('https://cloud.example/avatar/alice', $items[1][3]);
 	}
 
 	public function testHasAnEmptyMessageAndIsShownToOnlinePlayersOnly(): void {

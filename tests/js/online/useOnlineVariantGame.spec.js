@@ -71,6 +71,7 @@ function controller(moves = [], fields = {}) {
 		variantMoves: shallowRef(moves),
 		noteActivity: vi.fn(),
 		resign: vi.fn(),
+		load: vi.fn(async () => {}),
 	}
 }
 
@@ -97,6 +98,7 @@ describe('useOnlineVariantGame', () => {
 		const game = online.game
 		expect(game.state.value.ply).toBe(4)
 		expect(game.record.value.players.map((p) => p.kind)).toEqual(['human', 'remote'])
+		expect(game.record.value.players.map((p) => p.name)).toEqual([null, null])
 		expect(game.record.value.moves.map((m) => m.code)).toEqual(['b1-c3', 'h7-h5', 'a2-a4', 'd7-d6'])
 		expect(game.isHumanTurn.value).toBe(true)
 		expect(online.problem.value).toBeNull()
@@ -120,7 +122,7 @@ describe('useOnlineVariantGame', () => {
 		expect(online.game.isHumanTurn.value).toBe(false)
 	})
 
-	it('keeps the position when the server refuses a move', async () => {
+	it('keeps the position when the server refuses a move, and loads the game again', async () => {
 		const c = controller()
 		const api = fakeApi()
 		api.sendVariantMove.mockRejectedValue(Object.assign(new Error('conflict'), { status: 409 }))
@@ -128,9 +130,10 @@ describe('useOnlineVariantGame', () => {
 		await online.start()
 		await online.game.attempt('b1-c3')
 		expect(online.game.state.value.ply).toBe(0)
-		expect(online.game.notice.value).toEqual({ kind: 'sendFailed', code: 'b1-c3' })
+		expect(online.game.notice.value).toEqual({ kind: 'conflict', code: 'b1-c3' })
 		expect(api.sendVariantMove).toHaveBeenCalledTimes(1)
 		expect(api.settleVariantMove).not.toHaveBeenCalled()
+		await vi.waitFor(() => expect(c.load).toHaveBeenCalled())
 	})
 
 	it('sends a move again after a network error', async () => {
@@ -243,16 +246,87 @@ describe('useOnlineVariantGame', () => {
 		expect(online.game.isHumanTurn.value).toBe(online.game.state.value.turn === 2)
 	})
 
+	it('names the players of a game of four, from the controller or else from the seats', async () => {
+		const uids = ['alice', 'bob', 'carol', 'dave']
+		const c = controller([], {
+			id: 9,
+			variant: 'fourplayer',
+			variantOptions: { mode: 'ffa' },
+			myColor: '2',
+			chain: null,
+			seats: uids.map((userId, seat) => ({ seat, player: { userId, displayName: userId.toUpperCase() } })),
+		})
+		const online = useOnlineVariantGame(c, { api: fakeApi() })
+		await online.start()
+		expect(online.game.record.value.players).toEqual([
+			{ kind: 'remote', name: 'ALICE' },
+			{ kind: 'remote', name: 'BOB' },
+			{ kind: 'human', name: 'CAROL' },
+			{ kind: 'remote', name: 'DAVE' },
+		])
+		c.names = ref({ w: 'Alice A.', b: 'Bob B.', 0: 'Alice A.', 1: 'Bob B.', 2: 'Carol C.', 3: 'Dave D.' })
+		await online.start()
+		const names = online.game.record.value.players.map((p) => p.name)
+		expect(names).toEqual(['Alice A.', 'Bob B.', 'Carol C.', 'Dave D.'])
+	})
+
+	it('names the other player of a game of two by colour', async () => {
+		const c = controller()
+		c.names = ref({ w: 'Alice', b: 'Bob' })
+		const online = useOnlineVariantGame(c, { api: fakeApi() })
+		await online.start()
+		expect(online.game.record.value.players).toEqual([
+			{ kind: 'human', name: 'Alice' },
+			{ kind: 'remote', name: 'Bob' },
+		])
+	})
+
+	it('settles a move of a game of four with the sides that are out, and disputes a wrong list', async () => {
+		const game = FIXTURE.replays.find((r) => r.variant === 'fourplayer' && r.options.mode === 'ffa')
+		const fields = { id: 9, variant: 'fourplayer', variantOptions: { mode: 'ffa' }, myColor: '2', chain: null }
+		const open = { ...game.moves[0], nextSeat: null, result: null, stateHash: null }
+		const api = fakeApi()
+		const online = useOnlineVariantGame(controller([open], fields), { api })
+		await online.start()
+		expect(api.settleVariantMove).toHaveBeenCalledWith(9, 0, expect.objectContaining({ out: [] }))
+
+		const forged = controller([{ ...game.moves[0], out: [1] }], fields)
+		const other = fakeApi()
+		const disputed = useOnlineVariantGame(forged, { api: other })
+		await disputed.start()
+		expect(other.disputeVariantGame).toHaveBeenCalledWith(9, 0)
+
+		const older = controller([{ ...game.moves[0], out: null }], fields)
+		const fine = useOnlineVariantGame(older, { api: fakeApi() })
+		await fine.start()
+		expect(fine.problem.value).toBeNull()
+	})
+
+	it('loads the game again and rebuilds the board to recover from a refused move', async () => {
+		const moves = stored(ATOMIC.slice(0, 2))
+		const c = controller([])
+		c.load = vi.fn(async () => {
+			c.variantMoves.value = moves
+		})
+		const online = useOnlineVariantGame(c, { api: fakeApi() })
+		await online.start()
+		expect(online.game.state.value.ply).toBe(0)
+		await online.recover(Object.assign(new Error('conflict'), { status: 409 }))
+		expect(c.load).toHaveBeenCalledTimes(1)
+		expect(online.game.state.value.ply).toBe(2)
+		expect(online.problem.value).toBeNull()
+	})
+
 	it('stops the board when the game ends on the server', async () => {
 		const c = controller()
 		const online = useOnlineVariantGame(c, { api: fakeApi() })
 		await online.start()
 		expect(online.game.isHumanTurn.value).toBe(true)
+		online.game.resign()
+		expect(c.resign).toHaveBeenCalled()
 		c.game.value = { ...c.game.value, status: 'finished', result: '0-1', resultReason: 'resignation' }
 		await nextTick()
 		expect(online.game.isHumanTurn.value).toBe(false)
-		online.game.resign()
-		expect(c.resign).toHaveBeenCalled()
 	})
 })
 
